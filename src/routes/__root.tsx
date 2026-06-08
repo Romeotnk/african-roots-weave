@@ -103,6 +103,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <LanguageProvider>
+          <NavigationProgress />
           <div className="flex min-h-screen flex-col">
             {!isMinimal && !isDashboard && <Navbar />}
             <main className="flex-1">
