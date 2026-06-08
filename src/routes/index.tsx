@@ -191,8 +191,8 @@ function Home() {
               </ul>
               <div className="mt-5"><RatingStars rating={featured.rating} reviewCount={featured.reviewCount} size="md" /></div>
               <div className="mt-7 flex flex-col sm:flex-row gap-3">
-                <button className="h-11 px-5 rounded-full bg-[var(--brand-primary)] text-white font-semibold hover:bg-[var(--brand-primary-dark)] transition">Voir le profil complet</button>
-                <button className="h-11 px-5 rounded-full border border-[var(--brand-border)] font-semibold hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] transition">Prendre rendez-vous</button>
+                <Link to="/annuaire" className="h-11 inline-flex items-center justify-center px-5 rounded-full bg-[var(--brand-primary)] text-white font-semibold hover:bg-[var(--brand-primary-dark)] transition">Voir le profil complet</Link>
+                <Link to="/annuaire" className="h-11 inline-flex items-center justify-center px-5 rounded-full border border-[var(--brand-border)] font-semibold hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] transition">Prendre rendez-vous</Link>
               </div>
             </div>
           </div>
