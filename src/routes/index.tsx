@@ -27,14 +27,135 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const spaces = [
-  { name: "Pharmacopée vivante", desc: "Monographies scientifiques des plantes médicinales africaines.", count: "1 200+ plantes", icon: Leaf, color: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]", to: "/pharmacopee" },
-  { name: "Rites & Cultures", desc: "Cérémonies, symboliques végétales et transmission ancestrale.", count: "180 articles", icon: FlaskConical, color: "bg-purple-50 text-purple-700", to: "/rites-cultures" },
-  { name: "Santé au quotidien", desc: "Conseils, prévention et bien-être issus des savoirs africains.", count: "320 articles", icon: Stethoscope, color: "bg-teal-50 text-teal-700", to: "/sante-quotidien" },
-  { name: "Recettes santé", desc: "Préparations traditionnelles documentées pas à pas.", count: "240 recettes", icon: ChefHat, color: "bg-orange-50 text-orange-700", to: "/recettes-sante" },
-  { name: "Discutons-en", desc: "Forum Q&A entre praticiens, chercheurs et communauté.", count: "5 400+ questions", icon: MessagesSquare, color: "bg-blue-50 text-blue-700", to: "/discutons-en" },
-  { name: "Formations", desc: "Cours en ligne, webinaires et certifications encadrés.", count: "90 formations", icon: GraduationCap, color: "bg-amber-50 text-amber-700", to: "/formations" },
+const heroSlides = [
+  {
+    img: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1920&q=80&auto=format&fit=crop",
+    badge: "🌿 Plateforme panafricaine",
+    title: "Le patrimoine médical africain, enfin documenté et accessible",
+    desc: "Iwosan connecte praticiens traditionnels, chercheurs et communautés autour d'un savoir endogène rigoureusement documenté.",
+    ctaLabel: "Explorer la plateforme",
+    ctaTo: "/marketplace",
+    icon: Leaf,
+  },
+  {
+    img: "https://images.unsplash.com/photo-1532634922-8fe0b757fb13?w=1920&q=80&auto=format&fit=crop",
+    badge: "🛒 Marketplace vérifié",
+    title: "Plus de 500 produits & services certifiés à portée de clic",
+    desc: "Plantes médicinales, soins traditionnels, formations et consultations — tous validés par notre comité scientifique.",
+    ctaLabel: "Voir le marketplace",
+    ctaTo: "/marketplace",
+    icon: ShoppingBag,
+  },
+  {
+    img: "https://images.unsplash.com/photo-1559757175-5700dde675bc?w=1920&q=80&auto=format&fit=crop",
+    badge: "👥 Annuaire de praticiens",
+    title: "Trouvez un praticien vérifié près de chez vous",
+    desc: "Un annuaire géolocalisé de tradipraticiens, herboristes et chercheurs, évalués par leurs pairs et la communauté.",
+    ctaLabel: "Découvrir l'annuaire",
+    ctaTo: "/annuaire",
+    icon: Users,
+  },
+  {
+    img: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1920&q=80&auto=format&fit=crop",
+    badge: "📚 Pharmacopée vivante",
+    title: "1 200+ plantes médicinales africaines documentées",
+    desc: "Nomenclature scientifique, principes actifs, usages traditionnels et préparations illustrées.",
+    ctaLabel: "Ouvrir la pharmacopée",
+    ctaTo: "/pharmacopee",
+    icon: BookOpen,
+  },
 ];
+
+function HeroCarousel() {
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused) return;
+    const id = setInterval(() => setIndex((i) => (i + 1) % heroSlides.length), 6000);
+    return () => clearInterval(id);
+  }, [paused]);
+
+  const slide = heroSlides[index];
+  const Icon = slide.icon;
+
+  return (
+    <section
+      className="relative min-h-[92vh] flex items-center overflow-hidden"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      aria-roledescription="carousel"
+    >
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={index}
+          initial={{ opacity: 0, x: 80 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -80 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute inset-0"
+        >
+          <img src={slide.img} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(15,61,26,0.92) 0%, rgba(26,92,42,0.7) 100%)" }} />
+        </motion.div>
+      </AnimatePresence>
+
+      <div className="relative container-iwosan py-24 text-white text-center">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-1.5 text-[12px] font-semibold backdrop-blur-sm">
+              <Icon size={14} /> {slide.badge}
+            </span>
+            <h1 className="mt-6 text-[36px] md:text-[56px] text-white max-w-4xl mx-auto leading-[1.05]">
+              {slide.title}
+            </h1>
+            <p className="mt-6 text-[15px] md:text-[18px] text-white/85 max-w-2xl mx-auto leading-[1.7]">
+              {slide.desc}
+            </p>
+            <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link to={slide.ctaTo} className="inline-flex items-center gap-2 h-12 px-7 rounded-full bg-[var(--brand-gold)] text-[var(--color-text-primary)] font-semibold hover:bg-[var(--brand-gold-light)] transition shadow-iwosan-md">
+                {slide.ctaLabel} <ArrowRight size={18} />
+              </Link>
+              <Link to="/inscription" className="inline-flex items-center gap-2 h-12 px-7 rounded-full border-2 border-white text-white font-semibold hover:bg-white hover:text-[var(--brand-primary)] transition">
+                Rejoindre la communauté
+              </Link>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        <div className="mt-10 flex items-center justify-center gap-3 md:gap-5 text-[13px] md:text-[14px] text-white/70 flex-wrap">
+          <span><strong className="text-white">500+</strong> Praticiens</span>
+          <span className="w-1 h-1 rounded-full bg-white/40" />
+          <span><strong className="text-white">1 200+</strong> Plantes</span>
+          <span className="w-1 h-1 rounded-full bg-white/40" />
+          <span><strong className="text-white">20+</strong> Pays</span>
+        </div>
+
+        {/* Pagination dots */}
+        <div className="mt-8 flex items-center justify-center gap-2">
+          {heroSlides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setIndex(i)}
+              aria-label={`Aller à la diapositive ${i + 1}`}
+              className={`h-1.5 rounded-full transition-all ${i === index ? "w-8 bg-[var(--brand-gold)]" : "w-3 bg-white/40 hover:bg-white/70"}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      <motion.div animate={{ y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60">
+        <ChevronDown size={28} />
+      </motion.div>
+    </section>
+  );
+}
 
 function Home() {
   const featured = professionals[0];
