@@ -85,9 +85,18 @@ export function Navbar() {
 
         <div className="hidden md:flex items-center gap-3">
           <div className="flex items-center gap-1 text-[12px] font-semibold border border-[var(--brand-border)] rounded-full px-1 py-1">
-            <button className="px-2 py-0.5 rounded-full bg-[var(--brand-primary)] text-white">FR</button>
-            <button className="px-2 py-0.5 text-[var(--color-text-muted)]">EN</button>
+            <button
+              onClick={() => setLang("fr")}
+              aria-pressed={lang === "fr"}
+              className={cn("px-2 py-0.5 rounded-full transition", lang === "fr" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-muted)] hover:text-[var(--brand-primary)]")}
+            >FR</button>
+            <button
+              onClick={() => setLang("en")}
+              aria-pressed={lang === "en"}
+              className={cn("px-2 py-0.5 rounded-full transition", lang === "en" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-muted)] hover:text-[var(--brand-primary)]")}
+            >EN</button>
           </div>
+
           <Link to="/connexion" className="text-[14px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)]">Se connecter</Link>
           <Link to="/inscription" className="h-10 px-5 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[14px] font-semibold hover:bg-[var(--brand-primary-dark)] transition">S'inscrire</Link>
         </div>
