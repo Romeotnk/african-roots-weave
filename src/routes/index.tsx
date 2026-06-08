@@ -1,6 +1,7 @@
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2, Leaf, Stethoscope, FlaskConical, ChefHat, MessagesSquare, GraduationCap, MapPin, ChevronDown } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowRight, CheckCircle2, Leaf, Stethoscope, FlaskConical, ChefHat, MessagesSquare, GraduationCap, MapPin, ChevronDown, ShoppingBag, Users, BookOpen } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { ProfessionalCard } from "@/components/shared/ProfessionalCard";
