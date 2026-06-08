@@ -373,8 +373,8 @@ export const dict: Record<string, string> = {
   " rép.": " replies",
   "S'inscrire →": "Register →",
 
-  // ---------- Data: spaces (article cards) ----------
-  "Pharmacopée": "Pharmacopoeia",
+  // ---------- Data: spaces (article cards) — "Pharmacopée" already mapped above ----------
+
 
   // ---------- Data: articles ----------
   "Le Moringa, superaliment endémique : 12 études cliniques décodées":
