@@ -150,6 +150,22 @@
   h3 { font-weight: 600; }
   h4 { font-weight: 600; }
   ::selection { background: var(--brand-primary); color: white; }
+
+  /* Feedback visuel uniforme au clic + focus accessible (WCAG 2.4.7) */
+  a, button { -webkit-tap-highlight-color: transparent; }
+  a:active, button:active:not(:disabled) {
+    transform: scale(0.97);
+    transition: transform 80ms ease-out;
+  }
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--brand-gold);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    a:active, button:active { transform: none !important; }
+  }
 }
 
 @utility container-iwosan {
