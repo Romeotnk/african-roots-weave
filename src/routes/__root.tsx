@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { LanguageProvider } from "@/i18n/LanguageContext";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import "@/i18n/jsxPatch";
 
 
@@ -99,17 +100,18 @@ function RootComponent() {
   const isDashboard = pathname.startsWith("/tableau-de-bord");
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <div className="flex min-h-screen flex-col">
-          {!isMinimal && !isDashboard && <Navbar />}
-          <main className="flex-1">
-            <Outlet />
-          </main>
-          {!isMinimal && !isDashboard && <Footer />}
-        </div>
-      </LanguageProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <div className="flex min-h-screen flex-col">
+            {!isMinimal && !isDashboard && <Navbar />}
+            <main className="flex-1">
+              <Outlet />
+            </main>
+            {!isMinimal && !isDashboard && <Footer />}
+          </div>
+        </LanguageProvider>
+      </ThemeProvider>
     </QueryClientProvider>
-
   );
 }
 
