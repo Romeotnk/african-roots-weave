@@ -157,48 +157,20 @@ function HeroCarousel() {
   );
 }
 
+const spaces = [
+  { name: "Pharmacopée vivante", desc: "Monographies scientifiques des plantes médicinales africaines.", count: "1 200+ plantes", icon: Leaf, color: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]", to: "/pharmacopee" },
+  { name: "Rites & Cultures", desc: "Cérémonies, symboliques végétales et transmission ancestrale.", count: "180 articles", icon: FlaskConical, color: "bg-purple-50 text-purple-700", to: "/rites-cultures" },
+  { name: "Santé au quotidien", desc: "Conseils, prévention et bien-être issus des savoirs africains.", count: "320 articles", icon: Stethoscope, color: "bg-teal-50 text-teal-700", to: "/sante-quotidien" },
+  { name: "Recettes santé", desc: "Préparations traditionnelles documentées pas à pas.", count: "240 recettes", icon: ChefHat, color: "bg-orange-50 text-orange-700", to: "/recettes-sante" },
+  { name: "Discutons-en", desc: "Forum Q&A entre praticiens, chercheurs et communauté.", count: "5 400+ questions", icon: MessagesSquare, color: "bg-blue-50 text-blue-700", to: "/discutons-en" },
+  { name: "Formations", desc: "Cours en ligne, webinaires et certifications encadrés.", count: "90 formations", icon: GraduationCap, color: "bg-amber-50 text-amber-700", to: "/formations" },
+];
+
 function Home() {
   const featured = professionals[0];
   return (
     <>
-      {/* HERO */}
-      <section className="relative min-h-[92vh] flex items-center">
-        <div className="absolute inset-0">
-          <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1920&q=80&auto=format&fit=crop" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(15,61,26,0.92) 0%, rgba(26,92,42,0.75) 100%)" }} />
-        </div>
-        <div className="relative container-iwosan py-24 text-white text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-1.5 text-[12px] font-semibold backdrop-blur-sm">
-              🌿 Plateforme panafricaine
-            </span>
-          </motion.div>
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }} className="mt-6 text-[40px] md:text-[56px] text-white max-w-4xl mx-auto leading-[1.05]">
-            Le patrimoine médical africain, enfin documenté et accessible
-          </motion.h1>
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }} className="mt-6 text-[16px] md:text-[18px] text-white/80 max-w-2xl mx-auto leading-[1.7]">
-            Iwosan connecte praticiens traditionnels, chercheurs et communautés autour d'un savoir endogène rigoureusement documenté.
-          </motion.p>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.45 }} className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/marketplace" className="inline-flex items-center gap-2 h-12 px-7 rounded-full bg-[var(--brand-gold)] text-[var(--color-text-primary)] font-semibold hover:bg-[var(--brand-gold-light)] transition shadow-iwosan-md">
-              Explorer la plateforme <ArrowRight size={18} />
-            </Link>
-            <Link to="/inscription" className="inline-flex items-center gap-2 h-12 px-7 rounded-full border-2 border-white text-white font-semibold hover:bg-white hover:text-[var(--brand-primary)] transition">
-              Rejoindre la communauté
-            </Link>
-          </motion.div>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.6 }} className="mt-10 flex items-center justify-center gap-3 md:gap-5 text-[13px] md:text-[14px] text-white/60 flex-wrap">
-            <span><strong className="text-white">500+</strong> Praticiens</span>
-            <span className="w-1 h-1 rounded-full bg-white/40" />
-            <span><strong className="text-white">1 200+</strong> Plantes</span>
-            <span className="w-1 h-1 rounded-full bg-white/40" />
-            <span><strong className="text-white">20+</strong> Pays</span>
-          </motion.div>
-        </div>
-        <motion.div animate={{ y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60">
-          <ChevronDown size={28} />
-        </motion.div>
-      </section>
+      <HeroCarousel />
 
       {/* PORTRAIT DE LA SEMAINE */}
       <section className="py-20 md:py-28 bg-[var(--brand-surface-alt)]">
