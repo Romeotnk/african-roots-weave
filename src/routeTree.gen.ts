@@ -9,8 +9,80 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TableauDeBordRouteImport } from './routes/tableau-de-bord'
+import { Route as SanteQuotidienRouteImport } from './routes/sante-quotidien'
+import { Route as RitesCulturesRouteImport } from './routes/rites-cultures'
+import { Route as RecettesSanteRouteImport } from './routes/recettes-sante'
+import { Route as PharmacopeeRouteImport } from './routes/pharmacopee'
+import { Route as MarketplaceRouteImport } from './routes/marketplace'
+import { Route as InscriptionRouteImport } from './routes/inscription'
+import { Route as FormationsRouteImport } from './routes/formations'
+import { Route as DiscutonsEnRouteImport } from './routes/discutons-en'
+import { Route as ConnexionRouteImport } from './routes/connexion'
+import { Route as AnnuaireRouteImport } from './routes/annuaire'
+import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TableauDeBordRoute = TableauDeBordRouteImport.update({
+  id: '/tableau-de-bord',
+  path: '/tableau-de-bord',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SanteQuotidienRoute = SanteQuotidienRouteImport.update({
+  id: '/sante-quotidien',
+  path: '/sante-quotidien',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RitesCulturesRoute = RitesCulturesRouteImport.update({
+  id: '/rites-cultures',
+  path: '/rites-cultures',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecettesSanteRoute = RecettesSanteRouteImport.update({
+  id: '/recettes-sante',
+  path: '/recettes-sante',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PharmacopeeRoute = PharmacopeeRouteImport.update({
+  id: '/pharmacopee',
+  path: '/pharmacopee',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketplaceRoute = MarketplaceRouteImport.update({
+  id: '/marketplace',
+  path: '/marketplace',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InscriptionRoute = InscriptionRouteImport.update({
+  id: '/inscription',
+  path: '/inscription',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FormationsRoute = FormationsRouteImport.update({
+  id: '/formations',
+  path: '/formations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiscutonsEnRoute = DiscutonsEnRouteImport.update({
+  id: '/discutons-en',
+  path: '/discutons-en',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConnexionRoute = ConnexionRouteImport.update({
+  id: '/connexion',
+  path: '/connexion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnnuaireRoute = AnnuaireRouteImport.update({
+  id: '/annuaire',
+  path: '/annuaire',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgendaRoute = AgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +91,200 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
+  '/annuaire': typeof AnnuaireRoute
+  '/connexion': typeof ConnexionRoute
+  '/discutons-en': typeof DiscutonsEnRoute
+  '/formations': typeof FormationsRoute
+  '/inscription': typeof InscriptionRoute
+  '/marketplace': typeof MarketplaceRoute
+  '/pharmacopee': typeof PharmacopeeRoute
+  '/recettes-sante': typeof RecettesSanteRoute
+  '/rites-cultures': typeof RitesCulturesRoute
+  '/sante-quotidien': typeof SanteQuotidienRoute
+  '/tableau-de-bord': typeof TableauDeBordRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
+  '/annuaire': typeof AnnuaireRoute
+  '/connexion': typeof ConnexionRoute
+  '/discutons-en': typeof DiscutonsEnRoute
+  '/formations': typeof FormationsRoute
+  '/inscription': typeof InscriptionRoute
+  '/marketplace': typeof MarketplaceRoute
+  '/pharmacopee': typeof PharmacopeeRoute
+  '/recettes-sante': typeof RecettesSanteRoute
+  '/rites-cultures': typeof RitesCulturesRoute
+  '/sante-quotidien': typeof SanteQuotidienRoute
+  '/tableau-de-bord': typeof TableauDeBordRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
+  '/annuaire': typeof AnnuaireRoute
+  '/connexion': typeof ConnexionRoute
+  '/discutons-en': typeof DiscutonsEnRoute
+  '/formations': typeof FormationsRoute
+  '/inscription': typeof InscriptionRoute
+  '/marketplace': typeof MarketplaceRoute
+  '/pharmacopee': typeof PharmacopeeRoute
+  '/recettes-sante': typeof RecettesSanteRoute
+  '/rites-cultures': typeof RitesCulturesRoute
+  '/sante-quotidien': typeof SanteQuotidienRoute
+  '/tableau-de-bord': typeof TableauDeBordRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/agenda'
+    | '/annuaire'
+    | '/connexion'
+    | '/discutons-en'
+    | '/formations'
+    | '/inscription'
+    | '/marketplace'
+    | '/pharmacopee'
+    | '/recettes-sante'
+    | '/rites-cultures'
+    | '/sante-quotidien'
+    | '/tableau-de-bord'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/agenda'
+    | '/annuaire'
+    | '/connexion'
+    | '/discutons-en'
+    | '/formations'
+    | '/inscription'
+    | '/marketplace'
+    | '/pharmacopee'
+    | '/recettes-sante'
+    | '/rites-cultures'
+    | '/sante-quotidien'
+    | '/tableau-de-bord'
+  id:
+    | '__root__'
+    | '/'
+    | '/agenda'
+    | '/annuaire'
+    | '/connexion'
+    | '/discutons-en'
+    | '/formations'
+    | '/inscription'
+    | '/marketplace'
+    | '/pharmacopee'
+    | '/recettes-sante'
+    | '/rites-cultures'
+    | '/sante-quotidien'
+    | '/tableau-de-bord'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgendaRoute: typeof AgendaRoute
+  AnnuaireRoute: typeof AnnuaireRoute
+  ConnexionRoute: typeof ConnexionRoute
+  DiscutonsEnRoute: typeof DiscutonsEnRoute
+  FormationsRoute: typeof FormationsRoute
+  InscriptionRoute: typeof InscriptionRoute
+  MarketplaceRoute: typeof MarketplaceRoute
+  PharmacopeeRoute: typeof PharmacopeeRoute
+  RecettesSanteRoute: typeof RecettesSanteRoute
+  RitesCulturesRoute: typeof RitesCulturesRoute
+  SanteQuotidienRoute: typeof SanteQuotidienRoute
+  TableauDeBordRoute: typeof TableauDeBordRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tableau-de-bord': {
+      id: '/tableau-de-bord'
+      path: '/tableau-de-bord'
+      fullPath: '/tableau-de-bord'
+      preLoaderRoute: typeof TableauDeBordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sante-quotidien': {
+      id: '/sante-quotidien'
+      path: '/sante-quotidien'
+      fullPath: '/sante-quotidien'
+      preLoaderRoute: typeof SanteQuotidienRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rites-cultures': {
+      id: '/rites-cultures'
+      path: '/rites-cultures'
+      fullPath: '/rites-cultures'
+      preLoaderRoute: typeof RitesCulturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recettes-sante': {
+      id: '/recettes-sante'
+      path: '/recettes-sante'
+      fullPath: '/recettes-sante'
+      preLoaderRoute: typeof RecettesSanteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pharmacopee': {
+      id: '/pharmacopee'
+      path: '/pharmacopee'
+      fullPath: '/pharmacopee'
+      preLoaderRoute: typeof PharmacopeeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketplace': {
+      id: '/marketplace'
+      path: '/marketplace'
+      fullPath: '/marketplace'
+      preLoaderRoute: typeof MarketplaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inscription': {
+      id: '/inscription'
+      path: '/inscription'
+      fullPath: '/inscription'
+      preLoaderRoute: typeof InscriptionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/formations': {
+      id: '/formations'
+      path: '/formations'
+      fullPath: '/formations'
+      preLoaderRoute: typeof FormationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/discutons-en': {
+      id: '/discutons-en'
+      path: '/discutons-en'
+      fullPath: '/discutons-en'
+      preLoaderRoute: typeof DiscutonsEnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/connexion': {
+      id: '/connexion'
+      path: '/connexion'
+      fullPath: '/connexion'
+      preLoaderRoute: typeof ConnexionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/annuaire': {
+      id: '/annuaire'
+      path: '/annuaire'
+      fullPath: '/annuaire'
+      preLoaderRoute: typeof AnnuaireRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agenda': {
+      id: '/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AgendaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,7 +297,29 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgendaRoute: AgendaRoute,
+  AnnuaireRoute: AnnuaireRoute,
+  ConnexionRoute: ConnexionRoute,
+  DiscutonsEnRoute: DiscutonsEnRoute,
+  FormationsRoute: FormationsRoute,
+  InscriptionRoute: InscriptionRoute,
+  MarketplaceRoute: MarketplaceRoute,
+  PharmacopeeRoute: PharmacopeeRoute,
+  RecettesSanteRoute: RecettesSanteRoute,
+  RitesCulturesRoute: RitesCulturesRoute,
+  SanteQuotidienRoute: SanteQuotidienRoute,
+  TableauDeBordRoute: TableauDeBordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
