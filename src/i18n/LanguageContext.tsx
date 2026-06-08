@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { dict } from "./dictionary";
+import { setI18nLang } from "./jsxPatch";
 
 export type Lang = "fr" | "en";
 
@@ -16,7 +17,6 @@ const STORAGE_KEY = "iwosan_lang";
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("fr");
 
-  // Hydrate from localStorage on client
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY) as Lang | null;
@@ -24,7 +24,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     } catch { /* ignore */ }
   }, []);
 
-  // Reflect lang on <html>
+  // Reflect lang on <html> and on the JSX runtime patch.
+  // Use a layout-style effect synchronously so initial subtree renders correctly.
+  setI18nLang(lang);
+
   useEffect(() => {
     if (typeof document !== "undefined") {
       document.documentElement.lang = lang;
@@ -32,6 +35,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, [lang]);
 
   const setLang = useCallback((l: Lang) => {
+    setI18nLang(l);
     setLangState(l);
     try { localStorage.setItem(STORAGE_KEY, l); } catch { /* ignore */ }
   }, []);
@@ -43,7 +47,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(() => ({ lang, setLang, t }), [lang, setLang, t]);
 
-  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
+  // `key={lang}` forces a full unmount/remount of the subtree on language
+  // change so every JSX call is re-evaluated with the patched runtime.
+  return (
+    <LanguageContext.Provider value={value}>
+      <div key={lang} className="contents">{children}</div>
+    </LanguageContext.Provider>
+  );
 }
 
 export function useLanguage() {
