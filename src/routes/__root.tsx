@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { NavigationProgress } from "@/components/layout/NavigationProgress";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "@/i18n/jsxPatch";
