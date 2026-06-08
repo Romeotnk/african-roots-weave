@@ -122,9 +122,14 @@ export function Navbar() {
               <Link key={l.to} to={l.to} className="px-3 py-3 rounded-md text-[15px] font-medium text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)]">{l.label}</Link>
             ))}
             <div className="mt-4 pt-4 border-t border-[var(--brand-border-light)] flex flex-col gap-2">
+              <div className="flex items-center gap-2 justify-center mb-1">
+                <button onClick={() => setLang("fr")} className={cn("px-3 py-1 rounded-full text-[12px] font-semibold border", lang === "fr" ? "bg-[var(--brand-primary)] text-white border-[var(--brand-primary)]" : "border-[var(--brand-border)] text-[var(--color-text-muted)]")}>FR</button>
+                <button onClick={() => setLang("en")} className={cn("px-3 py-1 rounded-full text-[12px] font-semibold border", lang === "en" ? "bg-[var(--brand-primary)] text-white border-[var(--brand-primary)]" : "border-[var(--brand-border)] text-[var(--color-text-muted)]")}>EN</button>
+              </div>
               <Link to="/connexion" className="h-12 inline-flex items-center justify-center rounded-md border border-[var(--brand-border)] font-semibold">Se connecter</Link>
               <Link to="/inscription" className="h-12 inline-flex items-center justify-center rounded-md bg-[var(--brand-primary)] text-white font-semibold">S'inscrire</Link>
             </div>
+
           </nav>
         </div>
       </div>
