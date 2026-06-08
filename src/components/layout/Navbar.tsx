@@ -27,6 +27,8 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const [commOpen, setCommOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { lang, setLang } = useLanguage();
+
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
