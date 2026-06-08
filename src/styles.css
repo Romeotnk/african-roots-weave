@@ -90,6 +90,39 @@
   --sidebar-ring: var(--brand-primary);
 }
 
+/* Auto dark mode — suit la préférence système (prefers-color-scheme) */
+.dark {
+  --brand-primary: #4FB364;
+  --brand-primary-dark: #2E8C44;
+  --brand-primary-light: #6FD085;
+  --brand-primary-subtle: #11321A;
+  --brand-gold: #E8C76A;
+  --brand-gold-light: #F0DFA0;
+  --brand-bg: #0E1410;
+  --brand-surface: #161D17;
+  --brand-surface-alt: #1E2620;
+  --brand-border: #2A3329;
+  --brand-border-light: #232B23;
+  --brand-text-primary: #F1EEE6;
+  --brand-text-secondary: #C8C5BD;
+  --brand-text-muted: #8E8B82;
+  --brand-success: #4FB364;
+  --brand-warning: #E0A84F;
+  --brand-error: #E26A5C;
+  --brand-info: #5BA8D6;
+
+  --sidebar: #161D17;
+  --sidebar-foreground: var(--brand-text-primary);
+  --sidebar-primary: var(--brand-primary);
+  --sidebar-primary-foreground: #0E1410;
+  --sidebar-accent: var(--brand-primary-subtle);
+  --sidebar-accent-foreground: var(--brand-primary);
+  --sidebar-border: var(--brand-border-light);
+  --sidebar-ring: var(--brand-primary);
+}
+
+.dark ::selection { background: var(--brand-primary); color: #0E1410; }
+
 @layer base {
   * {
     border-color: var(--color-border);
