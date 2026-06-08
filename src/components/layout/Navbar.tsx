@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Menu, X, Leaf, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/i18n/LanguageContext";
+
 
 const navLinks = [
   { to: "/", label: "Accueil" },
@@ -25,6 +27,8 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const [commOpen, setCommOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { lang, setLang } = useLanguage();
+
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -81,9 +85,18 @@ export function Navbar() {
 
         <div className="hidden md:flex items-center gap-3">
           <div className="flex items-center gap-1 text-[12px] font-semibold border border-[var(--brand-border)] rounded-full px-1 py-1">
-            <button className="px-2 py-0.5 rounded-full bg-[var(--brand-primary)] text-white">FR</button>
-            <button className="px-2 py-0.5 text-[var(--color-text-muted)]">EN</button>
+            <button
+              onClick={() => setLang("fr")}
+              aria-pressed={lang === "fr"}
+              className={cn("px-2 py-0.5 rounded-full transition", lang === "fr" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-muted)] hover:text-[var(--brand-primary)]")}
+            >FR</button>
+            <button
+              onClick={() => setLang("en")}
+              aria-pressed={lang === "en"}
+              className={cn("px-2 py-0.5 rounded-full transition", lang === "en" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-muted)] hover:text-[var(--brand-primary)]")}
+            >EN</button>
           </div>
+
           <Link to="/connexion" className="text-[14px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)]">Se connecter</Link>
           <Link to="/inscription" className="h-10 px-5 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[14px] font-semibold hover:bg-[var(--brand-primary-dark)] transition">S'inscrire</Link>
         </div>
@@ -109,9 +122,14 @@ export function Navbar() {
               <Link key={l.to} to={l.to} className="px-3 py-3 rounded-md text-[15px] font-medium text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)]">{l.label}</Link>
             ))}
             <div className="mt-4 pt-4 border-t border-[var(--brand-border-light)] flex flex-col gap-2">
+              <div className="flex items-center gap-2 justify-center mb-1">
+                <button onClick={() => setLang("fr")} className={cn("px-3 py-1 rounded-full text-[12px] font-semibold border", lang === "fr" ? "bg-[var(--brand-primary)] text-white border-[var(--brand-primary)]" : "border-[var(--brand-border)] text-[var(--color-text-muted)]")}>FR</button>
+                <button onClick={() => setLang("en")} className={cn("px-3 py-1 rounded-full text-[12px] font-semibold border", lang === "en" ? "bg-[var(--brand-primary)] text-white border-[var(--brand-primary)]" : "border-[var(--brand-border)] text-[var(--color-text-muted)]")}>EN</button>
+              </div>
               <Link to="/connexion" className="h-12 inline-flex items-center justify-center rounded-md border border-[var(--brand-border)] font-semibold">Se connecter</Link>
               <Link to="/inscription" className="h-12 inline-flex items-center justify-center rounded-md bg-[var(--brand-primary)] text-white font-semibold">S'inscrire</Link>
             </div>
+
           </nav>
         </div>
       </div>
