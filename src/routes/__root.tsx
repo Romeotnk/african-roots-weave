@@ -15,7 +15,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { LanguageProvider } from "@/i18n/LanguageContext";
-import { TranslateTree } from "@/i18n/TranslateTree";
+import "@/i18n/jsxPatch";
+
 
 
 function NotFoundComponent() {
