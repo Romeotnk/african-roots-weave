@@ -1,35 +1,21 @@
-// Runtime patch: intercept every JSX call to translate string children/props
-// according to the active language. We mutate the named exports of
-// `react/jsx-runtime` (and `react/jsx-dev-runtime`) — ES module exports are
-// live bindings, so all files importing them pick up the wrapped function.
+// DOM-based translator. ES module exports of react/jsx-runtime are read-only
+// in modern Vite/ESM, so we can't monkey-patch them. Instead we walk the DOM
+// and translate text nodes + select attributes whenever the tree changes.
 
-import * as jsxRuntime from "react/jsx-runtime";
-import * as jsxDevRuntime from "react/jsx-dev-runtime";
 import { dict } from "./dictionary";
 
 type Lang = "fr" | "en";
 let LANG: Lang = "fr";
+let observer: MutationObserver | null = null;
 
-export function setI18nLang(lang: Lang) {
-  LANG = lang;
-}
-
-const TRANSLATABLE_PROPS = new Set([
-  "placeholder",
-  "title",
-  "alt",
-  "aria-label",
-  "label",
-  "subtitle",
-  "badge",
-]);
+const TRANSLATABLE_ATTRS = ["placeholder", "title", "alt", "aria-label"];
 
 function lookup(s: string): string {
-  if (typeof s !== "string" || !s) return s;
+  if (!s) return s;
   const direct = dict[s];
   if (direct) return direct;
   const trimmed = s.trim();
-  if (trimmed !== s) {
+  if (trimmed && trimmed !== s) {
     const t = dict[trimmed];
     if (t) {
       const leading = s.match(/^\s*/)?.[0] ?? "";
@@ -40,66 +26,71 @@ function lookup(s: string): string {
   return s;
 }
 
-function translateValue(v: unknown): unknown {
-  if (typeof v === "string") return lookup(v);
-  if (Array.isArray(v)) {
-    let mutated = false;
-    const next = v.map((x) => {
-      if (typeof x === "string") {
-        const t = lookup(x);
-        if (t !== x) { mutated = true; return t; }
-      }
-      return x;
-    });
-    return mutated ? next : v;
+function translateNode(node: Node) {
+  if (LANG !== "en") return;
+  if (node.nodeType === Node.TEXT_NODE) {
+    const text = node.nodeValue ?? "";
+    const next = lookup(text);
+    if (next !== text) node.nodeValue = next;
+    return;
   }
-  return v;
-}
-
-function maybeTranslateProps(props: unknown): unknown {
-  if (LANG !== "en" || !props || typeof props !== "object") return props;
-  const p = props as Record<string, unknown>;
-  let out: Record<string, unknown> | null = null;
-
-  if ("children" in p) {
-    const t = translateValue(p.children);
-    if (t !== p.children) {
-      out = out ?? { ...p };
-      out.children = t;
-    }
-  }
-
-  for (const key in p) {
-    if (key === "children") continue;
-    if (TRANSLATABLE_PROPS.has(key) && typeof p[key] === "string") {
-      const t = lookup(p[key] as string);
-      if (t !== p[key]) {
-        out = out ?? { ...p };
-        out[key] = t;
+  if (node.nodeType === Node.ELEMENT_NODE) {
+    const el = node as Element;
+    const tag = el.tagName;
+    if (tag === "SCRIPT" || tag === "STYLE") return;
+    for (const attr of TRANSLATABLE_ATTRS) {
+      const v = el.getAttribute(attr);
+      if (v) {
+        const next = lookup(v);
+        if (next !== v) el.setAttribute(attr, next);
       }
     }
+    node.childNodes.forEach(translateNode);
   }
-
-  return out ?? p;
 }
 
-type JsxFn = (type: unknown, props: unknown, key?: unknown, ...rest: unknown[]) => unknown;
-
-function wrap(orig: JsxFn): JsxFn {
-  return function patched(type, props, key, ...rest) {
-    return orig(type, maybeTranslateProps(props), key, ...rest);
-  };
+function translateAll() {
+  if (typeof document === "undefined") return;
+  translateNode(document.body);
 }
 
-const rt = jsxRuntime as unknown as { jsx: JsxFn; jsxs: JsxFn };
-const dev = jsxDevRuntime as unknown as { jsxDEV: JsxFn };
-
-if (!(rt as { __i18nPatched?: boolean }).__i18nPatched) {
-  rt.jsx = wrap(rt.jsx);
-  rt.jsxs = wrap(rt.jsxs);
-  (rt as { __i18nPatched?: boolean }).__i18nPatched = true;
+function ensureObserver() {
+  if (typeof document === "undefined" || observer) return;
+  observer = new MutationObserver((mutations) => {
+    if (LANG !== "en") return;
+    for (const m of mutations) {
+      if (m.type === "characterData" && m.target) {
+        translateNode(m.target);
+      } else if (m.type === "childList") {
+        m.addedNodes.forEach(translateNode);
+      } else if (m.type === "attributes" && m.target && m.attributeName) {
+        const el = m.target as Element;
+        if (TRANSLATABLE_ATTRS.includes(m.attributeName)) {
+          const v = el.getAttribute(m.attributeName);
+          if (v) {
+            const next = lookup(v);
+            if (next !== v) el.setAttribute(m.attributeName, next);
+          }
+        }
+      }
+    }
+  });
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: TRANSLATABLE_ATTRS,
+  });
 }
-if (dev.jsxDEV && !(dev as { __i18nPatched?: boolean }).__i18nPatched) {
-  dev.jsxDEV = wrap(dev.jsxDEV);
-  (dev as { __i18nPatched?: boolean }).__i18nPatched = true;
+
+export function setI18nLang(lang: Lang) {
+  LANG = lang;
+  if (typeof window === "undefined") return;
+  // Defer so React has committed the latest tree.
+  queueMicrotask(() => {
+    ensureObserver();
+    if (lang === "en") translateAll();
+    // For FR we'd need original strings; rely on React re-render via key remount.
+  });
 }
