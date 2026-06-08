@@ -92,9 +92,10 @@
 
 /* Auto dark mode — suit la préférence système (prefers-color-scheme) */
 .dark {
-  --brand-primary: #4FB364;
-  --brand-primary-dark: #2E8C44;
-  --brand-primary-light: #6FD085;
+  /* Primary assombri pour contraste AA (texte blanc sur primary >= 4.5:1) */
+  --brand-primary: #1F7A33;
+  --brand-primary-dark: #155323;
+  --brand-primary-light: #4FB364;
   --brand-primary-subtle: #11321A;
   --brand-gold: #E8C76A;
   --brand-gold-light: #F0DFA0;
@@ -110,6 +111,9 @@
   --brand-warning: #E0A84F;
   --brand-error: #E26A5C;
   --brand-info: #5BA8D6;
+
+  /* WCAG AA: texte sombre sur boutons clairs en mode nuit (contraste > 7:1) */
+  --color-text-inverse: #0E1410;
 
   --sidebar: #161D17;
   --sidebar-foreground: var(--brand-text-primary);
@@ -146,6 +150,22 @@
   h3 { font-weight: 600; }
   h4 { font-weight: 600; }
   ::selection { background: var(--brand-primary); color: white; }
+
+  /* Feedback visuel uniforme au clic + focus accessible (WCAG 2.4.7) */
+  a, button { -webkit-tap-highlight-color: transparent; }
+  a:active, button:active:not(:disabled) {
+    transform: scale(0.97);
+    transition: transform 80ms ease-out;
+  }
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--brand-gold);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    a:active, button:active { transform: none !important; }
+  }
 }
 
 @utility container-iwosan {
