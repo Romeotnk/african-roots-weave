@@ -98,13 +98,18 @@ function RootComponent() {
   const isDashboard = pathname.startsWith("/tableau-de-bord");
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="flex min-h-screen flex-col">
-        {!isMinimal && !isDashboard && <Navbar />}
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        {!isMinimal && !isDashboard && <Footer />}
-      </div>
+      <LanguageProvider>
+        <TranslateTree>
+          <div className="flex min-h-screen flex-col">
+            {!isMinimal && !isDashboard && <Navbar />}
+            <main className="flex-1">
+              <Outlet />
+            </main>
+            {!isMinimal && !isDashboard && <Footer />}
+          </div>
+        </TranslateTree>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }
+
