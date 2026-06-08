@@ -14,9 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { NavigationProgress } from "@/components/layout/NavigationProgress";
 import { LanguageProvider } from "@/i18n/LanguageContext";
-import { ThemeProvider } from "@/components/ThemeProvider";
 import "@/i18n/jsxPatch";
 
 
@@ -66,10 +64,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "IWOSAN — Le savoir médical africain, documenté et vivant" },
       { name: "description", content: "Plateforme panafricaine éditoriale, scientifique et communautaire dédiée à la médecine traditionnelle, aux plantes médicinales et aux cultures de guérison africaines." },
       { name: "author", content: "Iwosan" },
-      { property: "og:title", content: "IWOSAN — Plateforme panafricaine de médecine traditionnelle" },
-      { property: "og:description", content: "Praticiens vérifiés, pharmacopée documentée, marketplace et communauté." },
+      { property: "og:title", content: "IWOSAN — Le savoir médical africain, documenté et vivant" },
+      { property: "og:description", content: "Plateforme panafricaine éditoriale, scientifique et communautaire dédiée à la médecine traditionnelle, aux plantes médicinales et aux cultures de guérison africaines." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "IWOSAN — Le savoir médical africain, documenté et vivant" },
+      { name: "twitter:description", content: "Plateforme panafricaine éditoriale, scientifique et communautaire dédiée à la médecine traditionnelle, aux plantes médicinales et aux cultures de guérison africaines." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1819c790-5fdc-422e-96c4-3a4825934d70/id-preview-2ec67662--5c6b0925-718f-4d9a-a7ce-388131a1aaf2.lovable.app-1780928460304.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1819c790-5fdc-422e-96c4-3a4825934d70/id-preview-2ec67662--5c6b0925-718f-4d9a-a7ce-388131a1aaf2.lovable.app-1780928460304.png" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -101,19 +103,17 @@ function RootComponent() {
   const isDashboard = pathname.startsWith("/tableau-de-bord");
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <LanguageProvider>
-          <NavigationProgress />
-          <div className="flex min-h-screen flex-col">
-            {!isMinimal && !isDashboard && <Navbar />}
-            <main className="flex-1">
-              <Outlet />
-            </main>
-            {!isMinimal && !isDashboard && <Footer />}
-          </div>
-        </LanguageProvider>
-      </ThemeProvider>
+      <LanguageProvider>
+        <div className="flex min-h-screen flex-col">
+          {!isMinimal && !isDashboard && <Navbar />}
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          {!isMinimal && !isDashboard && <Footer />}
+        </div>
+      </LanguageProvider>
     </QueryClientProvider>
+
   );
 }
 
