@@ -100,17 +100,16 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
-        <TranslateTree>
-          <div className="flex min-h-screen flex-col">
-            {!isMinimal && !isDashboard && <Navbar />}
-            <main className="flex-1">
-              <Outlet />
-            </main>
-            {!isMinimal && !isDashboard && <Footer />}
-          </div>
-        </TranslateTree>
+        <div className="flex min-h-screen flex-col">
+          {!isMinimal && !isDashboard && <Navbar />}
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          {!isMinimal && !isDashboard && <Footer />}
+        </div>
       </LanguageProvider>
     </QueryClientProvider>
+
   );
 }
 
