@@ -111,6 +111,9 @@
   --brand-error: #E26A5C;
   --brand-info: #5BA8D6;
 
+  /* WCAG AA: texte sombre sur boutons clairs en mode nuit (contraste > 7:1) */
+  --color-text-inverse: #0E1410;
+
   --sidebar: #161D17;
   --sidebar-foreground: var(--brand-text-primary);
   --sidebar-primary: var(--brand-primary);
