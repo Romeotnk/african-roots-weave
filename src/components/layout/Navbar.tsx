@@ -47,17 +47,18 @@ export function Navbar() {
 
   return (
     <header className={cn(
-      "sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b transition-shadow",
+      "sticky top-0 z-50 backdrop-blur-md border-b transition-shadow",
+      "bg-[color-mix(in_oklab,var(--color-bg)_85%,transparent)]",
       scrolled ? "shadow-iwosan-sm border-[var(--brand-border-light)]" : "border-transparent"
     )}>
-      <div className="container-iwosan flex items-center justify-between h-[72px]">
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 rounded-lg bg-[var(--brand-primary)] flex items-center justify-center text-white">
+      <div className="container-iwosan flex items-center justify-between gap-2 h-[72px]">
+        <Link to="/" className="flex items-center gap-2 group min-w-0 flex-shrink">
+          <div className="w-9 h-9 shrink-0 rounded-lg bg-[var(--brand-primary)] flex items-center justify-center text-white">
             <Leaf size={18} />
           </div>
-          <div className="leading-none">
+          <div className="leading-none min-w-0">
             <div className="font-extrabold text-[20px] tracking-tight text-[var(--brand-primary)]">IWOSAN</div>
-            <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5 hidden sm:block">Le savoir africain, documenté et vivant</div>
+            <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5 hidden xl:block">Le savoir africain, documenté et vivant</div>
           </div>
         </Link>
 
@@ -101,8 +102,12 @@ export function Navbar() {
           <Link to="/inscription" className="h-10 px-5 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[14px] font-semibold hover:bg-[var(--brand-primary-dark)] transition">S'inscrire</Link>
         </div>
 
-        <button className="lg:hidden p-2" onClick={() => setOpen(!open)} aria-label="Menu">
-          {open ? <X size={24} /> : <Menu size={24} />}
+        <button
+          className="lg:hidden shrink-0 ml-auto inline-flex items-center justify-center w-11 h-11 rounded-md text-[var(--color-text-primary)] hover:bg-[var(--brand-surface-alt)]"
+          onClick={() => setOpen(!open)}
+          aria-label="Menu"
+        >
+          {open ? <X size={26} /> : <Menu size={26} />}
         </button>
       </div>
 
@@ -110,12 +115,12 @@ export function Navbar() {
       <div className={cn("fixed inset-0 z-40 lg:hidden transition-opacity", open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none")}>
         <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
         <div className={cn(
-          "absolute right-0 top-0 bottom-0 w-[85%] max-w-[360px] bg-white shadow-iwosan-xl flex flex-col transition-transform duration-300",
+          "absolute right-0 top-0 bottom-0 w-[85%] max-w-[360px] bg-[var(--color-bg)] shadow-iwosan-xl flex flex-col transition-transform duration-300",
           open ? "translate-x-0" : "translate-x-full"
         )}>
           <div className="h-[72px] flex items-center justify-between px-5 border-b border-[var(--brand-border-light)]">
             <span className="font-extrabold text-[var(--brand-primary)]">IWOSAN</span>
-            <button onClick={() => setOpen(false)}><X size={22} /></button>
+            <button onClick={() => setOpen(false)} aria-label="Fermer"><X size={22} /></button>
           </div>
           <nav className="flex-1 overflow-y-auto p-4 flex flex-col gap-1">
             {[...navLinks, ...communityLinks, ...tailLinks].map((l) => (
