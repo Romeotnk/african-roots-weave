@@ -92,9 +92,10 @@
 
 /* Auto dark mode — suit la préférence système (prefers-color-scheme) */
 .dark {
-  --brand-primary: #4FB364;
-  --brand-primary-dark: #2E8C44;
-  --brand-primary-light: #6FD085;
+  /* Primary assombri pour contraste AA (texte blanc sur primary >= 4.5:1) */
+  --brand-primary: #1F7A33;
+  --brand-primary-dark: #155323;
+  --brand-primary-light: #4FB364;
   --brand-primary-subtle: #11321A;
   --brand-gold: #E8C76A;
   --brand-gold-light: #F0DFA0;
