@@ -1,10 +1,99 @@
 import type { Article } from "@/types";
 
 export const articles: Article[] = [
-  { id: "a1", slug: "moringa-superaliment-afrique", title: "Le Moringa, superaliment endémique : 12 études cliniques décodées", excerpt: "Synthèse rigoureuse des recherches sur Moringa oleifera, ses indications validées et les zones d'ombre.", cover: "https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=800&q=80&auto=format&fit=crop", space: "Pharmacopée", readTime: 8, date: "2026-06-02", authorName: "Dr. Amina Traoré", authorAvatar: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=100&q=80&auto=format&fit=crop", authorSpecialty: "Ethnobotanique" },
-  { id: "a2", slug: "rites-naissance-baoule", title: "Rites de naissance chez les Baoulé : transmission et symbolique", excerpt: "Du septième jour à l'imposition du nom, un voyage ethnographique au cœur de la Côte d'Ivoire centrale.", cover: "https://images.unsplash.com/photo-1497436072909-60f360e1d4b1?w=800&q=80&auto=format&fit=crop", space: "Rites & Cultures", readTime: 12, date: "2026-05-28", authorName: "Mama Rose Ekwalla", authorAvatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&q=80&auto=format&fit=crop", authorSpecialty: "Sage-femme" },
-  { id: "a3", slug: "alimentation-anti-inflammatoire", title: "Alimentation anti-inflammatoire : retour aux fondamentaux africains", excerpt: "Fonio, baobab, hibiscus : trois piliers d'une diète traditionnelle redécouverte par la nutrition moderne.", cover: "https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=800&q=80&auto=format&fit=crop", space: "Santé au quotidien", readTime: 6, date: "2026-05-22", authorName: "Mama Fatou Sow", authorAvatar: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=100&q=80&auto=format&fit=crop", authorSpecialty: "Nutritionniste" },
-  { id: "a4", slug: "recette-tisane-digestive", title: "Recette : tisane digestive kinkéliba-citronnelle", excerpt: "Préparation, dosage et précautions d'usage pour une infusion quotidienne post-repas.", cover: "https://images.unsplash.com/photo-1597318181409-cf64d0b9d3d2?w=800&q=80&auto=format&fit=crop", space: "Recettes santé", readTime: 4, date: "2026-05-18", authorName: "Mama Aïssata", authorAvatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&q=80&auto=format&fit=crop", authorSpecialty: "Tradi-praticienne" },
-  { id: "a5", slug: "neem-antipaludique", title: "Le neem face au paludisme : où en est la science ?", excerpt: "Revue des essais cliniques et limites des extraits standardisés d'Azadirachta indica.", cover: "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=800&q=80&auto=format&fit=crop", space: "Pharmacopée", readTime: 10, date: "2026-05-14", authorName: "Dr. Kwame Mensah", authorAvatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&q=80&auto=format&fit=crop", authorSpecialty: "Phytothérapeute" },
-  { id: "a6", slug: "karite-cicatrisation", title: "Le beurre de karité : preuves cliniques en cicatrisation", excerpt: "Composition, mécanismes d'action et indications validées sur l'eczéma et les brûlures superficielles.", cover: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=800&q=80&auto=format&fit=crop", space: "Santé au quotidien", readTime: 7, date: "2026-05-08", authorName: "Tata Ngozi", authorAvatar: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=100&q=80&auto=format&fit=crop", authorSpecialty: "Herboriste" },
+  {
+    id: "a1",
+    slug: "moringa-superaliment-afrique",
+    title: "Le Moringa, superaliment endémique : 12 études cliniques décodées",
+    excerpt:
+      "Synthèse rigoureuse des recherches sur Moringa oleifera, ses indications validées et les zones d'ombre.",
+    cover:
+      "https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=800&q=80&auto=format&fit=crop",
+    space: "Pharmacopée",
+    readTime: 8,
+    date: "2026-06-02",
+    authorName: "Dr. Amina Traoré",
+    authorAvatar:
+      "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=100&q=80&auto=format&fit=crop",
+    authorSpecialty: "Ethnobotanique",
+  },
+  {
+    id: "a2",
+    slug: "rites-naissance-baoule",
+    title: "Rites de naissance chez les Baoulé : transmission et symbolique",
+    excerpt:
+      "Du septième jour à l'imposition du nom, un voyage ethnographique au cœur de la Côte d'Ivoire centrale.",
+    cover:
+      "https://images.unsplash.com/photo-1497436072909-60f360e1d4b1?w=800&q=80&auto=format&fit=crop",
+    space: "Rites & Cultures",
+    readTime: 12,
+    date: "2026-05-28",
+    authorName: "Mama Rose Ekwalla",
+    authorAvatar:
+      "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&q=80&auto=format&fit=crop",
+    authorSpecialty: "Sage-femme",
+  },
+  {
+    id: "a3",
+    slug: "alimentation-anti-inflammatoire",
+    title: "Alimentation anti-inflammatoire : retour aux fondamentaux africains",
+    excerpt:
+      "Fonio, baobab, hibiscus : trois piliers d'une diète traditionnelle redécouverte par la nutrition moderne.",
+    cover:
+      "https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=800&q=80&auto=format&fit=crop",
+    space: "Santé au quotidien",
+    readTime: 6,
+    date: "2026-05-22",
+    authorName: "Mama Fatou Sow",
+    authorAvatar:
+      "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=100&q=80&auto=format&fit=crop",
+    authorSpecialty: "Nutritionniste",
+  },
+  {
+    id: "a4",
+    slug: "recette-tisane-digestive",
+    title: "Recette : tisane digestive kinkéliba-citronnelle",
+    excerpt: "Préparation, dosage et précautions d'usage pour une infusion quotidienne post-repas.",
+    cover:
+      "https://images.unsplash.com/photo-1597318181409-cf64d0b9d3d2?w=800&q=80&auto=format&fit=crop",
+    space: "Recettes santé",
+    readTime: 4,
+    date: "2026-05-18",
+    authorName: "Mama Aïssata",
+    authorAvatar:
+      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&q=80&auto=format&fit=crop",
+    authorSpecialty: "Tradi-praticienne",
+  },
+  {
+    id: "a5",
+    slug: "neem-antipaludique",
+    title: "Le neem face au paludisme : où en est la science ?",
+    excerpt:
+      "Revue des essais cliniques et limites des extraits standardisés d'Azadirachta indica.",
+    cover:
+      "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=800&q=80&auto=format&fit=crop",
+    space: "Pharmacopée",
+    readTime: 10,
+    date: "2026-05-14",
+    authorName: "Dr. Kwame Mensah",
+    authorAvatar:
+      "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&q=80&auto=format&fit=crop",
+    authorSpecialty: "Phytothérapeute",
+  },
+  {
+    id: "a6",
+    slug: "karite-cicatrisation",
+    title: "Le beurre de karité : preuves cliniques en cicatrisation",
+    excerpt:
+      "Composition, mécanismes d'action et indications validées sur l'eczéma et les brûlures superficielles.",
+    cover:
+      "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=800&q=80&auto=format&fit=crop",
+    space: "Santé au quotidien",
+    readTime: 7,
+    date: "2026-05-08",
+    authorName: "Tata Ngozi",
+    authorAvatar:
+      "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=100&q=80&auto=format&fit=crop",
+    authorSpecialty: "Herboriste",
+  },
 ];

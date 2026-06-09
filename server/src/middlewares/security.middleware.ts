@@ -1,16 +1,18 @@
-import type { RequestHandler } from 'express';
+import type { RequestHandler } from "express";
 
 const sanitizeValue = (value: unknown): unknown => {
-  if (typeof value === 'string') {
-    return value.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '').trim();
+  if (typeof value === "string") {
+    return value.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "").trim();
   }
 
   if (Array.isArray(value)) {
     return value.map(sanitizeValue);
   }
 
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value).map(([key, nestedValue]) => [key, sanitizeValue(nestedValue)]));
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nestedValue]) => [key, sanitizeValue(nestedValue)]),
+    );
   }
 
   return value;

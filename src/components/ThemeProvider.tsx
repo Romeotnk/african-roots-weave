@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 export type ThemeMode = "light" | "dark" | "system";
 interface Ctx {
@@ -7,7 +15,12 @@ interface Ctx {
   setMode: (m: ThemeMode) => void;
   toggle: () => void;
 }
-const ThemeCtx = createContext<Ctx>({ mode: "system", resolved: "light", setMode: () => {}, toggle: () => {} });
+const ThemeCtx = createContext<Ctx>({
+  mode: "system",
+  resolved: "light",
+  setMode: () => {},
+  toggle: () => {},
+});
 const KEY = "iwosan_theme";
 
 function apply(dark: boolean) {
@@ -24,7 +37,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     try {
       const stored = localStorage.getItem(KEY) as ThemeMode | null;
       if (stored === "light" || stored === "dark" || stored === "system") setModeState(stored);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   useEffect(() => {
@@ -44,15 +59,24 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setMode = useCallback((m: ThemeMode) => {
     setModeState(m);
-    try { localStorage.setItem(KEY, m); } catch { /* ignore */ }
+    try {
+      localStorage.setItem(KEY, m);
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   const toggle = useCallback(() => {
     setMode(resolved === "dark" ? "light" : "dark");
   }, [resolved, setMode]);
 
-  const value = useMemo(() => ({ mode, resolved, setMode, toggle }), [mode, resolved, setMode, toggle]);
+  const value = useMemo(
+    () => ({ mode, resolved, setMode, toggle }),
+    [mode, resolved, setMode, toggle],
+  );
   return <ThemeCtx.Provider value={value}>{children}</ThemeCtx.Provider>;
 }
 
-export function useTheme() { return useContext(ThemeCtx); }
+export function useTheme() {
+  return useContext(ThemeCtx);
+}

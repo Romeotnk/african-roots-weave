@@ -1,13 +1,13 @@
-import { Prisma } from '@prisma/client';
-import { prisma } from '../config/db.js';
-import { redis } from '../config/redis.js';
-import { sendPasswordResetEmail, sendVerificationEmail } from '../services/email.service.js';
-import { verifyTurnstile } from '../services/turnstile.service.js';
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { apiResponse } from '../utils/apiResponse.js';
-import { clearRefreshCookie, setRefreshCookie } from '../utils/cookies.js';
-import { ApiError } from '../utils/errors.js';
-import { generateReferralCode, hashToken } from '../utils/random.js';
+import { Prisma } from "@prisma/client";
+import { prisma } from "../config/db.js";
+import { redis } from "../config/redis.js";
+import { sendPasswordResetEmail, sendVerificationEmail } from "../services/email.service.js";
+import { verifyTurnstile } from "../services/turnstile.service.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { apiResponse } from "../utils/apiResponse.js";
+import { clearRefreshCookie, setRefreshCookie } from "../utils/cookies.js";
+import { ApiError } from "../utils/errors.js";
+import { generateReferralCode, hashToken } from "../utils/random.js";
 import {
   createAccessTokenForUser,
   createEmailVerification,
@@ -16,8 +16,13 @@ import {
   hashPassword,
   rotateRefreshToken,
   verifyPassword,
-} from '../services/auth.service.js';
-import { signPasswordResetToken, verifyEmailToken, verifyPasswordResetToken, verifyRefreshToken } from '../utils/tokens.js';
+} from "../services/auth.service.js";
+import {
+  signPasswordResetToken,
+  verifyEmailToken,
+  verifyPasswordResetToken,
+  verifyRefreshToken,
+} from "../utils/tokens.js";
 
 /**
  * POST /api/auth/register
@@ -34,16 +39,25 @@ import { signPasswordResetToken, verifyEmailToken, verifyPasswordResetToken, ver
  * - 422 validation error
  */
 export const register = asyncHandler(async (req, res) => {
-  const { email, password, firstName, lastName, country, language = 'fr', referralCode, turnstileToken } = req.body;
+  const {
+    email,
+    password,
+    firstName,
+    lastName,
+    country,
+    language = "fr",
+    referralCode,
+    turnstileToken,
+  } = req.body;
 
   const turnstileOk = await verifyTurnstile(turnstileToken, req.ip);
   if (!turnstileOk) {
-    throw new ApiError(400, 'Turnstile verification failed');
+    throw new ApiError(400, "Turnstile verification failed");
   }
 
   const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } });
   if (existing) {
-    throw new ApiError(409, 'Email already registered');
+    throw new ApiError(409, "Email already registered");
   }
 
   const sponsor = referralCode
@@ -55,7 +69,10 @@ export const register = asyncHandler(async (req, res) => {
 
   let generatedReferralCode = generateReferralCode(firstName, lastName);
   for (let attempt = 0; attempt < 5; attempt += 1) {
-    const exists = await prisma.user.findUnique({ where: { referralCode: generatedReferralCode }, select: { id: true } });
+    const exists = await prisma.user.findUnique({
+      where: { referralCode: generatedReferralCode },
+      select: { id: true },
+    });
     if (!exists) break;
     generatedReferralCode = generateReferralCode(firstName, lastName);
   }
@@ -101,7 +118,7 @@ export const register = asyncHandler(async (req, res) => {
   const verificationUrl = await createEmailVerification(user.id);
   await sendVerificationEmail(user.email, verificationUrl);
 
-  res.status(201).json(apiResponse(true, { user }, 'Account created. Please verify your email.'));
+  res.status(201).json(apiResponse(true, { user }, "Account created. Please verify your email."));
 });
 
 /**
@@ -134,11 +151,11 @@ export const login = asyncHandler(async (req, res) => {
   });
 
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
-    throw new ApiError(401, 'Invalid credentials');
+    throw new ApiError(401, "Invalid credentials");
   }
 
   if (!user.isActive || user.isBanned) {
-    throw new ApiError(403, user.banReason ?? 'Account unavailable');
+    throw new ApiError(403, user.banReason ?? "Account unavailable");
   }
 
   await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
@@ -148,7 +165,7 @@ export const login = asyncHandler(async (req, res) => {
   setRefreshCookie(res, refreshToken);
 
   const { passwordHash: _passwordHash, ...safeUser } = user;
-  res.json(apiResponse(true, { accessToken, user: safeUser }, 'Login successful'));
+  res.json(apiResponse(true, { accessToken, user: safeUser }, "Login successful"));
 });
 
 /**
@@ -162,20 +179,26 @@ export const login = asyncHandler(async (req, res) => {
 export const refresh = asyncHandler(async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
   if (!refreshToken) {
-    throw new ApiError(401, 'Refresh token required');
+    throw new ApiError(401, "Refresh token required");
   }
 
   const payload = verifyRefreshToken(refreshToken);
-  const [tokenId, rawToken] = String(payload.tokenId).split('.');
+  const [tokenId, rawToken] = String(payload.tokenId).split(".");
   const rotation = await rotateRefreshToken(payload.sub, tokenId, rawToken);
 
   if (!rotation) {
     clearRefreshCookie(res);
-    throw new ApiError(401, 'Invalid refresh token');
+    throw new ApiError(401, "Invalid refresh token");
   }
 
   setRefreshCookie(res, rotation.refreshToken);
-  res.json(apiResponse(true, { accessToken: rotation.accessToken, user: rotation.user }, 'Token refreshed'));
+  res.json(
+    apiResponse(
+      true,
+      { accessToken: rotation.accessToken, user: rotation.user },
+      "Token refreshed",
+    ),
+  );
 });
 
 /**
@@ -189,7 +212,7 @@ export const logout = asyncHandler(async (req, res) => {
   if (refreshToken) {
     try {
       const payload = verifyRefreshToken(refreshToken);
-      const [tokenId] = String(payload.tokenId).split('.');
+      const [tokenId] = String(payload.tokenId).split(".");
       await prisma.refreshToken.updateMany({
         where: { id: tokenId, userId: payload.sub },
         data: { revokedAt: new Date() },
@@ -199,13 +222,15 @@ export const logout = asyncHandler(async (req, res) => {
     }
   }
 
-  const accessToken = req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : null;
+  const accessToken = req.headers.authorization?.startsWith("Bearer ")
+    ? req.headers.authorization.slice(7)
+    : null;
   if (accessToken && redis) {
-    await redis.set(`jwt:blacklist:${accessToken}`, '1', 'EX', 15 * 60);
+    await redis.set(`jwt:blacklist:${accessToken}`, "1", "EX", 15 * 60);
   }
 
   clearRefreshCookie(res);
-  res.json(apiResponse(true, null, 'Logged out'));
+  res.json(apiResponse(true, null, "Logged out"));
 });
 
 /**
@@ -226,15 +251,18 @@ export const verifyEmail = asyncHandler(async (req, res) => {
   });
 
   if (!stored) {
-    throw new ApiError(400, 'Invalid or expired verification token');
+    throw new ApiError(400, "Invalid or expired verification token");
   }
 
   await prisma.$transaction([
-    prisma.emailVerificationToken.update({ where: { id: stored.id }, data: { usedAt: new Date() } }),
+    prisma.emailVerificationToken.update({
+      where: { id: stored.id },
+      data: { usedAt: new Date() },
+    }),
     prisma.user.update({ where: { id: payload.sub }, data: { isEmailVerified: true } }),
   ]);
 
-  res.json(apiResponse(true, null, 'Email verified'));
+  res.json(apiResponse(true, null, "Email verified"));
 });
 
 /**
@@ -244,7 +272,10 @@ export const verifyEmail = asyncHandler(async (req, res) => {
  */
 export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
-  const user = await prisma.user.findUnique({ where: { email }, select: { id: true, email: true } });
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, email: true },
+  });
 
   if (user) {
     const token = signPasswordResetToken(user.id);
@@ -252,7 +283,7 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     await sendPasswordResetEmail(user.email, resetUrl);
   }
 
-  res.json(apiResponse(true, null, 'If the email exists, a reset link has been sent'));
+  res.json(apiResponse(true, null, "If the email exists, a reset link has been sent"));
 });
 
 /**
@@ -274,15 +305,18 @@ export const resetPassword = asyncHandler(async (req, res) => {
   });
 
   if (!stored) {
-    throw new ApiError(400, 'Invalid or expired reset token');
+    throw new ApiError(400, "Invalid or expired reset token");
   }
 
   const passwordHash = await hashPassword(password);
   await prisma.$transaction([
     prisma.passwordResetToken.update({ where: { id: stored.id }, data: { usedAt: new Date() } }),
     prisma.user.update({ where: { id: payload.sub }, data: { passwordHash } }),
-    prisma.refreshToken.updateMany({ where: { userId: payload.sub, revokedAt: null }, data: { revokedAt: new Date() } }),
+    prisma.refreshToken.updateMany({
+      where: { userId: payload.sub, revokedAt: null },
+      data: { revokedAt: new Date() },
+    }),
   ]);
 
-  res.json(apiResponse(true, null, 'Password reset successful'));
+  res.json(apiResponse(true, null, "Password reset successful"));
 });

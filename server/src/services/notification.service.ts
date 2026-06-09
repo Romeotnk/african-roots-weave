@@ -1,5 +1,5 @@
-import { prisma } from '../config/db.js';
-import { emitNotification } from './socket.service.js';
+import { prisma } from "../config/db.js";
+import { emitNotification } from "./socket.service.js";
 
 export const createNotification = async (input: {
   userId: string;

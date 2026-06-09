@@ -52,13 +52,13 @@ A l'inscription, un `MLMNode` est cree. Si un code parrain existe, le node est r
 
 ## Roles
 
-| Role | Capacites principales |
-| --- | --- |
-| USER | Achat, forum, wallet, notifications |
+| Role         | Capacites principales                    |
+| ------------ | ---------------------------------------- |
+| USER         | Achat, forum, wallet, notifications      |
 | PROFESSIONAL | Produits, articles autorises, evenements |
-| RESEARCHER | Contribution scientifique future |
-| MODERATOR | Moderation forum |
-| ADMIN | Administration complete |
+| RESEARCHER   | Contribution scientifique future         |
+| MODERATOR    | Moderation forum                         |
+| ADMIN        | Administration complete                  |
 
 ## Deploiement Railway
 

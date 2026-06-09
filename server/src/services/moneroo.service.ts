@@ -1,7 +1,7 @@
-import crypto from 'node:crypto';
-import { monerooConfig } from '../config/moneroo.js';
-import { env } from '../config/env.js';
-import { ApiError } from '../utils/errors.js';
+import crypto from "node:crypto";
+import { monerooConfig } from "../config/moneroo.js";
+import { env } from "../config/env.js";
+import { ApiError } from "../utils/errors.js";
 
 type InitiatePaymentInput = {
   amount: string;
@@ -14,22 +14,26 @@ type InitiatePaymentInput = {
 
 export const initiateMonerooPayment = async (input: InitiatePaymentInput) => {
   if (!monerooConfig.apiKey) {
+    if (env.nodeEnv === "production") {
+      throw new ApiError(500, "Moneroo API key is required in production");
+    }
+
     return {
       checkoutUrl: `${env.clientUrl}/checkout/mock?reference=${encodeURIComponent(input.reference)}`,
       transactionId: `mock_${input.reference}`,
-      provider: 'mock',
+      provider: "mock",
     };
   }
 
   const response = await fetch(`${monerooConfig.baseUrl}/payments/initialize`, {
-    method: 'POST',
+    method: "POST",
     headers: {
       Authorization: `Bearer ${monerooConfig.apiKey}`,
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       amount: input.amount,
-      currency: input.currency ?? 'XOF',
+      currency: input.currency ?? "XOF",
       description: input.description,
       customer: { email: input.customerEmail },
       reference: input.reference,
@@ -40,7 +44,7 @@ export const initiateMonerooPayment = async (input: InitiatePaymentInput) => {
   });
 
   if (!response.ok) {
-    throw new ApiError(502, 'Moneroo payment initialization failed');
+    throw new ApiError(502, "Moneroo payment initialization failed");
   }
 
   const data = (await response.json()) as {
@@ -52,7 +56,7 @@ export const initiateMonerooPayment = async (input: InitiatePaymentInput) => {
   return {
     checkoutUrl: data.data?.checkout_url ?? data.checkout_url,
     transactionId: data.data?.id ?? data.id ?? input.reference,
-    provider: 'moneroo',
+    provider: "moneroo",
   };
 };
 
@@ -65,6 +69,13 @@ export const verifyMonerooSignature = (rawBody: string, signature?: string) => {
     return false;
   }
 
-  const expected = crypto.createHmac('sha256', monerooConfig.webhookSecret).update(rawBody).digest('hex');
+  const expected = crypto
+    .createHmac("sha256", monerooConfig.webhookSecret)
+    .update(rawBody)
+    .digest("hex");
+  if (expected.length !== signature.length) {
+    return false;
+  }
+
   return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
 };

@@ -1,12 +1,12 @@
-import 'dotenv/config';
-import http from 'node:http';
-import { app } from './app.js';
-import { prisma } from './config/db.js';
-import { connectRedis } from './config/redis.js';
-import { env, validateEnv } from './config/env.js';
-import { initI18n } from './config/i18n.js';
-import { startCronJobs } from './jobs/cron.js';
-import { initSocket } from './services/socket.service.js';
+import "dotenv/config";
+import http from "node:http";
+import { app } from "./app.js";
+import { prisma } from "./config/db.js";
+import { connectRedis } from "./config/redis.js";
+import { env, validateEnv } from "./config/env.js";
+import { initI18n } from "./config/i18n.js";
+import { startCronJobs } from "./jobs/cron.js";
+import { initSocket } from "./services/socket.service.js";
 
 validateEnv();
 
@@ -25,5 +25,5 @@ const shutdown = async () => {
   server.close(() => process.exit(0));
 };
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);

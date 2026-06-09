@@ -1,8 +1,8 @@
-import { env } from '../config/env.js';
+import { env } from "../config/env.js";
 
 type TurnstileResponse = {
   success: boolean;
-  'error-codes'?: string[];
+  "error-codes"?: string[];
 };
 
 export const verifyTurnstile = async (token?: string, remoteIp?: string) => {
@@ -20,11 +20,11 @@ export const verifyTurnstile = async (token?: string, remoteIp?: string) => {
   });
 
   if (remoteIp) {
-    params.set('remoteip', remoteIp);
+    params.set("remoteip", remoteIp);
   }
 
-  const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
+  const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+    method: "POST",
     body: params,
   });
   const data = (await response.json()) as TurnstileResponse;

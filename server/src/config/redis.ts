@@ -1,5 +1,5 @@
-import { Redis } from 'ioredis';
-import { env } from './env.js';
+import { Redis } from "ioredis";
+import { env } from "./env.js";
 
 export const redis = env.redisUrl
   ? new Redis(env.redisUrl, {
@@ -9,13 +9,13 @@ export const redis = env.redisUrl
   : null;
 
 export const connectRedis = async () => {
-  if (!redis || redis.status === 'ready') {
+  if (!redis || redis.status === "ready") {
     return;
   }
 
   try {
     await redis.connect();
   } catch (error) {
-    console.warn('Redis unavailable, continuing without cache-backed features.', error);
+    console.warn("Redis unavailable, continuing without cache-backed features.", error);
   }
 };

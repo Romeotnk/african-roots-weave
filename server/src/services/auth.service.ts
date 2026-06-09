@@ -1,9 +1,9 @@
-import bcrypt from 'bcryptjs';
-import type { KycStatus, Role } from '@prisma/client';
-import { prisma } from '../config/db.js';
-import { env } from '../config/env.js';
-import { hashToken, randomToken } from '../utils/random.js';
-import { signAccessToken, signEmailToken, signRefreshToken } from '../utils/tokens.js';
+import bcrypt from "bcryptjs";
+import type { KycStatus, Role } from "@prisma/client";
+import { prisma } from "../config/db.js";
+import { env } from "../config/env.js";
+import { hashToken, randomToken } from "../utils/random.js";
+import { signAccessToken, signEmailToken, signRefreshToken } from "../utils/tokens.js";
 
 const refreshTokenExpiresAt = () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 

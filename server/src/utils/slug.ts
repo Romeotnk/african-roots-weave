@@ -1,4 +1,4 @@
-import slugify from 'slugify';
+import slugify from "slugify";
 
 export const makeSlug = (value: string) =>
   slugify(value, {

@@ -22,9 +22,15 @@ export function NavigationProgress() {
       raf = requestAnimationFrame(tick);
     } else {
       setProgress(100);
-      timeout = setTimeout(() => { setVisible(false); setProgress(0); }, 300);
+      timeout = setTimeout(() => {
+        setVisible(false);
+        setProgress(0);
+      }, 300);
     }
-    return () => { if (raf) cancelAnimationFrame(raf); if (timeout) clearTimeout(timeout); };
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      if (timeout) clearTimeout(timeout);
+    };
   }, [status]);
 
   return (

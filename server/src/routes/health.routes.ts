@@ -1,6 +1,6 @@
-import { Router } from 'express';
-import { prisma } from '../config/db.js';
-import { apiResponse } from '../utils/apiResponse.js';
+import { Router } from "express";
+import { prisma } from "../config/db.js";
+import { apiResponse } from "../utils/apiResponse.js";
 
 export const healthRouter = Router();
 
@@ -15,10 +15,10 @@ export const healthRouter = Router();
  * Possible errors:
  * - 503 when the database cannot be reached.
  */
-healthRouter.get('/', async (_req, res, next) => {
+healthRouter.get("/", async (_req, res, next) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
-    res.json(apiResponse(true, { database: 'up' }, 'Service healthy'));
+    res.json(apiResponse(true, { database: "up" }, "Service healthy"));
   } catch (error) {
     next(error);
   }

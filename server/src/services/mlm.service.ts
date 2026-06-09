@@ -1,5 +1,5 @@
-import { CommissionType, Prisma } from '@prisma/client';
-import { prisma } from '../config/db.js';
+import { CommissionType, Prisma } from "@prisma/client";
+import { prisma } from "../config/db.js";
 
 const mlmRates = [0.03, 0.02, 0.01] as const;
 
@@ -28,7 +28,7 @@ export const calculateOrderCommissions = async (orderId: string) =>
           sourceOrderId: order.id,
           amount: order.totalAmount.minus(order.commissionAmount),
           type: CommissionType.DIRECT,
-          status: 'APPROVED',
+          status: "APPROVED",
         },
       }),
     );
@@ -54,20 +54,26 @@ export const calculateOrderCommissions = async (orderId: string) =>
             sourceOrderId: order.id,
             amount,
             type,
-            status: 'APPROVED',
+            status: "APPROVED",
           },
         }),
       );
 
-      await tx.user.update({ where: { id: parent.userId }, data: { walletBalance: { increment: amount } } });
-      await tx.mLMNode.update({ where: { id: parent.id }, data: { totalEarnings: { increment: amount } } });
+      await tx.user.update({
+        where: { id: parent.userId },
+        data: { walletBalance: { increment: amount } },
+      });
+      await tx.mLMNode.update({
+        where: { id: parent.id },
+        data: { totalEarnings: { increment: amount } },
+      });
       await tx.notification.create({
         data: {
           userId: parent.userId,
-          type: 'COMMISSION_EARNED',
-          title: 'Commission gagnee',
+          type: "COMMISSION_EARNED",
+          title: "Commission gagnee",
           message: `Vous avez gagne une commission niveau ${level + 1}.`,
-          link: '/dashboard/mlm',
+          link: "/dashboard/mlm",
         },
       });
 
@@ -84,7 +90,9 @@ export const buildDownline = async (nodeId: string, depth = 3): Promise<unknown>
       user: { select: { id: true, firstName: true, lastName: true, country: true, role: true } },
       children: {
         include: {
-          user: { select: { id: true, firstName: true, lastName: true, country: true, role: true } },
+          user: {
+            select: { id: true, firstName: true, lastName: true, country: true, role: true },
+          },
         },
       },
     },
@@ -102,7 +110,7 @@ export const buildDownline = async (nodeId: string, depth = 3): Promise<unknown>
 
 export const sumByCommissionType = async (userId: string) =>
   prisma.commission.groupBy({
-    by: ['type'],
+    by: ["type"],
     where: { userId },
     _sum: { amount: true },
     _count: { id: true },

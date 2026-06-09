@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { dict } from "./dictionary";
 import { setI18nLang } from "./jsxPatch";
 
@@ -21,7 +29,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     try {
       const stored = localStorage.getItem(STORAGE_KEY) as Lang | null;
       if (stored === "fr" || stored === "en") setLangState(stored);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   // Reflect lang on <html> and on the JSX runtime patch.
@@ -37,13 +47,20 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const setLang = useCallback((l: Lang) => {
     setI18nLang(l);
     setLangState(l);
-    try { localStorage.setItem(STORAGE_KEY, l); } catch { /* ignore */ }
+    try {
+      localStorage.setItem(STORAGE_KEY, l);
+    } catch {
+      /* ignore */
+    }
   }, []);
 
-  const t = useCallback((fr: string) => {
-    if (lang === "fr") return fr;
-    return dict[fr] ?? fr;
-  }, [lang]);
+  const t = useCallback(
+    (fr: string) => {
+      if (lang === "fr") return fr;
+      return dict[fr] ?? fr;
+    },
+    [lang],
+  );
 
   const value = useMemo(() => ({ lang, setLang, t }), [lang, setLang, t]);
 
@@ -51,7 +68,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   // change so every JSX call is re-evaluated with the patched runtime.
   return (
     <LanguageContext.Provider value={value}>
-      <div key={lang} className="contents">{children}</div>
+      <div key={lang} className="contents">
+        {children}
+      </div>
     </LanguageContext.Provider>
   );
 }

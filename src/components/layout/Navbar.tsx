@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useTheme, type ThemeMode } from "@/components/ThemeProvider";
 
-
 const navLinks = [
   { to: "/", label: "Accueil" },
   { to: "/marketplace", label: "Marketplace" },
@@ -44,7 +43,11 @@ function ThemeSwitch({ compact = false }: { compact?: boolean }) {
     );
   }
   return (
-    <div className="flex items-center gap-0.5 border border-[var(--brand-border)] rounded-full p-1" role="radiogroup" aria-label="Thème">
+    <div
+      className="flex items-center gap-0.5 border border-[var(--brand-border)] rounded-full p-1"
+      role="radiogroup"
+      aria-label="Thème"
+    >
       {items.map(({ v, icon: Icon, label }) => (
         <button
           key={v}
@@ -55,7 +58,9 @@ function ThemeSwitch({ compact = false }: { compact?: boolean }) {
           onClick={() => setMode(v)}
           className={cn(
             "inline-flex items-center justify-center w-7 h-7 rounded-full transition active:scale-90",
-            mode === v ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-muted)] hover:text-[var(--brand-primary)]"
+            mode === v
+              ? "bg-[var(--brand-primary)] text-white"
+              : "text-[var(--color-text-muted)] hover:text-[var(--brand-primary)]",
           )}
         >
           <Icon size={13} />
@@ -72,62 +77,95 @@ export function Navbar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { lang, setLang } = useLanguage();
 
-
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-  useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [open]);
 
   const linkClass = (to: string) =>
     cn(
       "relative text-[14px] font-medium transition-colors py-2",
-      pathname === to ? "text-[var(--brand-primary)]" : "text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)]",
+      pathname === to
+        ? "text-[var(--brand-primary)]"
+        : "text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)]",
       "after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:bg-[var(--brand-primary)] after:transition-all",
       pathname === to ? "after:w-full" : "after:w-0 hover:after:w-full",
     );
 
   return (
-    <header className={cn(
-      "sticky top-0 z-50 backdrop-blur-md border-b transition-shadow",
-      "bg-[color-mix(in_oklab,var(--color-bg)_85%,transparent)]",
-      scrolled ? "shadow-iwosan-sm border-[var(--brand-border-light)]" : "border-transparent"
-    )}>
+    <header
+      className={cn(
+        "sticky top-0 z-50 backdrop-blur-md border-b transition-shadow",
+        "bg-[color-mix(in_oklab,var(--color-bg)_85%,transparent)]",
+        scrolled ? "shadow-iwosan-sm border-[var(--brand-border-light)]" : "border-transparent",
+      )}
+    >
       <div className="container-iwosan flex items-center justify-between gap-2 h-[72px]">
         <Link to="/" className="flex items-center gap-2 group min-w-0 flex-shrink">
           <div className="w-9 h-9 shrink-0 rounded-lg bg-[var(--brand-primary)] flex items-center justify-center text-white">
             <Leaf size={18} />
           </div>
           <div className="leading-none min-w-0">
-            <div className="font-extrabold text-[20px] tracking-tight text-[var(--brand-primary)]">IWOSAN</div>
-            <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5 hidden xl:block">Le savoir africain, documenté et vivant</div>
+            <div className="font-extrabold text-[20px] tracking-tight text-[var(--brand-primary)]">
+              IWOSAN
+            </div>
+            <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5 hidden xl:block">
+              Le savoir africain, documenté et vivant
+            </div>
           </div>
         </Link>
 
         <nav className="hidden lg:flex items-center gap-7">
           {navLinks.map((l) => (
-            <Link key={l.to} to={l.to} className={linkClass(l.to)}>{l.label}</Link>
+            <Link key={l.to} to={l.to} className={linkClass(l.to)}>
+              {l.label}
+            </Link>
           ))}
-          <div className="relative" onMouseEnter={() => setCommOpen(true)} onMouseLeave={() => setCommOpen(false)}>
-            <button className={cn("inline-flex items-center gap-1 text-[14px] font-medium py-2 text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)]")}>
+          <div
+            className="relative"
+            onMouseEnter={() => setCommOpen(true)}
+            onMouseLeave={() => setCommOpen(false)}
+          >
+            <button
+              className={cn(
+                "inline-flex items-center gap-1 text-[14px] font-medium py-2 text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)]",
+              )}
+            >
               Communauté <ChevronDown size={14} />
             </button>
-            <div className={cn(
-              "absolute top-full left-1/2 -translate-x-1/2 mt-1 w-60 bg-[var(--color-surface)] rounded-[12px] shadow-iwosan-lg border border-[var(--brand-border-light)] p-2 transition-all duration-200 origin-top",
-              commOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"
-            )}>
+            <div
+              className={cn(
+                "absolute top-full left-1/2 -translate-x-1/2 mt-1 w-60 bg-[var(--color-surface)] rounded-[12px] shadow-iwosan-lg border border-[var(--brand-border-light)] p-2 transition-all duration-200 origin-top",
+                commOpen
+                  ? "opacity-100 translate-y-0 pointer-events-auto"
+                  : "opacity-0 -translate-y-2 pointer-events-none",
+              )}
+            >
               {communityLinks.map((l) => (
-                <Link key={l.to} to={l.to} className="block px-3 py-2 rounded-md text-[14px] text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)]">{l.label}</Link>
+                <Link
+                  key={l.to}
+                  to={l.to}
+                  className="block px-3 py-2 rounded-md text-[14px] text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)]"
+                >
+                  {l.label}
+                </Link>
               ))}
             </div>
           </div>
           {tailLinks.map((l) => (
-            <Link key={l.to} to={l.to} className={linkClass(l.to)}>{l.label}</Link>
+            <Link key={l.to} to={l.to} className={linkClass(l.to)}>
+              {l.label}
+            </Link>
           ))}
         </nav>
 
@@ -137,19 +175,43 @@ export function Navbar() {
             <button
               onClick={() => setLang("fr")}
               aria-pressed={lang === "fr"}
-              className={cn("px-2 py-0.5 rounded-full transition active:scale-95", lang === "fr" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-muted)] hover:text-[var(--brand-primary)]")}
-            >FR</button>
+              className={cn(
+                "px-2 py-0.5 rounded-full transition active:scale-95",
+                lang === "fr"
+                  ? "bg-[var(--brand-primary)] text-white"
+                  : "text-[var(--color-text-muted)] hover:text-[var(--brand-primary)]",
+              )}
+            >
+              FR
+            </button>
             <button
               onClick={() => setLang("en")}
               aria-pressed={lang === "en"}
-              className={cn("px-2 py-0.5 rounded-full transition active:scale-95", lang === "en" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-muted)] hover:text-[var(--brand-primary)]")}
-            >EN</button>
+              className={cn(
+                "px-2 py-0.5 rounded-full transition active:scale-95",
+                lang === "en"
+                  ? "bg-[var(--brand-primary)] text-white"
+                  : "text-[var(--color-text-muted)] hover:text-[var(--brand-primary)]",
+              )}
+            >
+              EN
+            </button>
           </div>
 
           <ThemeSwitch />
 
-          <Link to="/connexion" className="text-[14px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] active:scale-95 transition">Se connecter</Link>
-          <Link to="/inscription" className="h-10 px-5 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[14px] font-semibold hover:bg-[var(--brand-primary-dark)] active:scale-95 transition shadow-iwosan-sm">S'inscrire</Link>
+          <Link
+            to="/connexion"
+            className="text-[14px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] active:scale-95 transition"
+          >
+            Se connecter
+          </Link>
+          <Link
+            to="/inscription"
+            className="h-10 px-5 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[14px] font-semibold hover:bg-[var(--brand-primary-dark)] active:scale-95 transition shadow-iwosan-sm"
+          >
+            S'inscrire
+          </Link>
         </div>
 
         {/* Mobile compact actions: theme + hamburger always visible */}
@@ -174,31 +236,73 @@ export function Navbar() {
       </div>
 
       {/* Mobile drawer */}
-      <div className={cn("fixed inset-0 z-40 lg:hidden transition-opacity", open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none")}>
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)} />
-        <div className={cn(
-          "absolute right-0 top-0 bottom-0 w-[88%] max-w-[360px] bg-[var(--color-bg)] shadow-iwosan-xl flex flex-col transition-transform duration-300",
-          open ? "translate-x-0" : "translate-x-full"
-        )}>
+      <div
+        className={cn(
+          "fixed inset-0 z-40 lg:hidden transition-opacity",
+          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+        )}
+      >
+        <div
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          onClick={() => setOpen(false)}
+        />
+        <div
+          className={cn(
+            "absolute right-0 top-0 bottom-0 w-[88%] max-w-[360px] bg-[var(--color-bg)] shadow-iwosan-xl flex flex-col transition-transform duration-300",
+            open ? "translate-x-0" : "translate-x-full",
+          )}
+        >
           <div className="h-[72px] flex items-center justify-between px-5 border-b border-[var(--brand-border-light)] shrink-0">
             <span className="font-extrabold text-[var(--brand-primary)]">IWOSAN</span>
-            <button onClick={() => setOpen(false)} aria-label="Fermer" className="w-10 h-10 inline-flex items-center justify-center rounded-md hover:bg-[var(--brand-surface-alt)] active:scale-95 transition"><X size={22} /></button>
+            <button
+              onClick={() => setOpen(false)}
+              aria-label="Fermer"
+              className="w-10 h-10 inline-flex items-center justify-center rounded-md hover:bg-[var(--brand-surface-alt)] active:scale-95 transition"
+            >
+              <X size={22} />
+            </button>
           </div>
 
           {/* Top sticky auth banner */}
           <div className="p-4 border-b border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] shrink-0">
             <div className="grid grid-cols-2 gap-2">
-              <Link to="/connexion" className="h-11 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[var(--color-text-primary)] font-semibold text-[14px] active:scale-95 transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]">
+              <Link
+                to="/connexion"
+                className="h-11 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[var(--color-text-primary)] font-semibold text-[14px] active:scale-95 transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
+              >
                 <LogIn size={16} /> Se connecter
               </Link>
-              <Link to="/inscription" className="h-11 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] text-white font-semibold text-[14px] active:scale-95 transition hover:bg-[var(--brand-primary-dark)]">
+              <Link
+                to="/inscription"
+                className="h-11 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] text-white font-semibold text-[14px] active:scale-95 transition hover:bg-[var(--brand-primary-dark)]"
+              >
                 <UserPlus size={16} /> S'inscrire
               </Link>
             </div>
             <div className="mt-3 flex items-center justify-between gap-2">
               <div className="flex items-center gap-1 text-[12px] font-semibold border border-[var(--brand-border)] rounded-full p-1 bg-[var(--color-surface)]">
-                <button onClick={() => setLang("fr")} className={cn("px-3 py-0.5 rounded-full transition", lang === "fr" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-muted)]")}>FR</button>
-                <button onClick={() => setLang("en")} className={cn("px-3 py-0.5 rounded-full transition", lang === "en" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-muted)]")}>EN</button>
+                <button
+                  onClick={() => setLang("fr")}
+                  className={cn(
+                    "px-3 py-0.5 rounded-full transition",
+                    lang === "fr"
+                      ? "bg-[var(--brand-primary)] text-white"
+                      : "text-[var(--color-text-muted)]",
+                  )}
+                >
+                  FR
+                </button>
+                <button
+                  onClick={() => setLang("en")}
+                  className={cn(
+                    "px-3 py-0.5 rounded-full transition",
+                    lang === "en"
+                      ? "bg-[var(--brand-primary)] text-white"
+                      : "text-[var(--color-text-muted)]",
+                  )}
+                >
+                  EN
+                </button>
               </div>
               <ThemeSwitch />
             </div>
@@ -206,7 +310,13 @@ export function Navbar() {
 
           <nav className="flex-1 overflow-y-auto overscroll-contain p-4 flex flex-col gap-1 pb-8">
             {[...navLinks, ...communityLinks, ...tailLinks].map((l) => (
-              <Link key={l.to} to={l.to} className="px-3 py-3 rounded-md text-[15px] font-medium text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)] active:scale-[0.98] transition">{l.label}</Link>
+              <Link
+                key={l.to}
+                to={l.to}
+                className="px-3 py-3 rounded-md text-[15px] font-medium text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)] active:scale-[0.98] transition"
+              >
+                {l.label}
+              </Link>
             ))}
           </nav>
         </div>

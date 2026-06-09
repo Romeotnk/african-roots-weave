@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
   deleteNotification,
   listNotifications,
@@ -6,17 +6,17 @@ import {
   readNotification,
   subscribeNewsletter,
   unsubscribeNewsletter,
-} from '../controllers/notification.controller.js';
-import { authMiddleware } from '../middlewares/auth.middleware.js';
+} from "../controllers/notification.controller.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 export const notificationRouter = Router();
 export const newsletterRouter = Router();
 
 notificationRouter.use(authMiddleware);
-notificationRouter.get('/', listNotifications);
-notificationRouter.put('/read-all', readAllNotifications);
-notificationRouter.put('/:id/read', readNotification);
-notificationRouter.delete('/:id', deleteNotification);
+notificationRouter.get("/", listNotifications);
+notificationRouter.put("/read-all", readAllNotifications);
+notificationRouter.put("/:id/read", readNotification);
+notificationRouter.delete("/:id", deleteNotification);
 
-newsletterRouter.post('/subscribe', subscribeNewsletter);
-newsletterRouter.post('/unsubscribe/:token', unsubscribeNewsletter);
+newsletterRouter.post("/subscribe", subscribeNewsletter);
+newsletterRouter.post("/unsubscribe/:token", unsubscribeNewsletter);

@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
-export function AnimatedCounter({ value, suffix = "", duration = 1800 }: { value: number; suffix?: string; duration?: number }) {
+export function AnimatedCounter({
+  value,
+  suffix = "",
+  duration = 1800,
+}: {
+  value: number;
+  suffix?: string;
+  duration?: number;
+}) {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.4 });
   const [n, setN] = useState(0);
   const started = useRef(false);
@@ -20,7 +28,10 @@ export function AnimatedCounter({ value, suffix = "", duration = 1800 }: { value
   }, [inView, value, duration]);
 
   return (
-    <span ref={ref} className="font-extrabold text-[40px] md:text-[48px] text-[var(--brand-primary)] tabular-nums">
+    <span
+      ref={ref}
+      className="font-extrabold text-[40px] md:text-[48px] text-[var(--brand-primary)] tabular-nums"
+    >
       {n.toLocaleString("fr-FR")}
       {suffix}
     </span>

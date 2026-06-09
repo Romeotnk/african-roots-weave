@@ -1,22 +1,25 @@
-import { prisma } from '../config/db.js';
-import { env } from '../config/env.js';
-import { apiResponse } from '../utils/apiResponse.js';
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { ApiError } from '../utils/errors.js';
-import { buildDownline, sumByCommissionType } from '../services/mlm.service.js';
+import { prisma } from "../config/db.js";
+import { env } from "../config/env.js";
+import { apiResponse } from "../utils/apiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/errors.js";
+import { buildDownline, sumByCommissionType } from "../services/mlm.service.js";
 
 export const myTree = asyncHandler(async (req, res) => {
-  if (!req.user) throw new ApiError(401, 'Authentication required');
-  const node = await prisma.mLMNode.findUnique({ where: { userId: req.user.id }, select: { id: true } });
-  if (!node) throw new ApiError(404, 'MLM node not found');
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  const node = await prisma.mLMNode.findUnique({
+    where: { userId: req.user.id },
+    select: { id: true },
+  });
+  if (!node) throw new ApiError(404, "MLM node not found");
 
-  res.json(apiResponse(true, await buildDownline(node.id, 3), 'MLM tree retrieved'));
+  res.json(apiResponse(true, await buildDownline(node.id, 3), "MLM tree retrieved"));
 });
 
 export const earnings = asyncHandler(async (req, res) => {
-  if (!req.user) throw new ApiError(401, 'Authentication required');
+  if (!req.user) throw new ApiError(401, "Authentication required");
   const data = await sumByCommissionType(req.user.id);
-  res.json(apiResponse(true, data, 'MLM earnings retrieved'));
+  res.json(apiResponse(true, data, "MLM earnings retrieved"));
 });
 
 export const stats = asyncHandler(async (_req, res) => {
@@ -35,15 +38,15 @@ export const stats = asyncHandler(async (_req, res) => {
         commissionsAmount: totalCommissions._sum.amount,
         affiliateLinkClicks: totalClicks._sum.affiliateLinkClicks ?? 0,
       },
-      'MLM stats retrieved',
+      "MLM stats retrieved",
     ),
   );
 });
 
 export const affiliateLink = asyncHandler(async (req, res) => {
-  if (!req.user) throw new ApiError(401, 'Authentication required');
+  if (!req.user) throw new ApiError(401, "Authentication required");
   const node = await prisma.mLMNode.findUnique({ where: { userId: req.user.id } });
-  if (!node) throw new ApiError(404, 'MLM node not found');
+  if (!node) throw new ApiError(404, "MLM node not found");
 
   res.json(
     apiResponse(
@@ -52,7 +55,7 @@ export const affiliateLink = asyncHandler(async (req, res) => {
         code: node.affiliateCode,
         link: `${env.clientUrl}/inscription?ref=${node.affiliateCode}`,
       },
-      'Affiliate link retrieved',
+      "Affiliate link retrieved",
     ),
   );
 });
@@ -64,7 +67,7 @@ export const trackClick = asyncHandler(async (req, res) => {
     select: { affiliateCode: true, affiliateLinkClicks: true },
   });
 
-  res.json(apiResponse(true, node, 'Affiliate click tracked'));
+  res.json(apiResponse(true, node, "Affiliate click tracked"));
 });
 
 export const capturePage = asyncHandler(async (req, res) => {
@@ -78,13 +81,19 @@ export const capturePage = asyncHandler(async (req, res) => {
           lastName: true,
           country: true,
           professionalProfile: {
-            select: { displayName: true, specialty: true, biography: true, photos: true, isVerified: true },
+            select: {
+              displayName: true,
+              specialty: true,
+              biography: true,
+              photos: true,
+              isVerified: true,
+            },
           },
         },
       },
     },
   });
 
-  if (!node) throw new ApiError(404, 'Affiliate not found');
-  res.json(apiResponse(true, node, 'Capture page retrieved'));
+  if (!node) throw new ApiError(404, "Affiliate not found");
+  res.json(apiResponse(true, node, "Capture page retrieved"));
 });

@@ -1,9 +1,9 @@
-import { cloudinary } from '../config/cloudinary.js';
+import { cloudinary } from "../config/cloudinary.js";
 
 export const uploadBufferToCloudinary = async (
   buffer: Buffer,
   folder: string,
-  resourceType: 'image' | 'video' | 'raw' | 'auto' = 'auto',
+  resourceType: "image" | "video" | "raw" | "auto" = "auto",
 ) =>
   new Promise<string>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
@@ -13,7 +13,7 @@ export const uploadBufferToCloudinary = async (
       },
       (error, result) => {
         if (error || !result?.secure_url) {
-          reject(error ?? new Error('Cloudinary upload failed'));
+          reject(error ?? new Error("Cloudinary upload failed"));
           return;
         }
         resolve(result.secure_url);

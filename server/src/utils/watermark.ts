@@ -1,11 +1,13 @@
-import sharp from 'sharp';
+import sharp from "sharp";
 
 export const optimizeAndWatermarkImage = async (buffer: Buffer) => {
   const image = sharp(buffer).rotate();
   const metadata = await image.metadata();
   const width = metadata.width && metadata.width > 2000 ? 2000 : metadata.width;
 
-  const optimized = image.resize(width ? { width, withoutEnlargement: true } : undefined).webp({ quality: 82 });
+  const optimized = image
+    .resize(width ? { width, withoutEnlargement: true } : undefined)
+    .webp({ quality: 82 });
   const base = await optimized.toBuffer();
   const baseMetadata = await sharp(base).metadata();
   const logoWidth = Math.max(Math.round((baseMetadata.width ?? 1000) * 0.14), 96);
@@ -31,7 +33,7 @@ export const optimizeAndWatermarkImage = async (buffer: Buffer) => {
     .toBuffer();
 
   return sharp(base)
-    .composite([{ input: logo, gravity: 'southeast' }])
+    .composite([{ input: logo, gravity: "southeast" }])
     .webp({ quality: 82 })
     .toBuffer();
 };

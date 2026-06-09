@@ -18,11 +18,17 @@ export function RatingStars({ rating, reviewCount, size = "sm", showCount = true
           <Star
             key={i}
             size={px}
-            className={i <= Math.round(rating) ? "fill-[var(--brand-gold)] text-[var(--brand-gold)]" : "text-[var(--brand-border)]"}
+            className={
+              i <= Math.round(rating)
+                ? "fill-[var(--brand-gold)] text-[var(--brand-gold)]"
+                : "text-[var(--brand-border)]"
+            }
           />
         ))}
       </div>
-      <span className="text-[13px] font-semibold text-[var(--color-text-primary)]">{rating.toFixed(1)}</span>
+      <span className="text-[13px] font-semibold text-[var(--color-text-primary)]">
+        {rating.toFixed(1)}
+      </span>
       {showCount && reviewCount !== undefined && (
         <span className="text-[13px] text-[var(--color-text-muted)]">({reviewCount})</span>
       )}
