@@ -18,6 +18,7 @@ import { i18nMiddleware } from "./middlewares/i18n.middleware.js";
 import { orderRouter } from "./routes/order.routes.js";
 import { mlmRouter } from "./routes/mlm.routes.js";
 import { paymentRouter, webhookRouter } from "./routes/payment.routes.js";
+import { professionalRouter } from "./routes/professional.routes.js";
 import { productRouter } from "./routes/product.routes.js";
 import { walletRouter } from "./routes/wallet.routes.js";
 import { globalRateLimit } from "./middlewares/rateLimit.middleware.js";
@@ -49,6 +50,7 @@ app.get("/api", (_req, res) => {
 app.use("/api/health", healthRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/products", productRouter);
+app.use("/api/professionals", professionalRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/coupons", couponRouter);
