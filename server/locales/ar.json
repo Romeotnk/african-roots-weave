@@ -1,0 +1,6 @@
+{
+  "common.success": "تمت العملية بنجاح",
+  "auth.loginSuccess": "تم تسجيل الدخول بنجاح",
+  "auth.required": "المصادقة مطلوبة",
+  "errors.forbidden": "ممنوع"
+}

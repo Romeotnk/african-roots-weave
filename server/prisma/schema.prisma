@@ -1,0 +1,834 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String
+  role            Role      @default(USER)
+  firstName       String
+  lastName        String
+  country         String
+  language        String    @default("fr")
+  isEmailVerified Boolean   @default(false)
+  kycStatus       KycStatus @default(PENDING)
+  kycDocuments    Json?
+  walletBalance   Decimal   @default(0) @db.Decimal(10, 2)
+  reputationScore Int       @default(0)
+  referralCode    String    @unique
+  referredById    String?
+  fcmToken        String?
+  isActive        Boolean   @default(true)
+  isBanned        Boolean   @default(false)
+  banReason       String?
+  lastLoginAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  referredBy              User?                    @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals               User[]                   @relation("UserReferrals")
+  professionalProfile     ProfessionalProfile?
+  refreshTokens           RefreshToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+  products                Product[]                @relation("SellerProducts")
+  purchases               Order[]                  @relation("BuyerOrders")
+  sales                   Order[]                  @relation("SellerOrders")
+  approvedRefunds         Order[]                  @relation("RefundApprover")
+  cartItems               CartItem[]
+  coupons                 Coupon[]
+  reviews                 Review[]
+  bids                    Bid[]
+  plantMonographs         PlantMonograph[]
+  articles                Article[]
+  questions               Question[]
+  answers                 Answer[]
+  forumComments           ForumComment[]
+  votes                   Vote[]
+  reports                 Report[]
+  events                  Event[]
+  eventRegistrations      EventRegistration[]
+  formations              Formation[]
+  mlmNode                 MLMNode?
+  commissions             Commission[]
+  subscription            Subscription?
+  walletTransactions      WalletTransaction[]
+  notifications           Notification[]
+  sentMessages            Message[]                @relation("SentMessages")
+  receivedMessages        Message[]                @relation("ReceivedMessages")
+  tickets                 Ticket[]
+  ticketMessages          TicketMessage[]
+  siteConfigUpdates       SiteConfig[]
+
+  @@index([email])
+  @@index([role])
+  @@index([kycStatus])
+  @@index([country])
+  @@index([createdAt(sort: Desc)])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model ProfessionalProfile {
+  id                     String    @id @default(cuid())
+  userId                 String    @unique
+  displayName            String
+  specialty              String[]
+  biography              String    @db.Text
+  initiationPath         String?   @db.Text
+  therapeuticSuccessRate Float?
+  innovations            String?   @db.Text
+  communityImpact        String?   @db.Text
+  philosophy             String?   @db.Text
+  location               String
+  latitude               Float?
+  longitude              Float?
+  isVerified             Boolean   @default(false)
+  verifiedAt             DateTime?
+  verificationDocs       Json?
+  photos                 String[]
+  socialLinks            Json?
+  averageRating          Float     @default(0)
+  totalReviews           Int       @default(0)
+  isPortraitOfWeek       Boolean   @default(false)
+  portraitStartDate      DateTime?
+  portraitEndDate        DateTime?
+  serviceBookingEnabled  Boolean   @default(false)
+  availabilitySchedule   Json?
+  defaultCommissionRate  Float?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isVerified])
+  @@index([isPortraitOfWeek])
+  @@index([latitude, longitude])
+}
+
+model Product {
+  id             String      @id @default(cuid())
+  sellerId       String
+  title          String
+  slug           String      @unique
+  description    String      @db.Text
+  price          Decimal     @db.Decimal(10, 2)
+  category       MedCategory
+  type           ProductType
+  images         String[]
+  stock          Int         @default(0)
+  isActive       Boolean     @default(true)
+  isApproved     Boolean     @default(false)
+  isFeatured     Boolean     @default(false)
+  auctionEnabled Boolean     @default(false)
+  auctionEndDate DateTime?
+  currentBid     Decimal?    @db.Decimal(10, 2)
+  commissionRate Float?
+  downloadLimit  Int?
+  fileUrl        String?
+  watermarked    Boolean     @default(false)
+  viewCount      Int         @default(0)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  seller    User       @relation("SellerProducts", fields: [sellerId], references: [id], onDelete: Cascade)
+  orders    Order[]
+  cartItems CartItem[]
+  bids      Bid[]
+
+  @@index([sellerId])
+  @@index([slug])
+  @@index([category])
+  @@index([type])
+  @@index([isActive, isApproved])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Order {
+  id                   String        @id @default(cuid())
+  buyerId              String
+  sellerId             String
+  productId            String
+  quantity             Int
+  unitPrice            Decimal       @db.Decimal(10, 2)
+  totalAmount          Decimal       @db.Decimal(10, 2)
+  commissionAmount     Decimal       @db.Decimal(10, 2)
+  discountAmount       Decimal       @default(0) @db.Decimal(10, 2)
+  status               OrderStatus   @default(PENDING)
+  paymentMethod        String?
+  monerooTransactionId String?
+  escrowStatus         EscrowStatus  @default(HELD)
+  deliveryConfirmedAt  DateTime?
+  disputeReason        String?
+  refundStatus         RefundStatus?
+  refundApprovedById   String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  buyer          User         @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Restrict)
+  seller         User         @relation("SellerOrders", fields: [sellerId], references: [id], onDelete: Restrict)
+  product        Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  refundApprover User?        @relation("RefundApprover", fields: [refundApprovedById], references: [id], onDelete: SetNull)
+  commissions    Commission[]
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([productId])
+  @@index([status])
+  @@index([escrowStatus])
+  @@index([createdAt(sort: Desc)])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  quantity  Int
+  addedAt   DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model Coupon {
+  id           String    @id @default(cuid())
+  code         String    @unique
+  discount     Float
+  isPercentage Boolean   @default(true)
+  maxUses      Int?
+  usedCount    Int       @default(0)
+  expiresAt    DateTime?
+  sellerId     String?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  seller User? @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@index([sellerId])
+  @@index([code])
+  @@index([isActive])
+}
+
+model Review {
+  id         String       @id @default(cuid())
+  authorId   String
+  targetId   String
+  targetType ReviewTarget
+  rating     Int
+  comment    String?      @db.Text
+  createdAt  DateTime     @default(now())
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@unique([authorId, targetId, targetType])
+  @@index([targetId, targetType])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Bid {
+  id        String   @id @default(cuid())
+  productId String
+  bidderId  String
+  amount    Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  bidder  User    @relation(fields: [bidderId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([bidderId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model PlantMonograph {
+  id                     String   @id @default(cuid())
+  scientificName         String   @unique
+  vernacularNames        Json
+  botanicalDescription   String   @db.Text
+  activeCompounds        String   @db.Text
+  therapeuticIndications String   @db.Text
+  dosage                 String   @db.Text
+  contraindications      String   @db.Text
+  clinicalStudies        String?  @db.Text
+  drugInteractions       String?  @db.Text
+  preparationMethods     String   @db.Text
+  illustration           String?
+  fieldPhotos            String[]
+  createdById            String
+  isPublished            Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([createdById])
+  @@index([isPublished])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Article {
+  id          String       @id @default(cuid())
+  authorId    String
+  space       ArticleSpace
+  title       String
+  slug        String       @unique
+  content     String       @db.Text
+  coverImage  String?
+  category    String?
+  tags        String[]
+  isPublished Boolean      @default(false)
+  isApproved  Boolean      @default(false)
+  publishedAt DateTime?
+  views       Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([slug])
+  @@index([space])
+  @@index([category])
+  @@index([isPublished, isApproved])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Question {
+  id               String   @id @default(cuid())
+  authorId         String
+  title            String
+  content          String   @db.Text
+  category         String
+  tags             String[]
+  isClosed         Boolean  @default(false)
+  isFeatured       Boolean  @default(false)
+  isHidden         Boolean  @default(false)
+  acceptedAnswerId String?  @unique
+  voteCount        Int      @default(0)
+  viewCount        Int      @default(0)
+  attachments      String[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  author         User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  answers        Answer[] @relation("QuestionAnswers")
+  acceptedAnswer Answer?  @relation("AcceptedAnswer", fields: [acceptedAnswerId], references: [id], onDelete: SetNull)
+
+  @@index([authorId])
+  @@index([category])
+  @@index([isClosed])
+  @@index([isFeatured])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Answer {
+  id          String   @id @default(cuid())
+  questionId  String
+  authorId    String
+  content     String   @db.Text
+  voteCount   Int      @default(0)
+  isAccepted  Boolean  @default(false)
+  isHidden    Boolean  @default(false)
+  attachments String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  question    Question  @relation("QuestionAnswers", fields: [questionId], references: [id], onDelete: Cascade)
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  acceptedFor Question? @relation("AcceptedAnswer")
+
+  @@index([questionId])
+  @@index([authorId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model ForumComment {
+  id         String   @id @default(cuid())
+  authorId   String
+  targetId   String
+  targetType String
+  content    String   @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([targetId, targetType])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Vote {
+  id         String   @id @default(cuid())
+  userId     String
+  targetId   String
+  targetType String
+  value      Int
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetId, targetType])
+  @@index([targetId, targetType])
+}
+
+model Report {
+  id         String       @id @default(cuid())
+  reporterId String
+  targetId   String
+  targetType String
+  reason     String
+  status     ReportStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  reporter User @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([reporterId])
+  @@index([targetId, targetType])
+  @@index([status])
+}
+
+model Event {
+  id           String    @id @default(cuid())
+  title        String
+  description  String    @db.Text
+  type         EventType
+  startDate    DateTime
+  endDate      DateTime
+  location     String?
+  isOnline     Boolean   @default(false)
+  meetingUrl   String?
+  maxAttendees Int?
+  coverImage   String?
+  createdById  String
+  isPublished  Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  createdBy     User                @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  registrations EventRegistration[]
+
+  @@index([createdById])
+  @@index([type])
+  @@index([startDate])
+  @@index([isPublished])
+  @@index([createdAt(sort: Desc)])
+}
+
+model EventRegistration {
+  id           String   @id @default(cuid())
+  eventId      String
+  userId       String
+  registeredAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([userId])
+}
+
+model Formation {
+  id            String        @id @default(cuid())
+  title         String
+  description   String?       @db.Text
+  type          FormationType
+  fileUrl       String
+  coverImage    String?
+  category      String
+  tags          String[]
+  createdById   String
+  isPublished   Boolean       @default(false)
+  downloadCount Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([createdById])
+  @@index([type])
+  @@index([category])
+  @@index([isPublished])
+  @@index([createdAt(sort: Desc)])
+}
+
+model MLMNode {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  parentId            String?
+  level               Int      @default(0)
+  affiliateCode       String   @unique
+  affiliateLinkClicks Int      @default(0)
+  totalDownlineCount  Int      @default(0)
+  totalEarnings       Decimal  @default(0) @db.Decimal(10, 2)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   MLMNode?  @relation("MLMTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children MLMNode[] @relation("MLMTree")
+
+  @@index([parentId])
+  @@index([affiliateCode])
+}
+
+model Commission {
+  id            String           @id @default(cuid())
+  userId        String
+  sourceOrderId String
+  amount        Decimal          @db.Decimal(10, 2)
+  type          CommissionType
+  status        CommissionStatus @default(PENDING)
+  paidAt        DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  user        User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceOrder Order @relation(fields: [sourceOrderId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sourceOrderId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Subscription {
+  id           String           @id @default(cuid())
+  userId       String           @unique
+  plan         SubscriptionPlan @default(FREE)
+  price        Decimal          @db.Decimal(10, 2)
+  startDate    DateTime
+  endDate      DateTime?
+  isActive     Boolean          @default(true)
+  maxListings  Int              @default(5)
+  maxDownloads Int              @default(10)
+  autoRenew    Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([plan])
+  @@index([isActive])
+  @@index([endDate])
+}
+
+model WalletTransaction {
+  id            String          @id @default(cuid())
+  userId        String
+  amount        Decimal         @db.Decimal(10, 2)
+  type          TransactionType
+  reference     String          @unique
+  description   String?
+  balanceBefore Decimal         @db.Decimal(10, 2)
+  balanceAfter  Decimal         @db.Decimal(10, 2)
+  createdAt     DateTime        @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  senderId    String
+  receiverId  String
+  content     String   @db.Text
+  isRead      Boolean  @default(false)
+  attachments String[]
+  createdAt   DateTime @default(now())
+
+  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([senderId, receiverId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Ticket {
+  id        String       @id @default(cuid())
+  authorId  String
+  subject   String
+  category  String
+  status    TicketStatus @default(OPEN)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  author   User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  messages TicketMessage[]
+
+  @@index([authorId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  authorId  String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@index([authorId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model SiteConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String   @db.Text
+  updatedById String
+  updatedAt   DateTime @updatedAt
+
+  updatedBy User @relation(fields: [updatedById], references: [id], onDelete: Restrict)
+
+  @@index([key])
+}
+
+model AdSpace {
+  id        String   @id @default(cuid())
+  name      String
+  position  String
+  code      String   @db.Text
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([position])
+  @@index([isActive])
+}
+
+model HomeBanner {
+  id        String   @id @default(cuid())
+  imageUrl  String
+  title     String?
+  link      String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, order])
+}
+
+model NewsletterSubscriber {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  language         String    @default("fr")
+  unsubscribeToken String    @unique
+  isActive         Boolean   @default(true)
+  subscribedAt     DateTime  @default(now())
+  unsubscribedAt   DateTime?
+
+  @@index([isActive])
+}
+
+enum Role {
+  USER
+  PROFESSIONAL
+  RESEARCHER
+  MODERATOR
+  ADMIN
+}
+
+enum KycStatus {
+  PENDING
+  SUBMITTED
+  VERIFIED
+  REJECTED
+}
+
+enum MedCategory {
+  GYNECO_OBSTETRIQUE
+  GASTRO_INTESTINAL
+  MALADIES_ENFANCE
+  ETATS_FEBRILES_ICTERES
+  AFFECTIONS_CUTANEES
+  SYSTEME_NERVEUX
+  OSTEO_ARTICULAIRE
+  PULMONAIRE
+  URO_GENITAL
+  ORL
+  OPHTALMOLOGIQUE
+  BUCCO_DENTAIRE
+  CARDIO_VASCULAIRE
+  STOMATOLOGIQUE
+  MYSTIQUE
+}
+
+enum ProductType {
+  PHYSICAL
+  SERVICE
+  DIGITAL
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  DISPUTED
+  REFUNDED
+  CANCELLED
+}
+
+enum EscrowStatus {
+  HELD
+  RELEASED
+  REFUNDED
+}
+
+enum RefundStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  PROCESSED
+}
+
+enum ReviewTarget {
+  PRODUCT
+  PROFESSIONAL
+}
+
+enum ArticleSpace {
+  SANTE_QUOTIDIEN
+  RITES_CULTURES
+  RECETTES_SANTE
+  PHARMACOPEE
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+  ACTIONED
+}
+
+enum EventType {
+  WEBINAR
+  FORMATION
+  SALON
+  PORTES_OUVERTES
+}
+
+enum FormationType {
+  DOCUMENT
+  VIDEO
+  IMAGE
+  CATALOGUE
+}
+
+enum CommissionType {
+  DIRECT
+  MLM_LEVEL1
+  MLM_LEVEL2
+  MLM_LEVEL3
+  AFFILIATE
+}
+
+enum CommissionStatus {
+  PENDING
+  APPROVED
+  PAID
+  CANCELLED
+}
+
+enum SubscriptionPlan {
+  FREE
+  BASIC
+  PRO
+  EXPERT
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  COMMISSION
+  PAYMENT
+  REFUND
+  TRANSFER
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
