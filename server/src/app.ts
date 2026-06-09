@@ -23,6 +23,7 @@ import { productRouter } from "./routes/product.routes.js";
 import { walletRouter } from "./routes/wallet.routes.js";
 import { globalRateLimit } from "./middlewares/rateLimit.middleware.js";
 import { sanitizeMiddleware } from "./middlewares/security.middleware.js";
+import { frontendMiddleware } from "./middlewares/frontend.middleware.js";
 import { apiResponse } from "./utils/apiResponse.js";
 
 export const app = express();
@@ -66,5 +67,6 @@ app.use("/api/formations", formationRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/notifications", notificationRouter);
 app.use("/api/newsletter", newsletterRouter);
+app.use(frontendMiddleware);
 app.use(notFoundHandler);
 app.use(errorHandler);

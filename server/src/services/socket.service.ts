@@ -2,7 +2,7 @@ import type { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
 import { prisma } from "../config/db.js";
 import { env } from "../config/env.js";
-import { redis } from "../config/redis.js";
+import { redisDel, redisSet } from "../config/redis.js";
 import { verifyAccessToken } from "../utils/tokens.js";
 
 let io: Server | null = null;
@@ -33,7 +33,7 @@ export const initSocket = (server: HttpServer) => {
 
         userId = user.id;
         socket.join(user.id);
-        if (redis) await redis.set(`presence:${user.id}`, "online", "EX", 60 * 5);
+        await redisSet(`presence:${user.id}`, "online", "EX", 60 * 5);
         socket.broadcast.emit("user:status", { userId: user.id, isOnline: true, lastSeen: null });
         ack?.({ success: true, userId: user.id });
       } catch {
@@ -96,8 +96,8 @@ export const initSocket = (server: HttpServer) => {
     socket.on("disconnect", async () => {
       if (!userId) return;
       const lastSeen = new Date().toISOString();
-      if (redis) await redis.set(`presence:${userId}:lastSeen`, lastSeen, "EX", 60 * 60 * 24 * 30);
-      if (redis) await redis.del(`presence:${userId}`);
+      await redisSet(`presence:${userId}:lastSeen`, lastSeen, "EX", 60 * 60 * 24 * 30);
+      await redisDel(`presence:${userId}`);
       socket.broadcast.emit("user:status", { userId, isOnline: false, lastSeen });
     });
   });

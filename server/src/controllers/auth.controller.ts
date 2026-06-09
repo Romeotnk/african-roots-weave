@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../config/db.js";
-import { redis } from "../config/redis.js";
+import { redisSet } from "../config/redis.js";
 import { sendPasswordResetEmail, sendVerificationEmail } from "../services/email.service.js";
 import { verifyTurnstile } from "../services/turnstile.service.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -225,8 +225,8 @@ export const logout = asyncHandler(async (req, res) => {
   const accessToken = req.headers.authorization?.startsWith("Bearer ")
     ? req.headers.authorization.slice(7)
     : null;
-  if (accessToken && redis) {
-    await redis.set(`jwt:blacklist:${accessToken}`, "1", "EX", 15 * 60);
+  if (accessToken) {
+    await redisSet(`jwt:blacklist:${accessToken}`, "1", "EX", 15 * 60);
   }
 
   clearRefreshCookie(res);

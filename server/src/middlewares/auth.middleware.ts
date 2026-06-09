@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 import { prisma } from "../config/db.js";
-import { redis } from "../config/redis.js";
+import { redisGet } from "../config/redis.js";
 import { ApiError } from "../utils/errors.js";
 import { verifyAccessToken } from "../utils/tokens.js";
 
@@ -14,7 +14,7 @@ export const authMiddleware: RequestHandler = async (req, _res, next) => {
     }
 
     const blacklistKey = `jwt:blacklist:${token}`;
-    if (redis && (await redis.get(blacklistKey))) {
+    if (await redisGet(blacklistKey)) {
       throw new ApiError(401, "Token revoked");
     }
 
