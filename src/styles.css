@@ -134,6 +134,20 @@
   * {
     border-color: var(--color-border);
   }
+
+  .dark .bg-white,
+  .dark .bg-white\/95,
+  .dark .bg-white\/10 {
+    background-color: var(--color-surface) !important;
+  }
+
+  .dark .border-white,
+  .dark .border-white\/10,
+  .dark .border-white\/30,
+  .dark .border-white\/40 {
+    border-color: var(--brand-border) !important;
+  }
+
   html {
     scroll-behavior: smooth;
   }

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { login } from "@/lib/api/auth";
@@ -9,6 +9,7 @@ export const Route = createFileRoute("/connexion")({
 });
 
 function Connexion() {
+  const router = useRouter();
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +25,8 @@ function Connexion() {
 
     try {
       await login(email, password);
-      setMessage("Connexion reussie. Vous pouvez acceder a votre espace.");
+      setMessage("Connexion reussie. Redirection vers votre tableau de bord...");
+      await router.navigate({ to: "/tableau-de-bord" });
     } catch (apiError) {
       setError(apiError instanceof Error ? apiError.message : "Connexion impossible pour le moment.");
     } finally {

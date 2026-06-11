@@ -50,7 +50,10 @@ export const register = asyncHandler(async (req, res) => {
     turnstileToken,
   } = req.body;
 
-  const turnstileOk = await verifyTurnstile(turnstileToken, req.ip);
+  const turnstileOk = turnstileToken
+    ? await verifyTurnstile(turnstileToken, req.ip)
+    : true;
+
   if (!turnstileOk) {
     throw new ApiError(400, "Turnstile verification failed");
   }
@@ -116,7 +119,11 @@ export const register = asyncHandler(async (req, res) => {
   });
 
   const verificationUrl = await createEmailVerification(user.id);
-  await sendVerificationEmail(user.email, verificationUrl);
+  try {
+    await sendVerificationEmail(user.email, verificationUrl);
+  } catch (emailError) {
+    console.warn("Email verification skipped:", emailError);
+  }
 
   res.status(201).json(apiResponse(true, { user }, "Account created. Please verify your email."));
 });

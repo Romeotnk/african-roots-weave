@@ -12,7 +12,7 @@ export function SearchBar({
   value?: string;
 }) {
   return (
-    <div className="flex items-center w-full h-[52px] rounded-full bg-white border-[1.5px] border-[var(--brand-border)] focus-within:border-[var(--brand-primary)] focus-within:shadow-[0_0_0_3px_rgba(26,92,42,0.12)] transition-all">
+    <div className="flex items-center w-full h-[52px] rounded-full bg-[var(--color-surface)] border-[1.5px] border-[var(--brand-border)] focus-within:border-[var(--brand-primary)] focus-within:shadow-[0_0_0_3px_rgba(26,92,42,0.12)] transition-all">
       <div className="pl-5 pr-2 text-[var(--color-text-muted)]">
         <Search size={20} />
       </div>

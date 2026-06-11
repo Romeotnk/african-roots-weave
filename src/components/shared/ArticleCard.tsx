@@ -4,7 +4,7 @@ import { Badge } from "./Badge";
 
 export function ArticleCard({ article }: { article: Article }) {
   return (
-    <article className="bg-white rounded-[12px] border border-[var(--brand-border-light)] shadow-iwosan-sm overflow-hidden card-hover flex flex-col">
+    <article className="bg-[var(--color-surface)] rounded-[12px] border border-[var(--brand-border-light)] shadow-iwosan-sm overflow-hidden card-hover flex flex-col">
       <div className="h-[200px] overflow-hidden">
         <img
           src={article.cover}
@@ -20,7 +20,7 @@ export function ArticleCard({ article }: { article: Article }) {
             <Clock size={12} /> {article.readTime} min
           </span>
         </div>
-        <h3 className="text-[18px] font-bold leading-snug line-clamp-2 mb-2">{article.title}</h3>
+        <h3 className="text-[18px] font-bold leading-snug line-clamp-2 mb-2 text-[var(--color-text-primary)]">{article.title}</h3>
         <p className="text-[14px] text-[var(--color-text-secondary)] leading-[1.6] line-clamp-3 mb-4">
           {article.excerpt}
         </p>

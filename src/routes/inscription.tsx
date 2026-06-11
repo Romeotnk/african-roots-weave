@@ -8,6 +8,20 @@ export const Route = createFileRoute("/inscription")({
   component: Inscription,
 });
 
+const africanCountries = [
+  "Benin",
+  "Burkina Faso",
+  "Cameroun",
+  "Cote d'Ivoire",
+  "Ghana",
+  "Mali",
+  "Maroc",
+  "Nigeria",
+  "RDC",
+  "Senegal",
+  "Togo",
+];
+
 const roles = [
   { id: "user", label: "Utilisateur", desc: "Decouvrir, acheter, echanger", Icon: User },
   { id: "pro", label: "Professionnel", desc: "Publier, vendre, consulter", Icon: Leaf },
@@ -130,13 +144,15 @@ function Inscription() {
               <select
                 value={country}
                 onChange={(event) => setCountry(event.target.value)}
+                required
                 className="w-full h-11 px-4 rounded-lg border border-[var(--brand-border)] outline-none bg-white"
               >
-                <option>Senegal</option>
-                <option>Mali</option>
-                <option>Cote d'Ivoire</option>
-                <option>Cameroun</option>
-                <option>Nigeria</option>
+                <option value="">Choisir un pays africain</option>
+                {africanCountries.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
               </select>
               <input
                 type="password"

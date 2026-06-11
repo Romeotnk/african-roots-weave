@@ -4,7 +4,7 @@ import { RatingStars } from "./RatingStars";
 
 export function ProductCard({ product }: { product: Product }) {
   return (
-    <article className="group bg-white rounded-[12px] border border-[var(--brand-border-light)] shadow-iwosan-sm overflow-hidden card-hover flex flex-col">
+    <article className="group bg-[var(--color-surface)] rounded-[12px] border border-[var(--brand-border-light)] shadow-iwosan-sm overflow-hidden card-hover flex flex-col">
       <div className="relative h-[220px] overflow-hidden">
         <img
           src={product.image}

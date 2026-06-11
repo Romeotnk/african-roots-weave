@@ -8,8 +8,8 @@ export function PlantCard({ plant, dark = false }: { plant: Plant; dark?: boolea
       className={cn(
         "rounded-[12px] overflow-hidden border card-hover flex flex-col",
         dark
-          ? "bg-white/[0.06] border-white/10 text-white"
-          : "bg-white border-[var(--brand-border-light)] shadow-iwosan-sm",
+          ? "bg-[var(--color-surface)] border-[var(--brand-border)] text-[var(--color-text-primary)]"
+          : "bg-[var(--color-surface)] border-[var(--brand-border-light)] shadow-iwosan-sm",
       )}
     >
       <div className="relative h-[200px] overflow-hidden">

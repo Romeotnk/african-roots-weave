@@ -3,7 +3,7 @@ import { ArrowUp, MessageCircle, Eye, CheckCircle2 } from "lucide-react";
 
 export function QuestionCard({ question }: { question: Question }) {
   return (
-    <article className="bg-white rounded-[12px] border border-[var(--brand-border)] p-5 hover:border-[var(--brand-primary)] transition flex gap-5">
+    <article className="bg-[var(--color-surface)] rounded-[12px] border border-[var(--brand-border)] p-5 hover:border-[var(--brand-primary)] transition flex gap-5">
       <div className="hidden sm:flex flex-col items-center text-center gap-3 w-16 shrink-0">
         <div>
           <div className="text-[var(--color-text-muted)]">
@@ -12,7 +12,7 @@ export function QuestionCard({ question }: { question: Question }) {
           <div className="text-[15px] font-bold">{question.votes}</div>
         </div>
         <div
-          className={`text-[11px] font-bold rounded px-2 py-1 ${question.resolved ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-600"}`}
+          className={`text-[11px] font-bold rounded px-2 py-1 ${question.resolved ? "bg-[var(--brand-success)]/15 text-[var(--brand-success)]" : "bg-[var(--brand-surface-alt)] text-[var(--color-text-secondary)]"}`}
         >
           {question.answers} rép.
         </div>
@@ -27,7 +27,7 @@ export function QuestionCard({ question }: { question: Question }) {
           </span>
           {question.resolved && <CheckCircle2 size={14} className="text-green-600" />}
         </div>
-        <h3 className="text-[16px] font-semibold leading-snug mb-2 hover:text-[var(--brand-primary)] cursor-pointer">
+        <h3 className="text-[16px] font-semibold leading-snug mb-2 text-[var(--color-text-primary)] hover:text-[var(--brand-primary)] cursor-pointer">
           {question.title}
         </h3>
         <p className="text-[13px] text-[var(--color-text-secondary)] line-clamp-2 mb-3">

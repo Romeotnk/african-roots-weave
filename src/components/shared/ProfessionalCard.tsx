@@ -4,7 +4,7 @@ import { RatingStars } from "./RatingStars";
 
 export function ProfessionalCard({ pro }: { pro: Professional }) {
   return (
-    <article className="bg-white rounded-[12px] border border-[var(--brand-border-light)] shadow-iwosan-sm overflow-hidden card-hover">
+    <article className="bg-[var(--color-surface)] rounded-[12px] border border-[var(--brand-border-light)] shadow-iwosan-sm overflow-hidden card-hover">
       <div className="h-[120px] overflow-hidden">
         <img src={pro.cover} alt="" loading="lazy" className="w-full h-full object-cover" />
       </div>
@@ -13,10 +13,10 @@ export function ProfessionalCard({ pro }: { pro: Professional }) {
           src={pro.avatar}
           alt={pro.name}
           loading="lazy"
-          className="w-[72px] h-[72px] rounded-full object-cover border-[3px] border-white -mt-9 shadow-iwosan-sm"
+          className="w-[72px] h-[72px] rounded-full object-cover border-[3px] border-[var(--color-surface)] -mt-9 shadow-iwosan-sm bg-[var(--color-surface)]"
         />
         <div className="mt-3 flex items-start justify-between gap-2">
-          <h3 className="text-[16px] font-bold leading-tight">{pro.name}</h3>
+          <h3 className="text-[16px] font-bold leading-tight text-[var(--color-text-primary)]">{pro.name}</h3>
           {pro.verified && <BadgeCheck className="text-[var(--brand-gold)] shrink-0" size={18} />}
         </div>
         <p className="text-[13px] font-medium text-[var(--color-text-muted)] mt-1 line-clamp-1">
