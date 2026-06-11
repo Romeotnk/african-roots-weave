@@ -77,6 +77,9 @@ export function Navbar() {
   const [commOpen, setCommOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { lang, setLang } = useLanguage();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const handleLogout = async () => { await signOut(); navigate({ to: "/" }); };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
