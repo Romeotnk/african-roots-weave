@@ -169,15 +169,19 @@ function Dashboard() {
                 {g.title}
               </h4>
               <ul className="space-y-0.5">
-                {g.items.map((it) => (
-                  <li key={it.label}>
-                    <a
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-[14px] cursor-pointer transition ${"active" in it && it.active ? "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)] font-semibold border-l-[3px] border-[var(--brand-primary)] -ml-3 pl-[14px]" : "text-[var(--color-text-secondary)] hover:bg-[var(--brand-surface-alt)]"}`}
-                    >
-                      <it.icon size={16} /> {it.label}
-                    </a>
-                  </li>
-                ))}
+                {g.items.map((it) => {
+                  const isLogout = it.label === "Déconnexion";
+                  return (
+                    <li key={it.label}>
+                      <button
+                        onClick={isLogout ? handleLogout : undefined}
+                        className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-[14px] cursor-pointer transition active:scale-[0.98] ${"active" in it && it.active ? "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)] font-semibold border-l-[3px] border-[var(--brand-primary)] -ml-3 pl-[14px]" : isLogout ? "text-red-600 hover:bg-red-50" : "text-[var(--color-text-secondary)] hover:bg-[var(--brand-surface-alt)]"}`}
+                      >
+                        <it.icon size={16} /> {it.label}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}
