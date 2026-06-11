@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -20,10 +20,16 @@ import {
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 export const Route = createFileRoute("/tableau-de-bord")({
   head: () => ({ meta: [{ title: "Tableau de bord — IWOSAN" }] }),
-  component: Dashboard,
+  component: () => (
+    <ProtectedRoute>
+      <Dashboard />
+    </ProtectedRoute>
+  ),
 });
 
 const groups = [
