@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
-import { Menu, X, Leaf, ChevronDown, Sun, Moon, Monitor, LogIn, UserPlus } from "lucide-react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Menu, X, Leaf, ChevronDown, Sun, Moon, Monitor, LogIn, UserPlus, LogOut, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useTheme, type ThemeMode } from "@/components/ThemeProvider";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 const navLinks = [
   { to: "/", label: "Accueil" },
