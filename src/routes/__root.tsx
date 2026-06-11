@@ -16,6 +16,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/i18n/LanguageContext";
+import { AuthProvider } from "@/lib/auth/AuthContext";
 import "@/i18n/jsxPatch";
 
 function NotFoundComponent() {
@@ -147,20 +148,22 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   // Hide nav/footer on auth & dashboard pages for a cleaner layout
-  const isMinimal = pathname === "/connexion" || pathname === "/inscription";
+  const isMinimal = ["/connexion", "/inscription", "/mot-de-passe-oublie", "/reset-password"].includes(pathname);
   const isDashboard = pathname.startsWith("/tableau-de-bord");
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <LanguageProvider>
-          <div className="flex min-h-screen flex-col">
-            {!isMinimal && !isDashboard && <Navbar />}
-            <main className="flex-1">
-              <Outlet />
-            </main>
-            {!isMinimal && !isDashboard && <Footer />}
-          </div>
-        </LanguageProvider>
+        <AuthProvider>
+          <LanguageProvider>
+            <div className="flex min-h-screen flex-col">
+              {!isMinimal && !isDashboard && <Navbar />}
+              <main className="flex-1">
+                <Outlet />
+              </main>
+              {!isMinimal && !isDashboard && <Footer />}
+            </div>
+          </LanguageProvider>
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

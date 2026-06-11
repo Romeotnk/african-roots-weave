@@ -12,8 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TableauDeBordRouteImport } from './routes/tableau-de-bord'
 import { Route as SanteQuotidienRouteImport } from './routes/sante-quotidien'
 import { Route as RitesCulturesRouteImport } from './routes/rites-cultures'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RecettesSanteRouteImport } from './routes/recettes-sante'
 import { Route as PharmacopeeRouteImport } from './routes/pharmacopee'
+import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as InscriptionRouteImport } from './routes/inscription'
 import { Route as FormationsRouteImport } from './routes/formations'
@@ -38,6 +40,11 @@ const RitesCulturesRoute = RitesCulturesRouteImport.update({
   path: '/rites-cultures',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecettesSanteRoute = RecettesSanteRouteImport.update({
   id: '/recettes-sante',
   path: '/recettes-sante',
@@ -46,6 +53,11 @@ const RecettesSanteRoute = RecettesSanteRouteImport.update({
 const PharmacopeeRoute = PharmacopeeRouteImport.update({
   id: '/pharmacopee',
   path: '/pharmacopee',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MotDePasseOublieRoute = MotDePasseOublieRouteImport.update({
+  id: '/mot-de-passe-oublie',
+  path: '/mot-de-passe-oublie',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketplaceRoute = MarketplaceRouteImport.update({
@@ -98,8 +110,10 @@ export interface FileRoutesByFullPath {
   '/formations': typeof FormationsRoute
   '/inscription': typeof InscriptionRoute
   '/marketplace': typeof MarketplaceRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/pharmacopee': typeof PharmacopeeRoute
   '/recettes-sante': typeof RecettesSanteRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/rites-cultures': typeof RitesCulturesRoute
   '/sante-quotidien': typeof SanteQuotidienRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
@@ -113,8 +127,10 @@ export interface FileRoutesByTo {
   '/formations': typeof FormationsRoute
   '/inscription': typeof InscriptionRoute
   '/marketplace': typeof MarketplaceRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/pharmacopee': typeof PharmacopeeRoute
   '/recettes-sante': typeof RecettesSanteRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/rites-cultures': typeof RitesCulturesRoute
   '/sante-quotidien': typeof SanteQuotidienRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
@@ -129,8 +145,10 @@ export interface FileRoutesById {
   '/formations': typeof FormationsRoute
   '/inscription': typeof InscriptionRoute
   '/marketplace': typeof MarketplaceRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/pharmacopee': typeof PharmacopeeRoute
   '/recettes-sante': typeof RecettesSanteRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/rites-cultures': typeof RitesCulturesRoute
   '/sante-quotidien': typeof SanteQuotidienRoute
   '/tableau-de-bord': typeof TableauDeBordRoute
@@ -146,8 +164,10 @@ export interface FileRouteTypes {
     | '/formations'
     | '/inscription'
     | '/marketplace'
+    | '/mot-de-passe-oublie'
     | '/pharmacopee'
     | '/recettes-sante'
+    | '/reset-password'
     | '/rites-cultures'
     | '/sante-quotidien'
     | '/tableau-de-bord'
@@ -161,8 +181,10 @@ export interface FileRouteTypes {
     | '/formations'
     | '/inscription'
     | '/marketplace'
+    | '/mot-de-passe-oublie'
     | '/pharmacopee'
     | '/recettes-sante'
+    | '/reset-password'
     | '/rites-cultures'
     | '/sante-quotidien'
     | '/tableau-de-bord'
@@ -176,8 +198,10 @@ export interface FileRouteTypes {
     | '/formations'
     | '/inscription'
     | '/marketplace'
+    | '/mot-de-passe-oublie'
     | '/pharmacopee'
     | '/recettes-sante'
+    | '/reset-password'
     | '/rites-cultures'
     | '/sante-quotidien'
     | '/tableau-de-bord'
@@ -192,8 +216,10 @@ export interface RootRouteChildren {
   FormationsRoute: typeof FormationsRoute
   InscriptionRoute: typeof InscriptionRoute
   MarketplaceRoute: typeof MarketplaceRoute
+  MotDePasseOublieRoute: typeof MotDePasseOublieRoute
   PharmacopeeRoute: typeof PharmacopeeRoute
   RecettesSanteRoute: typeof RecettesSanteRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   RitesCulturesRoute: typeof RitesCulturesRoute
   SanteQuotidienRoute: typeof SanteQuotidienRoute
   TableauDeBordRoute: typeof TableauDeBordRoute
@@ -222,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RitesCulturesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recettes-sante': {
       id: '/recettes-sante'
       path: '/recettes-sante'
@@ -234,6 +267,13 @@ declare module '@tanstack/react-router' {
       path: '/pharmacopee'
       fullPath: '/pharmacopee'
       preLoaderRoute: typeof PharmacopeeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mot-de-passe-oublie': {
+      id: '/mot-de-passe-oublie'
+      path: '/mot-de-passe-oublie'
+      fullPath: '/mot-de-passe-oublie'
+      preLoaderRoute: typeof MotDePasseOublieRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/marketplace': {
@@ -304,8 +344,10 @@ const rootRouteChildren: RootRouteChildren = {
   FormationsRoute: FormationsRoute,
   InscriptionRoute: InscriptionRoute,
   MarketplaceRoute: MarketplaceRoute,
+  MotDePasseOublieRoute: MotDePasseOublieRoute,
   PharmacopeeRoute: PharmacopeeRoute,
   RecettesSanteRoute: RecettesSanteRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   RitesCulturesRoute: RitesCulturesRoute,
   SanteQuotidienRoute: SanteQuotidienRoute,
   TableauDeBordRoute: TableauDeBordRoute,

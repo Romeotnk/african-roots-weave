@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -20,10 +20,16 @@ import {
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 export const Route = createFileRoute("/tableau-de-bord")({
   head: () => ({ meta: [{ title: "Tableau de bord — IWOSAN" }] }),
-  component: Dashboard,
+  component: () => (
+    <ProtectedRoute>
+      <Dashboard />
+    </ProtectedRoute>
+  ),
 });
 
 const groups = [
@@ -122,8 +128,17 @@ const orders = [
 ];
 
 function Dashboard() {
+  const { user, signOut, roles } = useAuth();
+  const navigate = useNavigate();
+  const displayName = (user?.user_metadata?.first_name as string) || user?.email?.split("@")[0] || "Invité";
+  const roleLabel = roles.includes("admin") ? "Admin" : roles.includes("professional") ? "Praticien" : roles.includes("researcher") ? "Chercheur" : "Utilisateur";
+  const handleLogout = async () => {
+    await signOut();
+    navigate({ to: "/" });
+  };
   return (
     <div className="flex min-h-screen bg-[var(--brand-bg)]">
+
       <aside className="hidden md:flex flex-col w-[260px] bg-white border-r border-[var(--brand-border-light)] sticky top-0 h-screen overflow-y-auto">
         <Link
           to="/"
@@ -141,9 +156,9 @@ function Dashboard() {
             alt=""
           />
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-semibold truncate">Mama Aïssata</p>
+            <p className="text-[14px] font-semibold truncate">{displayName}</p>
             <span className="text-[10px] bg-[var(--brand-gold)] text-white px-2 py-0.5 rounded font-bold uppercase tracking-wider">
-              Praticien
+              {roleLabel}
             </span>
           </div>
         </div>
@@ -154,15 +169,19 @@ function Dashboard() {
                 {g.title}
               </h4>
               <ul className="space-y-0.5">
-                {g.items.map((it) => (
-                  <li key={it.label}>
-                    <a
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-[14px] cursor-pointer transition ${"active" in it && it.active ? "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)] font-semibold border-l-[3px] border-[var(--brand-primary)] -ml-3 pl-[14px]" : "text-[var(--color-text-secondary)] hover:bg-[var(--brand-surface-alt)]"}`}
-                    >
-                      <it.icon size={16} /> {it.label}
-                    </a>
-                  </li>
-                ))}
+                {g.items.map((it) => {
+                  const isLogout = it.label === "Déconnexion";
+                  return (
+                    <li key={it.label}>
+                      <button
+                        onClick={isLogout ? handleLogout : undefined}
+                        className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-[14px] cursor-pointer transition active:scale-[0.98] ${"active" in it && it.active ? "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)] font-semibold border-l-[3px] border-[var(--brand-primary)] -ml-3 pl-[14px]" : isLogout ? "text-red-600 hover:bg-red-50" : "text-[var(--color-text-secondary)] hover:bg-[var(--brand-surface-alt)]"}`}
+                      >
+                        <it.icon size={16} /> {it.label}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}

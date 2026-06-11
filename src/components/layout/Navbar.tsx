@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
-import { Menu, X, Leaf, ChevronDown, Sun, Moon, Monitor, LogIn, UserPlus } from "lucide-react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Menu, X, Leaf, ChevronDown, Sun, Moon, Monitor, LogIn, UserPlus, LogOut, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useTheme, type ThemeMode } from "@/components/ThemeProvider";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 const navLinks = [
   { to: "/", label: "Accueil" },
@@ -76,6 +77,9 @@ export function Navbar() {
   const [commOpen, setCommOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { lang, setLang } = useLanguage();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const handleLogout = async () => { await signOut(); navigate({ to: "/" }); };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -200,30 +204,39 @@ export function Navbar() {
 
           <ThemeSwitch />
 
-          <Link
-            to="/connexion"
-            className="text-[14px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] active:scale-95 transition"
-          >
-            Se connecter
-          </Link>
-          <Link
-            to="/inscription"
-            className="h-10 px-5 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[14px] font-semibold hover:bg-[var(--brand-primary-dark)] active:scale-95 transition shadow-iwosan-sm"
-          >
-            S'inscrire
-          </Link>
+          {user ? (
+            <>
+              <Link to="/tableau-de-bord" className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] active:scale-95 transition">
+                <LayoutDashboard size={16} /> Tableau de bord
+              </Link>
+              <button onClick={handleLogout} className="h-10 px-5 inline-flex items-center gap-1.5 rounded-full border border-[var(--brand-border)] text-[14px] font-semibold hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] active:scale-95 transition">
+                <LogOut size={15} /> Déconnexion
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/connexion" className="text-[14px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] active:scale-95 transition">
+                Se connecter
+              </Link>
+              <Link to="/inscription" className="h-10 px-5 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[14px] font-semibold hover:bg-[var(--brand-primary-dark)] active:scale-95 transition shadow-iwosan-sm">
+                S'inscrire
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile compact actions: theme + hamburger always visible */}
         <div className="flex md:hidden items-center gap-2 ml-auto shrink-0">
           <ThemeSwitch compact />
-          <Link
-            to="/inscription"
-            className="h-10 px-4 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[13px] font-semibold active:scale-95 transition shadow-iwosan-sm"
-            aria-label="S'inscrire"
-          >
-            S'inscrire
-          </Link>
+          {user ? (
+            <Link to="/tableau-de-bord" className="h-10 px-4 inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-primary)] text-white text-[13px] font-semibold active:scale-95 transition shadow-iwosan-sm" aria-label="Tableau de bord">
+              <LayoutDashboard size={15} /> Espace
+            </Link>
+          ) : (
+            <Link to="/inscription" className="h-10 px-4 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[13px] font-semibold active:scale-95 transition shadow-iwosan-sm" aria-label="S'inscrire">
+              S'inscrire
+            </Link>
+          )}
           <button
             className="inline-flex items-center justify-center w-11 h-11 rounded-md text-[var(--color-text-primary)] hover:bg-[var(--brand-surface-alt)] active:scale-95 transition"
             onClick={() => setOpen(!open)}
@@ -265,20 +278,25 @@ export function Navbar() {
 
           {/* Top sticky auth banner */}
           <div className="p-4 border-b border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] shrink-0">
-            <div className="grid grid-cols-2 gap-2">
-              <Link
-                to="/connexion"
-                className="h-11 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[var(--color-text-primary)] font-semibold text-[14px] active:scale-95 transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
-              >
-                <LogIn size={16} /> Se connecter
-              </Link>
-              <Link
-                to="/inscription"
-                className="h-11 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] text-white font-semibold text-[14px] active:scale-95 transition hover:bg-[var(--brand-primary-dark)]"
-              >
-                <UserPlus size={16} /> S'inscrire
-              </Link>
-            </div>
+            {user ? (
+              <div className="grid grid-cols-2 gap-2">
+                <Link to="/tableau-de-bord" className="h-11 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] text-white font-semibold text-[14px] active:scale-95 transition hover:bg-[var(--brand-primary-dark)]">
+                  <LayoutDashboard size={16} /> Mon espace
+                </Link>
+                <button onClick={handleLogout} className="h-11 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[var(--color-text-primary)] font-semibold text-[14px] active:scale-95 transition hover:border-red-400 hover:text-red-600">
+                  <LogOut size={16} /> Déconnexion
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <Link to="/connexion" className="h-11 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[var(--color-text-primary)] font-semibold text-[14px] active:scale-95 transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]">
+                  <LogIn size={16} /> Se connecter
+                </Link>
+                <Link to="/inscription" className="h-11 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] text-white font-semibold text-[14px] active:scale-95 transition hover:bg-[var(--brand-primary-dark)]">
+                  <UserPlus size={16} /> S'inscrire
+                </Link>
+              </div>
+            )}
             <div className="mt-3 flex items-center justify-between gap-2">
               <div className="flex items-center gap-1 text-[12px] font-semibold border border-[var(--brand-border)] rounded-full p-1 bg-[var(--color-surface)]">
                 <button
