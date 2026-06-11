@@ -1,5 +1,13 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? "http://localhost:4000/api" : "/api");
+const normalizeApiBaseUrl = (value?: string) => {
+  if (!value) {
+    return "/api";
+  }
+
+  const normalized = value.replace(/\/+$/, "");
+  return normalized.endsWith("/api") ? normalized : `${normalized}/api`;
+};
+
+const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
 
 type ApiEnvelope<T> = {
   success: boolean;
