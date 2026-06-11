@@ -156,9 +156,9 @@ function Dashboard() {
             alt=""
           />
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-semibold truncate">Mama Aïssata</p>
+            <p className="text-[14px] font-semibold truncate">{displayName}</p>
             <span className="text-[10px] bg-[var(--brand-gold)] text-white px-2 py-0.5 rounded font-bold uppercase tracking-wider">
-              Praticien
+              {roleLabel}
             </span>
           </div>
         </div>
