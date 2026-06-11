@@ -278,20 +278,25 @@ export function Navbar() {
 
           {/* Top sticky auth banner */}
           <div className="p-4 border-b border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] shrink-0">
-            <div className="grid grid-cols-2 gap-2">
-              <Link
-                to="/connexion"
-                className="h-11 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[var(--color-text-primary)] font-semibold text-[14px] active:scale-95 transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
-              >
-                <LogIn size={16} /> Se connecter
-              </Link>
-              <Link
-                to="/inscription"
-                className="h-11 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] text-white font-semibold text-[14px] active:scale-95 transition hover:bg-[var(--brand-primary-dark)]"
-              >
-                <UserPlus size={16} /> S'inscrire
-              </Link>
-            </div>
+            {user ? (
+              <div className="grid grid-cols-2 gap-2">
+                <Link to="/tableau-de-bord" className="h-11 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] text-white font-semibold text-[14px] active:scale-95 transition hover:bg-[var(--brand-primary-dark)]">
+                  <LayoutDashboard size={16} /> Mon espace
+                </Link>
+                <button onClick={handleLogout} className="h-11 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[var(--color-text-primary)] font-semibold text-[14px] active:scale-95 transition hover:border-red-400 hover:text-red-600">
+                  <LogOut size={16} /> Déconnexion
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <Link to="/connexion" className="h-11 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[var(--color-text-primary)] font-semibold text-[14px] active:scale-95 transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]">
+                  <LogIn size={16} /> Se connecter
+                </Link>
+                <Link to="/inscription" className="h-11 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] text-white font-semibold text-[14px] active:scale-95 transition hover:bg-[var(--brand-primary-dark)]">
+                  <UserPlus size={16} /> S'inscrire
+                </Link>
+              </div>
+            )}
             <div className="mt-3 flex items-center justify-between gap-2">
               <div className="flex items-center gap-1 text-[12px] font-semibold border border-[var(--brand-border)] rounded-full p-1 bg-[var(--color-surface)]">
                 <button
