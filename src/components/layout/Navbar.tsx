@@ -228,13 +228,15 @@ export function Navbar() {
         {/* Mobile compact actions: theme + hamburger always visible */}
         <div className="flex md:hidden items-center gap-2 ml-auto shrink-0">
           <ThemeSwitch compact />
-          <Link
-            to="/inscription"
-            className="h-10 px-4 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[13px] font-semibold active:scale-95 transition shadow-iwosan-sm"
-            aria-label="S'inscrire"
-          >
-            S'inscrire
-          </Link>
+          {user ? (
+            <Link to="/tableau-de-bord" className="h-10 px-4 inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-primary)] text-white text-[13px] font-semibold active:scale-95 transition shadow-iwosan-sm" aria-label="Tableau de bord">
+              <LayoutDashboard size={15} /> Espace
+            </Link>
+          ) : (
+            <Link to="/inscription" className="h-10 px-4 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[13px] font-semibold active:scale-95 transition shadow-iwosan-sm" aria-label="S'inscrire">
+              S'inscrire
+            </Link>
+          )}
           <button
             className="inline-flex items-center justify-center w-11 h-11 rounded-md text-[var(--color-text-primary)] hover:bg-[var(--brand-surface-alt)] active:scale-95 transition"
             onClick={() => setOpen(!open)}
