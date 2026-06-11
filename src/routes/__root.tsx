@@ -148,7 +148,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   // Hide nav/footer on auth & dashboard pages for a cleaner layout
-  const isMinimal = pathname === "/connexion" || pathname === "/inscription";
+  const isMinimal = ["/connexion", "/inscription", "/mot-de-passe-oublie", "/reset-password"].includes(pathname);
   const isDashboard = pathname.startsWith("/tableau-de-bord");
   return (
     <QueryClientProvider client={queryClient}>
