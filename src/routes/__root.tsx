@@ -16,6 +16,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/i18n/LanguageContext";
+import { AuthProvider } from "@/lib/auth/AuthContext";
 import "@/i18n/jsxPatch";
 
 function NotFoundComponent() {
