@@ -204,18 +204,25 @@ export function Navbar() {
 
           <ThemeSwitch />
 
-          <Link
-            to="/connexion"
-            className="text-[14px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] active:scale-95 transition"
-          >
-            Se connecter
-          </Link>
-          <Link
-            to="/inscription"
-            className="h-10 px-5 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[14px] font-semibold hover:bg-[var(--brand-primary-dark)] active:scale-95 transition shadow-iwosan-sm"
-          >
-            S'inscrire
-          </Link>
+          {user ? (
+            <>
+              <Link to="/tableau-de-bord" className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] active:scale-95 transition">
+                <LayoutDashboard size={16} /> Tableau de bord
+              </Link>
+              <button onClick={handleLogout} className="h-10 px-5 inline-flex items-center gap-1.5 rounded-full border border-[var(--brand-border)] text-[14px] font-semibold hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] active:scale-95 transition">
+                <LogOut size={15} /> Déconnexion
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/connexion" className="text-[14px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] active:scale-95 transition">
+                Se connecter
+              </Link>
+              <Link to="/inscription" className="h-10 px-5 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[14px] font-semibold hover:bg-[var(--brand-primary-dark)] active:scale-95 transition shadow-iwosan-sm">
+                S'inscrire
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile compact actions: theme + hamburger always visible */}
