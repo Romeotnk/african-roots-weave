@@ -128,8 +128,17 @@ const orders = [
 ];
 
 function Dashboard() {
+  const { user, signOut, roles } = useAuth();
+  const navigate = useNavigate();
+  const displayName = (user?.user_metadata?.first_name as string) || user?.email?.split("@")[0] || "Invité";
+  const roleLabel = roles.includes("admin") ? "Admin" : roles.includes("professional") ? "Praticien" : roles.includes("researcher") ? "Chercheur" : "Utilisateur";
+  const handleLogout = async () => {
+    await signOut();
+    navigate({ to: "/" });
+  };
   return (
     <div className="flex min-h-screen bg-[var(--brand-bg)]">
+
       <aside className="hidden md:flex flex-col w-[260px] bg-white border-r border-[var(--brand-border-light)] sticky top-0 h-screen overflow-y-auto">
         <Link
           to="/"
