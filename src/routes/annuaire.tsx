@@ -21,44 +21,71 @@ export const Route = createFileRoute("/annuaire")({
   component: Annuaire,
 });
 
+const normalize = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
 function Annuaire() {
   const [items, setItems] = useState<Professional[]>(fallbackProfessionals);
   const [search, setSearch] = useState("");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [country, setCountry] = useState("");
+  const [specialty, setSpecialty] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const query = useMemo(() => {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (verifiedOnly) params.set("verified", "true");
-    params.set("limit", "24");
+    params.set("limit", "48");
     return params;
   }, [search, verifiedOnly]);
 
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
-    setError(null);
-
     getProfessionals(query)
       .then(({ professionals }) => {
-        if (!cancelled) setItems(professionals);
+        if (!cancelled && professionals.length) setItems(professionals);
       })
-      .catch((apiError) => {
-        if (!cancelled) {
-          setError(apiError instanceof Error ? apiError.message : "API indisponible, donnees locales affichees.");
-          setItems(fallbackProfessionals);
-        }
+      .catch(() => {
+        if (!cancelled) setItems(fallbackProfessionals);
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
       });
-
     return () => {
       cancelled = true;
     };
   }, [query]);
+
+  const countries = useMemo(
+    () => Array.from(new Set(items.map((p) => p.country).filter(Boolean))).sort(),
+    [items],
+  );
+  const specialties = useMemo(
+    () =>
+      Array.from(new Set(items.flatMap((p) => p.specialties ?? []).filter(Boolean))).sort(),
+    [items],
+  );
+
+  const filtered = useMemo(() => {
+    return items.filter((p) => {
+      if (verifiedOnly && !p.verified) return false;
+      if (country && p.country !== country) return false;
+      if (specialty && !(p.specialties ?? []).includes(specialty)) return false;
+      if (search) {
+        const q = normalize(search);
+        const haystack = normalize(
+          [p.name, p.specialty, p.location, p.country, p.bio, ...(p.specialties ?? [])].join(" "),
+        );
+        if (!haystack.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [items, search, verifiedOnly, country, specialty]);
 
   return (
     <>
@@ -77,18 +104,45 @@ function Annuaire() {
 
       <section className="sticky top-[72px] z-30 bg-white/95 backdrop-blur border-b border-[var(--brand-border-light)] py-4">
         <div className="container-iwosan flex items-center gap-3 flex-wrap">
-          <button className="px-4 h-10 rounded-full text-[13px] font-semibold border border-[var(--brand-border)] text-[var(--color-text-secondary)]">
-            Toutes specialites
-          </button>
-          <button className="px-4 h-10 rounded-full text-[13px] font-semibold border border-[var(--brand-border)] text-[var(--color-text-secondary)]">
-            Tous pays
-          </button>
+          <select
+            value={specialty}
+            onChange={(e) => setSpecialty(e.target.value)}
+            className="px-4 h-10 rounded-full text-[13px] font-semibold border border-[var(--brand-border)] bg-white text-[var(--color-text-secondary)]"
+          >
+            <option value="">Toutes specialites</option>
+            {specialties.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+          <select
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            className="px-4 h-10 rounded-full text-[13px] font-semibold border border-[var(--brand-border)] bg-white text-[var(--color-text-secondary)]"
+          >
+            <option value="">Tous pays</option>
+            {countries.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
           <button
             onClick={() => setVerifiedOnly((value) => !value)}
             className={`px-4 h-10 rounded-full text-[13px] font-semibold border ${verifiedOnly ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]" : "border-[var(--brand-border)] text-[var(--color-text-secondary)]"}`}
           >
             Verifie uniquement
           </button>
+          {(search || verifiedOnly || country || specialty) && (
+            <button
+              onClick={() => {
+                setSearch("");
+                setVerifiedOnly(false);
+                setCountry("");
+                setSpecialty("");
+              }}
+              className="px-4 h-10 rounded-full text-[13px] font-semibold text-[var(--brand-primary)]"
+            >
+              Reinitialiser
+            </button>
+          )}
         </div>
       </section>
 
@@ -97,20 +151,21 @@ function Annuaire() {
           <div className="mb-6 flex items-center justify-between gap-3">
             <p className="text-[14px] text-[var(--color-text-muted)]">
               <span className="font-bold text-[var(--color-text-primary)]">
-                {isLoading ? "Chargement..." : `${items.length} praticiens`}
+                {isLoading ? "Chargement..." : `${filtered.length} praticiens`}
               </span>
             </p>
           </div>
-          {error && (
-            <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] text-amber-800">
-              {error}
+          {filtered.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-[var(--brand-border)] px-4 py-8 text-center text-[14px] text-[var(--color-text-muted)]">
+              Aucun praticien ne correspond a votre recherche.
             </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {filtered.map((professional) => (
+                <ProfessionalCard key={professional.id} pro={professional} />
+              ))}
+            </div>
           )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {items.map((professional) => (
-              <ProfessionalCard key={professional.id} pro={professional} />
-            ))}
-          </div>
         </div>
       </section>
     </>
