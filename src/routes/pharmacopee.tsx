@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { PlantCard } from "@/components/shared/PlantCard";
@@ -19,19 +20,48 @@ export const Route = createFileRoute("/pharmacopee")({
   component: Pharmacopee,
 });
 
-const cats = [
-  "Toutes",
-  "Anti-infectieux",
-  "Gynécologie",
-  "Gastro-intestinal",
-  "Neurologie",
-  "Dermatologie",
-  "Cardio-vasculaire",
-  "Pulmonaire",
+const cats: Array<{ label: string; match: string[] }> = [
+  { label: "Toutes", match: [] },
+  { label: "Anti-infectieux", match: ["infect", "fievre", "paludism"] },
+  { label: "Gynécologie", match: ["gyne", "femme", "fertil", "post-partum"] },
+  { label: "Gastro-intestinal", match: ["digest", "gastro", "intestin", "foie", "hepat"] },
+  { label: "Neurologie", match: ["nerveu", "sommeil", "stress", "anxiet"] },
+  { label: "Dermatologie", match: ["peau", "cutan", "eczema", "cicatris", "dermat"] },
+  { label: "Cardio-vasculaire", match: ["cardio", "tension", "hyperten", "circul"] },
+  { label: "Pulmonaire", match: ["pulmon", "toux", "respir", "bronch"] },
 ];
+
+const normalize = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 
 function Pharmacopee() {
   const featured = plants[0];
+  const [search, setSearch] = useState("");
+  const [activeCat, setActiveCat] = useState("Toutes");
+
+  const filtered = useMemo(() => {
+    const cat = cats.find((c) => c.label === activeCat);
+    return plants.filter((p) => {
+      if (cat && cat.match.length) {
+        const blob = normalize(
+          [...p.indications, p.summary, p.family].join(" "),
+        );
+        if (!cat.match.some((m) => blob.includes(m))) return false;
+      }
+      if (search) {
+        const q = normalize(search);
+        const blob = normalize(
+          [p.scientificName, p.family, p.origin, p.summary, ...p.vernacularNames, ...p.indications].join(" "),
+        );
+        if (!blob.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [search, activeCat]);
+
   return (
     <>
       <section className="relative min-h-[60vh] flex items-center bg-[var(--brand-primary-dark)] text-white">
@@ -52,7 +82,11 @@ function Pharmacopee() {
             actifs, indications thérapeutiques et modes de préparation illustrés.
           </p>
           <div className="mt-8 max-w-2xl mx-auto">
-            <SearchBar placeholder="Rechercher une plante par nom scientifique ou vernaculaire..." />
+            <SearchBar
+              placeholder="Rechercher une plante par nom scientifique ou vernaculaire..."
+              value={search}
+              onChange={setSearch}
+            />
           </div>
         </div>
       </section>
@@ -110,20 +144,33 @@ function Pharmacopee() {
         <div className="container-iwosan">
           <SectionHeader label="Parcourir" title="Par catégorie thérapeutique" />
           <div className="flex gap-2 mb-8 flex-wrap">
-            {cats.map((c, i) => (
-              <button
-                key={c}
-                className={`px-4 py-2 rounded-full text-[13px] font-semibold ${i === 0 ? "bg-[var(--brand-primary)] text-white" : "bg-white border border-[var(--brand-border)] hover:border-[var(--brand-primary)]"}`}
-              >
-                {c}
-              </button>
-            ))}
+            {cats.map((c) => {
+              const active = activeCat === c.label;
+              return (
+                <button
+                  key={c.label}
+                  onClick={() => setActiveCat(c.label)}
+                  className={`px-4 py-2 rounded-full text-[13px] font-semibold transition ${active ? "bg-[var(--brand-primary)] text-white" : "bg-white border border-[var(--brand-border)] hover:border-[var(--brand-primary)]"}`}
+                >
+                  {c.label}
+                </button>
+              );
+            })}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {plants.map((p) => (
-              <PlantCard key={p.id} plant={p} />
-            ))}
-          </div>
+          <p className="mb-4 text-[13px] text-[var(--color-text-muted)]">
+            {filtered.length} plante{filtered.length > 1 ? "s" : ""}
+          </p>
+          {filtered.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-[var(--brand-border)] px-4 py-8 text-center text-[14px] text-[var(--color-text-muted)]">
+              Aucune plante ne correspond a votre recherche.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {filtered.map((p) => (
+                <PlantCard key={p.id} plant={p} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </>
