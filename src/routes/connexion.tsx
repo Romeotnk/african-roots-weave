@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { login } from "@/lib/api/auth";
 
 export const Route = createFileRoute("/connexion")({
   head: () => ({ meta: [{ title: "Connexion — IWOSAN" }] }),
@@ -20,16 +20,19 @@ function Connexion() {
     event.preventDefault();
     setError(null);
     setIsSubmitting(true);
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
-    setIsSubmitting(false);
-    if (authError) {
-      const msg = authError.message.toLowerCase();
-      if (msg.includes("invalid")) setError("Email ou mot de passe incorrect.");
-      else if (msg.includes("confirm")) setError("Veuillez confirmer votre email avant de vous connecter.");
-      else setError(authError.message);
-      return;
+    try {
+      await login(email, password);
+      navigate({ to: "/tableau-de-bord" });
+    } catch (apiError) {
+      const message = apiError instanceof Error ? apiError.message : "Connexion impossible pour le moment.";
+      if (message.toLowerCase().includes("invalid")) {
+        setError("Email ou mot de passe incorrect.");
+      } else {
+        setError(message);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-    navigate({ to: "/tableau-de-bord" });
   };
 
   return (

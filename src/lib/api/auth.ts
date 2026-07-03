@@ -10,6 +10,31 @@ export type AuthUser = {
   kycStatus: string;
 };
 
+const BACKEND_USER_STORAGE_KEY = "iwosan.user";
+
+export const backendAuthUserStore = {
+  get: () => {
+    if (typeof window === "undefined") return null;
+    const raw = window.localStorage.getItem(BACKEND_USER_STORAGE_KEY);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as AuthUser;
+    } catch {
+      window.localStorage.removeItem(BACKEND_USER_STORAGE_KEY);
+      return null;
+    }
+  },
+  set: (user: AuthUser | null) => {
+    if (typeof window === "undefined") return;
+    if (user) {
+      window.localStorage.setItem(BACKEND_USER_STORAGE_KEY, JSON.stringify(user));
+    } else {
+      window.localStorage.removeItem(BACKEND_USER_STORAGE_KEY);
+    }
+    window.dispatchEvent(new Event("iwosan.auth.changed"));
+  },
+};
+
 export type RegisterPayload = {
   email: string;
   password: string;
@@ -30,6 +55,7 @@ export const login = async (email: string, password: string) => {
 
   if (response.data?.accessToken) {
     authTokenStore.set(response.data.accessToken);
+    backendAuthUserStore.set(response.data.user);
   }
 
   return response;
@@ -63,5 +89,6 @@ export const logout = async () => {
     await apiRequest<null>("/auth/logout", { method: "POST" });
   } finally {
     authTokenStore.set(null);
+    backendAuthUserStore.set(null);
   }
 };

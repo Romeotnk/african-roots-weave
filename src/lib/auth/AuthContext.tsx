@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
+import { authTokenStore } from "@/lib/api/client";
+import { backendAuthUserStore, type AuthUser } from "@/lib/api/auth";
 
 export type AppRole = "user" | "professional" | "researcher" | "moderator" | "admin";
 
@@ -15,6 +17,27 @@ interface AuthCtx {
 }
 
 const Ctx = createContext<AuthCtx | null>(null);
+
+const roleMap: Record<string, AppRole> = {
+  USER: "user",
+  PROFESSIONAL: "professional",
+  RESEARCHER: "researcher",
+  MODERATOR: "moderator",
+  ADMIN: "admin",
+};
+
+const toSupabaseLikeUser = (backendUser: AuthUser): User =>
+  ({
+    id: backendUser.id,
+    email: backendUser.email,
+    user_metadata: {
+      first_name: backendUser.firstName,
+      last_name: backendUser.lastName,
+    },
+    app_metadata: {},
+    aud: "authenticated",
+    created_at: "",
+  }) as User;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -33,8 +56,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
-      setLoading(false);
-      return;
+      const loadBackendUser = () => {
+        const backendUser = backendAuthUserStore.get();
+        setSession(null);
+        setUser(backendUser ? toSupabaseLikeUser(backendUser) : null);
+        setRoles(backendUser ? [roleMap[backendUser.role] ?? "user"] : []);
+        setLoading(false);
+      };
+
+      loadBackendUser();
+      window.addEventListener("iwosan.auth.changed", loadBackendUser);
+      window.addEventListener("storage", loadBackendUser);
+      return () => {
+        window.removeEventListener("iwosan.auth.changed", loadBackendUser);
+        window.removeEventListener("storage", loadBackendUser);
+      };
     }
 
     // Listener first (synchronous state set), then fetch session
@@ -56,6 +92,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     if (!isSupabaseConfigured) {
+      authTokenStore.set(null);
+      backendAuthUserStore.set(null);
       setRoles([]);
       setSession(null);
       setUser(null);
