@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Mail } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { forgotPassword } from "@/lib/api/auth";
 
 export const Route = createFileRoute("/mot-de-passe-oublie")({
   head: () => ({ meta: [{ title: "Mot de passe oublié — IWOSAN" }] }),
@@ -18,12 +18,14 @@ function Forgot() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    setLoading(false);
-    if (err) setError(err.message);
-    else setSent(true);
+    try {
+      await forgotPassword(email);
+      setSent(true);
+    } catch (apiError) {
+      setError(apiError instanceof Error ? apiError.message : "Impossible d'envoyer le lien pour le moment.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -38,6 +38,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SanteQuotidienSlugRouteImport } from './routes/sante-quotidien/$slug'
 import { Route as SanteAuQuotidienSlugRouteImport } from './routes/sante-au-quotidien/$slug'
 import { Route as RitesCulturesSlugRouteImport } from './routes/rites-cultures/$slug'
+import { Route as ResetPasswordTokenRouteImport } from './routes/reset-password/$token'
 import { Route as RecettesSlugRouteImport } from './routes/recettes/$slug'
 import { Route as RecettesSanteSlugRouteImport } from './routes/recettes-sante/$slug'
 import { Route as ProfilUsernameRouteImport } from './routes/profil/$username'
@@ -229,6 +230,11 @@ const RitesCulturesSlugRoute = RitesCulturesSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => RitesCulturesRoute,
+} as any)
+const ResetPasswordTokenRoute = ResetPasswordTokenRouteImport.update({
+  id: '/$token',
+  path: '/$token',
+  getParentRoute: () => ResetPasswordRoute,
 } as any)
 const RecettesSlugRoute = RecettesSlugRouteImport.update({
   id: '/$slug',
@@ -490,7 +496,7 @@ export interface FileRoutesByFullPath {
   '/pharmacopee': typeof PharmacopeeRouteWithChildren
   '/recettes': typeof RecettesRouteWithChildren
   '/recettes-sante': typeof RecettesSanteRouteWithChildren
-  '/reset-password': typeof ResetPasswordRoute
+  '/reset-password': typeof ResetPasswordRouteWithChildren
   '/rites-cultures': typeof RitesCulturesRouteWithChildren
   '/sante-au-quotidien': typeof SanteAuQuotidienRouteWithChildren
   '/sante-quotidien': typeof SanteQuotidienRouteWithChildren
@@ -522,6 +528,7 @@ export interface FileRoutesByFullPath {
   '/profil/$username': typeof ProfilUsernameRoute
   '/recettes-sante/$slug': typeof RecettesSanteSlugRoute
   '/recettes/$slug': typeof RecettesSlugRoute
+  '/reset-password/$token': typeof ResetPasswordTokenRoute
   '/rites-cultures/$slug': typeof RitesCulturesSlugRoute
   '/sante-au-quotidien/$slug': typeof SanteAuQuotidienSlugRoute
   '/sante-quotidien/$slug': typeof SanteQuotidienSlugRoute
@@ -567,7 +574,7 @@ export interface FileRoutesByTo {
   '/pharmacopee': typeof PharmacopeeRouteWithChildren
   '/recettes': typeof RecettesRouteWithChildren
   '/recettes-sante': typeof RecettesSanteRouteWithChildren
-  '/reset-password': typeof ResetPasswordRoute
+  '/reset-password': typeof ResetPasswordRouteWithChildren
   '/rites-cultures': typeof RitesCulturesRouteWithChildren
   '/sante-au-quotidien': typeof SanteAuQuotidienRouteWithChildren
   '/sante-quotidien': typeof SanteQuotidienRouteWithChildren
@@ -599,6 +606,7 @@ export interface FileRoutesByTo {
   '/profil/$username': typeof ProfilUsernameRoute
   '/recettes-sante/$slug': typeof RecettesSanteSlugRoute
   '/recettes/$slug': typeof RecettesSlugRoute
+  '/reset-password/$token': typeof ResetPasswordTokenRoute
   '/rites-cultures/$slug': typeof RitesCulturesSlugRoute
   '/sante-au-quotidien/$slug': typeof SanteAuQuotidienSlugRoute
   '/sante-quotidien/$slug': typeof SanteQuotidienSlugRoute
@@ -645,7 +653,7 @@ export interface FileRoutesById {
   '/pharmacopee': typeof PharmacopeeRouteWithChildren
   '/recettes': typeof RecettesRouteWithChildren
   '/recettes-sante': typeof RecettesSanteRouteWithChildren
-  '/reset-password': typeof ResetPasswordRoute
+  '/reset-password': typeof ResetPasswordRouteWithChildren
   '/rites-cultures': typeof RitesCulturesRouteWithChildren
   '/sante-au-quotidien': typeof SanteAuQuotidienRouteWithChildren
   '/sante-quotidien': typeof SanteQuotidienRouteWithChildren
@@ -677,6 +685,7 @@ export interface FileRoutesById {
   '/profil/$username': typeof ProfilUsernameRoute
   '/recettes-sante/$slug': typeof RecettesSanteSlugRoute
   '/recettes/$slug': typeof RecettesSlugRoute
+  '/reset-password/$token': typeof ResetPasswordTokenRoute
   '/rites-cultures/$slug': typeof RitesCulturesSlugRoute
   '/sante-au-quotidien/$slug': typeof SanteAuQuotidienSlugRoute
   '/sante-quotidien/$slug': typeof SanteQuotidienSlugRoute
@@ -756,6 +765,7 @@ export interface FileRouteTypes {
     | '/profil/$username'
     | '/recettes-sante/$slug'
     | '/recettes/$slug'
+    | '/reset-password/$token'
     | '/rites-cultures/$slug'
     | '/sante-au-quotidien/$slug'
     | '/sante-quotidien/$slug'
@@ -833,6 +843,7 @@ export interface FileRouteTypes {
     | '/profil/$username'
     | '/recettes-sante/$slug'
     | '/recettes/$slug'
+    | '/reset-password/$token'
     | '/rites-cultures/$slug'
     | '/sante-au-quotidien/$slug'
     | '/sante-quotidien/$slug'
@@ -910,6 +921,7 @@ export interface FileRouteTypes {
     | '/profil/$username'
     | '/recettes-sante/$slug'
     | '/recettes/$slug'
+    | '/reset-password/$token'
     | '/rites-cultures/$slug'
     | '/sante-au-quotidien/$slug'
     | '/sante-quotidien/$slug'
@@ -956,7 +968,7 @@ export interface RootRouteChildren {
   PharmacopeeRoute: typeof PharmacopeeRouteWithChildren
   RecettesRoute: typeof RecettesRouteWithChildren
   RecettesSanteRoute: typeof RecettesSanteRouteWithChildren
-  ResetPasswordRoute: typeof ResetPasswordRoute
+  ResetPasswordRoute: typeof ResetPasswordRouteWithChildren
   RitesCulturesRoute: typeof RitesCulturesRouteWithChildren
   SanteAuQuotidienRoute: typeof SanteAuQuotidienRouteWithChildren
   SanteQuotidienRoute: typeof SanteQuotidienRouteWithChildren
@@ -1177,6 +1189,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/rites-cultures/$slug'
       preLoaderRoute: typeof RitesCulturesSlugRouteImport
       parentRoute: typeof RitesCulturesRoute
+    }
+    '/reset-password/$token': {
+      id: '/reset-password/$token'
+      path: '/$token'
+      fullPath: '/reset-password/$token'
+      preLoaderRoute: typeof ResetPasswordTokenRouteImport
+      parentRoute: typeof ResetPasswordRoute
     }
     '/recettes/$slug': {
       id: '/recettes/$slug'
@@ -1709,6 +1728,18 @@ const RecettesSanteRouteWithChildren = RecettesSanteRoute._addFileChildren(
   RecettesSanteRouteChildren,
 )
 
+interface ResetPasswordRouteChildren {
+  ResetPasswordTokenRoute: typeof ResetPasswordTokenRoute
+}
+
+const ResetPasswordRouteChildren: ResetPasswordRouteChildren = {
+  ResetPasswordTokenRoute: ResetPasswordTokenRoute,
+}
+
+const ResetPasswordRouteWithChildren = ResetPasswordRoute._addFileChildren(
+  ResetPasswordRouteChildren,
+)
+
 interface RitesCulturesRouteChildren {
   RitesCulturesSlugRoute: typeof RitesCulturesSlugRoute
 }
@@ -1766,7 +1797,7 @@ const rootRouteChildren: RootRouteChildren = {
   PharmacopeeRoute: PharmacopeeRouteWithChildren,
   RecettesRoute: RecettesRouteWithChildren,
   RecettesSanteRoute: RecettesSanteRouteWithChildren,
-  ResetPasswordRoute: ResetPasswordRoute,
+  ResetPasswordRoute: ResetPasswordRouteWithChildren,
   RitesCulturesRoute: RitesCulturesRouteWithChildren,
   SanteAuQuotidienRoute: SanteAuQuotidienRouteWithChildren,
   SanteQuotidienRoute: SanteQuotidienRouteWithChildren,

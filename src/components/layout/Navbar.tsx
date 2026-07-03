@@ -37,6 +37,23 @@ const accountLinks = [
   { to: "/mon-compte/tickets", label: "Tickets" },
 ];
 
+const readableLabel = (value: string) => {
+  if (!/[ÃÂâ]/.test(value)) return value;
+  try {
+    const encoded = Array.from(value)
+      .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, "0")}`)
+      .join("");
+    return decodeURIComponent(encoded);
+  } catch {
+    return value;
+  }
+};
+
+const labels = {
+  community: "Communauté",
+  logout: "Déconnexion",
+};
+
 function ThemeSwitch({ compact = false }: { compact?: boolean }) {
   const { mode, setMode, resolved } = useTheme();
   const items: { v: ThemeMode; icon: typeof Sun; label: string }[] = [
@@ -125,12 +142,12 @@ export function Navbar() {
     <header
       className={cn(
         "sticky top-0 z-50 backdrop-blur-md border-b transition-shadow",
-        "bg-[color-mix(in_oklab,var(--color-bg)_85%,transparent)]",
+        "bg-[var(--color-surface)]",
         scrolled ? "shadow-iwosan-sm border-[var(--brand-border-light)]" : "border-transparent",
       )}
     >
-      <div className="container-iwosan flex items-center justify-between gap-2 h-[72px]">
-        <Link to="/" className="flex items-center gap-2 group min-w-0 flex-shrink">
+      <div className="container-iwosan flex h-[72px] min-w-0 items-center justify-between gap-2">
+        <Link to="/" className="group flex shrink-0 items-center gap-2">
           <div className="w-9 h-9 shrink-0 rounded-lg bg-[var(--brand-primary)] flex items-center justify-center text-white">
             <Leaf size={18} />
           </div>
@@ -144,10 +161,10 @@ export function Navbar() {
           </div>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-7">
+        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-3 xl:flex 2xl:gap-5">
           {navLinks.map((l) => (
             <Link key={l.to} to={l.to} className={linkClass(l.to)}>
-              {l.label}
+              {readableLabel(l.label)}
             </Link>
           ))}
           <div
@@ -157,9 +174,10 @@ export function Navbar() {
           >
             <button
               className={cn(
-                "inline-flex items-center gap-1 text-[14px] font-medium py-2 text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)]",
+                "inline-flex items-center gap-1 whitespace-nowrap py-2 text-[0px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)]",
               )}
             >
+              <span className="text-[13px] 2xl:text-[14px]">{labels.community}</span>
               Communauté <ChevronDown size={14} />
             </button>
             <div
@@ -176,20 +194,20 @@ export function Navbar() {
                   to={l.to}
                   className="block px-3 py-2 rounded-md text-[14px] text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)]"
                 >
-                  {l.label}
+                  {readableLabel(l.label)}
                 </Link>
               ))}
             </div>
           </div>
           {tailLinks.map((l) => (
             <Link key={l.to} to={l.to} className={linkClass(l.to)}>
-              {l.label}
+              {readableLabel(l.label)}
             </Link>
           ))}
         </nav>
 
         {/* Desktop actions */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden shrink-0 items-center gap-2 md:flex">
           <div className="flex items-center gap-1 text-[12px] font-semibold border border-[var(--brand-border)] rounded-full px-1 py-1">
             <button
               onClick={() => setLang("fr")}
@@ -238,7 +256,8 @@ export function Navbar() {
               <Link to="/tableau-de-bord" className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] active:scale-95 transition">
                 <LayoutDashboard size={16} /> Tableau de bord
               </Link>
-              <button onClick={handleLogout} className="h-10 px-5 inline-flex items-center gap-1.5 rounded-full border border-[var(--brand-border)] text-[14px] font-semibold hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] active:scale-95 transition">
+              <button onClick={handleLogout} className="h-10 px-5 inline-flex items-center gap-1.5 rounded-full border border-[var(--brand-border)] text-[0px] font-semibold hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] active:scale-95 transition">
+                <span className="text-[14px]">{labels.logout}</span>
                 <LogOut size={15} /> Déconnexion
               </button>
             </>
@@ -271,13 +290,13 @@ export function Navbar() {
             )}
           </Link>
           {user ? (
-            <Link to="/tableau-de-bord" className="h-10 px-4 inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-primary)] text-white text-[13px] font-semibold active:scale-95 transition shadow-iwosan-sm" aria-label="Tableau de bord">
+            <Link to="/tableau-de-bord" className="hidden h-10 items-center gap-1.5 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white shadow-iwosan-sm transition active:scale-95 min-[420px]:inline-flex" aria-label="Tableau de bord">
               <LayoutDashboard size={15} /> Espace
             </Link>
           ) : (
             <Link
               to="/inscription"
-              className="h-10 px-4 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[13px] font-semibold active:scale-95 transition shadow-iwosan-sm"
+              className="hidden h-10 items-center rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white shadow-iwosan-sm transition active:scale-95 min-[420px]:inline-flex"
               aria-label="S'inscrire"
             >
               S'inscrire
@@ -297,7 +316,7 @@ export function Navbar() {
       {/* Mobile drawer */}
       <div
         className={cn(
-          "fixed inset-0 z-40 lg:hidden transition-opacity",
+          "fixed inset-0 z-[70] lg:hidden transition-opacity",
           open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
         )}
       >
@@ -307,7 +326,7 @@ export function Navbar() {
         />
         <div
           className={cn(
-            "absolute right-0 top-0 bottom-0 w-[88%] max-w-[360px] bg-[var(--color-bg)] shadow-iwosan-xl flex flex-col transition-transform duration-300",
+            "absolute bottom-0 right-0 top-0 flex w-[92%] max-w-[380px] flex-col bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-iwosan-xl transition-transform duration-300",
             open ? "translate-x-0" : "translate-x-full",
           )}
         >
@@ -329,7 +348,8 @@ export function Navbar() {
                 <Link to="/tableau-de-bord" className="h-11 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] text-white font-semibold text-[14px] active:scale-95 transition hover:bg-[var(--brand-primary-dark)]">
                   <LayoutDashboard size={16} /> Mon espace
                 </Link>
-                <button onClick={handleLogout} className="h-11 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[var(--color-text-primary)] font-semibold text-[14px] active:scale-95 transition hover:border-red-400 hover:text-red-600">
+                <button onClick={handleLogout} className="h-11 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[0px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition hover:border-red-400 hover:text-red-600">
+                  <span className="text-[14px]">{labels.logout}</span>
                   <LogOut size={16} /> Déconnexion
                 </button>
               </div>
@@ -379,7 +399,7 @@ export function Navbar() {
                 to={l.to}
                 className="px-3 py-3 rounded-md text-[15px] font-medium text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)] active:scale-[0.98] transition"
               >
-                {l.label}
+                {readableLabel(l.label)}
               </Link>
             ))}
             <div className="my-2 h-px bg-[var(--brand-border-light)]" />
@@ -389,7 +409,7 @@ export function Navbar() {
                 to={l.to}
                 className="px-3 py-3 rounded-md text-[15px] font-medium text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)] active:scale-[0.98] transition"
               >
-                {l.label}
+                {readableLabel(l.label)}
               </Link>
             ))}
             <Link
