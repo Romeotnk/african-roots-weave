@@ -17,7 +17,9 @@ import { Footer } from "@/components/layout/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { AuthProvider } from "@/lib/auth/AuthContext";
+import { CartProvider } from "@/cart/CartContext";
 import "@/i18n/jsxPatch";
+import { siteConfig } from "@/data/siteConfig";
 
 function NotFoundComponent() {
   return (
@@ -150,21 +152,41 @@ function RootComponent() {
   // Hide nav/footer on auth & dashboard pages for a cleaner layout
   const isMinimal = ["/connexion", "/inscription", "/mot-de-passe-oublie", "/reset-password"].includes(pathname);
   const isDashboard = pathname.startsWith("/tableau-de-bord");
+  const showMaintenance = siteConfig.maintenanceMode && !pathname.startsWith("/admin");
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
           <LanguageProvider>
-            <div className="flex min-h-screen flex-col">
-              {!isMinimal && !isDashboard && <Navbar />}
-              <main className="flex-1">
-                <Outlet />
-              </main>
-              {!isMinimal && !isDashboard && <Footer />}
-            </div>
+            <CartProvider>
+              <div className="flex min-h-screen flex-col">
+                {!showMaintenance && !isMinimal && !isDashboard && <Navbar />}
+                <main className="flex-1">
+                  {showMaintenance ? <MaintenancePage /> : <Outlet />}
+                </main>
+                {!showMaintenance && !isMinimal && !isDashboard && <Footer />}
+              </div>
+            </CartProvider>
           </LanguageProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
+  );
+}
+
+function MaintenancePage() {
+  return (
+    <div className="grid min-h-screen place-items-center bg-[var(--brand-primary-dark)] px-4 text-white">
+      <div className="max-w-xl text-center">
+        <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-[16px] bg-white/10">
+          <span className="text-[28px] font-black">I</span>
+        </div>
+        <h1 className="text-[34px] md:text-[48px]">Maintenance en cours</h1>
+        <p className="mt-4 text-white/75">{siteConfig.maintenanceMessage}</p>
+        <p className="mt-5 rounded-full bg-white/10 px-4 py-2 text-[13px] font-semibold">
+          Retour estime : {siteConfig.maintenanceReturnAt}
+        </p>
+      </div>
+    </div>
   );
 }

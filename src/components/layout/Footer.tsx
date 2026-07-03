@@ -1,11 +1,18 @@
 import { Link } from "@tanstack/react-router";
 import { Facebook, Twitter, Instagram, Linkedin, Youtube, Leaf } from "lucide-react";
+import { useState } from "react";
+import { useNewsletterSubscription } from "@/hooks/useNewsletterApi";
 
 const colTitle = "text-white text-[11px] font-semibold uppercase tracking-[0.1em] mb-5";
 const link =
   "block text-white/70 hover:text-[var(--brand-gold)] transition-colors text-[14px] py-1.5";
 
 export function Footer() {
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+  const [subscriptionError, setSubscriptionError] = useState("");
+  const newsletter = useNewsletterSubscription();
+
   return (
     <footer className="bg-[var(--brand-primary-dark)] text-white">
       <div className="container-iwosan py-16">
@@ -74,7 +81,48 @@ export function Footer() {
               contact@iwosan.africa
             </a>
             <a className={link}>WhatsApp : +221 77 000 00 00</a>
-            <a className={link}>CGU</a>
+            <Link className={link} to="/$slug" params={{ slug: "cgu" }}>CGU</Link>
+            <Link className={link} to="/$slug" params={{ slug: "politique-confidentialite" }}>Politique de confidentialite</Link>
+            <Link className={link} to="/$slug" params={{ slug: "mentions-legales" }}>Mentions legales</Link>
+            <form
+              className="mt-5"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!email.trim()) return;
+                setSubscriptionError("");
+                newsletter.mutate(
+                  { email, language: "fr" },
+                  {
+                    onSuccess: () => {
+                      setSubscribed(true);
+                      setEmail("");
+                    },
+                    onError: (error) => {
+                      setSubscriptionError(error instanceof Error ? error.message : "Inscription impossible pour le moment.");
+                    },
+                  },
+                );
+              }}
+            >
+              <label htmlFor="footer-newsletter" className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.1em] text-white/80">
+                Newsletter
+              </label>
+              <div className="flex overflow-hidden rounded-full bg-white">
+                <input
+                  id="footer-newsletter"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  type="email"
+                  placeholder="email@exemple.com"
+                  className="min-w-0 flex-1 px-4 text-[13px] text-[var(--color-text-primary)] outline-none"
+                />
+                <button type="submit" disabled={newsletter.isPending} className="bg-[var(--brand-gold)] px-4 text-[12px] font-bold text-[var(--brand-primary-dark)] disabled:opacity-70">
+                  {newsletter.isPending ? "..." : "S'abonner"}
+                </button>
+              </div>
+              {subscribed && <p className="mt-2 text-[12px] text-emerald-200">Inscription confirmee. Merci !</p>}
+              {subscriptionError && <p className="mt-2 text-[12px] text-red-200">{subscriptionError}</p>}
+            </form>
             <a className={link}>Politique de confidentialité</a>
             <a className={link}>Mentions légales</a>
           </div>

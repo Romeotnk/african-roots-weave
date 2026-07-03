@@ -1,4 +1,5 @@
 import type { Plant } from "@/types";
+import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -46,14 +47,16 @@ export function PlantCard({ plant, dark = false }: { plant: Plant; dark?: boolea
         >
           {plant.summary}
         </p>
-        <a
+        <Link
+          to="/pharmacopee/$slug"
+          params={{ slug: plant.slug }}
           className={cn(
             "mt-4 inline-flex items-center gap-1.5 text-[13px] font-semibold",
             dark ? "text-[var(--brand-gold)]" : "text-[var(--brand-primary)]",
           )}
         >
           Lire la monographie <ArrowRight size={14} />
-        </a>
+        </Link>
       </div>
     </article>
   );

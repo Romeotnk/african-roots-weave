@@ -16,6 +16,7 @@ export type RegisterPayload = {
   firstName: string;
   lastName: string;
   country: string;
+  role?: "USER" | "PROFESSIONAL" | "RESEARCHER";
   language?: "fr" | "en" | "ar";
   referralCode?: string;
   turnstileToken?: string;
@@ -38,6 +39,23 @@ export const register = async (payload: RegisterPayload) =>
   apiRequest<{ user: AuthUser }>("/auth/register", {
     method: "POST",
     body: payload,
+  });
+
+export const verifyEmail = async (token: string) =>
+  apiRequest<null>(`/auth/verify-email/${token}`, {
+    method: "POST",
+  });
+
+export const forgotPassword = async (email: string) =>
+  apiRequest<null>("/auth/forgot-password", {
+    method: "POST",
+    body: { email },
+  });
+
+export const resetPassword = async (token: string, password: string) =>
+  apiRequest<null>(`/auth/reset-password/${token}`, {
+    method: "POST",
+    body: { password },
   });
 
 export const logout = async () => {

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Menu, X, Leaf, ChevronDown, Sun, Moon, Monitor, LogIn, UserPlus, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, Leaf, ChevronDown, Sun, Moon, Monitor, LogIn, UserPlus, LogOut, LayoutDashboard, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useTheme, type ThemeMode } from "@/components/ThemeProvider";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { useCart } from "@/cart/CartContext";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 
 const navLinks = [
   { to: "/", label: "Accueil" },
@@ -21,6 +23,18 @@ const communityLinks = [
 const tailLinks = [
   { to: "/agenda", label: "Agenda" },
   { to: "/formations", label: "Formations" },
+  { to: "/devenir-pro", label: "Devenir pro" },
+];
+const accountLinks = [
+  { to: "/panier", label: "Panier" },
+  { to: "/messages", label: "Messages" },
+  { to: "/mes-commandes", label: "Mes commandes" },
+  { to: "/mon-compte/portefeuille", label: "Portefeuille" },
+  { to: "/mon-compte/affiliation", label: "Affiliation" },
+  { to: "/mon-compte/kyc", label: "KYC" },
+  { to: "/dashboard/pro", label: "Dashboard pro" },
+  { to: "/mon-compte/alertes", label: "Alertes" },
+  { to: "/mon-compte/tickets", label: "Tickets" },
 ];
 
 function ThemeSwitch({ compact = false }: { compact?: boolean }) {
@@ -80,6 +94,7 @@ export function Navbar() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const handleLogout = async () => { await signOut(); navigate({ to: "/" }); };
+  const { itemCount } = useCart();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -203,6 +218,20 @@ export function Navbar() {
           </div>
 
           <ThemeSwitch />
+          <NotificationBell />
+
+          <Link
+            to="/panier"
+            className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--brand-border)] text-[var(--color-text-secondary)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
+            aria-label="Panier"
+          >
+            <ShoppingCart size={17} />
+            {itemCount > 0 && (
+              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[var(--brand-gold)] px-1 text-[10px] font-bold text-[var(--color-text-primary)]">
+                {itemCount}
+              </span>
+            )}
+          </Link>
 
           {user ? (
             <>
@@ -228,12 +257,29 @@ export function Navbar() {
         {/* Mobile compact actions: theme + hamburger always visible */}
         <div className="flex md:hidden items-center gap-2 ml-auto shrink-0">
           <ThemeSwitch compact />
+          <NotificationBell />
+          <Link
+            to="/panier"
+            className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--brand-border)]"
+            aria-label="Panier"
+          >
+            <ShoppingCart size={17} />
+            {itemCount > 0 && (
+              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[var(--brand-gold)] px-1 text-[10px] font-bold">
+                {itemCount}
+              </span>
+            )}
+          </Link>
           {user ? (
             <Link to="/tableau-de-bord" className="h-10 px-4 inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-primary)] text-white text-[13px] font-semibold active:scale-95 transition shadow-iwosan-sm" aria-label="Tableau de bord">
               <LayoutDashboard size={15} /> Espace
             </Link>
           ) : (
-            <Link to="/inscription" className="h-10 px-4 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[13px] font-semibold active:scale-95 transition shadow-iwosan-sm" aria-label="S'inscrire">
+            <Link
+              to="/inscription"
+              className="h-10 px-4 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[13px] font-semibold active:scale-95 transition shadow-iwosan-sm"
+              aria-label="S'inscrire"
+            >
               S'inscrire
             </Link>
           )}
@@ -336,6 +382,22 @@ export function Navbar() {
                 {l.label}
               </Link>
             ))}
+            <div className="my-2 h-px bg-[var(--brand-border-light)]" />
+            {accountLinks.map((l) => (
+              <Link
+                key={l.to}
+                to={l.to}
+                className="px-3 py-3 rounded-md text-[15px] font-medium text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)] active:scale-[0.98] transition"
+              >
+                {l.label}
+              </Link>
+            ))}
+            <Link
+              to="/mon-compte/notifications"
+              className="px-3 py-3 rounded-md text-[15px] font-medium text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)] active:scale-[0.98] transition"
+            >
+              Notifications
+            </Link>
           </nav>
         </div>
       </div>

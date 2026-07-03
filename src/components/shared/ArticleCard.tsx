@@ -1,6 +1,13 @@
 import type { Article } from "@/types";
+import { Link } from "@tanstack/react-router";
 import { ArrowRight, Clock } from "lucide-react";
 import { Badge } from "./Badge";
+
+function articlePath(article: Article) {
+  if (article.space === "Rites & Cultures") return "/rites-cultures/$slug" as const;
+  if (article.space === "Recettes sante") return "/recettes/$slug" as const;
+  return "/sante-au-quotidien/$slug" as const;
+}
 
 export function ArticleCard({ article }: { article: Article }) {
   return (
@@ -36,9 +43,13 @@ export function ArticleCard({ article }: { article: Article }) {
               {article.authorSpecialty}
             </p>
           </div>
-          <a className="inline-flex items-center gap-1 text-[13px] font-semibold text-[var(--brand-primary)]">
+          <Link
+            to={articlePath(article)}
+            params={{ slug: article.slug }}
+            className="inline-flex items-center gap-1 text-[13px] font-semibold text-[var(--brand-primary)]"
+          >
             Lire <ArrowRight size={14} />
-          </a>
+          </Link>
         </div>
       </div>
     </article>

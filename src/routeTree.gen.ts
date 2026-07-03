@@ -11,19 +11,79 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TableauDeBordRouteImport } from './routes/tableau-de-bord'
 import { Route as SanteQuotidienRouteImport } from './routes/sante-quotidien'
+import { Route as SanteAuQuotidienRouteImport } from './routes/sante-au-quotidien'
 import { Route as RitesCulturesRouteImport } from './routes/rites-cultures'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RecettesSanteRouteImport } from './routes/recettes-sante'
+import { Route as RecettesRouteImport } from './routes/recettes'
 import { Route as PharmacopeeRouteImport } from './routes/pharmacopee'
+import { Route as PanierRouteImport } from './routes/panier'
 import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
+import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as MesCommandesRouteImport } from './routes/mes-commandes'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as InscriptionRouteImport } from './routes/inscription'
+import { Route as ForumRouteImport } from './routes/forum'
 import { Route as FormationsRouteImport } from './routes/formations'
 import { Route as DiscutonsEnRouteImport } from './routes/discutons-en'
+import { Route as DevenirProRouteImport } from './routes/devenir-pro'
 import { Route as ConnexionRouteImport } from './routes/connexion'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AnnuaireRouteImport } from './routes/annuaire'
+import { Route as AideRouteImport } from './routes/aide'
 import { Route as AgendaRouteImport } from './routes/agenda'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SanteQuotidienSlugRouteImport } from './routes/sante-quotidien/$slug'
+import { Route as SanteAuQuotidienSlugRouteImport } from './routes/sante-au-quotidien/$slug'
+import { Route as RitesCulturesSlugRouteImport } from './routes/rites-cultures/$slug'
+import { Route as RecettesSlugRouteImport } from './routes/recettes/$slug'
+import { Route as RecettesSanteSlugRouteImport } from './routes/recettes-sante/$slug'
+import { Route as ProfilUsernameRouteImport } from './routes/profil/$username'
+import { Route as PharmacopeeSlugRouteImport } from './routes/pharmacopee/$slug'
+import { Route as MonCompteTicketsRouteImport } from './routes/mon-compte/tickets'
+import { Route as MonComptePortefeuilleRouteImport } from './routes/mon-compte/portefeuille'
+import { Route as MonCompteNotificationsRouteImport } from './routes/mon-compte/notifications'
+import { Route as MonCompteKycRouteImport } from './routes/mon-compte/kyc'
+import { Route as MonCompteAlertesRouteImport } from './routes/mon-compte/alertes'
+import { Route as MonCompteAffiliationRouteImport } from './routes/mon-compte/affiliation'
+import { Route as MarketplaceDeposerRouteImport } from './routes/marketplace/deposer'
+import { Route as ForumNouvelleQuestionRouteImport } from './routes/forum/nouvelle-question'
+import { Route as ForumIdRouteImport } from './routes/forum/$id'
+import { Route as FormationsIdRouteImport } from './routes/formations/$id'
+import { Route as DashboardProRouteImport } from './routes/dashboard/pro'
+import { Route as DashboardInscriptionsRouteImport } from './routes/dashboard/inscriptions'
+import { Route as DashboardAnnoncesRouteImport } from './routes/dashboard/annonces'
+import { Route as AnnuaireIdRouteImport } from './routes/annuaire/$id'
+import { Route as AdminUtilisateursRouteImport } from './routes/admin/utilisateurs'
+import { Route as AdminNewsletterRouteImport } from './routes/admin/newsletter'
+import { Route as AdminMarketplaceRouteImport } from './routes/admin/marketplace'
+import { Route as AdminLogsRouteImport } from './routes/admin/logs'
+import { Route as AdminFinancesRouteImport } from './routes/admin/finances'
+import { Route as AdminContenusRouteImport } from './routes/admin/contenus'
+import { Route as AdminCommunicationRouteImport } from './routes/admin/communication'
+import { Route as AdminCommunauteRouteImport } from './routes/admin/communaute'
+import { Route as AdminAffiliationRouteImport } from './routes/admin/affiliation'
+import { Route as MesCommandesIdLitigeRouteImport } from './routes/mes-commandes/$id/litige'
+import { Route as FormationsIdApprendreRouteImport } from './routes/formations/$id/apprendre'
+import { Route as AdminUtilisateursKycRouteImport } from './routes/admin/utilisateurs/kyc'
+import { Route as AdminUtilisateursIdRouteImport } from './routes/admin/utilisateurs/$id'
+import { Route as AdminSitePublicitesRouteImport } from './routes/admin/site/publicites'
+import { Route as AdminSitePagesRouteImport } from './routes/admin/site/pages'
+import { Route as AdminSiteMenusRouteImport } from './routes/admin/site/menus'
+import { Route as AdminSiteIdentiteRouteImport } from './routes/admin/site/identite'
+import { Route as AdminSiteAccueilRouteImport } from './routes/admin/site/accueil'
+import { Route as AdminFinancesTransactionsRouteImport } from './routes/admin/finances/transactions'
+import { Route as AdminFinancesRemboursementsRouteImport } from './routes/admin/finances/remboursements'
+import { Route as AdminFinancesLitigesRouteImport } from './routes/admin/finances/litiges'
+import { Route as AdminFinancesCommissionsRouteImport } from './routes/admin/finances/commissions'
+import { Route as AdminCommunicationTicketsRouteImport } from './routes/admin/communication/tickets'
+import { Route as AdminCommunicationNotificationsRouteImport } from './routes/admin/communication/notifications'
+import { Route as AdminCommunicationNewsletterRouteImport } from './routes/admin/communication/newsletter'
+import { Route as AdminCommunauteSignalementsRouteImport } from './routes/admin/communaute/signalements'
+import { Route as AdminCommunauteForumRouteImport } from './routes/admin/communaute/forum'
+import { Route as AdminCommunauteAvisRouteImport } from './routes/admin/communaute/avis'
 
 const TableauDeBordRoute = TableauDeBordRouteImport.update({
   id: '/tableau-de-bord',
@@ -33,6 +93,11 @@ const TableauDeBordRoute = TableauDeBordRouteImport.update({
 const SanteQuotidienRoute = SanteQuotidienRouteImport.update({
   id: '/sante-quotidien',
   path: '/sante-quotidien',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SanteAuQuotidienRoute = SanteAuQuotidienRouteImport.update({
+  id: '/sante-au-quotidien',
+  path: '/sante-au-quotidien',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RitesCulturesRoute = RitesCulturesRouteImport.update({
@@ -50,14 +115,34 @@ const RecettesSanteRoute = RecettesSanteRouteImport.update({
   path: '/recettes-sante',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecettesRoute = RecettesRouteImport.update({
+  id: '/recettes',
+  path: '/recettes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PharmacopeeRoute = PharmacopeeRouteImport.update({
   id: '/pharmacopee',
   path: '/pharmacopee',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PanierRoute = PanierRouteImport.update({
+  id: '/panier',
+  path: '/panier',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MotDePasseOublieRoute = MotDePasseOublieRouteImport.update({
   id: '/mot-de-passe-oublie',
   path: '/mot-de-passe-oublie',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MesCommandesRoute = MesCommandesRouteImport.update({
+  id: '/mes-commandes',
+  path: '/mes-commandes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MarketplaceRoute = MarketplaceRouteImport.update({
@@ -70,6 +155,11 @@ const InscriptionRoute = InscriptionRouteImport.update({
   path: '/inscription',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForumRoute = ForumRouteImport.update({
+  id: '/forum',
+  path: '/forum',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FormationsRoute = FormationsRouteImport.update({
   id: '/formations',
   path: '/formations',
@@ -80,9 +170,19 @@ const DiscutonsEnRoute = DiscutonsEnRouteImport.update({
   path: '/discutons-en',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DevenirProRoute = DevenirProRouteImport.update({
+  id: '/devenir-pro',
+  path: '/devenir-pro',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConnexionRoute = ConnexionRouteImport.update({
   id: '/connexion',
   path: '/connexion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnnuaireRoute = AnnuaireRouteImport.update({
@@ -90,9 +190,24 @@ const AnnuaireRoute = AnnuaireRouteImport.update({
   path: '/annuaire',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AideRoute = AideRouteImport.update({
+  id: '/aide',
+  path: '/aide',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AgendaRoute = AgendaRouteImport.update({
   id: '/agenda',
   path: '/agenda',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SlugRoute = SlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -100,129 +215,762 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SanteQuotidienSlugRoute = SanteQuotidienSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => SanteQuotidienRoute,
+} as any)
+const SanteAuQuotidienSlugRoute = SanteAuQuotidienSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => SanteAuQuotidienRoute,
+} as any)
+const RitesCulturesSlugRoute = RitesCulturesSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => RitesCulturesRoute,
+} as any)
+const RecettesSlugRoute = RecettesSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => RecettesRoute,
+} as any)
+const RecettesSanteSlugRoute = RecettesSanteSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => RecettesSanteRoute,
+} as any)
+const ProfilUsernameRoute = ProfilUsernameRouteImport.update({
+  id: '/profil/$username',
+  path: '/profil/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PharmacopeeSlugRoute = PharmacopeeSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => PharmacopeeRoute,
+} as any)
+const MonCompteTicketsRoute = MonCompteTicketsRouteImport.update({
+  id: '/mon-compte/tickets',
+  path: '/mon-compte/tickets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MonComptePortefeuilleRoute = MonComptePortefeuilleRouteImport.update({
+  id: '/mon-compte/portefeuille',
+  path: '/mon-compte/portefeuille',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MonCompteNotificationsRoute = MonCompteNotificationsRouteImport.update({
+  id: '/mon-compte/notifications',
+  path: '/mon-compte/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MonCompteKycRoute = MonCompteKycRouteImport.update({
+  id: '/mon-compte/kyc',
+  path: '/mon-compte/kyc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MonCompteAlertesRoute = MonCompteAlertesRouteImport.update({
+  id: '/mon-compte/alertes',
+  path: '/mon-compte/alertes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MonCompteAffiliationRoute = MonCompteAffiliationRouteImport.update({
+  id: '/mon-compte/affiliation',
+  path: '/mon-compte/affiliation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketplaceDeposerRoute = MarketplaceDeposerRouteImport.update({
+  id: '/deposer',
+  path: '/deposer',
+  getParentRoute: () => MarketplaceRoute,
+} as any)
+const ForumNouvelleQuestionRoute = ForumNouvelleQuestionRouteImport.update({
+  id: '/nouvelle-question',
+  path: '/nouvelle-question',
+  getParentRoute: () => ForumRoute,
+} as any)
+const ForumIdRoute = ForumIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ForumRoute,
+} as any)
+const FormationsIdRoute = FormationsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => FormationsRoute,
+} as any)
+const DashboardProRoute = DashboardProRouteImport.update({
+  id: '/dashboard/pro',
+  path: '/dashboard/pro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardInscriptionsRoute = DashboardInscriptionsRouteImport.update({
+  id: '/dashboard/inscriptions',
+  path: '/dashboard/inscriptions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardAnnoncesRoute = DashboardAnnoncesRouteImport.update({
+  id: '/dashboard/annonces',
+  path: '/dashboard/annonces',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnnuaireIdRoute = AnnuaireIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AnnuaireRoute,
+} as any)
+const AdminUtilisateursRoute = AdminUtilisateursRouteImport.update({
+  id: '/utilisateurs',
+  path: '/utilisateurs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNewsletterRoute = AdminNewsletterRouteImport.update({
+  id: '/newsletter',
+  path: '/newsletter',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMarketplaceRoute = AdminMarketplaceRouteImport.update({
+  id: '/marketplace',
+  path: '/marketplace',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLogsRoute = AdminLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFinancesRoute = AdminFinancesRouteImport.update({
+  id: '/finances',
+  path: '/finances',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminContenusRoute = AdminContenusRouteImport.update({
+  id: '/contenus',
+  path: '/contenus',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCommunicationRoute = AdminCommunicationRouteImport.update({
+  id: '/communication',
+  path: '/communication',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCommunauteRoute = AdminCommunauteRouteImport.update({
+  id: '/communaute',
+  path: '/communaute',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAffiliationRoute = AdminAffiliationRouteImport.update({
+  id: '/affiliation',
+  path: '/affiliation',
+  getParentRoute: () => AdminRoute,
+} as any)
+const MesCommandesIdLitigeRoute = MesCommandesIdLitigeRouteImport.update({
+  id: '/$id/litige',
+  path: '/$id/litige',
+  getParentRoute: () => MesCommandesRoute,
+} as any)
+const FormationsIdApprendreRoute = FormationsIdApprendreRouteImport.update({
+  id: '/apprendre',
+  path: '/apprendre',
+  getParentRoute: () => FormationsIdRoute,
+} as any)
+const AdminUtilisateursKycRoute = AdminUtilisateursKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
+  getParentRoute: () => AdminUtilisateursRoute,
+} as any)
+const AdminUtilisateursIdRoute = AdminUtilisateursIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminUtilisateursRoute,
+} as any)
+const AdminSitePublicitesRoute = AdminSitePublicitesRouteImport.update({
+  id: '/site/publicites',
+  path: '/site/publicites',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSitePagesRoute = AdminSitePagesRouteImport.update({
+  id: '/site/pages',
+  path: '/site/pages',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSiteMenusRoute = AdminSiteMenusRouteImport.update({
+  id: '/site/menus',
+  path: '/site/menus',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSiteIdentiteRoute = AdminSiteIdentiteRouteImport.update({
+  id: '/site/identite',
+  path: '/site/identite',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSiteAccueilRoute = AdminSiteAccueilRouteImport.update({
+  id: '/site/accueil',
+  path: '/site/accueil',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFinancesTransactionsRoute =
+  AdminFinancesTransactionsRouteImport.update({
+    id: '/transactions',
+    path: '/transactions',
+    getParentRoute: () => AdminFinancesRoute,
+  } as any)
+const AdminFinancesRemboursementsRoute =
+  AdminFinancesRemboursementsRouteImport.update({
+    id: '/remboursements',
+    path: '/remboursements',
+    getParentRoute: () => AdminFinancesRoute,
+  } as any)
+const AdminFinancesLitigesRoute = AdminFinancesLitigesRouteImport.update({
+  id: '/litiges',
+  path: '/litiges',
+  getParentRoute: () => AdminFinancesRoute,
+} as any)
+const AdminFinancesCommissionsRoute =
+  AdminFinancesCommissionsRouteImport.update({
+    id: '/commissions',
+    path: '/commissions',
+    getParentRoute: () => AdminFinancesRoute,
+  } as any)
+const AdminCommunicationTicketsRoute =
+  AdminCommunicationTicketsRouteImport.update({
+    id: '/tickets',
+    path: '/tickets',
+    getParentRoute: () => AdminCommunicationRoute,
+  } as any)
+const AdminCommunicationNotificationsRoute =
+  AdminCommunicationNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AdminCommunicationRoute,
+  } as any)
+const AdminCommunicationNewsletterRoute =
+  AdminCommunicationNewsletterRouteImport.update({
+    id: '/newsletter',
+    path: '/newsletter',
+    getParentRoute: () => AdminCommunicationRoute,
+  } as any)
+const AdminCommunauteSignalementsRoute =
+  AdminCommunauteSignalementsRouteImport.update({
+    id: '/signalements',
+    path: '/signalements',
+    getParentRoute: () => AdminCommunauteRoute,
+  } as any)
+const AdminCommunauteForumRoute = AdminCommunauteForumRouteImport.update({
+  id: '/forum',
+  path: '/forum',
+  getParentRoute: () => AdminCommunauteRoute,
+} as any)
+const AdminCommunauteAvisRoute = AdminCommunauteAvisRouteImport.update({
+  id: '/avis',
+  path: '/avis',
+  getParentRoute: () => AdminCommunauteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$slug': typeof SlugRoute
+  '/admin': typeof AdminRouteWithChildren
   '/agenda': typeof AgendaRoute
-  '/annuaire': typeof AnnuaireRoute
+  '/aide': typeof AideRoute
+  '/annuaire': typeof AnnuaireRouteWithChildren
+  '/checkout': typeof CheckoutRoute
   '/connexion': typeof ConnexionRoute
+  '/devenir-pro': typeof DevenirProRoute
   '/discutons-en': typeof DiscutonsEnRoute
-  '/formations': typeof FormationsRoute
+  '/formations': typeof FormationsRouteWithChildren
+  '/forum': typeof ForumRouteWithChildren
   '/inscription': typeof InscriptionRoute
-  '/marketplace': typeof MarketplaceRoute
+  '/marketplace': typeof MarketplaceRouteWithChildren
+  '/mes-commandes': typeof MesCommandesRouteWithChildren
+  '/messages': typeof MessagesRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
-  '/pharmacopee': typeof PharmacopeeRoute
-  '/recettes-sante': typeof RecettesSanteRoute
+  '/panier': typeof PanierRoute
+  '/pharmacopee': typeof PharmacopeeRouteWithChildren
+  '/recettes': typeof RecettesRouteWithChildren
+  '/recettes-sante': typeof RecettesSanteRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
-  '/rites-cultures': typeof RitesCulturesRoute
-  '/sante-quotidien': typeof SanteQuotidienRoute
+  '/rites-cultures': typeof RitesCulturesRouteWithChildren
+  '/sante-au-quotidien': typeof SanteAuQuotidienRouteWithChildren
+  '/sante-quotidien': typeof SanteQuotidienRouteWithChildren
   '/tableau-de-bord': typeof TableauDeBordRoute
+  '/admin/affiliation': typeof AdminAffiliationRoute
+  '/admin/communaute': typeof AdminCommunauteRouteWithChildren
+  '/admin/communication': typeof AdminCommunicationRouteWithChildren
+  '/admin/contenus': typeof AdminContenusRoute
+  '/admin/finances': typeof AdminFinancesRouteWithChildren
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/marketplace': typeof AdminMarketplaceRoute
+  '/admin/newsletter': typeof AdminNewsletterRoute
+  '/admin/utilisateurs': typeof AdminUtilisateursRouteWithChildren
+  '/annuaire/$id': typeof AnnuaireIdRoute
+  '/dashboard/annonces': typeof DashboardAnnoncesRoute
+  '/dashboard/inscriptions': typeof DashboardInscriptionsRoute
+  '/dashboard/pro': typeof DashboardProRoute
+  '/formations/$id': typeof FormationsIdRouteWithChildren
+  '/forum/$id': typeof ForumIdRoute
+  '/forum/nouvelle-question': typeof ForumNouvelleQuestionRoute
+  '/marketplace/deposer': typeof MarketplaceDeposerRoute
+  '/mon-compte/affiliation': typeof MonCompteAffiliationRoute
+  '/mon-compte/alertes': typeof MonCompteAlertesRoute
+  '/mon-compte/kyc': typeof MonCompteKycRoute
+  '/mon-compte/notifications': typeof MonCompteNotificationsRoute
+  '/mon-compte/portefeuille': typeof MonComptePortefeuilleRoute
+  '/mon-compte/tickets': typeof MonCompteTicketsRoute
+  '/pharmacopee/$slug': typeof PharmacopeeSlugRoute
+  '/profil/$username': typeof ProfilUsernameRoute
+  '/recettes-sante/$slug': typeof RecettesSanteSlugRoute
+  '/recettes/$slug': typeof RecettesSlugRoute
+  '/rites-cultures/$slug': typeof RitesCulturesSlugRoute
+  '/sante-au-quotidien/$slug': typeof SanteAuQuotidienSlugRoute
+  '/sante-quotidien/$slug': typeof SanteQuotidienSlugRoute
+  '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
+  '/admin/communaute/forum': typeof AdminCommunauteForumRoute
+  '/admin/communaute/signalements': typeof AdminCommunauteSignalementsRoute
+  '/admin/communication/newsletter': typeof AdminCommunicationNewsletterRoute
+  '/admin/communication/notifications': typeof AdminCommunicationNotificationsRoute
+  '/admin/communication/tickets': typeof AdminCommunicationTicketsRoute
+  '/admin/finances/commissions': typeof AdminFinancesCommissionsRoute
+  '/admin/finances/litiges': typeof AdminFinancesLitigesRoute
+  '/admin/finances/remboursements': typeof AdminFinancesRemboursementsRoute
+  '/admin/finances/transactions': typeof AdminFinancesTransactionsRoute
+  '/admin/site/accueil': typeof AdminSiteAccueilRoute
+  '/admin/site/identite': typeof AdminSiteIdentiteRoute
+  '/admin/site/menus': typeof AdminSiteMenusRoute
+  '/admin/site/pages': typeof AdminSitePagesRoute
+  '/admin/site/publicites': typeof AdminSitePublicitesRoute
+  '/admin/utilisateurs/$id': typeof AdminUtilisateursIdRoute
+  '/admin/utilisateurs/kyc': typeof AdminUtilisateursKycRoute
+  '/formations/$id/apprendre': typeof FormationsIdApprendreRoute
+  '/mes-commandes/$id/litige': typeof MesCommandesIdLitigeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$slug': typeof SlugRoute
+  '/admin': typeof AdminRouteWithChildren
   '/agenda': typeof AgendaRoute
-  '/annuaire': typeof AnnuaireRoute
+  '/aide': typeof AideRoute
+  '/annuaire': typeof AnnuaireRouteWithChildren
+  '/checkout': typeof CheckoutRoute
   '/connexion': typeof ConnexionRoute
+  '/devenir-pro': typeof DevenirProRoute
   '/discutons-en': typeof DiscutonsEnRoute
-  '/formations': typeof FormationsRoute
+  '/formations': typeof FormationsRouteWithChildren
+  '/forum': typeof ForumRouteWithChildren
   '/inscription': typeof InscriptionRoute
-  '/marketplace': typeof MarketplaceRoute
+  '/marketplace': typeof MarketplaceRouteWithChildren
+  '/mes-commandes': typeof MesCommandesRouteWithChildren
+  '/messages': typeof MessagesRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
-  '/pharmacopee': typeof PharmacopeeRoute
-  '/recettes-sante': typeof RecettesSanteRoute
+  '/panier': typeof PanierRoute
+  '/pharmacopee': typeof PharmacopeeRouteWithChildren
+  '/recettes': typeof RecettesRouteWithChildren
+  '/recettes-sante': typeof RecettesSanteRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
-  '/rites-cultures': typeof RitesCulturesRoute
-  '/sante-quotidien': typeof SanteQuotidienRoute
+  '/rites-cultures': typeof RitesCulturesRouteWithChildren
+  '/sante-au-quotidien': typeof SanteAuQuotidienRouteWithChildren
+  '/sante-quotidien': typeof SanteQuotidienRouteWithChildren
   '/tableau-de-bord': typeof TableauDeBordRoute
+  '/admin/affiliation': typeof AdminAffiliationRoute
+  '/admin/communaute': typeof AdminCommunauteRouteWithChildren
+  '/admin/communication': typeof AdminCommunicationRouteWithChildren
+  '/admin/contenus': typeof AdminContenusRoute
+  '/admin/finances': typeof AdminFinancesRouteWithChildren
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/marketplace': typeof AdminMarketplaceRoute
+  '/admin/newsletter': typeof AdminNewsletterRoute
+  '/admin/utilisateurs': typeof AdminUtilisateursRouteWithChildren
+  '/annuaire/$id': typeof AnnuaireIdRoute
+  '/dashboard/annonces': typeof DashboardAnnoncesRoute
+  '/dashboard/inscriptions': typeof DashboardInscriptionsRoute
+  '/dashboard/pro': typeof DashboardProRoute
+  '/formations/$id': typeof FormationsIdRouteWithChildren
+  '/forum/$id': typeof ForumIdRoute
+  '/forum/nouvelle-question': typeof ForumNouvelleQuestionRoute
+  '/marketplace/deposer': typeof MarketplaceDeposerRoute
+  '/mon-compte/affiliation': typeof MonCompteAffiliationRoute
+  '/mon-compte/alertes': typeof MonCompteAlertesRoute
+  '/mon-compte/kyc': typeof MonCompteKycRoute
+  '/mon-compte/notifications': typeof MonCompteNotificationsRoute
+  '/mon-compte/portefeuille': typeof MonComptePortefeuilleRoute
+  '/mon-compte/tickets': typeof MonCompteTicketsRoute
+  '/pharmacopee/$slug': typeof PharmacopeeSlugRoute
+  '/profil/$username': typeof ProfilUsernameRoute
+  '/recettes-sante/$slug': typeof RecettesSanteSlugRoute
+  '/recettes/$slug': typeof RecettesSlugRoute
+  '/rites-cultures/$slug': typeof RitesCulturesSlugRoute
+  '/sante-au-quotidien/$slug': typeof SanteAuQuotidienSlugRoute
+  '/sante-quotidien/$slug': typeof SanteQuotidienSlugRoute
+  '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
+  '/admin/communaute/forum': typeof AdminCommunauteForumRoute
+  '/admin/communaute/signalements': typeof AdminCommunauteSignalementsRoute
+  '/admin/communication/newsletter': typeof AdminCommunicationNewsletterRoute
+  '/admin/communication/notifications': typeof AdminCommunicationNotificationsRoute
+  '/admin/communication/tickets': typeof AdminCommunicationTicketsRoute
+  '/admin/finances/commissions': typeof AdminFinancesCommissionsRoute
+  '/admin/finances/litiges': typeof AdminFinancesLitigesRoute
+  '/admin/finances/remboursements': typeof AdminFinancesRemboursementsRoute
+  '/admin/finances/transactions': typeof AdminFinancesTransactionsRoute
+  '/admin/site/accueil': typeof AdminSiteAccueilRoute
+  '/admin/site/identite': typeof AdminSiteIdentiteRoute
+  '/admin/site/menus': typeof AdminSiteMenusRoute
+  '/admin/site/pages': typeof AdminSitePagesRoute
+  '/admin/site/publicites': typeof AdminSitePublicitesRoute
+  '/admin/utilisateurs/$id': typeof AdminUtilisateursIdRoute
+  '/admin/utilisateurs/kyc': typeof AdminUtilisateursKycRoute
+  '/formations/$id/apprendre': typeof FormationsIdApprendreRoute
+  '/mes-commandes/$id/litige': typeof MesCommandesIdLitigeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$slug': typeof SlugRoute
+  '/admin': typeof AdminRouteWithChildren
   '/agenda': typeof AgendaRoute
-  '/annuaire': typeof AnnuaireRoute
+  '/aide': typeof AideRoute
+  '/annuaire': typeof AnnuaireRouteWithChildren
+  '/checkout': typeof CheckoutRoute
   '/connexion': typeof ConnexionRoute
+  '/devenir-pro': typeof DevenirProRoute
   '/discutons-en': typeof DiscutonsEnRoute
-  '/formations': typeof FormationsRoute
+  '/formations': typeof FormationsRouteWithChildren
+  '/forum': typeof ForumRouteWithChildren
   '/inscription': typeof InscriptionRoute
-  '/marketplace': typeof MarketplaceRoute
+  '/marketplace': typeof MarketplaceRouteWithChildren
+  '/mes-commandes': typeof MesCommandesRouteWithChildren
+  '/messages': typeof MessagesRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
-  '/pharmacopee': typeof PharmacopeeRoute
-  '/recettes-sante': typeof RecettesSanteRoute
+  '/panier': typeof PanierRoute
+  '/pharmacopee': typeof PharmacopeeRouteWithChildren
+  '/recettes': typeof RecettesRouteWithChildren
+  '/recettes-sante': typeof RecettesSanteRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
-  '/rites-cultures': typeof RitesCulturesRoute
-  '/sante-quotidien': typeof SanteQuotidienRoute
+  '/rites-cultures': typeof RitesCulturesRouteWithChildren
+  '/sante-au-quotidien': typeof SanteAuQuotidienRouteWithChildren
+  '/sante-quotidien': typeof SanteQuotidienRouteWithChildren
   '/tableau-de-bord': typeof TableauDeBordRoute
+  '/admin/affiliation': typeof AdminAffiliationRoute
+  '/admin/communaute': typeof AdminCommunauteRouteWithChildren
+  '/admin/communication': typeof AdminCommunicationRouteWithChildren
+  '/admin/contenus': typeof AdminContenusRoute
+  '/admin/finances': typeof AdminFinancesRouteWithChildren
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/marketplace': typeof AdminMarketplaceRoute
+  '/admin/newsletter': typeof AdminNewsletterRoute
+  '/admin/utilisateurs': typeof AdminUtilisateursRouteWithChildren
+  '/annuaire/$id': typeof AnnuaireIdRoute
+  '/dashboard/annonces': typeof DashboardAnnoncesRoute
+  '/dashboard/inscriptions': typeof DashboardInscriptionsRoute
+  '/dashboard/pro': typeof DashboardProRoute
+  '/formations/$id': typeof FormationsIdRouteWithChildren
+  '/forum/$id': typeof ForumIdRoute
+  '/forum/nouvelle-question': typeof ForumNouvelleQuestionRoute
+  '/marketplace/deposer': typeof MarketplaceDeposerRoute
+  '/mon-compte/affiliation': typeof MonCompteAffiliationRoute
+  '/mon-compte/alertes': typeof MonCompteAlertesRoute
+  '/mon-compte/kyc': typeof MonCompteKycRoute
+  '/mon-compte/notifications': typeof MonCompteNotificationsRoute
+  '/mon-compte/portefeuille': typeof MonComptePortefeuilleRoute
+  '/mon-compte/tickets': typeof MonCompteTicketsRoute
+  '/pharmacopee/$slug': typeof PharmacopeeSlugRoute
+  '/profil/$username': typeof ProfilUsernameRoute
+  '/recettes-sante/$slug': typeof RecettesSanteSlugRoute
+  '/recettes/$slug': typeof RecettesSlugRoute
+  '/rites-cultures/$slug': typeof RitesCulturesSlugRoute
+  '/sante-au-quotidien/$slug': typeof SanteAuQuotidienSlugRoute
+  '/sante-quotidien/$slug': typeof SanteQuotidienSlugRoute
+  '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
+  '/admin/communaute/forum': typeof AdminCommunauteForumRoute
+  '/admin/communaute/signalements': typeof AdminCommunauteSignalementsRoute
+  '/admin/communication/newsletter': typeof AdminCommunicationNewsletterRoute
+  '/admin/communication/notifications': typeof AdminCommunicationNotificationsRoute
+  '/admin/communication/tickets': typeof AdminCommunicationTicketsRoute
+  '/admin/finances/commissions': typeof AdminFinancesCommissionsRoute
+  '/admin/finances/litiges': typeof AdminFinancesLitigesRoute
+  '/admin/finances/remboursements': typeof AdminFinancesRemboursementsRoute
+  '/admin/finances/transactions': typeof AdminFinancesTransactionsRoute
+  '/admin/site/accueil': typeof AdminSiteAccueilRoute
+  '/admin/site/identite': typeof AdminSiteIdentiteRoute
+  '/admin/site/menus': typeof AdminSiteMenusRoute
+  '/admin/site/pages': typeof AdminSitePagesRoute
+  '/admin/site/publicites': typeof AdminSitePublicitesRoute
+  '/admin/utilisateurs/$id': typeof AdminUtilisateursIdRoute
+  '/admin/utilisateurs/kyc': typeof AdminUtilisateursKycRoute
+  '/formations/$id/apprendre': typeof FormationsIdApprendreRoute
+  '/mes-commandes/$id/litige': typeof MesCommandesIdLitigeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/$slug'
+    | '/admin'
     | '/agenda'
+    | '/aide'
     | '/annuaire'
+    | '/checkout'
     | '/connexion'
+    | '/devenir-pro'
     | '/discutons-en'
     | '/formations'
+    | '/forum'
     | '/inscription'
     | '/marketplace'
+    | '/mes-commandes'
+    | '/messages'
     | '/mot-de-passe-oublie'
+    | '/panier'
     | '/pharmacopee'
+    | '/recettes'
     | '/recettes-sante'
     | '/reset-password'
     | '/rites-cultures'
+    | '/sante-au-quotidien'
     | '/sante-quotidien'
     | '/tableau-de-bord'
+    | '/admin/affiliation'
+    | '/admin/communaute'
+    | '/admin/communication'
+    | '/admin/contenus'
+    | '/admin/finances'
+    | '/admin/logs'
+    | '/admin/marketplace'
+    | '/admin/newsletter'
+    | '/admin/utilisateurs'
+    | '/annuaire/$id'
+    | '/dashboard/annonces'
+    | '/dashboard/inscriptions'
+    | '/dashboard/pro'
+    | '/formations/$id'
+    | '/forum/$id'
+    | '/forum/nouvelle-question'
+    | '/marketplace/deposer'
+    | '/mon-compte/affiliation'
+    | '/mon-compte/alertes'
+    | '/mon-compte/kyc'
+    | '/mon-compte/notifications'
+    | '/mon-compte/portefeuille'
+    | '/mon-compte/tickets'
+    | '/pharmacopee/$slug'
+    | '/profil/$username'
+    | '/recettes-sante/$slug'
+    | '/recettes/$slug'
+    | '/rites-cultures/$slug'
+    | '/sante-au-quotidien/$slug'
+    | '/sante-quotidien/$slug'
+    | '/admin/communaute/avis'
+    | '/admin/communaute/forum'
+    | '/admin/communaute/signalements'
+    | '/admin/communication/newsletter'
+    | '/admin/communication/notifications'
+    | '/admin/communication/tickets'
+    | '/admin/finances/commissions'
+    | '/admin/finances/litiges'
+    | '/admin/finances/remboursements'
+    | '/admin/finances/transactions'
+    | '/admin/site/accueil'
+    | '/admin/site/identite'
+    | '/admin/site/menus'
+    | '/admin/site/pages'
+    | '/admin/site/publicites'
+    | '/admin/utilisateurs/$id'
+    | '/admin/utilisateurs/kyc'
+    | '/formations/$id/apprendre'
+    | '/mes-commandes/$id/litige'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/$slug'
+    | '/admin'
     | '/agenda'
+    | '/aide'
     | '/annuaire'
+    | '/checkout'
     | '/connexion'
+    | '/devenir-pro'
     | '/discutons-en'
     | '/formations'
+    | '/forum'
     | '/inscription'
     | '/marketplace'
+    | '/mes-commandes'
+    | '/messages'
     | '/mot-de-passe-oublie'
+    | '/panier'
     | '/pharmacopee'
+    | '/recettes'
     | '/recettes-sante'
     | '/reset-password'
     | '/rites-cultures'
+    | '/sante-au-quotidien'
     | '/sante-quotidien'
     | '/tableau-de-bord'
+    | '/admin/affiliation'
+    | '/admin/communaute'
+    | '/admin/communication'
+    | '/admin/contenus'
+    | '/admin/finances'
+    | '/admin/logs'
+    | '/admin/marketplace'
+    | '/admin/newsletter'
+    | '/admin/utilisateurs'
+    | '/annuaire/$id'
+    | '/dashboard/annonces'
+    | '/dashboard/inscriptions'
+    | '/dashboard/pro'
+    | '/formations/$id'
+    | '/forum/$id'
+    | '/forum/nouvelle-question'
+    | '/marketplace/deposer'
+    | '/mon-compte/affiliation'
+    | '/mon-compte/alertes'
+    | '/mon-compte/kyc'
+    | '/mon-compte/notifications'
+    | '/mon-compte/portefeuille'
+    | '/mon-compte/tickets'
+    | '/pharmacopee/$slug'
+    | '/profil/$username'
+    | '/recettes-sante/$slug'
+    | '/recettes/$slug'
+    | '/rites-cultures/$slug'
+    | '/sante-au-quotidien/$slug'
+    | '/sante-quotidien/$slug'
+    | '/admin/communaute/avis'
+    | '/admin/communaute/forum'
+    | '/admin/communaute/signalements'
+    | '/admin/communication/newsletter'
+    | '/admin/communication/notifications'
+    | '/admin/communication/tickets'
+    | '/admin/finances/commissions'
+    | '/admin/finances/litiges'
+    | '/admin/finances/remboursements'
+    | '/admin/finances/transactions'
+    | '/admin/site/accueil'
+    | '/admin/site/identite'
+    | '/admin/site/menus'
+    | '/admin/site/pages'
+    | '/admin/site/publicites'
+    | '/admin/utilisateurs/$id'
+    | '/admin/utilisateurs/kyc'
+    | '/formations/$id/apprendre'
+    | '/mes-commandes/$id/litige'
   id:
     | '__root__'
     | '/'
+    | '/$slug'
+    | '/admin'
     | '/agenda'
+    | '/aide'
     | '/annuaire'
+    | '/checkout'
     | '/connexion'
+    | '/devenir-pro'
     | '/discutons-en'
     | '/formations'
+    | '/forum'
     | '/inscription'
     | '/marketplace'
+    | '/mes-commandes'
+    | '/messages'
     | '/mot-de-passe-oublie'
+    | '/panier'
     | '/pharmacopee'
+    | '/recettes'
     | '/recettes-sante'
     | '/reset-password'
     | '/rites-cultures'
+    | '/sante-au-quotidien'
     | '/sante-quotidien'
     | '/tableau-de-bord'
+    | '/admin/affiliation'
+    | '/admin/communaute'
+    | '/admin/communication'
+    | '/admin/contenus'
+    | '/admin/finances'
+    | '/admin/logs'
+    | '/admin/marketplace'
+    | '/admin/newsletter'
+    | '/admin/utilisateurs'
+    | '/annuaire/$id'
+    | '/dashboard/annonces'
+    | '/dashboard/inscriptions'
+    | '/dashboard/pro'
+    | '/formations/$id'
+    | '/forum/$id'
+    | '/forum/nouvelle-question'
+    | '/marketplace/deposer'
+    | '/mon-compte/affiliation'
+    | '/mon-compte/alertes'
+    | '/mon-compte/kyc'
+    | '/mon-compte/notifications'
+    | '/mon-compte/portefeuille'
+    | '/mon-compte/tickets'
+    | '/pharmacopee/$slug'
+    | '/profil/$username'
+    | '/recettes-sante/$slug'
+    | '/recettes/$slug'
+    | '/rites-cultures/$slug'
+    | '/sante-au-quotidien/$slug'
+    | '/sante-quotidien/$slug'
+    | '/admin/communaute/avis'
+    | '/admin/communaute/forum'
+    | '/admin/communaute/signalements'
+    | '/admin/communication/newsletter'
+    | '/admin/communication/notifications'
+    | '/admin/communication/tickets'
+    | '/admin/finances/commissions'
+    | '/admin/finances/litiges'
+    | '/admin/finances/remboursements'
+    | '/admin/finances/transactions'
+    | '/admin/site/accueil'
+    | '/admin/site/identite'
+    | '/admin/site/menus'
+    | '/admin/site/pages'
+    | '/admin/site/publicites'
+    | '/admin/utilisateurs/$id'
+    | '/admin/utilisateurs/kyc'
+    | '/formations/$id/apprendre'
+    | '/mes-commandes/$id/litige'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SlugRoute: typeof SlugRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AgendaRoute: typeof AgendaRoute
-  AnnuaireRoute: typeof AnnuaireRoute
+  AideRoute: typeof AideRoute
+  AnnuaireRoute: typeof AnnuaireRouteWithChildren
+  CheckoutRoute: typeof CheckoutRoute
   ConnexionRoute: typeof ConnexionRoute
+  DevenirProRoute: typeof DevenirProRoute
   DiscutonsEnRoute: typeof DiscutonsEnRoute
-  FormationsRoute: typeof FormationsRoute
+  FormationsRoute: typeof FormationsRouteWithChildren
+  ForumRoute: typeof ForumRouteWithChildren
   InscriptionRoute: typeof InscriptionRoute
-  MarketplaceRoute: typeof MarketplaceRoute
+  MarketplaceRoute: typeof MarketplaceRouteWithChildren
+  MesCommandesRoute: typeof MesCommandesRouteWithChildren
+  MessagesRoute: typeof MessagesRoute
   MotDePasseOublieRoute: typeof MotDePasseOublieRoute
-  PharmacopeeRoute: typeof PharmacopeeRoute
-  RecettesSanteRoute: typeof RecettesSanteRoute
+  PanierRoute: typeof PanierRoute
+  PharmacopeeRoute: typeof PharmacopeeRouteWithChildren
+  RecettesRoute: typeof RecettesRouteWithChildren
+  RecettesSanteRoute: typeof RecettesSanteRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
-  RitesCulturesRoute: typeof RitesCulturesRoute
-  SanteQuotidienRoute: typeof SanteQuotidienRoute
+  RitesCulturesRoute: typeof RitesCulturesRouteWithChildren
+  SanteAuQuotidienRoute: typeof SanteAuQuotidienRouteWithChildren
+  SanteQuotidienRoute: typeof SanteQuotidienRouteWithChildren
   TableauDeBordRoute: typeof TableauDeBordRoute
+  DashboardAnnoncesRoute: typeof DashboardAnnoncesRoute
+  DashboardInscriptionsRoute: typeof DashboardInscriptionsRoute
+  DashboardProRoute: typeof DashboardProRoute
+  MonCompteAffiliationRoute: typeof MonCompteAffiliationRoute
+  MonCompteAlertesRoute: typeof MonCompteAlertesRoute
+  MonCompteKycRoute: typeof MonCompteKycRoute
+  MonCompteNotificationsRoute: typeof MonCompteNotificationsRoute
+  MonComptePortefeuilleRoute: typeof MonComptePortefeuilleRoute
+  MonCompteTicketsRoute: typeof MonCompteTicketsRoute
+  ProfilUsernameRoute: typeof ProfilUsernameRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -239,6 +987,13 @@ declare module '@tanstack/react-router' {
       path: '/sante-quotidien'
       fullPath: '/sante-quotidien'
       preLoaderRoute: typeof SanteQuotidienRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sante-au-quotidien': {
+      id: '/sante-au-quotidien'
+      path: '/sante-au-quotidien'
+      fullPath: '/sante-au-quotidien'
+      preLoaderRoute: typeof SanteAuQuotidienRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rites-cultures': {
@@ -262,6 +1017,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecettesSanteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recettes': {
+      id: '/recettes'
+      path: '/recettes'
+      fullPath: '/recettes'
+      preLoaderRoute: typeof RecettesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pharmacopee': {
       id: '/pharmacopee'
       path: '/pharmacopee'
@@ -269,11 +1031,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PharmacopeeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/panier': {
+      id: '/panier'
+      path: '/panier'
+      fullPath: '/panier'
+      preLoaderRoute: typeof PanierRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mot-de-passe-oublie': {
       id: '/mot-de-passe-oublie'
       path: '/mot-de-passe-oublie'
       fullPath: '/mot-de-passe-oublie'
       preLoaderRoute: typeof MotDePasseOublieRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mes-commandes': {
+      id: '/mes-commandes'
+      path: '/mes-commandes'
+      fullPath: '/mes-commandes'
+      preLoaderRoute: typeof MesCommandesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/marketplace': {
@@ -290,6 +1073,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InscriptionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forum': {
+      id: '/forum'
+      path: '/forum'
+      fullPath: '/forum'
+      preLoaderRoute: typeof ForumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/formations': {
       id: '/formations'
       path: '/formations'
@@ -304,11 +1094,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DiscutonsEnRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/devenir-pro': {
+      id: '/devenir-pro'
+      path: '/devenir-pro'
+      fullPath: '/devenir-pro'
+      preLoaderRoute: typeof DevenirProRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/connexion': {
       id: '/connexion'
       path: '/connexion'
       fullPath: '/connexion'
       preLoaderRoute: typeof ConnexionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/annuaire': {
@@ -318,11 +1122,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnnuaireRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/aide': {
+      id: '/aide'
+      path: '/aide'
+      fullPath: '/aide'
+      preLoaderRoute: typeof AideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/agenda': {
       id: '/agenda'
       path: '/agenda'
       fullPath: '/agenda'
       preLoaderRoute: typeof AgendaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$slug': {
+      id: '/$slug'
+      path: '/$slug'
+      fullPath: '/$slug'
+      preLoaderRoute: typeof SlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -332,25 +1157,630 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sante-quotidien/$slug': {
+      id: '/sante-quotidien/$slug'
+      path: '/$slug'
+      fullPath: '/sante-quotidien/$slug'
+      preLoaderRoute: typeof SanteQuotidienSlugRouteImport
+      parentRoute: typeof SanteQuotidienRoute
+    }
+    '/sante-au-quotidien/$slug': {
+      id: '/sante-au-quotidien/$slug'
+      path: '/$slug'
+      fullPath: '/sante-au-quotidien/$slug'
+      preLoaderRoute: typeof SanteAuQuotidienSlugRouteImport
+      parentRoute: typeof SanteAuQuotidienRoute
+    }
+    '/rites-cultures/$slug': {
+      id: '/rites-cultures/$slug'
+      path: '/$slug'
+      fullPath: '/rites-cultures/$slug'
+      preLoaderRoute: typeof RitesCulturesSlugRouteImport
+      parentRoute: typeof RitesCulturesRoute
+    }
+    '/recettes/$slug': {
+      id: '/recettes/$slug'
+      path: '/$slug'
+      fullPath: '/recettes/$slug'
+      preLoaderRoute: typeof RecettesSlugRouteImport
+      parentRoute: typeof RecettesRoute
+    }
+    '/recettes-sante/$slug': {
+      id: '/recettes-sante/$slug'
+      path: '/$slug'
+      fullPath: '/recettes-sante/$slug'
+      preLoaderRoute: typeof RecettesSanteSlugRouteImport
+      parentRoute: typeof RecettesSanteRoute
+    }
+    '/profil/$username': {
+      id: '/profil/$username'
+      path: '/profil/$username'
+      fullPath: '/profil/$username'
+      preLoaderRoute: typeof ProfilUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pharmacopee/$slug': {
+      id: '/pharmacopee/$slug'
+      path: '/$slug'
+      fullPath: '/pharmacopee/$slug'
+      preLoaderRoute: typeof PharmacopeeSlugRouteImport
+      parentRoute: typeof PharmacopeeRoute
+    }
+    '/mon-compte/tickets': {
+      id: '/mon-compte/tickets'
+      path: '/mon-compte/tickets'
+      fullPath: '/mon-compte/tickets'
+      preLoaderRoute: typeof MonCompteTicketsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mon-compte/portefeuille': {
+      id: '/mon-compte/portefeuille'
+      path: '/mon-compte/portefeuille'
+      fullPath: '/mon-compte/portefeuille'
+      preLoaderRoute: typeof MonComptePortefeuilleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mon-compte/notifications': {
+      id: '/mon-compte/notifications'
+      path: '/mon-compte/notifications'
+      fullPath: '/mon-compte/notifications'
+      preLoaderRoute: typeof MonCompteNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mon-compte/kyc': {
+      id: '/mon-compte/kyc'
+      path: '/mon-compte/kyc'
+      fullPath: '/mon-compte/kyc'
+      preLoaderRoute: typeof MonCompteKycRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mon-compte/alertes': {
+      id: '/mon-compte/alertes'
+      path: '/mon-compte/alertes'
+      fullPath: '/mon-compte/alertes'
+      preLoaderRoute: typeof MonCompteAlertesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mon-compte/affiliation': {
+      id: '/mon-compte/affiliation'
+      path: '/mon-compte/affiliation'
+      fullPath: '/mon-compte/affiliation'
+      preLoaderRoute: typeof MonCompteAffiliationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketplace/deposer': {
+      id: '/marketplace/deposer'
+      path: '/deposer'
+      fullPath: '/marketplace/deposer'
+      preLoaderRoute: typeof MarketplaceDeposerRouteImport
+      parentRoute: typeof MarketplaceRoute
+    }
+    '/forum/nouvelle-question': {
+      id: '/forum/nouvelle-question'
+      path: '/nouvelle-question'
+      fullPath: '/forum/nouvelle-question'
+      preLoaderRoute: typeof ForumNouvelleQuestionRouteImport
+      parentRoute: typeof ForumRoute
+    }
+    '/forum/$id': {
+      id: '/forum/$id'
+      path: '/$id'
+      fullPath: '/forum/$id'
+      preLoaderRoute: typeof ForumIdRouteImport
+      parentRoute: typeof ForumRoute
+    }
+    '/formations/$id': {
+      id: '/formations/$id'
+      path: '/$id'
+      fullPath: '/formations/$id'
+      preLoaderRoute: typeof FormationsIdRouteImport
+      parentRoute: typeof FormationsRoute
+    }
+    '/dashboard/pro': {
+      id: '/dashboard/pro'
+      path: '/dashboard/pro'
+      fullPath: '/dashboard/pro'
+      preLoaderRoute: typeof DashboardProRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/inscriptions': {
+      id: '/dashboard/inscriptions'
+      path: '/dashboard/inscriptions'
+      fullPath: '/dashboard/inscriptions'
+      preLoaderRoute: typeof DashboardInscriptionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/annonces': {
+      id: '/dashboard/annonces'
+      path: '/dashboard/annonces'
+      fullPath: '/dashboard/annonces'
+      preLoaderRoute: typeof DashboardAnnoncesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/annuaire/$id': {
+      id: '/annuaire/$id'
+      path: '/$id'
+      fullPath: '/annuaire/$id'
+      preLoaderRoute: typeof AnnuaireIdRouteImport
+      parentRoute: typeof AnnuaireRoute
+    }
+    '/admin/utilisateurs': {
+      id: '/admin/utilisateurs'
+      path: '/utilisateurs'
+      fullPath: '/admin/utilisateurs'
+      preLoaderRoute: typeof AdminUtilisateursRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/newsletter': {
+      id: '/admin/newsletter'
+      path: '/newsletter'
+      fullPath: '/admin/newsletter'
+      preLoaderRoute: typeof AdminNewsletterRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/marketplace': {
+      id: '/admin/marketplace'
+      path: '/marketplace'
+      fullPath: '/admin/marketplace'
+      preLoaderRoute: typeof AdminMarketplaceRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/logs': {
+      id: '/admin/logs'
+      path: '/logs'
+      fullPath: '/admin/logs'
+      preLoaderRoute: typeof AdminLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/finances': {
+      id: '/admin/finances'
+      path: '/finances'
+      fullPath: '/admin/finances'
+      preLoaderRoute: typeof AdminFinancesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/contenus': {
+      id: '/admin/contenus'
+      path: '/contenus'
+      fullPath: '/admin/contenus'
+      preLoaderRoute: typeof AdminContenusRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/communication': {
+      id: '/admin/communication'
+      path: '/communication'
+      fullPath: '/admin/communication'
+      preLoaderRoute: typeof AdminCommunicationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/communaute': {
+      id: '/admin/communaute'
+      path: '/communaute'
+      fullPath: '/admin/communaute'
+      preLoaderRoute: typeof AdminCommunauteRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/affiliation': {
+      id: '/admin/affiliation'
+      path: '/affiliation'
+      fullPath: '/admin/affiliation'
+      preLoaderRoute: typeof AdminAffiliationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/mes-commandes/$id/litige': {
+      id: '/mes-commandes/$id/litige'
+      path: '/$id/litige'
+      fullPath: '/mes-commandes/$id/litige'
+      preLoaderRoute: typeof MesCommandesIdLitigeRouteImport
+      parentRoute: typeof MesCommandesRoute
+    }
+    '/formations/$id/apprendre': {
+      id: '/formations/$id/apprendre'
+      path: '/apprendre'
+      fullPath: '/formations/$id/apprendre'
+      preLoaderRoute: typeof FormationsIdApprendreRouteImport
+      parentRoute: typeof FormationsIdRoute
+    }
+    '/admin/utilisateurs/kyc': {
+      id: '/admin/utilisateurs/kyc'
+      path: '/kyc'
+      fullPath: '/admin/utilisateurs/kyc'
+      preLoaderRoute: typeof AdminUtilisateursKycRouteImport
+      parentRoute: typeof AdminUtilisateursRoute
+    }
+    '/admin/utilisateurs/$id': {
+      id: '/admin/utilisateurs/$id'
+      path: '/$id'
+      fullPath: '/admin/utilisateurs/$id'
+      preLoaderRoute: typeof AdminUtilisateursIdRouteImport
+      parentRoute: typeof AdminUtilisateursRoute
+    }
+    '/admin/site/publicites': {
+      id: '/admin/site/publicites'
+      path: '/site/publicites'
+      fullPath: '/admin/site/publicites'
+      preLoaderRoute: typeof AdminSitePublicitesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/site/pages': {
+      id: '/admin/site/pages'
+      path: '/site/pages'
+      fullPath: '/admin/site/pages'
+      preLoaderRoute: typeof AdminSitePagesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/site/menus': {
+      id: '/admin/site/menus'
+      path: '/site/menus'
+      fullPath: '/admin/site/menus'
+      preLoaderRoute: typeof AdminSiteMenusRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/site/identite': {
+      id: '/admin/site/identite'
+      path: '/site/identite'
+      fullPath: '/admin/site/identite'
+      preLoaderRoute: typeof AdminSiteIdentiteRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/site/accueil': {
+      id: '/admin/site/accueil'
+      path: '/site/accueil'
+      fullPath: '/admin/site/accueil'
+      preLoaderRoute: typeof AdminSiteAccueilRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/finances/transactions': {
+      id: '/admin/finances/transactions'
+      path: '/transactions'
+      fullPath: '/admin/finances/transactions'
+      preLoaderRoute: typeof AdminFinancesTransactionsRouteImport
+      parentRoute: typeof AdminFinancesRoute
+    }
+    '/admin/finances/remboursements': {
+      id: '/admin/finances/remboursements'
+      path: '/remboursements'
+      fullPath: '/admin/finances/remboursements'
+      preLoaderRoute: typeof AdminFinancesRemboursementsRouteImport
+      parentRoute: typeof AdminFinancesRoute
+    }
+    '/admin/finances/litiges': {
+      id: '/admin/finances/litiges'
+      path: '/litiges'
+      fullPath: '/admin/finances/litiges'
+      preLoaderRoute: typeof AdminFinancesLitigesRouteImport
+      parentRoute: typeof AdminFinancesRoute
+    }
+    '/admin/finances/commissions': {
+      id: '/admin/finances/commissions'
+      path: '/commissions'
+      fullPath: '/admin/finances/commissions'
+      preLoaderRoute: typeof AdminFinancesCommissionsRouteImport
+      parentRoute: typeof AdminFinancesRoute
+    }
+    '/admin/communication/tickets': {
+      id: '/admin/communication/tickets'
+      path: '/tickets'
+      fullPath: '/admin/communication/tickets'
+      preLoaderRoute: typeof AdminCommunicationTicketsRouteImport
+      parentRoute: typeof AdminCommunicationRoute
+    }
+    '/admin/communication/notifications': {
+      id: '/admin/communication/notifications'
+      path: '/notifications'
+      fullPath: '/admin/communication/notifications'
+      preLoaderRoute: typeof AdminCommunicationNotificationsRouteImport
+      parentRoute: typeof AdminCommunicationRoute
+    }
+    '/admin/communication/newsletter': {
+      id: '/admin/communication/newsletter'
+      path: '/newsletter'
+      fullPath: '/admin/communication/newsletter'
+      preLoaderRoute: typeof AdminCommunicationNewsletterRouteImport
+      parentRoute: typeof AdminCommunicationRoute
+    }
+    '/admin/communaute/signalements': {
+      id: '/admin/communaute/signalements'
+      path: '/signalements'
+      fullPath: '/admin/communaute/signalements'
+      preLoaderRoute: typeof AdminCommunauteSignalementsRouteImport
+      parentRoute: typeof AdminCommunauteRoute
+    }
+    '/admin/communaute/forum': {
+      id: '/admin/communaute/forum'
+      path: '/forum'
+      fullPath: '/admin/communaute/forum'
+      preLoaderRoute: typeof AdminCommunauteForumRouteImport
+      parentRoute: typeof AdminCommunauteRoute
+    }
+    '/admin/communaute/avis': {
+      id: '/admin/communaute/avis'
+      path: '/avis'
+      fullPath: '/admin/communaute/avis'
+      preLoaderRoute: typeof AdminCommunauteAvisRouteImport
+      parentRoute: typeof AdminCommunauteRoute
+    }
   }
 }
 
+interface AdminCommunauteRouteChildren {
+  AdminCommunauteAvisRoute: typeof AdminCommunauteAvisRoute
+  AdminCommunauteForumRoute: typeof AdminCommunauteForumRoute
+  AdminCommunauteSignalementsRoute: typeof AdminCommunauteSignalementsRoute
+}
+
+const AdminCommunauteRouteChildren: AdminCommunauteRouteChildren = {
+  AdminCommunauteAvisRoute: AdminCommunauteAvisRoute,
+  AdminCommunauteForumRoute: AdminCommunauteForumRoute,
+  AdminCommunauteSignalementsRoute: AdminCommunauteSignalementsRoute,
+}
+
+const AdminCommunauteRouteWithChildren = AdminCommunauteRoute._addFileChildren(
+  AdminCommunauteRouteChildren,
+)
+
+interface AdminCommunicationRouteChildren {
+  AdminCommunicationNewsletterRoute: typeof AdminCommunicationNewsletterRoute
+  AdminCommunicationNotificationsRoute: typeof AdminCommunicationNotificationsRoute
+  AdminCommunicationTicketsRoute: typeof AdminCommunicationTicketsRoute
+}
+
+const AdminCommunicationRouteChildren: AdminCommunicationRouteChildren = {
+  AdminCommunicationNewsletterRoute: AdminCommunicationNewsletterRoute,
+  AdminCommunicationNotificationsRoute: AdminCommunicationNotificationsRoute,
+  AdminCommunicationTicketsRoute: AdminCommunicationTicketsRoute,
+}
+
+const AdminCommunicationRouteWithChildren =
+  AdminCommunicationRoute._addFileChildren(AdminCommunicationRouteChildren)
+
+interface AdminFinancesRouteChildren {
+  AdminFinancesCommissionsRoute: typeof AdminFinancesCommissionsRoute
+  AdminFinancesLitigesRoute: typeof AdminFinancesLitigesRoute
+  AdminFinancesRemboursementsRoute: typeof AdminFinancesRemboursementsRoute
+  AdminFinancesTransactionsRoute: typeof AdminFinancesTransactionsRoute
+}
+
+const AdminFinancesRouteChildren: AdminFinancesRouteChildren = {
+  AdminFinancesCommissionsRoute: AdminFinancesCommissionsRoute,
+  AdminFinancesLitigesRoute: AdminFinancesLitigesRoute,
+  AdminFinancesRemboursementsRoute: AdminFinancesRemboursementsRoute,
+  AdminFinancesTransactionsRoute: AdminFinancesTransactionsRoute,
+}
+
+const AdminFinancesRouteWithChildren = AdminFinancesRoute._addFileChildren(
+  AdminFinancesRouteChildren,
+)
+
+interface AdminUtilisateursRouteChildren {
+  AdminUtilisateursIdRoute: typeof AdminUtilisateursIdRoute
+  AdminUtilisateursKycRoute: typeof AdminUtilisateursKycRoute
+}
+
+const AdminUtilisateursRouteChildren: AdminUtilisateursRouteChildren = {
+  AdminUtilisateursIdRoute: AdminUtilisateursIdRoute,
+  AdminUtilisateursKycRoute: AdminUtilisateursKycRoute,
+}
+
+const AdminUtilisateursRouteWithChildren =
+  AdminUtilisateursRoute._addFileChildren(AdminUtilisateursRouteChildren)
+
+interface AdminRouteChildren {
+  AdminAffiliationRoute: typeof AdminAffiliationRoute
+  AdminCommunauteRoute: typeof AdminCommunauteRouteWithChildren
+  AdminCommunicationRoute: typeof AdminCommunicationRouteWithChildren
+  AdminContenusRoute: typeof AdminContenusRoute
+  AdminFinancesRoute: typeof AdminFinancesRouteWithChildren
+  AdminLogsRoute: typeof AdminLogsRoute
+  AdminMarketplaceRoute: typeof AdminMarketplaceRoute
+  AdminNewsletterRoute: typeof AdminNewsletterRoute
+  AdminUtilisateursRoute: typeof AdminUtilisateursRouteWithChildren
+  AdminSiteAccueilRoute: typeof AdminSiteAccueilRoute
+  AdminSiteIdentiteRoute: typeof AdminSiteIdentiteRoute
+  AdminSiteMenusRoute: typeof AdminSiteMenusRoute
+  AdminSitePagesRoute: typeof AdminSitePagesRoute
+  AdminSitePublicitesRoute: typeof AdminSitePublicitesRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAffiliationRoute: AdminAffiliationRoute,
+  AdminCommunauteRoute: AdminCommunauteRouteWithChildren,
+  AdminCommunicationRoute: AdminCommunicationRouteWithChildren,
+  AdminContenusRoute: AdminContenusRoute,
+  AdminFinancesRoute: AdminFinancesRouteWithChildren,
+  AdminLogsRoute: AdminLogsRoute,
+  AdminMarketplaceRoute: AdminMarketplaceRoute,
+  AdminNewsletterRoute: AdminNewsletterRoute,
+  AdminUtilisateursRoute: AdminUtilisateursRouteWithChildren,
+  AdminSiteAccueilRoute: AdminSiteAccueilRoute,
+  AdminSiteIdentiteRoute: AdminSiteIdentiteRoute,
+  AdminSiteMenusRoute: AdminSiteMenusRoute,
+  AdminSitePagesRoute: AdminSitePagesRoute,
+  AdminSitePublicitesRoute: AdminSitePublicitesRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface AnnuaireRouteChildren {
+  AnnuaireIdRoute: typeof AnnuaireIdRoute
+}
+
+const AnnuaireRouteChildren: AnnuaireRouteChildren = {
+  AnnuaireIdRoute: AnnuaireIdRoute,
+}
+
+const AnnuaireRouteWithChildren = AnnuaireRoute._addFileChildren(
+  AnnuaireRouteChildren,
+)
+
+interface FormationsIdRouteChildren {
+  FormationsIdApprendreRoute: typeof FormationsIdApprendreRoute
+}
+
+const FormationsIdRouteChildren: FormationsIdRouteChildren = {
+  FormationsIdApprendreRoute: FormationsIdApprendreRoute,
+}
+
+const FormationsIdRouteWithChildren = FormationsIdRoute._addFileChildren(
+  FormationsIdRouteChildren,
+)
+
+interface FormationsRouteChildren {
+  FormationsIdRoute: typeof FormationsIdRouteWithChildren
+}
+
+const FormationsRouteChildren: FormationsRouteChildren = {
+  FormationsIdRoute: FormationsIdRouteWithChildren,
+}
+
+const FormationsRouteWithChildren = FormationsRoute._addFileChildren(
+  FormationsRouteChildren,
+)
+
+interface ForumRouteChildren {
+  ForumIdRoute: typeof ForumIdRoute
+  ForumNouvelleQuestionRoute: typeof ForumNouvelleQuestionRoute
+}
+
+const ForumRouteChildren: ForumRouteChildren = {
+  ForumIdRoute: ForumIdRoute,
+  ForumNouvelleQuestionRoute: ForumNouvelleQuestionRoute,
+}
+
+const ForumRouteWithChildren = ForumRoute._addFileChildren(ForumRouteChildren)
+
+interface MarketplaceRouteChildren {
+  MarketplaceDeposerRoute: typeof MarketplaceDeposerRoute
+}
+
+const MarketplaceRouteChildren: MarketplaceRouteChildren = {
+  MarketplaceDeposerRoute: MarketplaceDeposerRoute,
+}
+
+const MarketplaceRouteWithChildren = MarketplaceRoute._addFileChildren(
+  MarketplaceRouteChildren,
+)
+
+interface MesCommandesRouteChildren {
+  MesCommandesIdLitigeRoute: typeof MesCommandesIdLitigeRoute
+}
+
+const MesCommandesRouteChildren: MesCommandesRouteChildren = {
+  MesCommandesIdLitigeRoute: MesCommandesIdLitigeRoute,
+}
+
+const MesCommandesRouteWithChildren = MesCommandesRoute._addFileChildren(
+  MesCommandesRouteChildren,
+)
+
+interface PharmacopeeRouteChildren {
+  PharmacopeeSlugRoute: typeof PharmacopeeSlugRoute
+}
+
+const PharmacopeeRouteChildren: PharmacopeeRouteChildren = {
+  PharmacopeeSlugRoute: PharmacopeeSlugRoute,
+}
+
+const PharmacopeeRouteWithChildren = PharmacopeeRoute._addFileChildren(
+  PharmacopeeRouteChildren,
+)
+
+interface RecettesRouteChildren {
+  RecettesSlugRoute: typeof RecettesSlugRoute
+}
+
+const RecettesRouteChildren: RecettesRouteChildren = {
+  RecettesSlugRoute: RecettesSlugRoute,
+}
+
+const RecettesRouteWithChildren = RecettesRoute._addFileChildren(
+  RecettesRouteChildren,
+)
+
+interface RecettesSanteRouteChildren {
+  RecettesSanteSlugRoute: typeof RecettesSanteSlugRoute
+}
+
+const RecettesSanteRouteChildren: RecettesSanteRouteChildren = {
+  RecettesSanteSlugRoute: RecettesSanteSlugRoute,
+}
+
+const RecettesSanteRouteWithChildren = RecettesSanteRoute._addFileChildren(
+  RecettesSanteRouteChildren,
+)
+
+interface RitesCulturesRouteChildren {
+  RitesCulturesSlugRoute: typeof RitesCulturesSlugRoute
+}
+
+const RitesCulturesRouteChildren: RitesCulturesRouteChildren = {
+  RitesCulturesSlugRoute: RitesCulturesSlugRoute,
+}
+
+const RitesCulturesRouteWithChildren = RitesCulturesRoute._addFileChildren(
+  RitesCulturesRouteChildren,
+)
+
+interface SanteAuQuotidienRouteChildren {
+  SanteAuQuotidienSlugRoute: typeof SanteAuQuotidienSlugRoute
+}
+
+const SanteAuQuotidienRouteChildren: SanteAuQuotidienRouteChildren = {
+  SanteAuQuotidienSlugRoute: SanteAuQuotidienSlugRoute,
+}
+
+const SanteAuQuotidienRouteWithChildren =
+  SanteAuQuotidienRoute._addFileChildren(SanteAuQuotidienRouteChildren)
+
+interface SanteQuotidienRouteChildren {
+  SanteQuotidienSlugRoute: typeof SanteQuotidienSlugRoute
+}
+
+const SanteQuotidienRouteChildren: SanteQuotidienRouteChildren = {
+  SanteQuotidienSlugRoute: SanteQuotidienSlugRoute,
+}
+
+const SanteQuotidienRouteWithChildren = SanteQuotidienRoute._addFileChildren(
+  SanteQuotidienRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SlugRoute: SlugRoute,
+  AdminRoute: AdminRouteWithChildren,
   AgendaRoute: AgendaRoute,
-  AnnuaireRoute: AnnuaireRoute,
+  AideRoute: AideRoute,
+  AnnuaireRoute: AnnuaireRouteWithChildren,
+  CheckoutRoute: CheckoutRoute,
   ConnexionRoute: ConnexionRoute,
+  DevenirProRoute: DevenirProRoute,
   DiscutonsEnRoute: DiscutonsEnRoute,
-  FormationsRoute: FormationsRoute,
+  FormationsRoute: FormationsRouteWithChildren,
+  ForumRoute: ForumRouteWithChildren,
   InscriptionRoute: InscriptionRoute,
-  MarketplaceRoute: MarketplaceRoute,
+  MarketplaceRoute: MarketplaceRouteWithChildren,
+  MesCommandesRoute: MesCommandesRouteWithChildren,
+  MessagesRoute: MessagesRoute,
   MotDePasseOublieRoute: MotDePasseOublieRoute,
-  PharmacopeeRoute: PharmacopeeRoute,
-  RecettesSanteRoute: RecettesSanteRoute,
+  PanierRoute: PanierRoute,
+  PharmacopeeRoute: PharmacopeeRouteWithChildren,
+  RecettesRoute: RecettesRouteWithChildren,
+  RecettesSanteRoute: RecettesSanteRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
-  RitesCulturesRoute: RitesCulturesRoute,
-  SanteQuotidienRoute: SanteQuotidienRoute,
+  RitesCulturesRoute: RitesCulturesRouteWithChildren,
+  SanteAuQuotidienRoute: SanteAuQuotidienRouteWithChildren,
+  SanteQuotidienRoute: SanteQuotidienRouteWithChildren,
   TableauDeBordRoute: TableauDeBordRoute,
+  DashboardAnnoncesRoute: DashboardAnnoncesRoute,
+  DashboardInscriptionsRoute: DashboardInscriptionsRoute,
+  DashboardProRoute: DashboardProRoute,
+  MonCompteAffiliationRoute: MonCompteAffiliationRoute,
+  MonCompteAlertesRoute: MonCompteAlertesRoute,
+  MonCompteKycRoute: MonCompteKycRoute,
+  MonCompteNotificationsRoute: MonCompteNotificationsRoute,
+  MonComptePortefeuilleRoute: MonComptePortefeuilleRoute,
+  MonCompteTicketsRoute: MonCompteTicketsRoute,
+  ProfilUsernameRoute: ProfilUsernameRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

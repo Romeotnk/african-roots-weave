@@ -1,11 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { PlantCard } from "@/components/shared/PlantCard";
 import { plants } from "@/data/plants";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { ArrowRight } from "lucide-react";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useMonographs } from "@/hooks/useContentApi";
+import { mapMonographsToPlants } from "@/lib/mappers/plantMonograph";
 
 export const Route = createFileRoute("/pharmacopee")({
   head: () => ({
@@ -20,47 +22,44 @@ export const Route = createFileRoute("/pharmacopee")({
   component: Pharmacopee,
 });
 
-const cats: Array<{ label: string; match: string[] }> = [
-  { label: "Toutes", match: [] },
-  { label: "Anti-infectieux", match: ["infect", "fievre", "paludism"] },
-  { label: "Gynécologie", match: ["gyne", "femme", "fertil", "post-partum"] },
-  { label: "Gastro-intestinal", match: ["digest", "gastro", "intestin", "foie", "hepat"] },
-  { label: "Neurologie", match: ["nerveu", "sommeil", "stress", "anxiet"] },
-  { label: "Dermatologie", match: ["peau", "cutan", "eczema", "cicatris", "dermat"] },
-  { label: "Cardio-vasculaire", match: ["cardio", "tension", "hyperten", "circul"] },
-  { label: "Pulmonaire", match: ["pulmon", "toux", "respir", "bronch"] },
+const cats = [
+  "Toutes",
+  "Anti-infectieux",
+  "Gynécologie",
+  "Gastro-intestinal",
+  "Neurologie",
+  "Dermatologie",
+  "Cardio-vasculaire",
+  "Pulmonaire",
 ];
 
-const normalize = (value: string) =>
-  value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-
 function Pharmacopee() {
-  const featured = plants[0];
+  const { data: monographs } = useMonographs();
   const [search, setSearch] = useState("");
-  const [activeCat, setActiveCat] = useState("Toutes");
+  const [category, setCategory] = useState("Toutes");
+  const debouncedSearch = useDebounce(search, 300);
+  const apiPlants = useMemo(() => mapMonographsToPlants(monographs), [monographs]);
+  const plantSource = apiPlants.length ? apiPlants : plants;
+  const featured = plantSource[0];
 
-  const filtered = useMemo(() => {
-    const cat = cats.find((c) => c.label === activeCat);
-    return plants.filter((p) => {
-      if (cat && cat.match.length) {
-        const blob = normalize(
-          [...p.indications, p.summary, p.family].join(" "),
-        );
-        if (!cat.match.some((m) => blob.includes(m))) return false;
-      }
-      if (search) {
-        const q = normalize(search);
-        const blob = normalize(
-          [p.scientificName, p.family, p.origin, p.summary, ...p.vernacularNames, ...p.indications].join(" "),
-        );
-        if (!blob.includes(q)) return false;
-      }
-      return true;
+  const filteredPlants = useMemo(() => {
+    const normalizedSearch = debouncedSearch.trim().toLowerCase();
+    return plantSource.filter((plant) => {
+      const searchable = [
+        plant.scientificName,
+        plant.family,
+        plant.origin,
+        plant.summary,
+        ...plant.vernacularNames,
+        ...plant.indications,
+      ]
+        .join(" ")
+        .toLowerCase();
+      const matchesSearch = !normalizedSearch || searchable.includes(normalizedSearch);
+      const matchesCategory = category === "Toutes" || plant.indications.includes(category) || plant.family === category;
+      return matchesSearch && matchesCategory;
     });
-  }, [search, activeCat]);
+  }, [category, debouncedSearch, plantSource]);
 
   return (
     <>
@@ -132,9 +131,13 @@ function Pharmacopee() {
                   ))}
                 </div>
               </div>
-              <button className="mt-7 h-11 px-6 rounded-full bg-[var(--brand-primary)] text-white font-semibold inline-flex items-center gap-2 hover:bg-[var(--brand-primary-dark)] transition">
+              <Link
+                to="/pharmacopee/$slug"
+                params={{ slug: featured.slug }}
+                className="mt-7 h-11 px-6 rounded-full bg-[var(--brand-primary)] text-white font-semibold inline-flex items-center gap-2 hover:bg-[var(--brand-primary-dark)] transition"
+              >
                 Lire la monographie complète <ArrowRight size={16} />
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -144,31 +147,37 @@ function Pharmacopee() {
         <div className="container-iwosan">
           <SectionHeader label="Parcourir" title="Par catégorie thérapeutique" />
           <div className="flex gap-2 mb-8 flex-wrap">
-            {cats.map((c) => {
-              const active = activeCat === c.label;
-              return (
-                <button
-                  key={c.label}
-                  onClick={() => setActiveCat(c.label)}
-                  className={`px-4 py-2 rounded-full text-[13px] font-semibold transition ${active ? "bg-[var(--brand-primary)] text-white" : "bg-white border border-[var(--brand-border)] hover:border-[var(--brand-primary)]"}`}
-                >
-                  {c.label}
-                </button>
-              );
-            })}
+            {cats.map((c, i) => (
+              <button
+                key={c}
+                onClick={() => setCategory(c)}
+                className={`px-4 py-2 rounded-full text-[13px] font-semibold ${category === c || (i === 0 && category === "Toutes") ? "bg-[var(--brand-primary)] text-white" : "bg-white border border-[var(--brand-border)] hover:border-[var(--brand-primary)]"}`}
+              >
+                {c}
+              </button>
+            ))}
           </div>
-          <p className="mb-4 text-[13px] text-[var(--color-text-muted)]">
-            {filtered.length} plante{filtered.length > 1 ? "s" : ""}
+          <p className="mb-6 text-[14px] text-[var(--color-text-muted)]">
+            <strong className="text-[var(--color-text-primary)]">{filteredPlants.length}</strong> plantes
+            trouvees{debouncedSearch ? ` pour "${debouncedSearch}"` : ""}
           </p>
-          {filtered.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-[var(--brand-border)] px-4 py-8 text-center text-[14px] text-[var(--color-text-muted)]">
-              Aucune plante ne correspond a votre recherche.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filtered.map((p) => (
-                <PlantCard key={p.id} plant={p} />
-              ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filteredPlants.map((p) => (
+              <PlantCard key={p.id} plant={p} />
+            ))}
+          </div>
+          {filteredPlants.length === 0 && (
+            <div className="mt-6 rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
+              <p className="font-bold">Aucune plante trouvee</p>
+              <button
+                onClick={() => {
+                  setSearch("");
+                  setCategory("Toutes");
+                }}
+                className="mt-4 h-10 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white"
+              >
+                Effacer les filtres
+              </button>
             </div>
           )}
         </div>

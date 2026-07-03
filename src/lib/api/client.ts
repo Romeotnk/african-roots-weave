@@ -1,13 +1,6 @@
-const normalizeApiBaseUrl = (value?: string) => {
-  if (!value) {
-    return "/api";
-  }
+import { BASE_URL } from "@/config/api";
 
-  const normalized = value.replace(/\/+$/, "");
-  return normalized.endsWith("/api") ? normalized : `${normalized}/api`;
-};
-
-const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
+const API_BASE_URL = BASE_URL;
 
 type ApiEnvelope<T> = {
   success: boolean;

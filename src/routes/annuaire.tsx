@@ -21,71 +21,69 @@ export const Route = createFileRoute("/annuaire")({
   component: Annuaire,
 });
 
-const normalize = (value: string) =>
-  value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-
 function Annuaire() {
   const [items, setItems] = useState<Professional[]>(fallbackProfessionals);
   const [search, setSearch] = useState("");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [country, setCountry] = useState("");
   const [specialty, setSpecialty] = useState("");
+  const [country, setCountry] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const query = useMemo(() => {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (verifiedOnly) params.set("verified", "true");
-    params.set("limit", "48");
+    params.set("limit", "24");
     return params;
   }, [search, verifiedOnly]);
+
+  const specialties = useMemo(
+    () =>
+      Array.from(new Set(items.flatMap((professional) => professional.specialties))).sort((a, b) =>
+        a.localeCompare(b, "fr"),
+      ),
+    [items],
+  );
+
+  const countries = useMemo(
+    () => Array.from(new Set(items.map((professional) => professional.country))).sort((a, b) => a.localeCompare(b, "fr")),
+    [items],
+  );
+
+  const filteredItems = useMemo(
+    () =>
+      items.filter((professional) => {
+        const matchesSpecialty = !specialty || professional.specialties.includes(specialty);
+        const matchesCountry = !country || professional.country === country;
+        return matchesSpecialty && matchesCountry;
+      }),
+    [country, items, specialty],
+  );
 
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
+    setError(null);
+
     getProfessionals(query)
       .then(({ professionals }) => {
-        if (!cancelled && professionals.length) setItems(professionals);
+        if (!cancelled) setItems(professionals);
       })
-      .catch(() => {
-        if (!cancelled) setItems(fallbackProfessionals);
+      .catch((apiError) => {
+        if (!cancelled) {
+          setError(apiError instanceof Error ? apiError.message : "API indisponible, donnees locales affichees.");
+          setItems(fallbackProfessionals);
+        }
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
       });
+
     return () => {
       cancelled = true;
     };
   }, [query]);
-
-  const countries = useMemo(
-    () => Array.from(new Set(items.map((p) => p.country).filter(Boolean))).sort(),
-    [items],
-  );
-  const specialties = useMemo(
-    () =>
-      Array.from(new Set(items.flatMap((p) => p.specialties ?? []).filter(Boolean))).sort(),
-    [items],
-  );
-
-  const filtered = useMemo(() => {
-    return items.filter((p) => {
-      if (verifiedOnly && !p.verified) return false;
-      if (country && p.country !== country) return false;
-      if (specialty && !(p.specialties ?? []).includes(specialty)) return false;
-      if (search) {
-        const q = normalize(search);
-        const haystack = normalize(
-          [p.name, p.specialty, p.location, p.country, p.bio, ...(p.specialties ?? [])].join(" "),
-        );
-        if (!haystack.includes(q)) return false;
-      }
-      return true;
-    });
-  }, [items, search, verifiedOnly, country, specialty]);
 
   return (
     <>
@@ -106,22 +104,26 @@ function Annuaire() {
         <div className="container-iwosan flex items-center gap-3 flex-wrap">
           <select
             value={specialty}
-            onChange={(e) => setSpecialty(e.target.value)}
-            className="px-4 h-10 rounded-full text-[13px] font-semibold border border-[var(--brand-border)] bg-white text-[var(--color-text-secondary)]"
+            onChange={(event) => setSpecialty(event.target.value)}
+            className="px-4 h-10 rounded-full text-[13px] font-semibold border border-[var(--brand-border)] text-[var(--color-text-secondary)] bg-white"
           >
             <option value="">Toutes specialites</option>
-            {specialties.map((s) => (
-              <option key={s} value={s}>{s}</option>
+            {specialties.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
             ))}
           </select>
           <select
             value={country}
-            onChange={(e) => setCountry(e.target.value)}
-            className="px-4 h-10 rounded-full text-[13px] font-semibold border border-[var(--brand-border)] bg-white text-[var(--color-text-secondary)]"
+            onChange={(event) => setCountry(event.target.value)}
+            className="px-4 h-10 rounded-full text-[13px] font-semibold border border-[var(--brand-border)] text-[var(--color-text-secondary)] bg-white"
           >
             <option value="">Tous pays</option>
-            {countries.map((c) => (
-              <option key={c} value={c}>{c}</option>
+            {countries.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
             ))}
           </select>
           <button
@@ -130,19 +132,6 @@ function Annuaire() {
           >
             Verifie uniquement
           </button>
-          {(search || verifiedOnly || country || specialty) && (
-            <button
-              onClick={() => {
-                setSearch("");
-                setVerifiedOnly(false);
-                setCountry("");
-                setSpecialty("");
-              }}
-              className="px-4 h-10 rounded-full text-[13px] font-semibold text-[var(--brand-primary)]"
-            >
-              Reinitialiser
-            </button>
-          )}
         </div>
       </section>
 
@@ -151,19 +140,34 @@ function Annuaire() {
           <div className="mb-6 flex items-center justify-between gap-3">
             <p className="text-[14px] text-[var(--color-text-muted)]">
               <span className="font-bold text-[var(--color-text-primary)]">
-                {isLoading ? "Chargement..." : `${filtered.length} praticiens`}
+                {isLoading ? "Chargement..." : `${filteredItems.length} praticiens`}
               </span>
             </p>
           </div>
-          {filtered.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-[var(--brand-border)] px-4 py-8 text-center text-[14px] text-[var(--color-text-muted)]">
-              Aucun praticien ne correspond a votre recherche.
+          {error && (
+            <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] text-amber-800">
+              {error}
             </p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filtered.map((professional) => (
-                <ProfessionalCard key={professional.id} pro={professional} />
-              ))}
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filteredItems.map((professional) => (
+              <ProfessionalCard key={professional.id} pro={professional} />
+            ))}
+          </div>
+          {!isLoading && filteredItems.length === 0 && (
+            <div className="mt-6 rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
+              <p className="font-bold">Aucun praticien trouve</p>
+              <button
+                onClick={() => {
+                  setSearch("");
+                  setSpecialty("");
+                  setCountry("");
+                  setVerifiedOnly(false);
+                }}
+                className="mt-4 h-10 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white"
+              >
+                Effacer les filtres
+              </button>
             </div>
           )}
         </div>

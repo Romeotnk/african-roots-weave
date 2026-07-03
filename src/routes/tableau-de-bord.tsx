@@ -224,12 +224,18 @@ function Dashboard() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-            <button className="bg-[var(--brand-primary)] text-white rounded-[12px] p-4 font-semibold text-left hover:bg-[var(--brand-primary-dark)] transition">
+            <Link
+              to="/marketplace/deposer"
+              className="bg-[var(--brand-primary)] text-white rounded-[12px] p-4 font-semibold text-left hover:bg-[var(--brand-primary-dark)] transition"
+            >
               + Ajouter un produit
-            </button>
-            <button className="bg-white border border-[var(--brand-border)] rounded-[12px] p-4 font-semibold text-left hover:border-[var(--brand-primary)] transition">
-              Voir mes commandes
-            </button>
+            </Link>
+            <Link
+              to="/dashboard/annonces"
+              className="bg-white border border-[var(--brand-border)] rounded-[12px] p-4 font-semibold text-left hover:border-[var(--brand-primary)] transition"
+            >
+              Gerer mes annonces
+            </Link>
             <button className="bg-white border border-[var(--brand-border)] rounded-[12px] p-4 font-semibold text-left hover:border-[var(--brand-primary)] transition">
               Voir mes messages
             </button>

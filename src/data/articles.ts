@@ -4,96 +4,114 @@ export const articles: Article[] = [
   {
     id: "a1",
     slug: "moringa-superaliment-afrique",
-    title: "Le Moringa, superaliment endémique : 12 études cliniques décodées",
+    title: "Le moringa, superaliment endemique : 12 etudes decodees",
     excerpt:
-      "Synthèse rigoureuse des recherches sur Moringa oleifera, ses indications validées et les zones d'ombre.",
-    cover:
-      "https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=800&q=80&auto=format&fit=crop",
-    space: "Pharmacopée",
+      "Synthese rigoureuse des recherches sur Moringa oleifera, ses indications validees et les zones d'ombre.",
+    body:
+      "<p>Le moringa est devenu un symbole de nutrition accessible en Afrique de l'Ouest. Ses feuilles concentrent proteines, fer, calcium et vitamines, mais la qualite de sechage influence beaucoup la valeur finale.</p><p>Les usages quotidiens les plus prudents restent alimentaires : poudre dans la bouillie, feuilles fraiches dans les sauces ou infusion legere. Les extraits concentres doivent etre encadres.</p>",
+    cover: "https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=1200&q=80&auto=format&fit=crop",
+    space: "Pharmacopee",
+    category: "Nutrition",
     readTime: 8,
     date: "2026-06-02",
-    authorName: "Dr. Amina Traoré",
-    authorAvatar:
-      "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=100&q=80&auto=format&fit=crop",
+    authorName: "Dr. Amina Traore",
+    authorAvatar: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=120&q=80&auto=format&fit=crop",
     authorSpecialty: "Ethnobotanique",
+    authorProfileId: "p1",
+    comments: [
+      {
+        id: "com-a1",
+        authorName: "Awa D.",
+        content: "Article tres clair, surtout sur la difference entre aliment et extrait concentre.",
+        date: "2026-06-03",
+      },
+    ],
   },
   {
     id: "a2",
     slug: "rites-naissance-baoule",
-    title: "Rites de naissance chez les Baoulé : transmission et symbolique",
+    title: "Rites de naissance chez les Baoule : transmission et symbolique",
     excerpt:
-      "Du septième jour à l'imposition du nom, un voyage ethnographique au cœur de la Côte d'Ivoire centrale.",
-    cover:
-      "https://images.unsplash.com/photo-1497436072909-60f360e1d4b1?w=800&q=80&auto=format&fit=crop",
+      "Du septieme jour a l'imposition du nom, un voyage ethnographique au coeur de la Cote d'Ivoire centrale.",
+    body:
+      "<p>Les rites de naissance baoule structurent l'accueil social de l'enfant et rappellent le lien entre famille, ancetres et territoire.</p><p>Ce contenu est presente a des fins documentaires et culturelles. Il ne vise pas a remplacer l'accompagnement communautaire ou spirituel propre a chaque lignage.</p>",
+    cover: "https://images.unsplash.com/photo-1497436072909-60f360e1d4b1?w=1200&q=80&auto=format&fit=crop",
     space: "Rites & Cultures",
+    category: "Rituels de soin",
     readTime: 12,
     date: "2026-05-28",
     authorName: "Mama Rose Ekwalla",
-    authorAvatar:
-      "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&q=80&auto=format&fit=crop",
+    authorAvatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&q=80&auto=format&fit=crop",
     authorSpecialty: "Sage-femme",
+    authorProfileId: "p2",
   },
   {
     id: "a3",
     slug: "alimentation-anti-inflammatoire",
     title: "Alimentation anti-inflammatoire : retour aux fondamentaux africains",
     excerpt:
-      "Fonio, baobab, hibiscus : trois piliers d'une diète traditionnelle redécouverte par la nutrition moderne.",
-    cover:
-      "https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=800&q=80&auto=format&fit=crop",
-    space: "Santé au quotidien",
+      "Fonio, baobab, hibiscus : trois piliers d'une diete traditionnelle redecouverte par la nutrition moderne.",
+    body:
+      "<p>Les cuisines africaines traditionnelles offrent des bases naturellement riches en fibres, mineraux et antioxydants. Le fonio, le baobab et l'hibiscus montrent comment une alimentation ordinaire peut soutenir la prevention.</p><p>L'objectif n'est pas de transformer chaque repas en prescription, mais de retrouver des equilibres simples : cereales peu raffinees, sauces vegetales, legumineuses et boissons non sucrees.</p>",
+    cover: "https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=1200&q=80&auto=format&fit=crop",
+    space: "Sante au quotidien",
+    category: "Nutrition",
     readTime: 6,
     date: "2026-05-22",
     authorName: "Mama Fatou Sow",
-    authorAvatar:
-      "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=100&q=80&auto=format&fit=crop",
+    authorAvatar: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=120&q=80&auto=format&fit=crop",
     authorSpecialty: "Nutritionniste",
+    authorProfileId: "p3",
   },
   {
     id: "a4",
     slug: "recette-tisane-digestive",
-    title: "Recette : tisane digestive kinkéliba-citronnelle",
-    excerpt: "Préparation, dosage et précautions d'usage pour une infusion quotidienne post-repas.",
-    cover:
-      "https://images.unsplash.com/photo-1597318181409-cf64d0b9d3d2?w=800&q=80&auto=format&fit=crop",
-    space: "Recettes santé",
+    title: "Recette : tisane digestive kinkeliba-citronnelle",
+    excerpt: "Preparation, dosage et precautions d'usage pour une infusion quotidienne post-repas.",
+    body:
+      "<p>Cette infusion associe kinkeliba et citronnelle pour accompagner la digestion apres un repas lourd. Elle reste une recette familiale de confort, pas un traitement medical.</p>",
+    cover: "https://images.unsplash.com/photo-1597318181409-cf64d0b9d3d2?w=1200&q=80&auto=format&fit=crop",
+    space: "Recettes sante",
+    category: "Infusions",
     readTime: 4,
     date: "2026-05-18",
-    authorName: "Mama Aïssata",
-    authorAvatar:
-      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&q=80&auto=format&fit=crop",
+    authorName: "Mama Aissata",
+    authorAvatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&q=80&auto=format&fit=crop",
     authorSpecialty: "Tradi-praticienne",
+    authorProfileId: "p4",
   },
   {
     id: "a5",
     slug: "neem-antipaludique",
-    title: "Le neem face au paludisme : où en est la science ?",
-    excerpt:
-      "Revue des essais cliniques et limites des extraits standardisés d'Azadirachta indica.",
-    cover:
-      "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=800&q=80&auto=format&fit=crop",
-    space: "Pharmacopée",
+    title: "Le neem face au paludisme : ou en est la science ?",
+    excerpt: "Revue des essais cliniques et limites des extraits standardises d'Azadirachta indica.",
+    body:
+      "<p>Le neem fait l'objet de nombreuses recherches, mais les usages populaires depassent souvent les donnees disponibles. Les extraits concentres peuvent presenter des risques, notamment chez l'enfant et la femme enceinte.</p>",
+    cover: "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=1200&q=80&auto=format&fit=crop",
+    space: "Pharmacopee",
+    category: "Prevention",
     readTime: 10,
     date: "2026-05-14",
     authorName: "Dr. Kwame Mensah",
-    authorAvatar:
-      "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&q=80&auto=format&fit=crop",
-    authorSpecialty: "Phytothérapeute",
+    authorAvatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=120&q=80&auto=format&fit=crop",
+    authorSpecialty: "Phytotherapeute",
+    authorProfileId: "p5",
   },
   {
     id: "a6",
     slug: "karite-cicatrisation",
-    title: "Le beurre de karité : preuves cliniques en cicatrisation",
-    excerpt:
-      "Composition, mécanismes d'action et indications validées sur l'eczéma et les brûlures superficielles.",
-    cover:
-      "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=800&q=80&auto=format&fit=crop",
-    space: "Santé au quotidien",
+    title: "Le beurre de karite : preuves cliniques en cicatrisation",
+    excerpt: "Composition, mecanismes d'action et indications validees sur l'eczema et les brulures superficielles.",
+    body:
+      "<p>Le beurre de karite non raffine est riche en acides gras et insaponifiables. Son interet principal concerne l'emollience, la protection cutanee et l'accompagnement des irritations superficielles.</p><p>Sur une plaie profonde, une brulure etendue ou une infection, il faut consulter rapidement.</p>",
+    cover: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=1200&q=80&auto=format&fit=crop",
+    space: "Sante au quotidien",
+    category: "Soins du corps",
     readTime: 7,
     date: "2026-05-08",
     authorName: "Tata Ngozi",
-    authorAvatar:
-      "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=100&q=80&auto=format&fit=crop",
+    authorAvatar: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=120&q=80&auto=format&fit=crop",
     authorSpecialty: "Herboriste",
+    authorProfileId: "p6",
   },
 ];

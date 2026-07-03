@@ -3,7 +3,9 @@ import { apiRequest } from "./client";
 
 type BackendProduct = {
   id: string;
+  slug?: string;
   title: string;
+  description?: string;
   category: string;
   type: "PHYSICAL" | "SERVICE" | "DIGITAL";
   price: string | number;
@@ -23,6 +25,26 @@ type BackendProduct = {
       isVerified: boolean;
     } | null;
   };
+};
+
+export type ProductPayload = {
+  title: string;
+  description: string;
+  price: number | string;
+  category: string;
+  type: "PHYSICAL" | "SERVICE" | "DIGITAL";
+  images?: string[];
+  stock?: number;
+  auctionEnabled?: boolean;
+  auctionEndDate?: string;
+  commissionRate?: number;
+  downloadLimit?: number;
+  fileUrl?: string;
+};
+
+export type UpdateProductPayload = Partial<ProductPayload> & {
+  isActive?: boolean;
+  isApproved?: boolean;
 };
 
 type BackendProfessional = {
@@ -99,4 +121,58 @@ export const getProfessionals = async (params: URLSearchParams) => {
     professionals: (response.data ?? []).map(toProfessional),
     pagination: response.pagination,
   };
+};
+
+export const getProfessionalById = async (id: string) => {
+  const response = await apiRequest<BackendProfessional>(`/professionals/${id}`);
+  return response.data ? toProfessional(response.data) : null;
+};
+
+export const getProductBySlug = async (slug: string) => {
+  const response = await apiRequest<BackendProduct>(`/products/${slug}`);
+  return response.data ? toProduct(response.data) : null;
+};
+
+export const createProduct = async (payload: ProductPayload) => {
+  const response = await apiRequest<BackendProduct>("/products", {
+    method: "POST",
+    body: payload,
+  });
+  return response.data ? toProduct(response.data) : null;
+};
+
+export const updateProduct = async (id: string, payload: UpdateProductPayload) => {
+  const response = await apiRequest<BackendProduct>(`/products/${id}`, {
+    method: "PUT",
+    body: payload,
+  });
+  return response.data ? toProduct(response.data) : null;
+};
+
+export const deleteProduct = async (id: string) => {
+  const response = await apiRequest<null>(`/products/${id}`, { method: "DELETE" });
+  return response.data;
+};
+
+export const uploadProductImages = async (id: string, files: File[]) => {
+  const body = new FormData();
+  files.forEach((file) => body.append("images", file));
+  const response = await apiRequest<{ id: string; images: string[]; watermarked: boolean }>(`/products/${id}/upload-images`, {
+    method: "POST",
+    body,
+  });
+  return response.data;
+};
+
+export const listProductBids = async (id: string) => {
+  const response = await apiRequest<unknown[]>(`/products/${id}/bids`);
+  return response.data ?? [];
+};
+
+export const placeProductBid = async (id: string, amount: number) => {
+  const response = await apiRequest<unknown>(`/products/${id}/bids`, {
+    method: "POST",
+    body: { amount },
+  });
+  return response.data;
 };

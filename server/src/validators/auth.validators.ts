@@ -18,6 +18,7 @@ export const registerValidator = [
   body("firstName").isString().isLength({ min: 2, max: 80 }).escape(),
   body("lastName").isString().isLength({ min: 2, max: 80 }).escape(),
   body("country").isString().isLength({ min: 2, max: 80 }).escape(),
+  body("role").optional().isIn(["USER", "PROFESSIONAL", "RESEARCHER"]),
   body("language").optional().isIn(["fr", "en", "ar"]),
   body("referralCode").optional().isString().trim().escape(),
   body("turnstileToken").optional().isString(),

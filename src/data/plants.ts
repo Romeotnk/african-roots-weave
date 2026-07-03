@@ -5,27 +5,63 @@ export const plants: Plant[] = [
     id: "pl1",
     slug: "kinkeliba",
     scientificName: "Combretum micranthum",
-    vernacularNames: ["Kinkéliba", "Sékhew", "Quinquéliba"],
+    vernacularNames: ["Kinkeliba", "Sekhew", "Quinqueliba"],
     family: "Combretaceae",
     origin: "Afrique de l'Ouest",
-    indications: ["Digestion", "Détoxification hépatique", "Fièvre"],
-    image:
-      "https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=800&q=80&auto=format&fit=crop",
+    region: "Sahel et savanes ouest-africaines",
+    therapeuticCategory: "Digestif et hepatique",
+    indications: ["Digestion", "Detoxification hepatique", "Fievre"],
+    image: "https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=1200&q=80&auto=format&fit=crop",
+    gallery: [
+      "https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=1200&q=80&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1515446134809-993c501ca304?w=1200&q=80&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=1200&q=80&auto=format&fit=crop",
+    ],
     summary:
-      "Plante emblématique du Sahel, utilisée en infusion pour ses propriétés hépatoprotectrices et diurétiques.",
+      "Plante emblematique du Sahel, utilisee en infusion pour ses proprietes hepatoprotectrices et diuretiques.",
+    botanicalDescription:
+      "Arbuste ligneux a feuilles opposees, commun dans les zones seches. Les feuilles sont recoltees puis sechees a l'ombre pour limiter la degradation aromatique.",
+    medicinalProperties: [
+      { property: "Digestive", use: "Infusion apres repas lourd", evidence: "Usage traditionnel documente" },
+      { property: "Diuretique", use: "Cure courte de confort", evidence: "Donnees pharmacologiques preliminaires" },
+      { property: "Hepatique", use: "Soutien prudent du foie", evidence: "Observation ethnobotanique" },
+    ],
+    preparations: [
+      "Rincer une petite poignee de feuilles seches.",
+      "Infuser 10 minutes dans une eau fremissante, hors feu.",
+      "Filtrer et boire tiede, sans prolonger la cure sans avis professionnel.",
+    ],
+    precautions: [
+      "Eviter les cures longues en cas de maladie hepatique non suivie.",
+      "Demander avis medical pendant grossesse, allaitement ou traitement chronique.",
+    ],
+    references: ["Monographies ethnobotaniques ouest-africaines", "Revue Iwosan, dossier plantes digestives 2026"],
   },
   {
     id: "pl2",
     slug: "moringa-oleifera",
     scientificName: "Moringa oleifera",
-    vernacularNames: ["Moringa", "Nébéday", "Arbre miracle"],
+    vernacularNames: ["Moringa", "Nebeday", "Arbre miracle"],
     family: "Moringaceae",
     origin: "Pan-tropical",
-    indications: ["Malnutrition", "Anémie", "Hypertension"],
-    image:
-      "https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=800&q=80&auto=format&fit=crop",
-    summary:
-      "Source exceptionnelle de protéines, vitamines et minéraux. Utilisé en feuilles fraîches ou poudre.",
+    region: "Afrique de l'Ouest, jardins familiaux et cultures maraicheres",
+    therapeuticCategory: "Nutrition",
+    indications: ["Malnutrition", "Anemie", "Hypertension"],
+    image: "https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=1200&q=80&auto=format&fit=crop",
+    gallery: [
+      "https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=1200&q=80&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=1200&q=80&auto=format&fit=crop",
+    ],
+    summary: "Source exceptionnelle de proteines, vitamines et mineraux. Utilise en feuilles fraiches ou poudre.",
+    botanicalDescription:
+      "Petit arbre a croissance rapide, feuilles composees et gousses allongees. Les feuilles sont les parties les plus utilisees en nutrition.",
+    medicinalProperties: [
+      { property: "Nutritionnelle", use: "Complement alimentaire local", evidence: "Composition nutritionnelle bien decrite" },
+      { property: "Antioxydante", use: "Soutien alimentaire", evidence: "Donnees in vitro et cliniques limitees" },
+    ],
+    preparations: ["Ajouter la poudre aux repas tiedes.", "Utiliser les feuilles fraiches dans sauces et bouillies."],
+    precautions: ["Eviter les extraits concentres pendant grossesse sans avis professionnel."],
+    references: ["FAO - ressources nutritionnelles locales", "Iwosan, note de vulgarisation moringa"],
   },
   {
     id: "pl3",
@@ -33,50 +69,39 @@ export const plants: Plant[] = [
     scientificName: "Azadirachta indica",
     vernacularNames: ["Neem", "Margousier"],
     family: "Meliaceae",
-    origin: "Asie tropicale, naturalisé en Afrique",
+    origin: "Asie tropicale, naturalise en Afrique",
+    region: "Zones tropicales urbaines et rurales",
+    therapeuticCategory: "Dermatologie et antiparasitaire",
     indications: ["Paludisme", "Dermatoses", "Antiparasitaire"],
-    image:
-      "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=800&q=80&auto=format&fit=crop",
-    summary:
-      "Arbre aux mille vertus, principes actifs étudiés pour leurs effets antimicrobiens et antiparasitaires.",
+    image: "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=1200&q=80&auto=format&fit=crop",
+    summary: "Arbre aux mille vertus, principes actifs etudies pour leurs effets antimicrobiens et antiparasitaires.",
+    botanicalDescription: "Arbre persistant a feuilles composees, amer dans plusieurs parties utilisees.",
+    medicinalProperties: [
+      { property: "Antimicrobienne", use: "Usage externe traditionnel", evidence: "Donnees experimentales" },
+      { property: "Antiparasitaire", use: "Soins encadres", evidence: "Donnees variables selon extrait" },
+    ],
+    preparations: ["Usage externe tres dilue.", "Eviter l'automedication interne."],
+    precautions: ["Deconseille chez l'enfant jeune et pendant grossesse sans supervision."],
+    references: ["Revue pharmacologique Azadirachta indica"],
   },
   {
     id: "pl4",
     slug: "karite",
     scientificName: "Vitellaria paradoxa",
-    vernacularNames: ["Karité", "Shea"],
+    vernacularNames: ["Karite", "Shea"],
     family: "Sapotaceae",
     origin: "Savanes ouest-africaines",
-    indications: ["Cicatrisation", "Eczéma", "Vergetures"],
-    image:
-      "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=800&q=80&auto=format&fit=crop",
-    summary:
-      "Beurre extrait des noix, riche en insaponifiables, base de la cosmétique traditionnelle ouest-africaine.",
-  },
-  {
-    id: "pl5",
-    slug: "baobab",
-    scientificName: "Adansonia digitata",
-    vernacularNames: ["Baobab", "Pain de singe"],
-    family: "Malvaceae",
-    origin: "Savanes africaines",
-    indications: ["Diarrhée", "Carences vitamine C", "Fièvre"],
-    image:
-      "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=800&q=80&auto=format&fit=crop",
-    summary:
-      "Toutes les parties sont utilisées : fruit (pulpe acidulée), feuilles (lalo), écorce (fibres médicinales).",
-  },
-  {
-    id: "pl6",
-    slug: "artemisia-annua",
-    scientificName: "Artemisia annua",
-    vernacularNames: ["Armoise annuelle"],
-    family: "Asteraceae",
-    origin: "Chine, cultivée en Afrique",
-    indications: ["Paludisme", "Fièvres récurrentes"],
-    image:
-      "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=800&q=80&auto=format&fit=crop",
-    summary:
-      "Source d'artémisinine, désormais cultivée et étudiée par les programmes africains de lutte antipaludique.",
+    region: "Ceinture du karite",
+    therapeuticCategory: "Soins cutanes",
+    indications: ["Cicatrisation", "Eczema", "Vergetures"],
+    image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=1200&q=80&auto=format&fit=crop",
+    summary: "Beurre extrait des noix, riche en insaponifiables, base de la cosmetique traditionnelle ouest-africaine.",
+    botanicalDescription: "Arbre de savane a fruits charnus contenant une noix riche en matiere grasse.",
+    medicinalProperties: [
+      { property: "Emolliente", use: "Peau seche et irritations superficielles", evidence: "Usage cosmetique etabli" },
+    ],
+    preparations: ["Appliquer une fine couche sur peau propre.", "Associer a une hygiene douce."],
+    precautions: ["Ne pas appliquer sur plaie infectee ou brulure etendue sans avis medical."],
+    references: ["Dossier Iwosan cosmetique traditionnelle"],
   },
 ];
