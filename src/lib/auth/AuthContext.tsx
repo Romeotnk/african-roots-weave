@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 
 export type AppRole = "user" | "professional" | "researcher" | "moderator" | "admin";
 
@@ -32,6 +32,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+
     // Listener first (synchronous state set), then fetch session
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
@@ -50,6 +55,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    if (!isSupabaseConfigured) {
+      setRoles([]);
+      setSession(null);
+      setUser(null);
+      return;
+    }
+
     await supabase.auth.signOut();
     setRoles([]);
   };
