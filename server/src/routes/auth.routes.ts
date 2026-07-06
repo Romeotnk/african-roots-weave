@@ -3,11 +3,13 @@ import {
   forgotPassword,
   login,
   logout,
+  me,
   refresh,
   register,
   resetPassword,
   verifyEmail,
 } from "../controllers/auth.controller.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { authRateLimit } from "../middlewares/rateLimit.middleware.js";
 import { validateRequest } from "../middlewares/validation.middleware.js";
 import {
@@ -24,6 +26,7 @@ export const authRouter = Router();
 authRouter.post("/register", authRateLimit, registerValidator, validateRequest, register);
 authRouter.post("/login", authRateLimit, loginValidator, validateRequest, login);
 authRouter.post("/refresh", refresh);
+authRouter.get("/me", authMiddleware, me);
 authRouter.post("/logout", logout);
 
 // Email and password recovery.

@@ -12,6 +12,7 @@ const navLinks = [
   { to: "/", label: "Accueil" },
   { to: "/marketplace", label: "Marketplace" },
   { to: "/annuaire", label: "Annuaire" },
+  { to: "/devenir-pro", label: "Devenir pro" },
   { to: "/pharmacopee", label: "Pharmacopée" },
 ];
 const communityLinks = [
@@ -23,7 +24,6 @@ const communityLinks = [
 const tailLinks = [
   { to: "/agenda", label: "Agenda" },
   { to: "/formations", label: "Formations" },
-  { to: "/devenir-pro", label: "Devenir pro" },
 ];
 const accountLinks = [
   { to: "/panier", label: "Panier" },
@@ -37,21 +37,9 @@ const accountLinks = [
   { to: "/mon-compte/tickets", label: "Tickets" },
 ];
 
-const readableLabel = (value: string) => {
-  if (!/[ÃÂâ]/.test(value)) return value;
-  try {
-    const encoded = Array.from(value)
-      .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, "0")}`)
-      .join("");
-    return decodeURIComponent(encoded);
-  } catch {
-    return value;
-  }
-};
-
-const labels = {
-  community: "Communauté",
-  logout: "Déconnexion",
+const displayLabels = {
+  community: "Communaut\u00e9",
+  logout: "D\u00e9connexion",
 };
 
 function ThemeSwitch({ compact = false }: { compact?: boolean }) {
@@ -76,7 +64,7 @@ function ThemeSwitch({ compact = false }: { compact?: boolean }) {
   }
   return (
     <div
-      className="flex items-center gap-0.5 border border-[var(--brand-border)] rounded-full p-1"
+      className="flex items-center gap-0.5 border border-[var(--brand-border)] rounded-full p-0.5"
       role="radiogroup"
       aria-label="Thème"
     >
@@ -89,13 +77,13 @@ function ThemeSwitch({ compact = false }: { compact?: boolean }) {
           title={label}
           onClick={() => setMode(v)}
           className={cn(
-            "inline-flex items-center justify-center w-7 h-7 rounded-full transition active:scale-90",
+            "inline-flex items-center justify-center w-6 h-6 rounded-full transition active:scale-90",
             mode === v
               ? "bg-[var(--brand-primary)] text-white"
               : "text-[var(--color-text-muted)] hover:text-[var(--brand-primary)]",
           )}
         >
-          <Icon size={13} />
+          <Icon size={12} />
         </button>
       ))}
     </div>
@@ -130,7 +118,7 @@ export function Navbar() {
 
   const linkClass = (to: string) =>
     cn(
-      "relative text-[14px] font-medium transition-colors py-2",
+      "relative whitespace-nowrap text-[11px] font-semibold transition-colors py-2 xl:text-[12px]",
       pathname === to
         ? "text-[var(--brand-primary)]"
         : "text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)]",
@@ -146,7 +134,7 @@ export function Navbar() {
         scrolled ? "shadow-iwosan-sm border-[var(--brand-border-light)]" : "border-transparent",
       )}
     >
-      <div className="container-iwosan flex h-[72px] min-w-0 items-center justify-between gap-2">
+      <div className="container-iwosan relative flex h-[72px] min-w-0 items-center justify-between gap-2 lg:h-[82px] lg:gap-3">
         <Link to="/" className="group flex shrink-0 items-center gap-2">
           <div className="w-9 h-9 shrink-0 rounded-lg bg-[var(--brand-primary)] flex items-center justify-center text-white">
             <Leaf size={18} />
@@ -155,16 +143,17 @@ export function Navbar() {
             <div className="font-extrabold text-[20px] tracking-tight text-[var(--brand-primary)]">
               IWOSAN
             </div>
-            <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5 hidden xl:block">
-              Le savoir africain, documenté et vivant
+            <div className="hidden mt-0.5 max-w-[118px] leading-[1.05] text-[var(--color-text-muted)] lg:block">
+              <span className="block text-[8px]">Savoirs africains</span>
+              <span className="block text-[8px]">document&eacute;s et vivants</span>
             </div>
           </div>
         </Link>
 
-        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-3 xl:flex 2xl:gap-5">
+        <nav className="hidden min-w-0 flex-1 flex-nowrap items-center justify-center gap-x-1 lg:flex xl:gap-x-1.5">
           {navLinks.map((l) => (
             <Link key={l.to} to={l.to} className={linkClass(l.to)}>
-              {readableLabel(l.label)}
+              {l.label}
             </Link>
           ))}
           <div
@@ -176,9 +165,10 @@ export function Navbar() {
               className={cn(
                 "inline-flex items-center gap-1 whitespace-nowrap py-2 text-[0px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)]",
               )}
+              aria-label={displayLabels.community}
             >
-              <span className="text-[13px] 2xl:text-[14px]">{labels.community}</span>
-              Communauté <ChevronDown size={14} />
+              <span className="text-[11px] xl:text-[12px]">{displayLabels.community}</span>
+              <ChevronDown size={14} />
             </button>
             <div
               className={cn(
@@ -194,26 +184,26 @@ export function Navbar() {
                   to={l.to}
                   className="block px-3 py-2 rounded-md text-[14px] text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)]"
                 >
-                  {readableLabel(l.label)}
+                  {l.label}
                 </Link>
               ))}
             </div>
           </div>
           {tailLinks.map((l) => (
             <Link key={l.to} to={l.to} className={linkClass(l.to)}>
-              {readableLabel(l.label)}
+              {l.label}
             </Link>
           ))}
         </nav>
 
         {/* Desktop actions */}
-        <div className="hidden shrink-0 items-center gap-2 md:flex">
-          <div className="flex items-center gap-1 text-[12px] font-semibold border border-[var(--brand-border)] rounded-full px-1 py-1">
+        <div className="hidden shrink-0 items-center gap-1.5 xl:flex">
+          <div className="flex items-center gap-0.5 text-[10px] font-semibold border border-[var(--brand-border)] rounded-full px-0.5 py-0.5">
             <button
               onClick={() => setLang("fr")}
               aria-pressed={lang === "fr"}
               className={cn(
-                "px-2 py-0.5 rounded-full transition active:scale-95",
+                "px-1 py-0.5 rounded-full transition active:scale-95",
                 lang === "fr"
                   ? "bg-[var(--brand-primary)] text-white"
                   : "text-[var(--color-text-muted)] hover:text-[var(--brand-primary)]",
@@ -225,7 +215,7 @@ export function Navbar() {
               onClick={() => setLang("en")}
               aria-pressed={lang === "en"}
               className={cn(
-                "px-2 py-0.5 rounded-full transition active:scale-95",
+                "px-1 py-0.5 rounded-full transition active:scale-95",
                 lang === "en"
                   ? "bg-[var(--brand-primary)] text-white"
                   : "text-[var(--color-text-muted)] hover:text-[var(--brand-primary)]",
@@ -236,16 +226,16 @@ export function Navbar() {
           </div>
 
           <ThemeSwitch />
-          <NotificationBell />
+          <NotificationBell compact />
 
           <Link
             to="/panier"
-            className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--brand-border)] text-[var(--color-text-secondary)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
+            className="relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--brand-border)] text-[var(--color-text-secondary)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
             aria-label="Panier"
           >
-            <ShoppingCart size={17} />
+            <ShoppingCart size={14} />
             {itemCount > 0 && (
-              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[var(--brand-gold)] px-1 text-[10px] font-bold text-[var(--color-text-primary)]">
+              <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[var(--brand-gold)] px-1 text-[9px] font-bold text-[var(--color-text-primary)]">
                 {itemCount}
               </span>
             )}
@@ -253,20 +243,20 @@ export function Navbar() {
 
           {user ? (
             <>
-              <Link to="/tableau-de-bord" className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] active:scale-95 transition">
+              <Link to="/tableau-de-bord" className="inline-flex items-center gap-1 whitespace-nowrap text-[12px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] active:scale-95 transition xl:text-[13px]">
                 <LayoutDashboard size={16} /> Tableau de bord
               </Link>
-              <button onClick={handleLogout} className="h-10 px-5 inline-flex items-center gap-1.5 rounded-full border border-[var(--brand-border)] text-[0px] font-semibold hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] active:scale-95 transition">
-                <span className="text-[14px]">{labels.logout}</span>
-                <LogOut size={15} /> Déconnexion
+              <button onClick={handleLogout} className="h-9 px-3 inline-flex items-center gap-1 rounded-full border border-[var(--brand-border)] text-[0px] font-semibold hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] active:scale-95 transition">
+                <span className="text-[12px] xl:text-[13px]">{displayLabels.logout}</span>
+                <LogOut size={15} />
               </button>
             </>
           ) : (
             <>
-              <Link to="/connexion" className="text-[14px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] active:scale-95 transition">
+              <Link to="/connexion" className="whitespace-nowrap text-[12px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] active:scale-95 transition xl:text-[13px]">
                 Se connecter
               </Link>
-              <Link to="/inscription" className="h-10 px-5 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[14px] font-semibold hover:bg-[var(--brand-primary-dark)] active:scale-95 transition shadow-iwosan-sm">
+              <Link to="/inscription" className="h-9 px-3 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[12px] font-semibold hover:bg-[var(--brand-primary-dark)] active:scale-95 transition shadow-iwosan-sm xl:text-[13px]">
                 S'inscrire
               </Link>
             </>
@@ -274,12 +264,13 @@ export function Navbar() {
         </div>
 
         {/* Mobile compact actions: theme + hamburger always visible */}
-        <div className="flex md:hidden items-center gap-2 ml-auto shrink-0">
-          <ThemeSwitch compact />
-          <NotificationBell />
+        <div className="ml-auto flex shrink-0 items-center gap-2 xl:hidden">
+          <div className="hidden sm:block lg:hidden">
+            <NotificationBell />
+          </div>
           <Link
             to="/panier"
-            className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--brand-border)]"
+            className="relative hidden h-10 w-10 items-center justify-center rounded-full border border-[var(--brand-border)] sm:inline-flex lg:hidden"
             aria-label="Panier"
           >
             <ShoppingCart size={17} />
@@ -290,20 +281,20 @@ export function Navbar() {
             )}
           </Link>
           {user ? (
-            <Link to="/tableau-de-bord" className="hidden h-10 items-center gap-1.5 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white shadow-iwosan-sm transition active:scale-95 min-[420px]:inline-flex" aria-label="Tableau de bord">
+            <Link to="/tableau-de-bord" className="hidden h-10 items-center gap-1.5 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white shadow-iwosan-sm transition active:scale-95 sm:inline-flex lg:hidden" aria-label="Tableau de bord">
               <LayoutDashboard size={15} /> Espace
             </Link>
           ) : (
             <Link
               to="/inscription"
-              className="hidden h-10 items-center rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white shadow-iwosan-sm transition active:scale-95 min-[420px]:inline-flex"
+              className="hidden h-10 items-center rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white shadow-iwosan-sm transition active:scale-95 sm:inline-flex lg:hidden"
               aria-label="S'inscrire"
             >
               S'inscrire
             </Link>
           )}
           <button
-            className="inline-flex items-center justify-center w-11 h-11 rounded-md text-[var(--color-text-primary)] hover:bg-[var(--brand-surface-alt)] active:scale-95 transition"
+            className="absolute right-4 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-md text-[var(--color-text-primary)] transition hover:bg-[var(--brand-surface-alt)] active:scale-95 xl:static xl:translate-y-0"
             onClick={() => setOpen(!open)}
             aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
             aria-expanded={open}
@@ -316,49 +307,47 @@ export function Navbar() {
       {/* Mobile drawer */}
       <div
         className={cn(
-          "fixed inset-0 z-[70] lg:hidden transition-opacity",
+          "fixed inset-0 z-[999] xl:hidden transition-opacity",
           open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
         )}
       >
         <div
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/65"
           onClick={() => setOpen(false)}
         />
         <div
           className={cn(
-            "absolute bottom-0 right-0 top-0 flex w-[92%] max-w-[380px] flex-col bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-iwosan-xl transition-transform duration-300",
+            "absolute inset-y-0 right-0 flex w-[88vw] max-w-[330px] flex-col border-l border-[#eadfce] bg-white text-[#1f2933] shadow-2xl opacity-100 transition-transform duration-300",
             open ? "translate-x-0" : "translate-x-full",
           )}
         >
-          <div className="h-[72px] flex items-center justify-between px-5 border-b border-[var(--brand-border-light)] shrink-0">
-            <span className="font-extrabold text-[var(--brand-primary)]">IWOSAN</span>
-            <button
-              onClick={() => setOpen(false)}
-              aria-label="Fermer"
-              className="w-10 h-10 inline-flex items-center justify-center rounded-md hover:bg-[var(--brand-surface-alt)] active:scale-95 transition"
-            >
-              <X size={22} />
-            </button>
-          </div>
-
-          {/* Top sticky auth banner */}
-          <div className="p-4 border-b border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] shrink-0">
+          {/* Account actions */}
+          <div className="p-3 border-b border-[#eadfce] bg-[#faf7ef] shrink-0">
+            <div className="mb-2 flex justify-end">
+              <button
+                onClick={() => setOpen(false)}
+                aria-label="Fermer"
+                className="w-8 h-8 inline-flex items-center justify-center rounded-md hover:bg-white active:scale-95 transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
             {user ? (
               <div className="grid grid-cols-2 gap-2">
-                <Link to="/tableau-de-bord" className="h-11 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] text-white font-semibold text-[14px] active:scale-95 transition hover:bg-[var(--brand-primary-dark)]">
+                <Link to="/tableau-de-bord" className="h-9 inline-flex items-center justify-center gap-1 rounded-full bg-[var(--brand-primary)] text-white font-semibold text-[12px] active:scale-95 transition hover:bg-[var(--brand-primary-dark)]">
                   <LayoutDashboard size={16} /> Mon espace
                 </Link>
-                <button onClick={handleLogout} className="h-11 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[0px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition hover:border-red-400 hover:text-red-600">
-                  <span className="text-[14px]">{labels.logout}</span>
-                  <LogOut size={16} /> Déconnexion
+                <button onClick={handleLogout} className="h-9 inline-flex items-center justify-center gap-1 rounded-full border border-[var(--brand-border)] text-[0px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition hover:border-red-400 hover:text-red-600">
+                  <span className="text-[12px]">{displayLabels.logout}</span>
+                  <LogOut size={16} />
                 </button>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2">
-                <Link to="/connexion" className="h-11 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[var(--color-text-primary)] font-semibold text-[14px] active:scale-95 transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]">
+                <Link to="/connexion" className="h-9 inline-flex items-center justify-center gap-1 rounded-full border border-[#c9b99d] bg-white text-[#1f2933] font-semibold text-[12px] shadow-sm active:scale-95 transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]">
                   <LogIn size={16} /> Se connecter
                 </Link>
-                <Link to="/inscription" className="h-11 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] text-white font-semibold text-[14px] active:scale-95 transition hover:bg-[var(--brand-primary-dark)]">
+                <Link to="/inscription" className="h-9 inline-flex items-center justify-center gap-1 rounded-full bg-[var(--brand-primary)] text-white font-semibold text-[12px] active:scale-95 transition hover:bg-[var(--brand-primary-dark)]">
                   <UserPlus size={16} /> S'inscrire
                 </Link>
               </div>
@@ -392,29 +381,43 @@ export function Navbar() {
             </div>
           </div>
 
-          <nav className="flex-1 overflow-y-auto overscroll-contain p-4 flex flex-col gap-1 pb-8">
+          <nav className="flex shrink-0 flex-col gap-0.5 bg-white px-3 py-2 text-left">
             {[...navLinks, ...communityLinks, ...tailLinks].map((l) => (
               <Link
                 key={l.to}
                 to={l.to}
-                className="px-3 py-3 rounded-md text-[15px] font-medium text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)] active:scale-[0.98] transition"
+                className={cn(
+                  "flex min-h-9 w-full items-center justify-start rounded-md px-3 text-left text-[14px] font-semibold transition active:scale-[0.98]",
+                  pathname === l.to
+                    ? "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]"
+                    : "text-[var(--color-text-primary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)]",
+                )}
               >
-                {readableLabel(l.label)}
+                {l.label}
               </Link>
             ))}
-            <div className="my-2 h-px bg-[var(--brand-border-light)]" />
+          </nav>
+
+          <div className="h-px bg-[#eadfce]" />
+
+          <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain bg-white px-3 py-2 pb-5 text-left">
             {accountLinks.map((l) => (
               <Link
                 key={l.to}
                 to={l.to}
-                className="px-3 py-3 rounded-md text-[15px] font-medium text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)] active:scale-[0.98] transition"
+                className={cn(
+                  "flex min-h-9 w-full items-center justify-start rounded-md px-3 text-left text-[14px] font-semibold transition active:scale-[0.98]",
+                  pathname === l.to
+                    ? "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]"
+                    : "text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)]",
+                )}
               >
-                {readableLabel(l.label)}
+                {l.label}
               </Link>
             ))}
             <Link
               to="/mon-compte/notifications"
-              className="px-3 py-3 rounded-md text-[15px] font-medium text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)] active:scale-[0.98] transition"
+              className="flex min-h-9 w-full items-center justify-start rounded-md px-3 text-left text-[14px] font-semibold text-[var(--color-text-secondary)] transition hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)] active:scale-[0.98]"
             >
               Notifications
             </Link>

@@ -15,7 +15,7 @@ const icons: Record<NotificationType, typeof Bell> = {
   forum: Users,
 };
 
-export function NotificationBell() {
+export function NotificationBell({ compact = false }: { compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const { data: notifications = [] } = useNotifications();
@@ -41,11 +41,15 @@ export function NotificationBell() {
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-label="Notifications"
-        className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--brand-border)] text-[var(--color-text-secondary)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
+        className={compact
+          ? "relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--brand-border)] text-[var(--color-text-secondary)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
+          : "relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--brand-border)] text-[var(--color-text-secondary)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"}
       >
-        <Bell size={17} />
+        <Bell size={compact ? 14 : 17} />
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+          <span className={compact
+            ? "absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white"
+            : "absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white"}>
             {unreadCount}
           </span>
         )}

@@ -28,10 +28,27 @@ import { apiResponse } from "./utils/apiResponse.js";
 
 export const app = express();
 
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:8080",
+  "http://127.0.0.1:8080",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:3001",
+  "http://127.0.0.1:3001",
+].filter(Boolean) as string[];
+
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL ?? "http://localhost:8080",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`Origin not allowed by CORS: ${origin}`));
+    },
     credentials: true,
   }),
 );

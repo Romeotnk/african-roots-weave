@@ -3,7 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Clock } from "lucide-react";
 import { Badge } from "./Badge";
 
-function articlePath(article: Article) {
+export function articlePath(article: Article) {
+  if (article.space === "Pharmacopee") return "/pharmacopee/$slug" as const;
   if (article.space === "Rites & Cultures") return "/rites-cultures/$slug" as const;
   if (article.space === "Recettes sante") return "/recettes/$slug" as const;
   return "/sante-au-quotidien/$slug" as const;

@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
@@ -22,6 +23,7 @@ import {
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { apiRequest, authTokenStore } from "@/lib/api/client";
 
 export const Route = createFileRoute("/tableau-de-bord")({
   head: () => ({ meta: [{ title: "Tableau de bord — IWOSAN" }] }),
@@ -127,11 +129,59 @@ const orders = [
   },
 ];
 
+type AccountProfile = {
+  id: string;
+  email: string;
+  role: string;
+  firstName: string;
+  lastName: string;
+  language: string;
+  kycStatus: string;
+  isActive: boolean;
+  isBanned: boolean;
+  lastLoginAt?: string;
+  createdAt?: string;
+};
+
 function Dashboard() {
   const { user, signOut, roles } = useAuth();
   const navigate = useNavigate();
-  const displayName = (user?.user_metadata?.first_name as string) || user?.email?.split("@")[0] || "Invité";
-  const roleLabel = roles.includes("admin") ? "Admin" : roles.includes("professional") ? "Praticien" : roles.includes("researcher") ? "Chercheur" : "Utilisateur";
+  const hasBackendAuth = Boolean(authTokenStore.get());
+
+  const { data: profile } = useQuery<AccountProfile | null>({
+    queryKey: ["auth", "me"],
+    queryFn: async () => {
+      const response = await apiRequest<AccountProfile>("/auth/me");
+      return response.data;
+    },
+    enabled: hasBackendAuth,
+    retry: false,
+  });
+
+  const fallbackName = (user?.user_metadata?.first_name as string) || user?.email?.split("@")[0] || "Invité";
+  const displayName = profile
+    ? `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim() || fallbackName
+    : fallbackName;
+  const firstName = displayName.split(" ")[0] || "cher utilisateur";
+  const roleLabel = roles.includes("admin")
+    ? "Admin"
+    : roles.includes("professional")
+      ? "Praticien"
+      : roles.includes("researcher")
+        ? "Chercheur"
+        : profile?.role === "PROFESSIONAL"
+          ? "Praticien"
+          : profile?.role === "RESEARCHER"
+            ? "Chercheur"
+            : "Utilisateur";
+  const accountStatus = profile?.isBanned ? "Bloqué" : profile?.isActive ? "Actif" : "Inactif";
+  const joinedAt = profile?.createdAt
+    ? new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(profile.createdAt))
+    : "À définir";
+  const lastLoginAt = profile?.lastLoginAt
+    ? new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(profile.lastLoginAt))
+    : "À définir";
+
   const handleLogout = async () => {
     await signOut();
     navigate({ to: "/" });
@@ -191,8 +241,8 @@ function Dashboard() {
       <div className="flex-1 min-w-0">
         <header className="bg-white border-b border-[var(--brand-border-light)] px-5 md:px-8 h-[72px] flex items-center justify-between">
           <div>
-            <h1 className="text-[20px] md:text-[24px] font-bold">Bonjour, Aïssata 👋</h1>
-            <p className="text-[12px] text-[var(--color-text-muted)]">Lundi 8 juin 2026</p>
+            <h1 className="text-[20px] md:text-[24px] font-bold">Bonjour, {firstName} 👋</h1>
+            <p className="text-[12px] text-[var(--color-text-muted)]">{profile?.email ?? user?.email ?? "Compte connecté"}</p>
           </div>
           <button className="relative w-10 h-10 rounded-full hover:bg-[var(--brand-surface-alt)] flex items-center justify-center">
             <Bell size={18} />
@@ -201,6 +251,36 @@ function Dashboard() {
         </header>
 
         <div className="p-5 md:p-8 space-y-6">
+          <div className="rounded-[16px] border border-[var(--brand-border-light)] bg-white p-5 shadow-sm">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
+                  Profil connecté
+                </p>
+                <h2 className="mt-1 text-[20px] font-bold text-[var(--color-text-primary)]">{displayName}</h2>
+                <p className="mt-1 text-[13px] text-[var(--color-text-secondary)]">{profile?.email ?? user?.email ?? "—"}</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-[12px] bg-[var(--brand-surface-alt)] px-3 py-2">
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-muted)]">Rôle</p>
+                  <p className="mt-1 text-[13px] font-semibold">{roleLabel}</p>
+                </div>
+                <div className="rounded-[12px] bg-[var(--brand-surface-alt)] px-3 py-2">
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-muted)]">Statut</p>
+                  <p className="mt-1 text-[13px] font-semibold">{accountStatus}</p>
+                </div>
+                <div className="rounded-[12px] bg-[var(--brand-surface-alt)] px-3 py-2">
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-muted)]">KYC</p>
+                  <p className="mt-1 text-[13px] font-semibold">{profile?.kycStatus ?? "NON_DÉMARRÉ"}</p>
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-4 border-t border-[var(--brand-border-light)] pt-4 text-[12px] text-[var(--color-text-muted)]">
+              <span>Inscrit le {joinedAt}</span>
+              <span>Dernière connexion {lastLoginAt}</span>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {stats.map((s, i) => (
               <div

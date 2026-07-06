@@ -113,12 +113,12 @@ function HeroCarousel() {
 
   return (
     <section
-      className="relative min-h-[92vh] flex items-center overflow-hidden"
+      className="relative min-h-[92vh] flex items-center overflow-hidden bg-[var(--brand-primary-dark)] text-white"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       aria-roledescription="carousel"
     >
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={index}
           initial={{ opacity: 0, x: 80 }}
@@ -139,7 +139,7 @@ function HeroCarousel() {
       </AnimatePresence>
 
       <div className="relative container-iwosan py-24 text-white text-center">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={index}
             initial={{ opacity: 0, y: 24 }}
@@ -150,7 +150,7 @@ function HeroCarousel() {
             <span className="inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-1.5 text-[12px] font-semibold backdrop-blur-sm">
               <Icon size={14} /> {slide.badge}
             </span>
-            <h1 className="mt-6 text-[36px] md:text-[56px] text-white max-w-4xl mx-auto leading-[1.05]">
+            <h1 className="mt-6 text-[27px] sm:text-[40px] md:text-[56px] text-white max-w-4xl mx-auto leading-[1.1]">
               {slide.title}
             </h1>
             <p className="mt-6 text-[15px] md:text-[18px] text-white/85 max-w-2xl mx-auto leading-[1.7]">

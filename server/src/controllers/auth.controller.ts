@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../config/db.js";
+import { env } from "../config/env.js";
 import { redisSet } from "../config/redis.js";
 import { sendPasswordResetEmail, sendVerificationEmail } from "../services/email.service.js";
 import { verifyTurnstile } from "../services/turnstile.service.js";
@@ -121,13 +122,27 @@ export const register = asyncHandler(async (req, res) => {
   });
 
   const verificationUrl = await createEmailVerification(user.id);
+  let emailSent = false;
+  const shouldSkipEmailInDev = env.nodeEnv !== "production";
+
   try {
     await sendVerificationEmail(user.email, verificationUrl);
+    emailSent = true;
   } catch (emailError) {
     console.warn("Email verification skipped:", emailError);
   }
 
-  res.status(201).json(apiResponse(true, { user }, "Account created. Please verify your email."));
+  if (!emailSent && shouldSkipEmailInDev) {
+    await prisma.user.update({ where: { id: user.id }, data: { isEmailVerified: true } });
+  }
+
+  const message = emailSent
+    ? "Account created. Please verify your email."
+    : shouldSkipEmailInDev
+      ? "Account created. Email verification is disabled in local development, so your account is activated immediately."
+      : "Account created. Please verify your email.";
+
+  res.status(201).json(apiResponse(true, { user, emailSent, isEmailVerified: emailSent || shouldSkipEmailInDev }, message));
 });
 
 /**
@@ -216,6 +231,31 @@ export const refresh = asyncHandler(async (req, res) => {
  * Revokes the refresh token and blacklists the current access token in Redis
  * when Redis is configured.
  */
+export const me = asyncHandler(async (req, res) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      firstName: true,
+      lastName: true,
+      language: true,
+      kycStatus: true,
+      isActive: true,
+      isBanned: true,
+      lastLoginAt: true,
+      createdAt: true,
+    },
+  });
+
+  if (!user || !user.isActive || user.isBanned) {
+    throw new ApiError(401, "Account unavailable");
+  }
+
+  res.json(apiResponse(true, user, "Profile loaded"));
+});
+
 export const logout = asyncHandler(async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
   if (refreshToken) {

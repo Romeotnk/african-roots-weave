@@ -7,6 +7,14 @@ const colTitle = "text-white text-[11px] font-semibold uppercase tracking-[0.1em
 const link =
   "block text-white/70 hover:text-[var(--brand-gold)] transition-colors text-[14px] py-1.5";
 
+const socialLinks = [
+  { icon: Facebook, label: "Facebook", href: "https://www.facebook.com/iwosan" },
+  { icon: Twitter, label: "Twitter", href: "https://twitter.com/iwosan" },
+  { icon: Instagram, label: "Instagram", href: "https://www.instagram.com/iwosan" },
+  { icon: Linkedin, label: "LinkedIn", href: "https://www.linkedin.com/company/iwosan" },
+  { icon: Youtube, label: "YouTube", href: "https://www.youtube.com/@iwosan" },
+];
+
 export function Footer() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
@@ -29,9 +37,13 @@ export function Footer() {
               et au patrimoine de guérison africain.
             </p>
             <div className="flex gap-3">
-              {[Facebook, Twitter, Instagram, Linkedin, Youtube].map((Icon, i) => (
+              {socialLinks.map(({ icon: Icon, label, href }) => (
                 <a
-                  key={i}
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={label}
                   className="w-9 h-9 rounded-full bg-white/10 hover:bg-[var(--brand-gold)] hover:text-[var(--brand-primary-dark)] flex items-center justify-center transition-colors cursor-pointer"
                 >
                   <Icon size={16} />
@@ -80,10 +92,10 @@ export function Footer() {
             <a className={link} href="mailto:contact@iwosan.africa">
               contact@iwosan.africa
             </a>
-            <a className={link}>WhatsApp : +221 77 000 00 00</a>
+            <a className={link} href="https://wa.me/221770000000" target="_blank" rel="noreferrer">WhatsApp : +221 77 000 00 00</a>
             <Link className={link} to="/$slug" params={{ slug: "cgu" }}>CGU</Link>
-            <Link className={link} to="/$slug" params={{ slug: "politique-confidentialite" }}>Politique de confidentialite</Link>
-            <Link className={link} to="/$slug" params={{ slug: "mentions-legales" }}>Mentions legales</Link>
+            <Link className={link} to="/$slug" params={{ slug: "politique-confidentialite" }}>Politique de confidentialité</Link>
+            <Link className={link} to="/$slug" params={{ slug: "mentions-legales" }}>Mentions légales</Link>
             <form
               className="mt-5"
               onSubmit={(event) => {
@@ -120,11 +132,9 @@ export function Footer() {
                   {newsletter.isPending ? "..." : "S'abonner"}
                 </button>
               </div>
-              {subscribed && <p className="mt-2 text-[12px] text-emerald-200">Inscription confirmee. Merci !</p>}
+              {subscribed && <p className="mt-2 text-[12px] text-emerald-200">Inscription confirmée. Merci !</p>}
               {subscriptionError && <p className="mt-2 text-[12px] text-red-200">{subscriptionError}</p>}
             </form>
-            <a className={link}>Politique de confidentialité</a>
-            <a className={link}>Mentions légales</a>
           </div>
         </div>
       </div>

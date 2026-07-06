@@ -13,10 +13,15 @@ validateEnv();
 const port = env.port;
 const server = http.createServer(app);
 
+console.log("Starting Iwosan API...");
 await connectRedis();
+console.log("Redis initialization completed.");
 await initI18n();
+console.log("I18n initialization completed.");
 initSocket(server);
+console.log("Socket initialization completed.");
 startCronJobs();
+console.log("Cron jobs initialized.");
 
 server.listen(port, () => console.log(`Iwosan API listening on port ${port}`));
 

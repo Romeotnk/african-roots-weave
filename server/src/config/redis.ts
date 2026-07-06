@@ -30,7 +30,12 @@ export const connectRedis = async () => {
   }
 
   try {
-    await redisClient.connect();
+    await Promise.race([
+      redisClient.connect(),
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Redis connection timed out")), 3000);
+      }),
+    ]);
   } catch (error) {
     redisUnavailable = true;
     console.warn(

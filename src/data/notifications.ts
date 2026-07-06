@@ -25,7 +25,7 @@ export const notifications: AppNotification[] = [
     type: "listing",
     title: "Annonce approuvee",
     body: "Votre annonce Kinkeliba premium est maintenant visible.",
-    href: "/marketplace/annonces",
+    href: "/dashboard/annonces",
     read: false,
     date: "2026-07-01 16:45",
   },

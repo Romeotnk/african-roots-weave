@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AlertTriangle } from "lucide-react";
-import { ArticleCard } from "@/components/shared/ArticleCard";
+import { ArticleCard, articlePath } from "@/components/shared/ArticleCard";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { articles } from "@/data/articles";
@@ -181,7 +181,7 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
                 {spaceArticles.slice(0, 5).map((article, index) => (
                   <li key={article.id} className="flex gap-3">
                     <span className="font-extrabold text-[var(--brand-primary)]">{index + 1}</span>
-                    <Link to="/sante-au-quotidien/$slug" params={{ slug: article.slug }} className="text-[var(--color-text-secondary)]">
+                    <Link to={articlePath(article)} params={{ slug: article.slug }} className="text-[var(--color-text-secondary)]">
                       {article.title}
                     </Link>
                   </li>

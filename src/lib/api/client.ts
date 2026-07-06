@@ -21,6 +21,41 @@ type RequestOptions = Omit<RequestInit, "body"> & {
 
 let accessToken = typeof window !== "undefined" ? window.localStorage.getItem("iwosan.accessToken") : null;
 
+const parseApiEnvelope = async <T>(response: Response): Promise<ApiEnvelope<T>> => {
+  const contentType = response.headers.get("content-type") ?? "";
+  const text = await response.text();
+
+  if (!text.trim()) {
+    return {
+      success: false,
+      data: null,
+      message: response.ok
+        ? "Réponse API vide."
+        : "API indisponible. Vérifiez que le serveur backend est lancé.",
+    };
+  }
+
+  if (!contentType.includes("application/json")) {
+    return {
+      success: false,
+      data: null,
+      message: response.ok
+        ? "Réponse API invalide."
+        : "API indisponible ou mauvaise route API.",
+    };
+  }
+
+  try {
+    return JSON.parse(text) as ApiEnvelope<T>;
+  } catch {
+    return {
+      success: false,
+      data: null,
+      message: "Réponse API JSON invalide.",
+    };
+  }
+};
+
 export const authTokenStore = {
   get: () => accessToken,
   set: (token: string | null) => {
@@ -45,7 +80,7 @@ const refreshAccessToken = async () => {
     return null;
   }
 
-  const payload = (await response.json()) as ApiEnvelope<{ accessToken: string }>;
+  const payload = await parseApiEnvelope<{ accessToken: string }>(response);
   const token = payload.data?.accessToken ?? null;
   authTokenStore.set(token);
   return token;
@@ -76,7 +111,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     }
   }
 
-  const payload = (await response.json()) as ApiEnvelope<T>;
+  const payload = await parseApiEnvelope<T>(response);
 
   if (!response.ok || !payload.success) {
     throw new Error(payload.message || "Erreur API Iwosan");

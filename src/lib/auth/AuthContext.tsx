@@ -55,15 +55,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      const loadBackendUser = () => {
-        const backendUser = backendAuthUserStore.get();
+    const loadBackendUser = () => {
+      const backendUser = backendAuthUserStore.get();
+      const token = authTokenStore.get();
+      if (backendUser && token) {
         setSession(null);
-        setUser(backendUser ? toSupabaseLikeUser(backendUser) : null);
-        setRoles(backendUser ? [roleMap[backendUser.role] ?? "user"] : []);
+        setUser(toSupabaseLikeUser(backendUser));
+        setRoles([roleMap[backendUser.role] ?? "user"]);
         setLoading(false);
-      };
+        return true;
+      }
 
+      setSession(null);
+      setUser(null);
+      setRoles([]);
+      setLoading(false);
+      return false;
+    };
+
+    if (!isSupabaseConfigured) {
       loadBackendUser();
       window.addEventListener("iwosan.auth.changed", loadBackendUser);
       window.addEventListener("storage", loadBackendUser);
@@ -82,9 +92,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      loadRoles(data.session?.user?.id).finally(() => setLoading(false));
+      if (data.session?.user) {
+        setSession(data.session);
+        setUser(data.session.user);
+        loadRoles(data.session.user.id).finally(() => setLoading(false));
+        return;
+      }
+
+      const backendAuthenticated = loadBackendUser();
+      if (!backendAuthenticated) {
+        setLoading(false);
+      }
     });
 
     return () => sub.subscription.unsubscribe();

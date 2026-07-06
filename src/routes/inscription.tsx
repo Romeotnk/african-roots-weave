@@ -4,6 +4,7 @@ import { User, Leaf, FlaskConical } from "lucide-react";
 import { register } from "@/lib/api/auth";
 import { CountrySelect } from "@/components/shared/CountrySelect";
 import { getCountryName } from "@/constants/countries";
+import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/inscription")({
   head: () => ({ meta: [{ title: "Inscription - IWOSAN" }] }),
@@ -39,6 +40,7 @@ function Inscription() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSocialSubmitting, setIsSocialSubmitting] = useState<"google" | "facebook" | null>(null);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -57,7 +59,7 @@ function Inscription() {
 
     setIsSubmitting(true);
     try {
-      await register({
+      const response = await register({
         email,
         password,
         firstName,
@@ -66,11 +68,42 @@ function Inscription() {
         role: role ? apiRoleBySelection[role as keyof typeof apiRoleBySelection] : "USER",
         language: "fr",
       });
-      setMessage("Compte cree. Verifiez votre email pour activer votre compte.");
+      setMessage(response.message || "Compte cree. Verifiez votre email pour activer votre compte.");
     } catch (apiError) {
       setError(apiError instanceof Error ? apiError.message : "Inscription impossible pour le moment.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSocialSignIn = async (provider: "google" | "facebook") => {
+    setError(null);
+    setMessage(null);
+
+    if (!isSupabaseConfigured) {
+      setError("La connexion Google/Facebook n'est pas encore configurée. Ajoutez les variables Supabase et les providers OAuth pour l'activer.");
+      return;
+    }
+
+    setIsSocialSubmitting(provider);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/connexion`,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+    } catch (socialError) {
+      setError(
+        socialError instanceof Error ? socialError.message : "La connexion sociale n'a pas pu être lancée.",
+      );
+    } finally {
+      setIsSocialSubmitting(null);
     }
   };
 
@@ -198,11 +231,21 @@ function Inscription() {
             <div className="flex-1 h-px bg-[var(--brand-border-light)]" />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <button className="h-11 rounded-lg border border-[var(--brand-border)] font-semibold text-[14px] hover:bg-[var(--brand-surface-alt)]">
-              Google
+            <button
+              type="button"
+              onClick={() => handleSocialSignIn("google")}
+              disabled={isSocialSubmitting !== null}
+              className="h-11 rounded-lg border border-[var(--brand-border)] font-semibold text-[14px] hover:bg-[var(--brand-surface-alt)] disabled:opacity-70"
+            >
+              {isSocialSubmitting === "google" ? "Ouverture…" : "Google"}
             </button>
-            <button className="h-11 rounded-lg bg-[#1877F2] text-white font-semibold text-[14px]">
-              Facebook
+            <button
+              type="button"
+              onClick={() => handleSocialSignIn("facebook")}
+              disabled={isSocialSubmitting !== null}
+              className="h-11 rounded-lg bg-[#1877F2] text-white font-semibold text-[14px] disabled:opacity-70"
+            >
+              {isSocialSubmitting === "facebook" ? "Ouverture…" : "Facebook"}
             </button>
           </div>
           <p className="mt-6 text-center text-[14px] text-[var(--color-text-muted)]">

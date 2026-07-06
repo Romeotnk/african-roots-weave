@@ -156,6 +156,7 @@
     color: var(--color-text-primary);
     font-family: "Montserrat", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
     text-rendering: optimizeLegibility;
   }
   h1,
@@ -217,6 +218,7 @@
 }
 
 @utility container-iwosan {
+  box-sizing: border-box;
   width: 100%;
   margin-inline: auto;
   padding-inline: 1.25rem;
