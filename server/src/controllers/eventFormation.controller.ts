@@ -5,6 +5,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
 
+const canPublishProgramming = (role: Role) => role === Role.SUPER_ADMIN || role === Role.ADMIN || role === Role.EDITOR;
+
 export const listEvents = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
   const where = { isPublished: true, type: req.query.type as never };
@@ -13,6 +15,19 @@ export const listEvents = asyncHandler(async (req, res) => {
     prisma.event.count({ where }),
   ]);
   res.json(apiResponse(true, events, "Events retrieved", paginationMeta(page, limit, total)));
+});
+
+export const listMyEvents = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  const { page, limit, skip } = getPagination(req.query);
+  const where = { createdById: req.user.id };
+
+  const [events, total] = await prisma.$transaction([
+    prisma.event.findMany({ where, skip, take: limit, orderBy: { startDate: "asc" } }),
+    prisma.event.count({ where }),
+  ]);
+
+  res.json(apiResponse(true, events, "My events retrieved", paginationMeta(page, limit, total)));
 });
 
 export const getEvent = asyncHandler(async (req, res) => {
@@ -32,7 +47,7 @@ export const createEvent = asyncHandler(async (req, res) => {
       startDate: new Date(req.body.startDate),
       endDate: new Date(req.body.endDate),
       createdById: req.user.id,
-      isPublished: req.user.role === Role.ADMIN ? Boolean(req.body.isPublished) : false,
+      isPublished: canPublishProgramming(req.user.role) ? Boolean(req.body.isPublished) : false,
     },
   });
   res.status(201).json(apiResponse(true, event, "Event created"));
@@ -68,6 +83,21 @@ export const listFormations = asyncHandler(async (req, res) => {
   ]);
   res.json(
     apiResponse(true, formations, "Formations retrieved", paginationMeta(page, limit, total)),
+  );
+});
+
+export const listMyFormations = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  const { page, limit, skip } = getPagination(req.query);
+  const where = { createdById: req.user.id };
+
+  const [formations, total] = await prisma.$transaction([
+    prisma.formation.findMany({ where, skip, take: limit, orderBy: { createdAt: "desc" } }),
+    prisma.formation.count({ where }),
+  ]);
+
+  res.json(
+    apiResponse(true, formations, "My formations retrieved", paginationMeta(page, limit, total)),
   );
 });
 

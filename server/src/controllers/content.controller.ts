@@ -7,6 +7,9 @@ import { getPagination, paginationMeta } from "../utils/pagination.js";
 import { makeSlug } from "../utils/slug.js";
 
 const adminOnlySpaces: ArticleSpace[] = ["PHARMACOPEE", "RITES_CULTURES"];
+const editorialRoles: Role[] = [Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR];
+
+const canPublishContent = (role: Role) => editorialRoles.includes(role);
 
 export const listArticles = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
@@ -31,6 +34,25 @@ export const listArticles = asyncHandler(async (req, res) => {
   res.json(apiResponse(true, articles, "Articles retrieved", paginationMeta(page, limit, total)));
 });
 
+export const listMyArticles = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  const { page, limit, skip } = getPagination(req.query);
+  const where = { authorId: req.user.id };
+
+  const [articles, total] = await prisma.$transaction([
+    prisma.article.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: { author: { select: { id: true, firstName: true, lastName: true, role: true } } },
+    }),
+    prisma.article.count({ where }),
+  ]);
+
+  res.json(apiResponse(true, articles, "My articles retrieved", paginationMeta(page, limit, total)));
+});
+
 export const getArticle = asyncHandler(async (req, res) => {
   const article = await prisma.article.update({
     where: { slug: req.params.slug },
@@ -43,8 +65,9 @@ export const getArticle = asyncHandler(async (req, res) => {
 export const createArticle = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
   const space = req.body.space as ArticleSpace;
-  if (adminOnlySpaces.includes(space) && req.user.role !== Role.ADMIN)
-    throw new ApiError(403, "Admin only space");
+  if (adminOnlySpaces.includes(space) && !canPublishContent(req.user.role)) {
+    throw new ApiError(403, "Editorial space only");
+  }
 
   const article = await prisma.article.create({
     data: {
@@ -56,9 +79,9 @@ export const createArticle = asyncHandler(async (req, res) => {
       coverImage: req.body.coverImage,
       category: req.body.category,
       tags: req.body.tags ?? [],
-      isApproved: req.user.role === Role.ADMIN,
-      isPublished: req.user.role === Role.ADMIN && Boolean(req.body.isPublished),
-      publishedAt: req.user.role === Role.ADMIN && req.body.isPublished ? new Date() : undefined,
+      isApproved: canPublishContent(req.user.role),
+      isPublished: canPublishContent(req.user.role) && Boolean(req.body.isPublished),
+      publishedAt: canPublishContent(req.user.role) && req.body.isPublished ? new Date() : undefined,
     },
   });
   res.status(201).json(apiResponse(true, article, "Article created"));
@@ -71,7 +94,7 @@ export const updateArticle = asyncHandler(async (req, res) => {
     select: { authorId: true },
   });
   if (!existing) throw new ApiError(404, "Article not found");
-  if (existing.authorId !== req.user.id && req.user.role !== Role.ADMIN)
+  if (existing.authorId !== req.user.id && !canPublishContent(req.user.role))
     throw new ApiError(403, "Forbidden");
 
   const article = await prisma.article.update({
@@ -82,7 +105,7 @@ export const updateArticle = asyncHandler(async (req, res) => {
       coverImage: req.body.coverImage,
       category: req.body.category,
       tags: req.body.tags,
-      isApproved: req.user.role === Role.ADMIN ? req.body.isApproved : false,
+      isApproved: canPublishContent(req.user.role) ? req.body.isApproved : false,
     },
   });
   res.json(apiResponse(true, article, "Article updated"));
@@ -95,7 +118,7 @@ export const deleteArticle = asyncHandler(async (req, res) => {
     select: { authorId: true },
   });
   if (!existing) throw new ApiError(404, "Article not found");
-  if (existing.authorId !== req.user.id && req.user.role !== Role.ADMIN)
+  if (existing.authorId !== req.user.id && !canPublishContent(req.user.role))
     throw new ApiError(403, "Forbidden");
   await prisma.article.delete({ where: { id: req.params.id } });
   res.json(apiResponse(true, null, "Article deleted"));

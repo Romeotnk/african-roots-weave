@@ -55,6 +55,11 @@ export const frontendMiddleware: RequestHandler = async (req, res, next) => {
     return;
   }
 
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    next();
+    return;
+  }
+
   try {
     const frontendServer = await getFrontendServer();
     if (!frontendServer) {

@@ -1,6 +1,9 @@
 import rateLimit from "express-rate-limit";
 
+const skipWhenDisabled = () => process.env.DISABLE_RATE_LIMIT === "true";
+
 export const globalRateLimit = rateLimit({
+  skip: skipWhenDisabled,
   windowMs: 15 * 60 * 1000,
   limit: 100,
   standardHeaders: true,
@@ -13,6 +16,7 @@ export const globalRateLimit = rateLimit({
 });
 
 export const authRateLimit = rateLimit({
+  skip: skipWhenDisabled,
   windowMs: 15 * 60 * 1000,
   limit: 5,
   standardHeaders: true,

@@ -187,6 +187,9 @@ export const walletWithdraw = asyncHandler(async (req, res) => {
 export const walletTransfer = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
   const amount = new Prisma.Decimal(req.body.amount);
+  const receiverWhere = req.body.receiverEmail
+    ? { email: req.body.receiverEmail }
+    : { id: req.body.receiverId };
 
   const result = await prisma.$transaction(async (tx) => {
     const sender = await tx.user.findUnique({
@@ -194,8 +197,8 @@ export const walletTransfer = asyncHandler(async (req, res) => {
       select: { walletBalance: true },
     });
     const receiver = await tx.user.findUnique({
-      where: { id: req.body.receiverId },
-      select: { walletBalance: true },
+      where: receiverWhere,
+      select: { id: true, walletBalance: true },
     });
     if (!sender || sender.walletBalance.lt(amount))
       throw new ApiError(400, "Insufficient wallet balance");
@@ -206,11 +209,11 @@ export const walletTransfer = asyncHandler(async (req, res) => {
       data: { walletBalance: { decrement: amount } },
     });
     await tx.user.update({
-      where: { id: req.body.receiverId },
+      where: { id: receiver.id },
       data: { walletBalance: { increment: amount } },
     });
 
-    const reference = `transfer_${Date.now()}_${req.user!.id}_${req.body.receiverId}`;
+    const reference = `transfer_${Date.now()}_${req.user!.id}_${receiver.id}`;
     await tx.walletTransaction.createMany({
       data: [
         {
@@ -222,7 +225,7 @@ export const walletTransfer = asyncHandler(async (req, res) => {
           balanceAfter: sender.walletBalance.minus(amount),
         },
         {
-          userId: req.body.receiverId,
+          userId: receiver.id,
           amount,
           type: "TRANSFER",
           reference: `${reference}_in`,

@@ -17,6 +17,7 @@ import { errorHandler, notFoundHandler } from "./middlewares/error.middleware.js
 import { i18nMiddleware } from "./middlewares/i18n.middleware.js";
 import { orderRouter } from "./routes/order.routes.js";
 import { mlmRouter } from "./routes/mlm.routes.js";
+import { messageRouter } from "./routes/message.routes.js";
 import { paymentRouter, webhookRouter } from "./routes/payment.routes.js";
 import { professionalRouter } from "./routes/professional.routes.js";
 import { productRouter } from "./routes/product.routes.js";
@@ -76,6 +77,7 @@ app.use("/api/payments", paymentRouter);
 app.use("/api/webhooks", webhookRouter);
 app.use("/api/wallet", walletRouter);
 app.use("/api/mlm", mlmRouter);
+app.use("/api/messages", messageRouter);
 app.use("/api/articles", articleRouter);
 app.use("/api/monographs", monographRouter);
 app.use("/api/forum", forumRouter);

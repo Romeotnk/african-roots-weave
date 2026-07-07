@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Bell, Trash2 } from "lucide-react";
+import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import { Switch } from "@/components/ui/switch";
 import { marketplaceAlerts } from "@/data/marketplaceAlerts";
 import type { MarketplaceAlert } from "@/types";
@@ -18,6 +19,7 @@ function AlertsPage() {
       <section className="border-b border-[var(--brand-border-light)] bg-white">
         <div className="container-iwosan flex flex-col gap-4 py-8 md:flex-row md:items-center md:justify-between">
           <div>
+            <AccountBackLink />
             <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--brand-primary)]">
               Mon compte
             </p>

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { MessageCircle } from "lucide-react";
+import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import { supportTickets } from "@/data/help";
 import type { SupportTicketStatus } from "@/types";
 
@@ -22,6 +23,7 @@ function TicketsPage() {
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">
       <section className="container-iwosan py-10">
+        <AccountBackLink />
         <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Support</p>
         <h1 className="mt-2 text-[34px] md:text-[44px]">Mes tickets</h1>
         <div className="mt-8 grid gap-6 lg:grid-cols-[360px_1fr]">

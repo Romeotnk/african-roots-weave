@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, MessageSquare, PackageCheck, Star, Store, Users } from "lucide-react";
 import { useMemo, useState } from "react";
+import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import type { NotificationType } from "@/data/notifications";
 import { useNotifications } from "@/hooks/useNotificationsApi";
 
@@ -25,6 +26,7 @@ function NotificationsPage() {
   return (
     <main className="bg-[var(--brand-bg)] py-10">
       <div className="container-iwosan max-w-4xl">
+        <AccountBackLink />
         <h1 className="text-[34px]">Notifications</h1>
         <div className="mt-5 flex flex-wrap gap-2">
           {["all", "message", "listing", "order", "review", "forum"].map((item) => (

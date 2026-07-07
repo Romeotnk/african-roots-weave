@@ -20,7 +20,8 @@ export const validateCoupon = asyncHandler(async (req, res) => {
 export const listCoupons = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
   const { page, limit, skip } = getPagination(req.query);
-  const where = req.user.role === "ADMIN" ? {} : { sellerId: req.user.id };
+  const canManageAllCoupons = req.user.role === "SUPER_ADMIN" || req.user.role === "ADMIN";
+  const where = canManageAllCoupons ? {} : { sellerId: req.user.id };
 
   const [coupons, total] = await prisma.$transaction([
     prisma.coupon.findMany({ where, skip, take: limit, orderBy: { createdAt: "desc" } }),
@@ -32,6 +33,7 @@ export const listCoupons = asyncHandler(async (req, res) => {
 
 export const createCoupon = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
+  const canAssignSeller = req.user.role === "SUPER_ADMIN" || req.user.role === "ADMIN";
 
   const coupon = await prisma.coupon.create({
     data: {
@@ -40,7 +42,7 @@ export const createCoupon = asyncHandler(async (req, res) => {
       isPercentage: req.body.isPercentage ?? true,
       maxUses: req.body.maxUses,
       expiresAt: req.body.expiresAt ? new Date(req.body.expiresAt) : undefined,
-      sellerId: req.user.role === "ADMIN" ? req.body.sellerId : req.user.id,
+      sellerId: canAssignSeller ? req.body.sellerId : req.user.id,
     },
   });
 

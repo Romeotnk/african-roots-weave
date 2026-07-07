@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import type { KycStatus, Role } from "@prisma/client";
+import type { AdminSubRole, KycStatus, Role } from "@prisma/client";
 import { prisma } from "../config/db.js";
 import { env } from "../config/env.js";
 import { hashToken, randomToken } from "../utils/random.js";
@@ -10,6 +10,9 @@ const refreshTokenExpiresAt = () => new Date(Date.now() + 7 * 24 * 60 * 60 * 100
 export const createAccessTokenForUser = (user: {
   id: string;
   role: Role;
+  adminSubRole?: AdminSubRole | null;
+  isResearcher?: boolean;
+  isEmailVerified?: boolean;
   email: string;
   language: string;
   kycStatus: KycStatus;
@@ -17,6 +20,9 @@ export const createAccessTokenForUser = (user: {
   signAccessToken({
     userId: user.id,
     role: user.role,
+    adminSubRole: user.adminSubRole,
+    isResearcher: user.isResearcher,
+    isEmailVerified: user.isEmailVerified,
     email: user.email,
     language: user.language,
     kycStatus: user.kycStatus,
@@ -46,6 +52,9 @@ export const rotateRefreshToken = async (userId: string, tokenId: string, rawTok
           id: true,
           email: true,
           role: true,
+          adminSubRole: true,
+          isResearcher: true,
+          isEmailVerified: true,
           language: true,
           kycStatus: true,
           isActive: true,

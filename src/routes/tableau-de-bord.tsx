@@ -37,47 +37,47 @@ export const Route = createFileRoute("/tableau-de-bord")({
 const groups = [
   {
     title: "Vue d'ensemble",
-    items: [{ icon: LayoutDashboard, label: "Tableau de bord", active: true }],
+    items: [{ icon: LayoutDashboard, label: "Tableau de bord", to: "/tableau-de-bord", active: true }],
   },
   {
     title: "Boutique",
     items: [
-      { icon: ShoppingBag, label: "Mes produits" },
-      { icon: Package, label: "Commandes" },
-      { icon: Wallet, label: "Revenus" },
-      { icon: Tag, label: "Coupons" },
+      { icon: ShoppingBag, label: "Mes produits", to: "/tableau-de-bord/mes-produits" },
+      { icon: Package, label: "Commandes", to: "/tableau-de-bord/commandes" },
+      { icon: Wallet, label: "Revenus", to: "/mon-compte/portefeuille" },
+      { icon: Tag, label: "Coupons", to: "/tableau-de-bord/coupons" },
     ],
   },
   {
     title: "Profil",
     items: [
-      { icon: User, label: "Mon profil" },
-      { icon: Star, label: "Avis reçus" },
-      { icon: FileText, label: "Mon blog" },
+      { icon: User, label: "Mon profil", to: "/tableau-de-bord/profil" },
+      { icon: Star, label: "Avis reçus", to: "/tableau-de-bord/avis" },
+      { icon: FileText, label: "Mon blog", to: "/tableau-de-bord/blog" },
     ],
   },
   {
     title: "Communauté",
     items: [
-      { icon: MessageSquare, label: "Mes questions" },
-      { icon: GraduationCap, label: "Mes formations" },
-      { icon: Calendar, label: "Mes événements" },
+      { icon: MessageSquare, label: "Mes questions", to: "/tableau-de-bord/questions" },
+      { icon: GraduationCap, label: "Mes formations", to: "/tableau-de-bord/formations" },
+      { icon: Calendar, label: "Mes événements", to: "/tableau-de-bord/evenements" },
     ],
   },
   {
     title: "Réseau",
     items: [
-      { icon: Users, label: "Mon réseau" },
-      { icon: Users, label: "Affiliations" },
-      { icon: Wallet, label: "Commissions" },
+      { icon: Users, label: "Mon réseau", to: "/tableau-de-bord/reseau" },
+      { icon: Users, label: "Affiliations", to: "/mon-compte/affiliation" },
+      { icon: Wallet, label: "Commissions", to: "/tableau-de-bord/commissions" },
     ],
   },
   {
     title: "Compte",
     items: [
-      { icon: Settings, label: "Paramètres" },
-      { icon: Bell, label: "Notifications" },
-      { icon: ShieldCheck, label: "KYC" },
+      { icon: Settings, label: "Paramètres", to: "/tableau-de-bord/parametres" },
+      { icon: Bell, label: "Notifications", to: "/mon-compte/notifications" },
+      { icon: ShieldCheck, label: "KYC", to: "/mon-compte/kyc" },
       { icon: LogOut, label: "Déconnexion" },
     ],
   },
@@ -221,14 +221,19 @@ function Dashboard() {
               <ul className="space-y-0.5">
                 {g.items.map((it) => {
                   const isLogout = it.label === "Déconnexion";
+                  const itemClassName = `w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-[14px] cursor-pointer transition active:scale-[0.98] ${"active" in it && it.active ? "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)] font-semibold border-l-[3px] border-[var(--brand-primary)] -ml-3 pl-[14px]" : isLogout ? "text-red-600 hover:bg-red-50" : "text-[var(--color-text-secondary)] hover:bg-[var(--brand-surface-alt)]"}`;
+                  const to = "to" in it ? it.to : undefined;
                   return (
                     <li key={it.label}>
-                      <button
-                        onClick={isLogout ? handleLogout : undefined}
-                        className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-[14px] cursor-pointer transition active:scale-[0.98] ${"active" in it && it.active ? "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)] font-semibold border-l-[3px] border-[var(--brand-primary)] -ml-3 pl-[14px]" : isLogout ? "text-red-600 hover:bg-red-50" : "text-[var(--color-text-secondary)] hover:bg-[var(--brand-surface-alt)]"}`}
-                      >
-                        <it.icon size={16} /> {it.label}
-                      </button>
+                      {!to ? (
+                        <button onClick={handleLogout} className={itemClassName}>
+                          <it.icon size={16} /> {it.label}
+                        </button>
+                      ) : (
+                        <Link to={to as never} className={itemClassName}>
+                          <it.icon size={16} /> {it.label}
+                        </Link>
+                      )}
                     </li>
                   );
                 })}

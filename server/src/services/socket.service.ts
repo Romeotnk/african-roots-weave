@@ -63,7 +63,7 @@ export const initSocket = (server: HttpServer) => {
         });
 
         io?.to(payload.receiverId).emit("message:received", message);
-        await prisma.notification.create({
+        const notification = await prisma.notification.create({
           data: {
             userId: payload.receiverId,
             type: "NEW_MESSAGE",
@@ -72,6 +72,7 @@ export const initSocket = (server: HttpServer) => {
             link: `/messages/${userId}`,
           },
         });
+        io?.to(payload.receiverId).emit("notification:new", notification);
         ack?.({ success: true, data: message });
       },
     );

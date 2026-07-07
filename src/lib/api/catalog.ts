@@ -1,4 +1,6 @@
 import type { Product, Professional } from "@/types";
+import { products as fallbackProducts } from "@/data/products";
+import { professionals as fallbackProfessionals } from "@/data/professionals";
 import { apiRequest } from "./client";
 
 type BackendProduct = {
@@ -74,6 +76,18 @@ const productTypeMap = {
   DIGITAL: "digital",
 } as const;
 
+const asList = (value: unknown): unknown[] => {
+  if (Array.isArray(value)) return value;
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (Array.isArray(record.products)) return record.products;
+    if (Array.isArray(record.professionals)) return record.professionals;
+    if (Array.isArray(record.items)) return record.items;
+    if (Array.isArray(record.data)) return record.data;
+  }
+  return [];
+};
+
 export const toProduct = (product: BackendProduct): Product => ({
   id: product.id,
   title: product.title,
@@ -107,30 +121,48 @@ export const toProfessional = (professional: BackendProfessional): Professional 
 
 export const getProducts = async (params: URLSearchParams) => {
   const query = params.toString();
-  const response = await apiRequest<BackendProduct[]>(`/products${query ? `?${query}` : ""}`);
-  return {
-    products: (response.data ?? []).map(toProduct),
-    pagination: response.pagination,
-  };
+  try {
+    const response = await apiRequest<unknown>(`/products${query ? `?${query}` : ""}`);
+    const items = asList(response.data) as BackendProduct[];
+    return {
+      products: items.map(toProduct),
+      pagination: response.pagination,
+    };
+  } catch {
+    return { products: fallbackProducts, pagination: undefined };
+  }
 };
 
 export const getProfessionals = async (params: URLSearchParams) => {
   const query = params.toString();
-  const response = await apiRequest<BackendProfessional[]>(`/professionals${query ? `?${query}` : ""}`);
-  return {
-    professionals: (response.data ?? []).map(toProfessional),
-    pagination: response.pagination,
-  };
+  try {
+    const response = await apiRequest<unknown>(`/professionals${query ? `?${query}` : ""}`);
+    const items = asList(response.data) as BackendProfessional[];
+    return {
+      professionals: items.map(toProfessional),
+      pagination: response.pagination,
+    };
+  } catch {
+    return { professionals: fallbackProfessionals, pagination: undefined };
+  }
 };
 
 export const getProfessionalById = async (id: string) => {
-  const response = await apiRequest<BackendProfessional>(`/professionals/${id}`);
-  return response.data ? toProfessional(response.data) : null;
+  try {
+    const response = await apiRequest<BackendProfessional>(`/professionals/${id}`);
+    return response.data ? toProfessional(response.data) : null;
+  } catch {
+    return fallbackProfessionals.find((professional) => professional.id === id) ?? null;
+  }
 };
 
 export const getProductBySlug = async (slug: string) => {
-  const response = await apiRequest<BackendProduct>(`/products/${slug}`);
-  return response.data ? toProduct(response.data) : null;
+  try {
+    const response = await apiRequest<BackendProduct>(`/products/${slug}`);
+    return response.data ? toProduct(response.data) : null;
+  } catch {
+    return fallbackProducts.find((product) => product.id === slug) ?? null;
+  }
 };
 
 export const createProduct = async (payload: ProductPayload) => {
@@ -165,8 +197,8 @@ export const uploadProductImages = async (id: string, files: File[]) => {
 };
 
 export const listProductBids = async (id: string) => {
-  const response = await apiRequest<unknown[]>(`/products/${id}/bids`);
-  return response.data ?? [];
+  const response = await apiRequest<unknown>(`/products/${id}/bids`);
+  return asList(response.data);
 };
 
 export const placeProductBid = async (id: string, amount: number) => {

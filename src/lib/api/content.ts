@@ -36,10 +36,26 @@ const toQuery = (params: Record<string, string | number | undefined>) => {
   return query.toString();
 };
 
+const asList = (value: unknown): unknown[] => {
+  if (Array.isArray(value)) return value;
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (Array.isArray(record.articles)) return record.articles;
+    if (Array.isArray(record.monographs)) return record.monographs;
+    if (Array.isArray(record.items)) return record.items;
+    if (Array.isArray(record.data)) return record.data;
+  }
+  return [];
+};
+
 export async function listArticles(params: ArticleQuery = {}) {
   const query = toQuery(params);
-  const response = await apiRequest<unknown[]>(`/articles${query ? `?${query}` : ""}`);
-  return { articles: response.data ?? [], pagination: response.pagination };
+  try {
+    const response = await apiRequest<unknown>(`/articles${query ? `?${query}` : ""}`);
+    return { articles: asList(response.data), pagination: response.pagination };
+  } catch {
+    return { articles: [], pagination: undefined };
+  }
 }
 
 export async function getArticle(slug: string) {
@@ -76,8 +92,12 @@ export async function publishArticle(id: string) {
 }
 
 export async function listMonographs() {
-  const response = await apiRequest<unknown[]>("/monographs");
-  return response.data ?? [];
+  try {
+    const response = await apiRequest<unknown>("/monographs");
+    return asList(response.data);
+  } catch {
+    return [];
+  }
 }
 
 export async function getMonograph(id: string) {

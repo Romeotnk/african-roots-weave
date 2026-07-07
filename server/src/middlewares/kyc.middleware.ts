@@ -7,7 +7,7 @@ export const kycMiddleware: RequestHandler = (req, _res, next) => {
     return;
   }
 
-  if (req.user.kycStatus !== "VERIFIED") {
+  if (req.user.role !== "SUPER_ADMIN" && req.user.role !== "ADMIN" && req.user.kycStatus !== "VERIFIED") {
     next(new ApiError(403, "KYC verification required"));
     return;
   }

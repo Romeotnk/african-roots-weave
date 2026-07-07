@@ -25,23 +25,41 @@ export const authMiddleware: RequestHandler = async (req, _res, next) => {
         id: true,
         email: true,
         role: true,
+        adminSubRole: true,
+        isResearcher: true,
         language: true,
         kycStatus: true,
+        isEmailVerified: true,
         isActive: true,
         isBanned: true,
+        banExpiresAt: true,
       },
     });
 
-    if (!user || !user.isActive || user.isBanned) {
+    if (!user || !user.isActive) {
       throw new ApiError(401, "Account unavailable");
+    }
+
+    if (user.isBanned) {
+      if (user.banExpiresAt && user.banExpiresAt <= new Date()) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { isBanned: false, banReason: null, banExpiresAt: null },
+        });
+      } else {
+        throw new ApiError(401, "Account unavailable");
+      }
     }
 
     req.user = {
       id: user.id,
       email: user.email,
       role: user.role,
+      adminSubRole: user.adminSubRole,
+      isResearcher: user.isResearcher,
       language: user.language,
       kycStatus: user.kycStatus,
+      isEmailVerified: user.isEmailVerified,
     };
     req.language = user.language;
     next();

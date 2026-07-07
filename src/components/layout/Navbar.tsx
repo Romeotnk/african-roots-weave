@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Menu, X, Leaf, ChevronDown, Sun, Moon, Monitor, LogIn, UserPlus, LogOut, LayoutDashboard, ShoppingCart } from "lucide-react";
+import { Menu, X, Leaf, ChevronDown, Sun, Moon, LogIn, UserPlus, LogOut, LayoutDashboard, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useTheme, type ThemeMode } from "@/components/ThemeProvider";
@@ -46,7 +46,6 @@ function ThemeSwitch({ compact = false }: { compact?: boolean }) {
   const { mode, setMode, resolved } = useTheme();
   const items: { v: ThemeMode; icon: typeof Sun; label: string }[] = [
     { v: "light", icon: Sun, label: "Clair" },
-    { v: "system", icon: Monitor, label: "Auto" },
     { v: "dark", icon: Moon, label: "Sombre" },
   ];
   if (compact) {

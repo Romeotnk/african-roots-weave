@@ -5,8 +5,10 @@ import {
   logout,
   register,
   resetPassword,
+  submitKyc,
   verifyEmail,
   type RegisterPayload,
+  type SubmitKycPayload,
 } from "@/lib/api/auth";
 
 export function useLoginMutation() {
@@ -42,5 +44,11 @@ export function useForgotPasswordMutation() {
 export function useResetPasswordMutation() {
   return useMutation({
     mutationFn: ({ token, password }: { token: string; password: string }) => resetPassword(token, password),
+  });
+}
+
+export function useSubmitKycMutation() {
+  return useMutation({
+    mutationFn: (payload: SubmitKycPayload) => submitKyc(payload),
   });
 }

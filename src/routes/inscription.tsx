@@ -1,9 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { User, Leaf, FlaskConical } from "lucide-react";
 import { register } from "@/lib/api/auth";
 import { CountrySelect } from "@/components/shared/CountrySelect";
-import { getCountryName } from "@/constants/countries";
 import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/inscription")({
@@ -25,7 +24,7 @@ const roles = [
 const apiRoleBySelection = {
   user: "USER",
   pro: "PROFESSIONAL",
-  researcher: "RESEARCHER",
+  researcher: "USER",
 } as const;
 
 function Inscription() {
@@ -42,7 +41,7 @@ function Inscription() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSocialSubmitting, setIsSocialSubmitting] = useState<"google" | "facebook" | null>(null);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setMessage(null);
@@ -68,7 +67,11 @@ function Inscription() {
         role: role ? apiRoleBySelection[role as keyof typeof apiRoleBySelection] : "USER",
         language: "fr",
       });
-      setMessage(response.message || "Compte cree. Verifiez votre email pour activer votre compte.");
+      setMessage(
+        role === "researcher"
+          ? "Compte cree. Votre profil chercheur devra etre valide depuis l'administration."
+          : response.message || "Compte cree. Verifiez votre email pour activer votre compte.",
+      );
     } catch (apiError) {
       setError(apiError instanceof Error ? apiError.message : "Inscription impossible pour le moment.");
     } finally {
@@ -175,9 +178,11 @@ function Inscription() {
                 required
                 className="w-full h-11 px-4 rounded-lg border border-[var(--brand-border)] outline-none bg-white"
               />
-              <p className="text-[12px] text-[var(--color-text-muted)]">
-                Pays selectionne : {getCountryName(country)}
-              </p>
+              {role === "researcher" && (
+                <p className="rounded-lg border border-[var(--brand-border-light)] bg-[var(--brand-primary-subtle)] px-3 py-2 text-[12px] font-semibold text-[var(--brand-primary)]">
+                  Les comptes chercheur sont valides par l'equipe IWOSAN apres inscription.
+                </p>
+              )}
               <input
                 type="password"
                 placeholder="Mot de passe"

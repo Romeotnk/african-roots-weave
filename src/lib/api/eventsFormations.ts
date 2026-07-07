@@ -26,10 +26,26 @@ const toQuery = (params: Record<string, string | number | undefined>) => {
   return query.toString();
 };
 
+const asList = (value: unknown): unknown[] => {
+  if (Array.isArray(value)) return value;
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (Array.isArray(record.events)) return record.events;
+    if (Array.isArray(record.formations)) return record.formations;
+    if (Array.isArray(record.items)) return record.items;
+    if (Array.isArray(record.data)) return record.data;
+  }
+  return [];
+};
+
 export async function listEvents(params: EventQuery = {}) {
   const query = toQuery(params);
-  const response = await apiRequest<unknown[]>(`/events${query ? `?${query}` : ""}`);
-  return { events: response.data ?? [], pagination: response.pagination };
+  try {
+    const response = await apiRequest<unknown>(`/events${query ? `?${query}` : ""}`);
+    return { events: asList(response.data), pagination: response.pagination };
+  } catch {
+    return { events: [], pagination: undefined };
+  }
 }
 
 export async function getEvent(id: string) {
@@ -61,8 +77,12 @@ export async function unregisterEvent(id: string) {
 
 export async function listFormations(params: FormationQuery = {}) {
   const query = toQuery(params);
-  const response = await apiRequest<unknown[]>(`/formations${query ? `?${query}` : ""}`);
-  return { formations: response.data ?? [], pagination: response.pagination };
+  try {
+    const response = await apiRequest<unknown>(`/formations${query ? `?${query}` : ""}`);
+    return { formations: asList(response.data), pagination: response.pagination };
+  } catch {
+    return { formations: [], pagination: undefined };
+  }
 }
 
 export async function getFormation(id: string) {

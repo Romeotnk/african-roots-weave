@@ -10,10 +10,15 @@ export const attachSupabaseAuth = createMiddleware({ type: 'function' }).client(
       return next()
     }
 
-    const { data } = await supabase.auth.getSession()
-    const token = data.session?.access_token
-    return next({
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
+    try {
+      const { data } = await supabase.auth.getSession()
+      const token = data.session?.access_token
+      return next({
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+    } catch (error) {
+      console.warn('Supabase auth middleware skipped.', error)
+      return next()
+    }
   },
 )

@@ -52,7 +52,7 @@ export function useWalletWithdraw() {
 export function useWalletTransfer() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ receiverId, amount }: { receiverId: string; amount: number }) => transferWalletFunds(receiverId, amount),
+    mutationFn: ({ receiver, amount }: { receiver: string; amount: number }) => transferWalletFunds(receiver, amount),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wallet"] }),
   });
 }

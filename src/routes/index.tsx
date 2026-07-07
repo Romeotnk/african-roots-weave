@@ -309,7 +309,7 @@ function Home() {
     return apiPlants.length ? apiPlants : plants;
   }, [monographs]);
   const displayedEvents = useMemo(() => {
-    const mappedEvents = (apiEvents ?? []).map(mapApiEvent).filter((event): event is EventItem => Boolean(event));
+    const mappedEvents = (apiEvents?.events ?? []).map(mapApiEvent).filter((event): event is EventItem => Boolean(event));
     return mappedEvents.length ? mappedEvents : events;
   }, [apiEvents]);
   const featured = displayedProfessionals[0];

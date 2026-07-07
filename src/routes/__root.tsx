@@ -46,6 +46,7 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+  const showDetails = import.meta.env.DEV;
   useEffect(() => {
     reportClientError(error, { boundary: "root_error_component" });
   }, [error]);
@@ -71,6 +72,11 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             Accueil
           </a>
         </div>
+        {showDetails && (
+          <pre className="mt-5 max-h-56 overflow-auto rounded-md bg-slate-950 p-3 text-left text-xs text-slate-100">
+            {error.stack || error.message}
+          </pre>
+        )}
       </div>
     </div>
   );
@@ -136,6 +142,12 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="fr">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=localStorage.getItem('iwosan_theme');document.documentElement.classList.toggle('dark',t==='dark');document.documentElement.style.colorScheme=t==='dark'?'dark':'light'}catch(e){}",
+          }}
+        />
         <HeadContent />
       </head>
       <body>

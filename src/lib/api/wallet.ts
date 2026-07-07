@@ -51,8 +51,8 @@ export const requestWalletWithdraw = (amount: number, destination: string) =>
     body: { amount, destination },
   });
 
-export const transferWalletFunds = (receiverId: string, amount: number) =>
+export const transferWalletFunds = (receiver: string, amount: number) =>
   apiRequest<{ reference: string }>("/wallet/transfer", {
     method: "POST",
-    body: { receiverId, amount },
+    body: receiver.includes("@") ? { receiverEmail: receiver, amount } : { receiverId: receiver, amount },
   });

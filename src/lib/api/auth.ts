@@ -4,8 +4,13 @@ export type AuthUser = {
   id: string;
   email: string;
   role: string;
+  adminSubRole?: string | null;
+  isResearcher?: boolean;
+  isEmailVerified?: boolean;
   firstName: string;
   lastName: string;
+  avatarUrl?: string | null;
+  country?: string;
   language: string;
   kycStatus: string;
 };
@@ -41,7 +46,7 @@ export type RegisterPayload = {
   firstName: string;
   lastName: string;
   country: string;
-  role?: "USER" | "PROFESSIONAL" | "RESEARCHER";
+  role?: "USER" | "PROFESSIONAL";
   language?: "fr" | "en" | "ar";
   referralCode?: string;
   turnstileToken?: string;
@@ -82,6 +87,48 @@ export const resetPassword = async (token: string, password: string) =>
   apiRequest<null>(`/auth/reset-password/${token}`, {
     method: "POST",
     body: { password },
+  });
+
+export type UpdateMePayload = Partial<Pick<AuthUser, "firstName" | "lastName" | "country" | "language" | "avatarUrl">>;
+
+export const updateMe = async (payload: UpdateMePayload) => {
+  const response = await apiRequest<AuthUser>("/auth/me", {
+    method: "PATCH",
+    body: payload,
+  });
+  if (response.data) {
+    backendAuthUserStore.set(response.data);
+  }
+  return response;
+};
+
+export type SubmitKycPayload = {
+  docType: string;
+  country: string;
+  documentNumber: string;
+  expiresAt?: string;
+  files?: {
+    front?: string;
+    back?: string;
+    selfie?: string;
+  };
+};
+
+export const submitKyc = async (payload: SubmitKycPayload) => {
+  const response = await apiRequest<AuthUser>("/auth/kyc", {
+    method: "POST",
+    body: payload,
+  });
+  if (response.data) {
+    backendAuthUserStore.set(response.data);
+  }
+  return response;
+};
+
+export const changePassword = async (currentPassword: string, password: string) =>
+  apiRequest<null>("/auth/change-password", {
+    method: "POST",
+    body: { currentPassword, password },
   });
 
 export const logout = async () => {

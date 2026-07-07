@@ -1,10 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Image, Laugh, Paperclip, Search, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { conversations as initialConversations } from "@/data/messages";
 import { useMessagesSocket } from "@/hooks/useMessagesSocket";
+import { listConversations, markConversationRead } from "@/lib/api/messages";
+import { authTokenStore } from "@/lib/api/client";
 import type { ChatMessage } from "@/types";
 
 export const Route = createFileRoute("/messages")({
@@ -13,11 +16,24 @@ export const Route = createFileRoute("/messages")({
 });
 
 function MessagesPage() {
-  const [conversations, setConversations] = useState(initialConversations);
-  const [activeId, setActiveId] = useState(initialConversations[0]?.id ?? "");
+  const hasBackendAuth = Boolean(authTokenStore.get());
+  const [conversations, setConversations] = useState(hasBackendAuth ? [] : initialConversations);
+  const [activeId, setActiveId] = useState(hasBackendAuth ? "" : initialConversations[0]?.id ?? "");
   const [query, setQuery] = useState("");
   const [draft, setDraft] = useState("");
   const [mobileConversationOpen, setMobileConversationOpen] = useState(false);
+  const conversationsQuery = useQuery({
+    queryKey: ["messages", "conversations"],
+    queryFn: listConversations,
+    enabled: hasBackendAuth,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (!conversationsQuery.data) return;
+    setConversations(conversationsQuery.data);
+    setActiveId((current) => current || conversationsQuery.data?.[0]?.id || "");
+  }, [conversationsQuery.data]);
   const handleIncomingMessage = useCallback((message: { id: string; senderId: string; content: string; createdAt: string; isRead?: boolean }) => {
     const nextMessage: ChatMessage = {
       id: message.id,
@@ -153,7 +169,7 @@ function MessagesPage() {
                   return (
                     <button
                       key={conversation.id}
-                      onClick={() => {
+                  onClick={() => {
                         setActiveId(conversation.id);
                         setMobileConversationOpen(true);
                         setConversations((current) =>
@@ -161,6 +177,9 @@ function MessagesPage() {
                             item.id === conversation.id ? { ...item, unreadCount: 0 } : item,
                           ),
                         );
+                        if (!conversation.id.startsWith("conv")) {
+                          markConversationRead(conversation.id).catch(() => undefined);
+                        }
                         conversation.messages
                           .filter((message) => message.sender === "them" && !message.read && !conversation.id.startsWith("conv"))
                           .forEach((message) => markRead(message.id));

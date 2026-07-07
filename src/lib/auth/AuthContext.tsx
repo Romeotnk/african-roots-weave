@@ -4,7 +4,7 @@ import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 import { authTokenStore } from "@/lib/api/client";
 import { backendAuthUserStore, type AuthUser } from "@/lib/api/auth";
 
-export type AppRole = "user" | "professional" | "researcher" | "moderator" | "admin";
+export type AppRole = "user" | "professional" | "researcher" | "moderator" | "editor" | "admin" | "super_admin";
 
 interface AuthCtx {
   user: User | null;
@@ -23,7 +23,23 @@ const roleMap: Record<string, AppRole> = {
   PROFESSIONAL: "professional",
   RESEARCHER: "researcher",
   MODERATOR: "moderator",
+  EDITOR: "editor",
   ADMIN: "admin",
+  SUPER_ADMIN: "super_admin",
+};
+
+const rolesFromBackendUser = (backendUser: AuthUser): AppRole[] => {
+  const role = roleMap[backendUser.role] ?? "user";
+  const roles = new Set<AppRole>([role]);
+  if (backendUser.role === "SUPER_ADMIN") roles.add("admin");
+  if (backendUser.role === "PROFESSIONAL") roles.add("user");
+  if (backendUser.role === "RESEARCHER" || backendUser.isResearcher) {
+    roles.add("researcher");
+    roles.add("user");
+  }
+  if (backendUser.adminSubRole === "MODERATOR") roles.add("moderator");
+  if (backendUser.adminSubRole === "EDITOR") roles.add("editor");
+  return [...roles];
 };
 
 const toSupabaseLikeUser = (backendUser: AuthUser): User =>
@@ -50,8 +66,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRoles([]);
       return;
     }
-    const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
-    setRoles((data ?? []).map((r) => r.role as AppRole));
+    try {
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
+      setRoles((data ?? []).map((r) => r.role as AppRole));
+    } catch (error) {
+      console.warn("Supabase roles unavailable, keeping backend roles only.", error);
+      setRoles([]);
+    }
   };
 
   useEffect(() => {
@@ -61,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (backendUser && token) {
         setSession(null);
         setUser(toSupabaseLikeUser(backendUser));
-        setRoles([roleMap[backendUser.role] ?? "user"]);
+        setRoles(rolesFromBackendUser(backendUser));
         setLoading(false);
         return true;
       }
@@ -73,8 +94,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     };
 
+    const backendAuthenticated = loadBackendUser();
+    if (backendAuthenticated) {
+      window.addEventListener("iwosan.auth.changed", loadBackendUser);
+      window.addEventListener("storage", loadBackendUser);
+      return () => {
+        window.removeEventListener("iwosan.auth.changed", loadBackendUser);
+        window.removeEventListener("storage", loadBackendUser);
+      };
+    }
+
     if (!isSupabaseConfigured) {
-      loadBackendUser();
       window.addEventListener("iwosan.auth.changed", loadBackendUser);
       window.addEventListener("storage", loadBackendUser);
       return () => {
@@ -84,42 +114,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Listener first (synchronous state set), then fetch session
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      // Defer Supabase calls to avoid deadlocks
-      setTimeout(() => loadRoles(s?.user?.id), 0);
-    });
+    let sub: { subscription: { unsubscribe: () => void } } | null = null;
+    try {
+      const listener = supabase.auth.onAuthStateChange((_event, s) => {
+        setSession(s);
+        setUser(s?.user ?? null);
+        // Defer Supabase calls to avoid deadlocks
+        setTimeout(() => loadRoles(s?.user?.id), 0);
+      });
+      sub = listener.data;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user) {
-        setSession(data.session);
-        setUser(data.session.user);
-        loadRoles(data.session.user.id).finally(() => setLoading(false));
-        return;
-      }
+      supabase.auth
+        .getSession()
+        .then(({ data }) => {
+          if (data.session?.user) {
+            setSession(data.session);
+            setUser(data.session.user);
+            loadRoles(data.session.user.id).finally(() => setLoading(false));
+            return;
+          }
 
-      const backendAuthenticated = loadBackendUser();
-      if (!backendAuthenticated) {
-        setLoading(false);
-      }
-    });
+          if (!loadBackendUser()) {
+            setLoading(false);
+          }
+        })
+        .catch((error) => {
+          console.warn("Supabase session unavailable, falling back to backend auth.", error);
+          loadBackendUser();
+          setLoading(false);
+        });
+    } catch (error) {
+      console.warn("Supabase auth unavailable, falling back to backend auth.", error);
+      loadBackendUser();
+      setLoading(false);
+    }
 
-    return () => sub.subscription.unsubscribe();
+    return () => sub?.subscription.unsubscribe();
   }, []);
 
   const signOut = async () => {
+    authTokenStore.set(null);
+    backendAuthUserStore.set(null);
     if (!isSupabaseConfigured) {
-      authTokenStore.set(null);
-      backendAuthUserStore.set(null);
       setRoles([]);
       setSession(null);
       setUser(null);
       return;
     }
 
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.warn("Supabase sign out skipped.", error);
+    }
     setRoles([]);
+    setSession(null);
+    setUser(null);
   };
 
   const value: AuthCtx = {

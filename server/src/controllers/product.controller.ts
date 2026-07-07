@@ -45,6 +45,8 @@ const productSelect = {
   },
 } satisfies Prisma.ProductSelect;
 
+const canModerateProducts = (role: Role) => role === Role.SUPER_ADMIN || role === Role.ADMIN;
+
 export const listProducts = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
   const minPrice = req.query.minPrice ? new Prisma.Decimal(String(req.query.minPrice)) : undefined;
@@ -89,6 +91,24 @@ export const listProducts = asyncHandler(async (req, res) => {
   res.json(apiResponse(true, products, "Products retrieved", paginationMeta(page, limit, total)));
 });
 
+export const listMyProducts = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+
+  const { page, limit, skip } = getPagination(req.query);
+  const [products, total] = await prisma.$transaction([
+    prisma.product.findMany({
+      where: { sellerId: req.user.id },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      select: productSelect,
+    }),
+    prisma.product.count({ where: { sellerId: req.user.id } }),
+  ]);
+
+  res.json(apiResponse(true, products, "My products retrieved", paginationMeta(page, limit, total)));
+});
+
 export const getProductBySlug = asyncHandler(async (req, res) => {
   const product = await prisma.product.update({
     where: { slug: req.params.slug },
@@ -121,7 +141,7 @@ export const createProduct = asyncHandler(async (req, res) => {
       commissionRate: req.body.commissionRate,
       downloadLimit: req.body.downloadLimit,
       fileUrl: req.body.fileUrl,
-      isApproved: req.user.role === Role.ADMIN,
+      isApproved: canModerateProducts(req.user.role),
     },
     select: productSelect,
   });
@@ -137,7 +157,7 @@ export const updateProduct = asyncHandler(async (req, res) => {
     select: { sellerId: true },
   });
   if (!existing) throw new ApiError(404, "Product not found");
-  if (existing.sellerId !== req.user.id && req.user.role !== Role.ADMIN)
+  if (existing.sellerId !== req.user.id && !canModerateProducts(req.user.role))
     throw new ApiError(403, "Forbidden");
 
   const product = await prisma.product.update({
@@ -155,7 +175,7 @@ export const updateProduct = asyncHandler(async (req, res) => {
       commissionRate: req.body.commissionRate,
       downloadLimit: req.body.downloadLimit,
       fileUrl: req.body.fileUrl,
-      isApproved: req.user.role === Role.ADMIN ? req.body.isApproved : false,
+      isApproved: canModerateProducts(req.user.role) ? req.body.isApproved : false,
     },
     select: productSelect,
   });
@@ -171,7 +191,7 @@ export const deleteProduct = asyncHandler(async (req, res) => {
     select: { sellerId: true },
   });
   if (!existing) throw new ApiError(404, "Product not found");
-  if (existing.sellerId !== req.user.id && req.user.role !== Role.ADMIN)
+  if (existing.sellerId !== req.user.id && !canModerateProducts(req.user.role))
     throw new ApiError(403, "Forbidden");
 
   await prisma.product.update({ where: { id: req.params.id }, data: { isActive: false } });
@@ -186,7 +206,7 @@ export const uploadProductImages = asyncHandler(async (req, res) => {
     select: { sellerId: true, images: true },
   });
   if (!product) throw new ApiError(404, "Product not found");
-  if (product.sellerId !== req.user.id && req.user.role !== Role.ADMIN)
+  if (product.sellerId !== req.user.id && !canModerateProducts(req.user.role))
     throw new ApiError(403, "Forbidden");
 
   const files = (req.files as Express.Multer.File[] | undefined) ?? [];

@@ -1,9 +1,27 @@
-import { Role } from "@prisma/client";
+import { AdminSubRole, Role } from "@prisma/client";
 import { prisma } from "../config/db.js";
 import { sendEmail } from "../services/email.service.js";
+import { writeAuditLog } from "../services/audit.service.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/errors.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
+
+const adminAssignableRoles: Role[] = [Role.MODERATOR, Role.EDITOR, Role.RESEARCHER];
+
+const assertCanTouchUser = async (actorRole: Role, targetId: string) => {
+  const target = await prisma.user.findUnique({
+    where: { id: targetId },
+    select: { id: true, role: true },
+  });
+
+  if (!target) throw new ApiError(404, "User not found");
+  if (target.role === Role.SUPER_ADMIN && actorRole !== Role.SUPER_ADMIN) {
+    throw new ApiError(403, "Accès non autorisé");
+  }
+
+  return target;
+};
 
 export const dashboard = asyncHandler(async (_req, res) => {
   const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -90,19 +108,89 @@ export const getUser = asyncHandler(async (req, res) => {
 });
 
 export const banUser = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  await assertCanTouchUser(req.user.role, req.params.id);
+
+  const duration = req.body.duration ? Number(req.body.duration) : null;
+  const banExpiresAt = duration ? new Date(Date.now() + duration * 60 * 60 * 1000) : null;
   const user = await prisma.user.update({
     where: { id: req.params.id },
-    data: { isBanned: true, banReason: req.body.reason },
+    data: { isBanned: true, banReason: req.body.reason, banExpiresAt },
+  });
+  await writeAuditLog(req, {
+    action: "USER_BANNED",
+    targetId: user.id,
+    targetType: "User",
+    metadata: { reason: req.body.reason, duration },
   });
   res.json(apiResponse(true, user, "User banned"));
 });
 
 export const updateRole = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  await assertCanTouchUser(req.user.role, req.params.id);
+
+  const nextRole = req.body.role as Role;
+  const nextSubRole = req.body.subRole as AdminSubRole | undefined;
+
+  if (!Object.values(Role).includes(nextRole)) {
+    throw new ApiError(400, "Invalid role");
+  }
+
+  if (req.user.role !== Role.SUPER_ADMIN && !adminAssignableRoles.includes(nextRole)) {
+    throw new ApiError(403, "Accès non autorisé");
+  }
+
   const user = await prisma.user.update({
     where: { id: req.params.id },
-    data: { role: req.body.role },
+    data: {
+      role: nextRole,
+      adminSubRole: nextSubRole ?? (nextRole === Role.MODERATOR ? "MODERATOR" : nextRole === Role.EDITOR ? "EDITOR" : null),
+      isResearcher: nextRole === Role.RESEARCHER || Boolean(req.body.isResearcher),
+    },
+  });
+  await writeAuditLog(req, {
+    action: "USER_ROLE_UPDATED",
+    targetId: user.id,
+    targetType: "User",
+    metadata: { role: nextRole, subRole: nextSubRole },
   });
   res.json(apiResponse(true, user, "User role updated"));
+});
+
+export const promoteUser = updateRole;
+
+export const unbanUser = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  await assertCanTouchUser(req.user.role, req.params.id);
+
+  const user = await prisma.user.update({
+    where: { id: req.params.id },
+    data: { isBanned: false, banReason: null, banExpiresAt: null },
+  });
+  await writeAuditLog(req, { action: "USER_UNBANNED", targetId: user.id, targetType: "User" });
+  res.json(apiResponse(true, user, "User unbanned"));
+});
+
+export const auditLog = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPagination(req.query);
+  const where = {
+    userId: typeof req.query.userId === "string" ? req.query.userId : undefined,
+    action: typeof req.query.action === "string" ? req.query.action : undefined,
+  };
+
+  const [logs, total] = await prisma.$transaction([
+    prisma.auditLog.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: { user: { select: { id: true, email: true, role: true } } },
+    }),
+    prisma.auditLog.count({ where }),
+  ]);
+
+  res.json(apiResponse(true, logs, "Audit log retrieved", paginationMeta(page, limit, total)));
 });
 
 export const kycDocuments = asyncHandler(async (req, res) => {

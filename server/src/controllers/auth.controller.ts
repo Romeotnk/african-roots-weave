@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import { prisma } from "../config/db.js";
 import { env } from "../config/env.js";
 import { redisSet } from "../config/redis.js";
@@ -83,6 +83,7 @@ export const register = asyncHandler(async (req, res) => {
   }
 
   const passwordHash = await hashPassword(password);
+  const requestedRole = role === Role.PROFESSIONAL ? Role.PROFESSIONAL : Role.USER;
 
   const user = await prisma.$transaction(async (tx) => {
     const created = await tx.user.create({
@@ -92,7 +93,9 @@ export const register = asyncHandler(async (req, res) => {
         firstName,
         lastName,
         country,
-        role,
+        role: requestedRole,
+        adminSubRole: null,
+        isResearcher: false,
         language,
         referralCode: generatedReferralCode,
         referredById: sponsor?.id,
@@ -101,8 +104,13 @@ export const register = asyncHandler(async (req, res) => {
         id: true,
         email: true,
         role: true,
+        adminSubRole: true,
+        isResearcher: true,
+        isEmailVerified: true,
         firstName: true,
         lastName: true,
+        avatarUrl: true,
+        country: true,
         language: true,
         kycStatus: true,
         referralCode: true,
@@ -166,16 +174,31 @@ export const login = asyncHandler(async (req, res) => {
       role: true,
       firstName: true,
       lastName: true,
+      avatarUrl: true,
+      country: true,
       language: true,
       kycStatus: true,
+      adminSubRole: true,
+      isResearcher: true,
+      isEmailVerified: true,
       isActive: true,
       isBanned: true,
       banReason: true,
+      banExpiresAt: true,
     },
   });
 
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
     throw new ApiError(401, "Invalid credentials");
+  }
+
+  if (user.isBanned && user.banExpiresAt && user.banExpiresAt <= new Date()) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { isBanned: false, banReason: null, banExpiresAt: null },
+    });
+    user.isBanned = false;
+    user.banReason = null;
   }
 
   if (!user.isActive || user.isBanned) {
@@ -232,6 +255,10 @@ export const refresh = asyncHandler(async (req, res) => {
  * when Redis is configured.
  */
 export const me = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    throw new ApiError(401, "Authentication required");
+  }
+
   const user = await prisma.user.findUnique({
     where: { id: req.user.id },
     select: {
@@ -240,10 +267,17 @@ export const me = asyncHandler(async (req, res) => {
       role: true,
       firstName: true,
       lastName: true,
+      avatarUrl: true,
+      country: true,
       language: true,
       kycStatus: true,
+      adminSubRole: true,
+      isResearcher: true,
+      isEmailVerified: true,
       isActive: true,
       isBanned: true,
+      banReason: true,
+      banExpiresAt: true,
       lastLoginAt: true,
       createdAt: true,
     },
@@ -254,6 +288,136 @@ export const me = asyncHandler(async (req, res) => {
   }
 
   res.json(apiResponse(true, user, "Profile loaded"));
+});
+
+export const updateMe = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    throw new ApiError(401, "Authentication required");
+  }
+
+  const { firstName, lastName, country, language, avatarUrl } = req.body;
+  const data: Prisma.UserUpdateInput = {};
+
+  if (firstName !== undefined) data.firstName = firstName;
+  if (lastName !== undefined) data.lastName = lastName;
+  if (country !== undefined) data.country = country;
+  if (language !== undefined) data.language = language;
+  if (avatarUrl !== undefined) data.avatarUrl = avatarUrl || null;
+
+  const user = await prisma.user.update({
+    where: { id: req.user.id },
+    data,
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      adminSubRole: true,
+      isResearcher: true,
+      isEmailVerified: true,
+      firstName: true,
+      lastName: true,
+      avatarUrl: true,
+      country: true,
+      language: true,
+      kycStatus: true,
+      isActive: true,
+      isBanned: true,
+      banReason: true,
+      banExpiresAt: true,
+      lastLoginAt: true,
+      createdAt: true,
+    },
+  });
+
+  res.json(apiResponse(true, user, "Profile updated"));
+});
+
+export const submitKyc = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    throw new ApiError(401, "Authentication required");
+  }
+
+  const { docType, country, documentNumber, expiresAt, files } = req.body;
+  const kycDocuments: Prisma.InputJsonObject = {
+    docType,
+    country,
+    documentNumber,
+    expiresAt: expiresAt || null,
+    files: files ?? {},
+    submittedAt: new Date().toISOString(),
+  };
+
+  const user = await prisma.$transaction(async (tx) => {
+    const updated = await tx.user.update({
+      where: { id: req.user!.id },
+      data: {
+        kycStatus: "SUBMITTED",
+        kycDocuments,
+      },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        adminSubRole: true,
+        isResearcher: true,
+        isEmailVerified: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        country: true,
+        language: true,
+        kycStatus: true,
+        isActive: true,
+        isBanned: true,
+        banReason: true,
+        banExpiresAt: true,
+        lastLoginAt: true,
+        createdAt: true,
+      },
+    });
+
+    await tx.notification.create({
+      data: {
+        userId: req.user!.id,
+        type: "KYC_SUBMITTED",
+        title: "Dossier KYC recu",
+        message: "Votre dossier d'identite est en attente de verification.",
+        link: "/mon-compte/kyc",
+      },
+    });
+
+    return updated;
+  });
+
+  res.json(apiResponse(true, user, "KYC submitted"));
+});
+
+export const changePassword = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    throw new ApiError(401, "Authentication required");
+  }
+
+  const { currentPassword, password } = req.body;
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    select: { id: true, passwordHash: true },
+  });
+
+  if (!user || !(await verifyPassword(currentPassword, user.passwordHash))) {
+    throw new ApiError(401, "Current password is invalid");
+  }
+
+  const passwordHash = await hashPassword(password);
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: user.id }, data: { passwordHash } }),
+    prisma.refreshToken.updateMany({
+      where: { userId: user.id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    }),
+  ]);
+
+  clearRefreshCookie(res);
+  res.json(apiResponse(true, null, "Password changed successfully"));
 });
 
 export const logout = asyncHandler(async (req, res) => {

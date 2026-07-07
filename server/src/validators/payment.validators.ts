@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, oneOf } from "express-validator";
 
 export const initiatePaymentValidator = [
   body("orderId").isString().notEmpty(),
@@ -10,6 +10,8 @@ export const depositValidator = [body("amount").isFloat({ min: 1 })];
 export const withdrawValidator = [body("amount").isFloat({ min: 1 })];
 
 export const transferValidator = [
-  body("receiverId").isString().notEmpty(),
+  oneOf([body("receiverId").isString().notEmpty(), body("receiverEmail").isEmail().normalizeEmail()]),
+  body("receiverId").optional().isString().notEmpty(),
+  body("receiverEmail").optional().isEmail().normalizeEmail(),
   body("amount").isFloat({ min: 1 }),
 ];

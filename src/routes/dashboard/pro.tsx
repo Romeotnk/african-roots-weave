@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CalendarDays, CheckCircle2, DollarSign, Eye, MessageSquare, Star } from "lucide-react";
 import { useState } from "react";
+import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import { proBookings, proReviews } from "@/data/proDashboard";
 import { RatingStars } from "@/components/shared/RatingStars";
 
@@ -17,6 +18,7 @@ function ProDashboard() {
     <main className="min-h-screen bg-[var(--brand-bg)]">
       <section className="border-b border-[var(--brand-border-light)] bg-white">
         <div className="container-iwosan py-8">
+          <AccountBackLink to="/dashboard" label="Retour au dashboard" />
           <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--brand-primary)]">Espace praticien</p>
           <h1 className="mt-2 text-[32px] md:text-[42px]">Dashboard professionnel</h1>
         </div>

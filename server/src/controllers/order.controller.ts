@@ -6,6 +6,31 @@ import { ApiError } from "../utils/errors.js";
 
 const defaultCommissionRate = 0.1;
 
+export const listMyOrders = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+
+  const scope = String(req.query.scope ?? "all");
+  const where: Prisma.OrderWhereInput =
+    scope === "sales"
+      ? { sellerId: req.user.id }
+      : scope === "purchases"
+        ? { buyerId: req.user.id }
+        : { OR: [{ buyerId: req.user.id }, { sellerId: req.user.id }] };
+
+  const orders = await prisma.order.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    take: 100,
+    include: {
+      product: { select: { id: true, title: true, slug: true, images: true } },
+      buyer: { select: { id: true, firstName: true, lastName: true, email: true } },
+      seller: { select: { id: true, firstName: true, lastName: true, email: true } },
+    },
+  });
+
+  res.json(apiResponse(true, orders, "My orders retrieved"));
+});
+
 export const createOrder = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
 

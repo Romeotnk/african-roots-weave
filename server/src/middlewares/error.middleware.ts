@@ -15,5 +15,5 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
     console.error(error);
   }
 
-  res.status(statusCode).json(apiResponse(false, null, message));
+  res.status(statusCode).json({ ...apiResponse(false, null, message), code: statusCode });
 };

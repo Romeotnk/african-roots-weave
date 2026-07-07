@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 
-export type ThemeMode = "light" | "dark" | "system";
+export type ThemeMode = "light" | "dark";
 interface Ctx {
   mode: ThemeMode;
   resolved: "light" | "dark";
@@ -16,7 +16,7 @@ interface Ctx {
   toggle: () => void;
 }
 const ThemeCtx = createContext<Ctx>({
-  mode: "system",
+  mode: "light",
   resolved: "light",
   setMode: () => {},
   toggle: () => {},
@@ -30,13 +30,13 @@ function apply(dark: boolean) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [mode, setModeState] = useState<ThemeMode>("system");
+  const [mode, setModeState] = useState<ThemeMode>("light");
   const [resolved, setResolved] = useState<"light" | "dark">("light");
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem(KEY) as ThemeMode | null;
-      if (stored === "light" || stored === "dark" || stored === "system") setModeState(stored);
+      if (stored === "light" || stored === "dark") setModeState(stored);
     } catch {
       /* ignore */
     }
@@ -44,17 +44,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const mql = window.matchMedia("(prefers-color-scheme: dark)");
-    const compute = () => {
-      const dark = mode === "dark" || (mode === "system" && mql.matches);
-      apply(dark);
-      setResolved(dark ? "dark" : "light");
-    };
-    compute();
-    if (mode === "system") {
-      mql.addEventListener?.("change", compute);
-      return () => mql.removeEventListener?.("change", compute);
-    }
+    const dark = mode === "dark";
+    apply(dark);
+    setResolved(dark ? "dark" : "light");
   }, [mode]);
 
   const setMode = useCallback((m: ThemeMode) => {

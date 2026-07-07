@@ -5,13 +5,14 @@ import {
   createProduct,
   deleteProduct,
   getProductBySlug,
+  listMyProducts,
   listProducts,
   updateProduct,
   uploadProductImages,
 } from "../controllers/product.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { kycMiddleware } from "../middlewares/kyc.middleware.js";
-import { roleMiddleware } from "../middlewares/role.middleware.js";
+import { requireEmailVerified, roleMiddleware } from "../middlewares/role.middleware.js";
 import { upload } from "../middlewares/upload.middleware.js";
 import { validateRequest } from "../middlewares/validation.middleware.js";
 import {
@@ -27,21 +28,24 @@ export const productRouter = Router();
 
 // Product catalog.
 productRouter.get("/", productListValidator, validateRequest, listProducts);
+productRouter.get("/mine", authMiddleware, listMyProducts);
 productRouter.get("/:slug", slugParamValidator, validateRequest, getProductBySlug);
 productRouter.post(
   "/",
   authMiddleware,
-  roleMiddleware([Role.PROFESSIONAL, Role.ADMIN]),
+  requireEmailVerified,
+  roleMiddleware([Role.PROFESSIONAL, Role.SUPER_ADMIN, Role.ADMIN]),
   kycMiddleware,
   createProductValidator,
   validateRequest,
   createProduct,
 );
-productRouter.put("/:id", authMiddleware, updateProductValidator, validateRequest, updateProduct);
-productRouter.delete("/:id", authMiddleware, idParamValidator, validateRequest, deleteProduct);
+productRouter.put("/:id", authMiddleware, requireEmailVerified, updateProductValidator, validateRequest, updateProduct);
+productRouter.delete("/:id", authMiddleware, requireEmailVerified, idParamValidator, validateRequest, deleteProduct);
 productRouter.post(
   "/:id/upload-images",
   authMiddleware,
+  requireEmailVerified,
   idParamValidator,
   validateRequest,
   upload.array("images", 8),
@@ -50,4 +54,4 @@ productRouter.post(
 
 // Auction bids.
 productRouter.get("/:id/bids", idParamValidator, validateRequest, listBids);
-productRouter.post("/:id/bids", authMiddleware, bidValidator, validateRequest, placeBid);
+productRouter.post("/:id/bids", authMiddleware, requireEmailVerified, bidValidator, validateRequest, placeBid);

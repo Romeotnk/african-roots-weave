@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -12,8 +13,11 @@ model User {
   email           String    @unique
   passwordHash    String
   role            Role      @default(USER)
+  adminSubRole    AdminSubRole?
+  isResearcher    Boolean   @default(false)
   firstName       String
   lastName        String
+  avatarUrl       String?
   country         String
   language        String    @default("fr")
   isEmailVerified Boolean   @default(false)
@@ -27,6 +31,7 @@ model User {
   isActive        Boolean   @default(true)
   isBanned        Boolean   @default(false)
   banReason       String?
+  banExpiresAt    DateTime?
   lastLoginAt     DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -65,9 +70,12 @@ model User {
   tickets                 Ticket[]
   ticketMessages          TicketMessage[]
   siteConfigUpdates       SiteConfig[]
+  auditLogs               AuditLog[]                @relation("AuditActor")
 
   @@index([email])
   @@index([role])
+  @@index([adminSubRole])
+  @@index([isResearcher])
   @@index([kycStatus])
   @@index([country])
   @@index([createdAt(sort: Desc)])
@@ -700,12 +708,38 @@ model NewsletterSubscriber {
   @@index([isActive])
 }
 
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  targetId   String?
+  targetType String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation("AuditActor", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([targetId, targetType])
+  @@index([createdAt(sort: Desc)])
+}
+
 enum Role {
-  USER
+  SUPER_ADMIN
+  ADMIN
+  MODERATOR
+  EDITOR
   PROFESSIONAL
   RESEARCHER
+  USER
+}
+
+enum AdminSubRole {
   MODERATOR
-  ADMIN
+  EDITOR
 }
 
 enum KycStatus {

@@ -18,9 +18,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { walletSummary, walletTransactions } from "@/data/wallet";
 import type { WalletTransactionStatus, WalletTransactionType } from "@/types";
-import { useWalletBalance, useWalletTransactions } from "@/hooks/useWalletApi";
+import {
+  useWalletBalance,
+  useWalletDeposit,
+  useWalletTransactions,
+  useWalletTransfer,
+  useWalletWithdraw,
+} from "@/hooks/useWalletApi";
 
 export const Route = createFileRoute("/mon-compte/portefeuille")({
   head: () => ({ meta: [{ title: "Portefeuille - IWOSAN" }] }),
@@ -57,8 +65,17 @@ function WalletPage() {
   const [periodFilter, setPeriodFilter] = useState("all");
   const [pin, setPin] = useState("");
   const [actionMessage, setActionMessage] = useState("");
+  const [walletForm, setWalletForm] = useState({
+    amount: "",
+    method: "mobile_money",
+    destination: "",
+    receiver: "",
+  });
   const remoteBalance = useWalletBalance();
   const remoteTransactions = useWalletTransactions();
+  const deposit = useWalletDeposit();
+  const withdraw = useWalletWithdraw();
+  const transfer = useWalletTransfer();
   const displayedSummary = {
     ...walletSummary,
     available: remoteBalance.data ?? walletSummary.available,
@@ -86,7 +103,44 @@ function WalletPage() {
   const closeDialog = (message?: string) => {
     setDialog(null);
     setPin("");
+    setWalletForm({ amount: "", method: "mobile_money", destination: "", receiver: "" });
     if (message) setActionMessage(message);
+  };
+
+  const submitWalletAction = async () => {
+    if (dialog === "pin") {
+      closeDialog("PIN enregistre pour cette session.");
+      return;
+    }
+
+    const amount = Number(walletForm.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setActionMessage("Indiquez un montant valide.");
+      return;
+    }
+
+    try {
+      if (dialog === "deposit") {
+        await deposit.mutateAsync({ amount, method: walletForm.method });
+        closeDialog("Depot initialise. Suivez les instructions de paiement recues.");
+        return;
+      }
+      if (dialog === "withdraw") {
+        await withdraw.mutateAsync({ amount, destination: walletForm.destination || "Destination principale" });
+        closeDialog("Demande de retrait envoyee a l'administration.");
+        return;
+      }
+      if (dialog === "transfer") {
+        if (!walletForm.receiver.trim()) {
+          setActionMessage("Indiquez l'email ou l'identifiant du destinataire.");
+          return;
+        }
+        await transfer.mutateAsync({ amount, receiver: walletForm.receiver.trim() });
+        closeDialog("Transfert effectue.");
+      }
+    } catch (error) {
+      setActionMessage(error instanceof Error ? error.message : "Action portefeuille impossible.");
+    }
   };
 
   const exportCsv = () => {
@@ -112,15 +166,17 @@ function WalletPage() {
   };
 
   return (
+    <ProtectedRoute>
     <main className="min-h-screen bg-[var(--brand-bg)]">
       <section className="border-b border-[var(--brand-border-light)] bg-white">
         <div className="container-iwosan py-8">
+          <AccountBackLink />
           <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--brand-primary)]">
             Mon compte
           </p>
           <h1 className="mt-2 text-[32px] md:text-[42px]">Portefeuille Iwosan</h1>
           <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-            Interface mock pour solde, transactions, depot, retrait, transfert et PIN.
+            Solde, transactions, depot, retrait et transfert lies a votre compte connecte.
           </p>
         </div>
       </section>
@@ -238,8 +294,18 @@ function WalletPage() {
         </div>
       </section>
 
-      <WalletActionDialog dialog={dialog} pin={pin} setPin={setPin} onClose={closeDialog} />
+      <WalletActionDialog
+        dialog={dialog}
+        pin={pin}
+        setPin={setPin}
+        walletForm={walletForm}
+        setWalletForm={setWalletForm}
+        onClose={closeDialog}
+        onConfirm={submitWalletAction}
+        isPending={deposit.isPending || withdraw.isPending || transfer.isPending}
+      />
     </main>
+    </ProtectedRoute>
   );
 }
 
@@ -247,12 +313,20 @@ function WalletActionDialog({
   dialog,
   pin,
   setPin,
+  walletForm,
+  setWalletForm,
   onClose,
+  onConfirm,
+  isPending,
 }: {
   dialog: WalletDialog;
   pin: string;
   setPin: (value: string) => void;
+  walletForm: { amount: string; method: string; destination: string; receiver: string };
+  setWalletForm: (value: { amount: string; method: string; destination: string; receiver: string }) => void;
   onClose: (message?: string) => void;
+  onConfirm: () => void;
+  isPending: boolean;
 }) {
   const title =
     dialog === "deposit"
@@ -268,38 +342,66 @@ function WalletActionDialog({
       <DialogContent className="max-w-xl bg-white">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>Simulation locale. La transaction reelle sera branchee en Section 14.</DialogDescription>
+          <DialogDescription>Les actions sont envoyees au backend IWOSAN du compte connecte.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           {dialog === "deposit" && (
             <>
-              <input type="number" placeholder="Montant" className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4" />
-              <select className="h-11 w-full rounded-lg border border-[var(--brand-border)] bg-white px-4">
-                <option>MTN MoMo</option>
-                <option>Moov Money</option>
-                <option>Wave</option>
-                <option>Orange Money</option>
+              <input
+                type="number"
+                min="1"
+                placeholder="Montant"
+                value={walletForm.amount}
+                onChange={(event) => setWalletForm({ ...walletForm, amount: event.target.value })}
+                className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4"
+              />
+              <select
+                value={walletForm.method}
+                onChange={(event) => setWalletForm({ ...walletForm, method: event.target.value })}
+                className="h-11 w-full rounded-lg border border-[var(--brand-border)] bg-white px-4"
+              >
+                <option value="mobile_money">Mobile money</option>
+                <option value="card">Carte bancaire</option>
               </select>
-              <input placeholder="Numero de telephone" className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4" />
               <p className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">Confirmez ensuite la demande USSD sur votre telephone.</p>
             </>
           )}
           {dialog === "withdraw" && (
             <>
               <p className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">Solde disponible: {walletSummary.available.toLocaleString("fr-FR")} FCFA</p>
-              <input type="number" placeholder="Montant a retirer" className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4" />
-              <select className="h-11 w-full rounded-lg border border-[var(--brand-border)] bg-white px-4">
-                <option>Wave - +229 90 00 00 00</option>
-                <option>Compte bancaire principal</option>
-              </select>
+              <input
+                type="number"
+                min="1"
+                placeholder="Montant a retirer"
+                value={walletForm.amount}
+                onChange={(event) => setWalletForm({ ...walletForm, amount: event.target.value })}
+                className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4"
+              />
+              <input
+                placeholder="Destination de paiement"
+                value={walletForm.destination}
+                onChange={(event) => setWalletForm({ ...walletForm, destination: event.target.value })}
+                className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4"
+              />
               <p className="text-[13px] text-[var(--color-text-muted)]">Delai estime: 1-3 jours ouvrables.</p>
             </>
           )}
           {dialog === "transfer" && (
             <>
-              <input placeholder="Email ou username Iwosan" className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4" />
-              <input type="number" placeholder="Montant" className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4" />
-              <textarea placeholder="Note optionnelle" className="min-h-[90px] w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
+              <input
+                placeholder="Email ou identifiant IWOSAN"
+                value={walletForm.receiver}
+                onChange={(event) => setWalletForm({ ...walletForm, receiver: event.target.value })}
+                className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4"
+              />
+              <input
+                type="number"
+                min="1"
+                placeholder="Montant"
+                value={walletForm.amount}
+                onChange={(event) => setWalletForm({ ...walletForm, amount: event.target.value })}
+                className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4"
+              />
             </>
           )}
           <div>
@@ -313,16 +415,11 @@ function WalletActionDialog({
             </InputOTP>
           </div>
           <button
-            onClick={() =>
-              onClose(
-                dialog === "pin"
-                  ? "PIN configure localement pour cette session mock."
-                  : "Action portefeuille simulee. Les endpoints seront branches plus tard.",
-              )
-            }
-            className="h-11 w-full rounded-full bg-[var(--brand-primary)] font-semibold text-white"
+            onClick={onConfirm}
+            disabled={isPending}
+            className="h-11 w-full rounded-full bg-[var(--brand-primary)] font-semibold text-white disabled:opacity-70"
           >
-            Confirmer
+            {isPending ? "Traitement..." : "Confirmer"}
           </button>
         </div>
       </DialogContent>

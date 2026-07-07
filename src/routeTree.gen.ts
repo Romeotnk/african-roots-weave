@@ -19,6 +19,7 @@ import { Route as RecettesRouteImport } from './routes/recettes'
 import { Route as PharmacopeeRouteImport } from './routes/pharmacopee'
 import { Route as PanierRouteImport } from './routes/panier'
 import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
+import { Route as MonCompteRouteImport } from './routes/mon-compte'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MesCommandesRouteImport } from './routes/mes-commandes'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
@@ -27,6 +28,7 @@ import { Route as ForumRouteImport } from './routes/forum'
 import { Route as FormationsRouteImport } from './routes/formations'
 import { Route as DiscutonsEnRouteImport } from './routes/discutons-en'
 import { Route as DevenirProRouteImport } from './routes/devenir-pro'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ConnexionRouteImport } from './routes/connexion'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AnnuaireRouteImport } from './routes/annuaire'
@@ -35,6 +37,18 @@ import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TableauDeBordReseauRouteImport } from './routes/tableau-de-bord/reseau'
+import { Route as TableauDeBordQuestionsRouteImport } from './routes/tableau-de-bord/questions'
+import { Route as TableauDeBordProfilRouteImport } from './routes/tableau-de-bord/profil'
+import { Route as TableauDeBordParametresRouteImport } from './routes/tableau-de-bord/parametres'
+import { Route as TableauDeBordMesProduitsRouteImport } from './routes/tableau-de-bord/mes-produits'
+import { Route as TableauDeBordFormationsRouteImport } from './routes/tableau-de-bord/formations'
+import { Route as TableauDeBordEvenementsRouteImport } from './routes/tableau-de-bord/evenements'
+import { Route as TableauDeBordCouponsRouteImport } from './routes/tableau-de-bord/coupons'
+import { Route as TableauDeBordCommissionsRouteImport } from './routes/tableau-de-bord/commissions'
+import { Route as TableauDeBordCommandesRouteImport } from './routes/tableau-de-bord/commandes'
+import { Route as TableauDeBordBlogRouteImport } from './routes/tableau-de-bord/blog'
+import { Route as TableauDeBordAvisRouteImport } from './routes/tableau-de-bord/avis'
 import { Route as SanteQuotidienSlugRouteImport } from './routes/sante-quotidien/$slug'
 import { Route as SanteAuQuotidienSlugRouteImport } from './routes/sante-au-quotidien/$slug'
 import { Route as RitesCulturesSlugRouteImport } from './routes/rites-cultures/$slug'
@@ -136,6 +150,11 @@ const MotDePasseOublieRoute = MotDePasseOublieRouteImport.update({
   path: '/mot-de-passe-oublie',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MonCompteRoute = MonCompteRouteImport.update({
+  id: '/mon-compte',
+  path: '/mon-compte',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MessagesRoute = MessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
@@ -174,6 +193,11 @@ const DiscutonsEnRoute = DiscutonsEnRouteImport.update({
 const DevenirProRoute = DevenirProRouteImport.update({
   id: '/devenir-pro',
   path: '/devenir-pro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConnexionRoute = ConnexionRouteImport.update({
@@ -216,6 +240,68 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TableauDeBordReseauRoute = TableauDeBordReseauRouteImport.update({
+  id: '/reseau',
+  path: '/reseau',
+  getParentRoute: () => TableauDeBordRoute,
+} as any)
+const TableauDeBordQuestionsRoute = TableauDeBordQuestionsRouteImport.update({
+  id: '/questions',
+  path: '/questions',
+  getParentRoute: () => TableauDeBordRoute,
+} as any)
+const TableauDeBordProfilRoute = TableauDeBordProfilRouteImport.update({
+  id: '/profil',
+  path: '/profil',
+  getParentRoute: () => TableauDeBordRoute,
+} as any)
+const TableauDeBordParametresRoute = TableauDeBordParametresRouteImport.update({
+  id: '/parametres',
+  path: '/parametres',
+  getParentRoute: () => TableauDeBordRoute,
+} as any)
+const TableauDeBordMesProduitsRoute =
+  TableauDeBordMesProduitsRouteImport.update({
+    id: '/mes-produits',
+    path: '/mes-produits',
+    getParentRoute: () => TableauDeBordRoute,
+  } as any)
+const TableauDeBordFormationsRoute = TableauDeBordFormationsRouteImport.update({
+  id: '/formations',
+  path: '/formations',
+  getParentRoute: () => TableauDeBordRoute,
+} as any)
+const TableauDeBordEvenementsRoute = TableauDeBordEvenementsRouteImport.update({
+  id: '/evenements',
+  path: '/evenements',
+  getParentRoute: () => TableauDeBordRoute,
+} as any)
+const TableauDeBordCouponsRoute = TableauDeBordCouponsRouteImport.update({
+  id: '/coupons',
+  path: '/coupons',
+  getParentRoute: () => TableauDeBordRoute,
+} as any)
+const TableauDeBordCommissionsRoute =
+  TableauDeBordCommissionsRouteImport.update({
+    id: '/commissions',
+    path: '/commissions',
+    getParentRoute: () => TableauDeBordRoute,
+  } as any)
+const TableauDeBordCommandesRoute = TableauDeBordCommandesRouteImport.update({
+  id: '/commandes',
+  path: '/commandes',
+  getParentRoute: () => TableauDeBordRoute,
+} as any)
+const TableauDeBordBlogRoute = TableauDeBordBlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
+  getParentRoute: () => TableauDeBordRoute,
+} as any)
+const TableauDeBordAvisRoute = TableauDeBordAvisRouteImport.update({
+  id: '/avis',
+  path: '/avis',
+  getParentRoute: () => TableauDeBordRoute,
+} as any)
 const SanteQuotidienSlugRoute = SanteQuotidienSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -257,34 +343,34 @@ const PharmacopeeSlugRoute = PharmacopeeSlugRouteImport.update({
   getParentRoute: () => PharmacopeeRoute,
 } as any)
 const MonCompteTicketsRoute = MonCompteTicketsRouteImport.update({
-  id: '/mon-compte/tickets',
-  path: '/mon-compte/tickets',
-  getParentRoute: () => rootRouteImport,
+  id: '/tickets',
+  path: '/tickets',
+  getParentRoute: () => MonCompteRoute,
 } as any)
 const MonComptePortefeuilleRoute = MonComptePortefeuilleRouteImport.update({
-  id: '/mon-compte/portefeuille',
-  path: '/mon-compte/portefeuille',
-  getParentRoute: () => rootRouteImport,
+  id: '/portefeuille',
+  path: '/portefeuille',
+  getParentRoute: () => MonCompteRoute,
 } as any)
 const MonCompteNotificationsRoute = MonCompteNotificationsRouteImport.update({
-  id: '/mon-compte/notifications',
-  path: '/mon-compte/notifications',
-  getParentRoute: () => rootRouteImport,
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => MonCompteRoute,
 } as any)
 const MonCompteKycRoute = MonCompteKycRouteImport.update({
-  id: '/mon-compte/kyc',
-  path: '/mon-compte/kyc',
-  getParentRoute: () => rootRouteImport,
+  id: '/kyc',
+  path: '/kyc',
+  getParentRoute: () => MonCompteRoute,
 } as any)
 const MonCompteAlertesRoute = MonCompteAlertesRouteImport.update({
-  id: '/mon-compte/alertes',
-  path: '/mon-compte/alertes',
-  getParentRoute: () => rootRouteImport,
+  id: '/alertes',
+  path: '/alertes',
+  getParentRoute: () => MonCompteRoute,
 } as any)
 const MonCompteAffiliationRoute = MonCompteAffiliationRouteImport.update({
-  id: '/mon-compte/affiliation',
-  path: '/mon-compte/affiliation',
-  getParentRoute: () => rootRouteImport,
+  id: '/affiliation',
+  path: '/affiliation',
+  getParentRoute: () => MonCompteRoute,
 } as any)
 const MarketplaceDeposerRoute = MarketplaceDeposerRouteImport.update({
   id: '/deposer',
@@ -307,19 +393,19 @@ const FormationsIdRoute = FormationsIdRouteImport.update({
   getParentRoute: () => FormationsRoute,
 } as any)
 const DashboardProRoute = DashboardProRouteImport.update({
-  id: '/dashboard/pro',
-  path: '/dashboard/pro',
-  getParentRoute: () => rootRouteImport,
+  id: '/pro',
+  path: '/pro',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardInscriptionsRoute = DashboardInscriptionsRouteImport.update({
-  id: '/dashboard/inscriptions',
-  path: '/dashboard/inscriptions',
-  getParentRoute: () => rootRouteImport,
+  id: '/inscriptions',
+  path: '/inscriptions',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardAnnoncesRoute = DashboardAnnoncesRouteImport.update({
-  id: '/dashboard/annonces',
-  path: '/dashboard/annonces',
-  getParentRoute: () => rootRouteImport,
+  id: '/annonces',
+  path: '/annonces',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const AnnuaireIdRoute = AnnuaireIdRouteImport.update({
   id: '/$id',
@@ -483,6 +569,7 @@ export interface FileRoutesByFullPath {
   '/annuaire': typeof AnnuaireRouteWithChildren
   '/checkout': typeof CheckoutRoute
   '/connexion': typeof ConnexionRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/devenir-pro': typeof DevenirProRoute
   '/discutons-en': typeof DiscutonsEnRoute
   '/formations': typeof FormationsRouteWithChildren
@@ -491,6 +578,7 @@ export interface FileRoutesByFullPath {
   '/marketplace': typeof MarketplaceRouteWithChildren
   '/mes-commandes': typeof MesCommandesRouteWithChildren
   '/messages': typeof MessagesRoute
+  '/mon-compte': typeof MonCompteRouteWithChildren
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/panier': typeof PanierRoute
   '/pharmacopee': typeof PharmacopeeRouteWithChildren
@@ -500,7 +588,7 @@ export interface FileRoutesByFullPath {
   '/rites-cultures': typeof RitesCulturesRouteWithChildren
   '/sante-au-quotidien': typeof SanteAuQuotidienRouteWithChildren
   '/sante-quotidien': typeof SanteQuotidienRouteWithChildren
-  '/tableau-de-bord': typeof TableauDeBordRoute
+  '/tableau-de-bord': typeof TableauDeBordRouteWithChildren
   '/admin/affiliation': typeof AdminAffiliationRoute
   '/admin/communaute': typeof AdminCommunauteRouteWithChildren
   '/admin/communication': typeof AdminCommunicationRouteWithChildren
@@ -532,6 +620,18 @@ export interface FileRoutesByFullPath {
   '/rites-cultures/$slug': typeof RitesCulturesSlugRoute
   '/sante-au-quotidien/$slug': typeof SanteAuQuotidienSlugRoute
   '/sante-quotidien/$slug': typeof SanteQuotidienSlugRoute
+  '/tableau-de-bord/avis': typeof TableauDeBordAvisRoute
+  '/tableau-de-bord/blog': typeof TableauDeBordBlogRoute
+  '/tableau-de-bord/commandes': typeof TableauDeBordCommandesRoute
+  '/tableau-de-bord/commissions': typeof TableauDeBordCommissionsRoute
+  '/tableau-de-bord/coupons': typeof TableauDeBordCouponsRoute
+  '/tableau-de-bord/evenements': typeof TableauDeBordEvenementsRoute
+  '/tableau-de-bord/formations': typeof TableauDeBordFormationsRoute
+  '/tableau-de-bord/mes-produits': typeof TableauDeBordMesProduitsRoute
+  '/tableau-de-bord/parametres': typeof TableauDeBordParametresRoute
+  '/tableau-de-bord/profil': typeof TableauDeBordProfilRoute
+  '/tableau-de-bord/questions': typeof TableauDeBordQuestionsRoute
+  '/tableau-de-bord/reseau': typeof TableauDeBordReseauRoute
   '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
   '/admin/communaute/forum': typeof AdminCommunauteForumRoute
   '/admin/communaute/signalements': typeof AdminCommunauteSignalementsRoute
@@ -561,6 +661,7 @@ export interface FileRoutesByTo {
   '/annuaire': typeof AnnuaireRouteWithChildren
   '/checkout': typeof CheckoutRoute
   '/connexion': typeof ConnexionRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/devenir-pro': typeof DevenirProRoute
   '/discutons-en': typeof DiscutonsEnRoute
   '/formations': typeof FormationsRouteWithChildren
@@ -569,6 +670,7 @@ export interface FileRoutesByTo {
   '/marketplace': typeof MarketplaceRouteWithChildren
   '/mes-commandes': typeof MesCommandesRouteWithChildren
   '/messages': typeof MessagesRoute
+  '/mon-compte': typeof MonCompteRouteWithChildren
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/panier': typeof PanierRoute
   '/pharmacopee': typeof PharmacopeeRouteWithChildren
@@ -578,7 +680,7 @@ export interface FileRoutesByTo {
   '/rites-cultures': typeof RitesCulturesRouteWithChildren
   '/sante-au-quotidien': typeof SanteAuQuotidienRouteWithChildren
   '/sante-quotidien': typeof SanteQuotidienRouteWithChildren
-  '/tableau-de-bord': typeof TableauDeBordRoute
+  '/tableau-de-bord': typeof TableauDeBordRouteWithChildren
   '/admin/affiliation': typeof AdminAffiliationRoute
   '/admin/communaute': typeof AdminCommunauteRouteWithChildren
   '/admin/communication': typeof AdminCommunicationRouteWithChildren
@@ -610,6 +712,18 @@ export interface FileRoutesByTo {
   '/rites-cultures/$slug': typeof RitesCulturesSlugRoute
   '/sante-au-quotidien/$slug': typeof SanteAuQuotidienSlugRoute
   '/sante-quotidien/$slug': typeof SanteQuotidienSlugRoute
+  '/tableau-de-bord/avis': typeof TableauDeBordAvisRoute
+  '/tableau-de-bord/blog': typeof TableauDeBordBlogRoute
+  '/tableau-de-bord/commandes': typeof TableauDeBordCommandesRoute
+  '/tableau-de-bord/commissions': typeof TableauDeBordCommissionsRoute
+  '/tableau-de-bord/coupons': typeof TableauDeBordCouponsRoute
+  '/tableau-de-bord/evenements': typeof TableauDeBordEvenementsRoute
+  '/tableau-de-bord/formations': typeof TableauDeBordFormationsRoute
+  '/tableau-de-bord/mes-produits': typeof TableauDeBordMesProduitsRoute
+  '/tableau-de-bord/parametres': typeof TableauDeBordParametresRoute
+  '/tableau-de-bord/profil': typeof TableauDeBordProfilRoute
+  '/tableau-de-bord/questions': typeof TableauDeBordQuestionsRoute
+  '/tableau-de-bord/reseau': typeof TableauDeBordReseauRoute
   '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
   '/admin/communaute/forum': typeof AdminCommunauteForumRoute
   '/admin/communaute/signalements': typeof AdminCommunauteSignalementsRoute
@@ -640,6 +754,7 @@ export interface FileRoutesById {
   '/annuaire': typeof AnnuaireRouteWithChildren
   '/checkout': typeof CheckoutRoute
   '/connexion': typeof ConnexionRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/devenir-pro': typeof DevenirProRoute
   '/discutons-en': typeof DiscutonsEnRoute
   '/formations': typeof FormationsRouteWithChildren
@@ -648,6 +763,7 @@ export interface FileRoutesById {
   '/marketplace': typeof MarketplaceRouteWithChildren
   '/mes-commandes': typeof MesCommandesRouteWithChildren
   '/messages': typeof MessagesRoute
+  '/mon-compte': typeof MonCompteRouteWithChildren
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/panier': typeof PanierRoute
   '/pharmacopee': typeof PharmacopeeRouteWithChildren
@@ -657,7 +773,7 @@ export interface FileRoutesById {
   '/rites-cultures': typeof RitesCulturesRouteWithChildren
   '/sante-au-quotidien': typeof SanteAuQuotidienRouteWithChildren
   '/sante-quotidien': typeof SanteQuotidienRouteWithChildren
-  '/tableau-de-bord': typeof TableauDeBordRoute
+  '/tableau-de-bord': typeof TableauDeBordRouteWithChildren
   '/admin/affiliation': typeof AdminAffiliationRoute
   '/admin/communaute': typeof AdminCommunauteRouteWithChildren
   '/admin/communication': typeof AdminCommunicationRouteWithChildren
@@ -689,6 +805,18 @@ export interface FileRoutesById {
   '/rites-cultures/$slug': typeof RitesCulturesSlugRoute
   '/sante-au-quotidien/$slug': typeof SanteAuQuotidienSlugRoute
   '/sante-quotidien/$slug': typeof SanteQuotidienSlugRoute
+  '/tableau-de-bord/avis': typeof TableauDeBordAvisRoute
+  '/tableau-de-bord/blog': typeof TableauDeBordBlogRoute
+  '/tableau-de-bord/commandes': typeof TableauDeBordCommandesRoute
+  '/tableau-de-bord/commissions': typeof TableauDeBordCommissionsRoute
+  '/tableau-de-bord/coupons': typeof TableauDeBordCouponsRoute
+  '/tableau-de-bord/evenements': typeof TableauDeBordEvenementsRoute
+  '/tableau-de-bord/formations': typeof TableauDeBordFormationsRoute
+  '/tableau-de-bord/mes-produits': typeof TableauDeBordMesProduitsRoute
+  '/tableau-de-bord/parametres': typeof TableauDeBordParametresRoute
+  '/tableau-de-bord/profil': typeof TableauDeBordProfilRoute
+  '/tableau-de-bord/questions': typeof TableauDeBordQuestionsRoute
+  '/tableau-de-bord/reseau': typeof TableauDeBordReseauRoute
   '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
   '/admin/communaute/forum': typeof AdminCommunauteForumRoute
   '/admin/communaute/signalements': typeof AdminCommunauteSignalementsRoute
@@ -720,6 +848,7 @@ export interface FileRouteTypes {
     | '/annuaire'
     | '/checkout'
     | '/connexion'
+    | '/dashboard'
     | '/devenir-pro'
     | '/discutons-en'
     | '/formations'
@@ -728,6 +857,7 @@ export interface FileRouteTypes {
     | '/marketplace'
     | '/mes-commandes'
     | '/messages'
+    | '/mon-compte'
     | '/mot-de-passe-oublie'
     | '/panier'
     | '/pharmacopee'
@@ -769,6 +899,18 @@ export interface FileRouteTypes {
     | '/rites-cultures/$slug'
     | '/sante-au-quotidien/$slug'
     | '/sante-quotidien/$slug'
+    | '/tableau-de-bord/avis'
+    | '/tableau-de-bord/blog'
+    | '/tableau-de-bord/commandes'
+    | '/tableau-de-bord/commissions'
+    | '/tableau-de-bord/coupons'
+    | '/tableau-de-bord/evenements'
+    | '/tableau-de-bord/formations'
+    | '/tableau-de-bord/mes-produits'
+    | '/tableau-de-bord/parametres'
+    | '/tableau-de-bord/profil'
+    | '/tableau-de-bord/questions'
+    | '/tableau-de-bord/reseau'
     | '/admin/communaute/avis'
     | '/admin/communaute/forum'
     | '/admin/communaute/signalements'
@@ -798,6 +940,7 @@ export interface FileRouteTypes {
     | '/annuaire'
     | '/checkout'
     | '/connexion'
+    | '/dashboard'
     | '/devenir-pro'
     | '/discutons-en'
     | '/formations'
@@ -806,6 +949,7 @@ export interface FileRouteTypes {
     | '/marketplace'
     | '/mes-commandes'
     | '/messages'
+    | '/mon-compte'
     | '/mot-de-passe-oublie'
     | '/panier'
     | '/pharmacopee'
@@ -847,6 +991,18 @@ export interface FileRouteTypes {
     | '/rites-cultures/$slug'
     | '/sante-au-quotidien/$slug'
     | '/sante-quotidien/$slug'
+    | '/tableau-de-bord/avis'
+    | '/tableau-de-bord/blog'
+    | '/tableau-de-bord/commandes'
+    | '/tableau-de-bord/commissions'
+    | '/tableau-de-bord/coupons'
+    | '/tableau-de-bord/evenements'
+    | '/tableau-de-bord/formations'
+    | '/tableau-de-bord/mes-produits'
+    | '/tableau-de-bord/parametres'
+    | '/tableau-de-bord/profil'
+    | '/tableau-de-bord/questions'
+    | '/tableau-de-bord/reseau'
     | '/admin/communaute/avis'
     | '/admin/communaute/forum'
     | '/admin/communaute/signalements'
@@ -876,6 +1032,7 @@ export interface FileRouteTypes {
     | '/annuaire'
     | '/checkout'
     | '/connexion'
+    | '/dashboard'
     | '/devenir-pro'
     | '/discutons-en'
     | '/formations'
@@ -884,6 +1041,7 @@ export interface FileRouteTypes {
     | '/marketplace'
     | '/mes-commandes'
     | '/messages'
+    | '/mon-compte'
     | '/mot-de-passe-oublie'
     | '/panier'
     | '/pharmacopee'
@@ -925,6 +1083,18 @@ export interface FileRouteTypes {
     | '/rites-cultures/$slug'
     | '/sante-au-quotidien/$slug'
     | '/sante-quotidien/$slug'
+    | '/tableau-de-bord/avis'
+    | '/tableau-de-bord/blog'
+    | '/tableau-de-bord/commandes'
+    | '/tableau-de-bord/commissions'
+    | '/tableau-de-bord/coupons'
+    | '/tableau-de-bord/evenements'
+    | '/tableau-de-bord/formations'
+    | '/tableau-de-bord/mes-produits'
+    | '/tableau-de-bord/parametres'
+    | '/tableau-de-bord/profil'
+    | '/tableau-de-bord/questions'
+    | '/tableau-de-bord/reseau'
     | '/admin/communaute/avis'
     | '/admin/communaute/forum'
     | '/admin/communaute/signalements'
@@ -955,6 +1125,7 @@ export interface RootRouteChildren {
   AnnuaireRoute: typeof AnnuaireRouteWithChildren
   CheckoutRoute: typeof CheckoutRoute
   ConnexionRoute: typeof ConnexionRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
   DevenirProRoute: typeof DevenirProRoute
   DiscutonsEnRoute: typeof DiscutonsEnRoute
   FormationsRoute: typeof FormationsRouteWithChildren
@@ -963,6 +1134,7 @@ export interface RootRouteChildren {
   MarketplaceRoute: typeof MarketplaceRouteWithChildren
   MesCommandesRoute: typeof MesCommandesRouteWithChildren
   MessagesRoute: typeof MessagesRoute
+  MonCompteRoute: typeof MonCompteRouteWithChildren
   MotDePasseOublieRoute: typeof MotDePasseOublieRoute
   PanierRoute: typeof PanierRoute
   PharmacopeeRoute: typeof PharmacopeeRouteWithChildren
@@ -972,16 +1144,7 @@ export interface RootRouteChildren {
   RitesCulturesRoute: typeof RitesCulturesRouteWithChildren
   SanteAuQuotidienRoute: typeof SanteAuQuotidienRouteWithChildren
   SanteQuotidienRoute: typeof SanteQuotidienRouteWithChildren
-  TableauDeBordRoute: typeof TableauDeBordRoute
-  DashboardAnnoncesRoute: typeof DashboardAnnoncesRoute
-  DashboardInscriptionsRoute: typeof DashboardInscriptionsRoute
-  DashboardProRoute: typeof DashboardProRoute
-  MonCompteAffiliationRoute: typeof MonCompteAffiliationRoute
-  MonCompteAlertesRoute: typeof MonCompteAlertesRoute
-  MonCompteKycRoute: typeof MonCompteKycRoute
-  MonCompteNotificationsRoute: typeof MonCompteNotificationsRoute
-  MonComptePortefeuilleRoute: typeof MonComptePortefeuilleRoute
-  MonCompteTicketsRoute: typeof MonCompteTicketsRoute
+  TableauDeBordRoute: typeof TableauDeBordRouteWithChildren
   ProfilUsernameRoute: typeof ProfilUsernameRoute
 }
 
@@ -1057,6 +1220,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MotDePasseOublieRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mon-compte': {
+      id: '/mon-compte'
+      path: '/mon-compte'
+      fullPath: '/mon-compte'
+      preLoaderRoute: typeof MonCompteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/messages': {
       id: '/messages'
       path: '/messages'
@@ -1111,6 +1281,13 @@ declare module '@tanstack/react-router' {
       path: '/devenir-pro'
       fullPath: '/devenir-pro'
       preLoaderRoute: typeof DevenirProRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/connexion': {
@@ -1168,6 +1345,90 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/tableau-de-bord/reseau': {
+      id: '/tableau-de-bord/reseau'
+      path: '/reseau'
+      fullPath: '/tableau-de-bord/reseau'
+      preLoaderRoute: typeof TableauDeBordReseauRouteImport
+      parentRoute: typeof TableauDeBordRoute
+    }
+    '/tableau-de-bord/questions': {
+      id: '/tableau-de-bord/questions'
+      path: '/questions'
+      fullPath: '/tableau-de-bord/questions'
+      preLoaderRoute: typeof TableauDeBordQuestionsRouteImport
+      parentRoute: typeof TableauDeBordRoute
+    }
+    '/tableau-de-bord/profil': {
+      id: '/tableau-de-bord/profil'
+      path: '/profil'
+      fullPath: '/tableau-de-bord/profil'
+      preLoaderRoute: typeof TableauDeBordProfilRouteImport
+      parentRoute: typeof TableauDeBordRoute
+    }
+    '/tableau-de-bord/parametres': {
+      id: '/tableau-de-bord/parametres'
+      path: '/parametres'
+      fullPath: '/tableau-de-bord/parametres'
+      preLoaderRoute: typeof TableauDeBordParametresRouteImport
+      parentRoute: typeof TableauDeBordRoute
+    }
+    '/tableau-de-bord/mes-produits': {
+      id: '/tableau-de-bord/mes-produits'
+      path: '/mes-produits'
+      fullPath: '/tableau-de-bord/mes-produits'
+      preLoaderRoute: typeof TableauDeBordMesProduitsRouteImport
+      parentRoute: typeof TableauDeBordRoute
+    }
+    '/tableau-de-bord/formations': {
+      id: '/tableau-de-bord/formations'
+      path: '/formations'
+      fullPath: '/tableau-de-bord/formations'
+      preLoaderRoute: typeof TableauDeBordFormationsRouteImport
+      parentRoute: typeof TableauDeBordRoute
+    }
+    '/tableau-de-bord/evenements': {
+      id: '/tableau-de-bord/evenements'
+      path: '/evenements'
+      fullPath: '/tableau-de-bord/evenements'
+      preLoaderRoute: typeof TableauDeBordEvenementsRouteImport
+      parentRoute: typeof TableauDeBordRoute
+    }
+    '/tableau-de-bord/coupons': {
+      id: '/tableau-de-bord/coupons'
+      path: '/coupons'
+      fullPath: '/tableau-de-bord/coupons'
+      preLoaderRoute: typeof TableauDeBordCouponsRouteImport
+      parentRoute: typeof TableauDeBordRoute
+    }
+    '/tableau-de-bord/commissions': {
+      id: '/tableau-de-bord/commissions'
+      path: '/commissions'
+      fullPath: '/tableau-de-bord/commissions'
+      preLoaderRoute: typeof TableauDeBordCommissionsRouteImport
+      parentRoute: typeof TableauDeBordRoute
+    }
+    '/tableau-de-bord/commandes': {
+      id: '/tableau-de-bord/commandes'
+      path: '/commandes'
+      fullPath: '/tableau-de-bord/commandes'
+      preLoaderRoute: typeof TableauDeBordCommandesRouteImport
+      parentRoute: typeof TableauDeBordRoute
+    }
+    '/tableau-de-bord/blog': {
+      id: '/tableau-de-bord/blog'
+      path: '/blog'
+      fullPath: '/tableau-de-bord/blog'
+      preLoaderRoute: typeof TableauDeBordBlogRouteImport
+      parentRoute: typeof TableauDeBordRoute
+    }
+    '/tableau-de-bord/avis': {
+      id: '/tableau-de-bord/avis'
+      path: '/avis'
+      fullPath: '/tableau-de-bord/avis'
+      preLoaderRoute: typeof TableauDeBordAvisRouteImport
+      parentRoute: typeof TableauDeBordRoute
     }
     '/sante-quotidien/$slug': {
       id: '/sante-quotidien/$slug'
@@ -1227,45 +1488,45 @@ declare module '@tanstack/react-router' {
     }
     '/mon-compte/tickets': {
       id: '/mon-compte/tickets'
-      path: '/mon-compte/tickets'
+      path: '/tickets'
       fullPath: '/mon-compte/tickets'
       preLoaderRoute: typeof MonCompteTicketsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof MonCompteRoute
     }
     '/mon-compte/portefeuille': {
       id: '/mon-compte/portefeuille'
-      path: '/mon-compte/portefeuille'
+      path: '/portefeuille'
       fullPath: '/mon-compte/portefeuille'
       preLoaderRoute: typeof MonComptePortefeuilleRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof MonCompteRoute
     }
     '/mon-compte/notifications': {
       id: '/mon-compte/notifications'
-      path: '/mon-compte/notifications'
+      path: '/notifications'
       fullPath: '/mon-compte/notifications'
       preLoaderRoute: typeof MonCompteNotificationsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof MonCompteRoute
     }
     '/mon-compte/kyc': {
       id: '/mon-compte/kyc'
-      path: '/mon-compte/kyc'
+      path: '/kyc'
       fullPath: '/mon-compte/kyc'
       preLoaderRoute: typeof MonCompteKycRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof MonCompteRoute
     }
     '/mon-compte/alertes': {
       id: '/mon-compte/alertes'
-      path: '/mon-compte/alertes'
+      path: '/alertes'
       fullPath: '/mon-compte/alertes'
       preLoaderRoute: typeof MonCompteAlertesRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof MonCompteRoute
     }
     '/mon-compte/affiliation': {
       id: '/mon-compte/affiliation'
-      path: '/mon-compte/affiliation'
+      path: '/affiliation'
       fullPath: '/mon-compte/affiliation'
       preLoaderRoute: typeof MonCompteAffiliationRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof MonCompteRoute
     }
     '/marketplace/deposer': {
       id: '/marketplace/deposer'
@@ -1297,24 +1558,24 @@ declare module '@tanstack/react-router' {
     }
     '/dashboard/pro': {
       id: '/dashboard/pro'
-      path: '/dashboard/pro'
+      path: '/pro'
       fullPath: '/dashboard/pro'
       preLoaderRoute: typeof DashboardProRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/inscriptions': {
       id: '/dashboard/inscriptions'
-      path: '/dashboard/inscriptions'
+      path: '/inscriptions'
       fullPath: '/dashboard/inscriptions'
       preLoaderRoute: typeof DashboardInscriptionsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/annonces': {
       id: '/dashboard/annonces'
-      path: '/dashboard/annonces'
+      path: '/annonces'
       fullPath: '/dashboard/annonces'
       preLoaderRoute: typeof DashboardAnnoncesRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/annuaire/$id': {
       id: '/annuaire/$id'
@@ -1632,6 +1893,22 @@ const AnnuaireRouteWithChildren = AnnuaireRoute._addFileChildren(
   AnnuaireRouteChildren,
 )
 
+interface DashboardRouteChildren {
+  DashboardAnnoncesRoute: typeof DashboardAnnoncesRoute
+  DashboardInscriptionsRoute: typeof DashboardInscriptionsRoute
+  DashboardProRoute: typeof DashboardProRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAnnoncesRoute: DashboardAnnoncesRoute,
+  DashboardInscriptionsRoute: DashboardInscriptionsRoute,
+  DashboardProRoute: DashboardProRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
+
 interface FormationsIdRouteChildren {
   FormationsIdApprendreRoute: typeof FormationsIdApprendreRoute
 }
@@ -1690,6 +1967,28 @@ const MesCommandesRouteChildren: MesCommandesRouteChildren = {
 
 const MesCommandesRouteWithChildren = MesCommandesRoute._addFileChildren(
   MesCommandesRouteChildren,
+)
+
+interface MonCompteRouteChildren {
+  MonCompteAffiliationRoute: typeof MonCompteAffiliationRoute
+  MonCompteAlertesRoute: typeof MonCompteAlertesRoute
+  MonCompteKycRoute: typeof MonCompteKycRoute
+  MonCompteNotificationsRoute: typeof MonCompteNotificationsRoute
+  MonComptePortefeuilleRoute: typeof MonComptePortefeuilleRoute
+  MonCompteTicketsRoute: typeof MonCompteTicketsRoute
+}
+
+const MonCompteRouteChildren: MonCompteRouteChildren = {
+  MonCompteAffiliationRoute: MonCompteAffiliationRoute,
+  MonCompteAlertesRoute: MonCompteAlertesRoute,
+  MonCompteKycRoute: MonCompteKycRoute,
+  MonCompteNotificationsRoute: MonCompteNotificationsRoute,
+  MonComptePortefeuilleRoute: MonComptePortefeuilleRoute,
+  MonCompteTicketsRoute: MonCompteTicketsRoute,
+}
+
+const MonCompteRouteWithChildren = MonCompteRoute._addFileChildren(
+  MonCompteRouteChildren,
 )
 
 interface PharmacopeeRouteChildren {
@@ -1775,6 +2074,40 @@ const SanteQuotidienRouteWithChildren = SanteQuotidienRoute._addFileChildren(
   SanteQuotidienRouteChildren,
 )
 
+interface TableauDeBordRouteChildren {
+  TableauDeBordAvisRoute: typeof TableauDeBordAvisRoute
+  TableauDeBordBlogRoute: typeof TableauDeBordBlogRoute
+  TableauDeBordCommandesRoute: typeof TableauDeBordCommandesRoute
+  TableauDeBordCommissionsRoute: typeof TableauDeBordCommissionsRoute
+  TableauDeBordCouponsRoute: typeof TableauDeBordCouponsRoute
+  TableauDeBordEvenementsRoute: typeof TableauDeBordEvenementsRoute
+  TableauDeBordFormationsRoute: typeof TableauDeBordFormationsRoute
+  TableauDeBordMesProduitsRoute: typeof TableauDeBordMesProduitsRoute
+  TableauDeBordParametresRoute: typeof TableauDeBordParametresRoute
+  TableauDeBordProfilRoute: typeof TableauDeBordProfilRoute
+  TableauDeBordQuestionsRoute: typeof TableauDeBordQuestionsRoute
+  TableauDeBordReseauRoute: typeof TableauDeBordReseauRoute
+}
+
+const TableauDeBordRouteChildren: TableauDeBordRouteChildren = {
+  TableauDeBordAvisRoute: TableauDeBordAvisRoute,
+  TableauDeBordBlogRoute: TableauDeBordBlogRoute,
+  TableauDeBordCommandesRoute: TableauDeBordCommandesRoute,
+  TableauDeBordCommissionsRoute: TableauDeBordCommissionsRoute,
+  TableauDeBordCouponsRoute: TableauDeBordCouponsRoute,
+  TableauDeBordEvenementsRoute: TableauDeBordEvenementsRoute,
+  TableauDeBordFormationsRoute: TableauDeBordFormationsRoute,
+  TableauDeBordMesProduitsRoute: TableauDeBordMesProduitsRoute,
+  TableauDeBordParametresRoute: TableauDeBordParametresRoute,
+  TableauDeBordProfilRoute: TableauDeBordProfilRoute,
+  TableauDeBordQuestionsRoute: TableauDeBordQuestionsRoute,
+  TableauDeBordReseauRoute: TableauDeBordReseauRoute,
+}
+
+const TableauDeBordRouteWithChildren = TableauDeBordRoute._addFileChildren(
+  TableauDeBordRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SlugRoute: SlugRoute,
@@ -1784,6 +2117,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnnuaireRoute: AnnuaireRouteWithChildren,
   CheckoutRoute: CheckoutRoute,
   ConnexionRoute: ConnexionRoute,
+  DashboardRoute: DashboardRouteWithChildren,
   DevenirProRoute: DevenirProRoute,
   DiscutonsEnRoute: DiscutonsEnRoute,
   FormationsRoute: FormationsRouteWithChildren,
@@ -1792,6 +2126,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketplaceRoute: MarketplaceRouteWithChildren,
   MesCommandesRoute: MesCommandesRouteWithChildren,
   MessagesRoute: MessagesRoute,
+  MonCompteRoute: MonCompteRouteWithChildren,
   MotDePasseOublieRoute: MotDePasseOublieRoute,
   PanierRoute: PanierRoute,
   PharmacopeeRoute: PharmacopeeRouteWithChildren,
@@ -1801,16 +2136,7 @@ const rootRouteChildren: RootRouteChildren = {
   RitesCulturesRoute: RitesCulturesRouteWithChildren,
   SanteAuQuotidienRoute: SanteAuQuotidienRouteWithChildren,
   SanteQuotidienRoute: SanteQuotidienRouteWithChildren,
-  TableauDeBordRoute: TableauDeBordRoute,
-  DashboardAnnoncesRoute: DashboardAnnoncesRoute,
-  DashboardInscriptionsRoute: DashboardInscriptionsRoute,
-  DashboardProRoute: DashboardProRoute,
-  MonCompteAffiliationRoute: MonCompteAffiliationRoute,
-  MonCompteAlertesRoute: MonCompteAlertesRoute,
-  MonCompteKycRoute: MonCompteKycRoute,
-  MonCompteNotificationsRoute: MonCompteNotificationsRoute,
-  MonComptePortefeuilleRoute: MonComptePortefeuilleRoute,
-  MonCompteTicketsRoute: MonCompteTicketsRoute,
+  TableauDeBordRoute: TableauDeBordRouteWithChildren,
   ProfilUsernameRoute: ProfilUsernameRoute,
 }
 export const routeTree = rootRouteImport

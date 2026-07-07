@@ -17,6 +17,7 @@ import {
   ReportStatus,
 } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { randomUUID } from "node:crypto";
 
 const prisma = new PrismaClient();
 const passwordHash = await bcrypt.hash("Admin@123", 12);
@@ -680,9 +681,10 @@ const questionsData = [
 // ─────────────────────────────────────
 
 async function main() {
-  console.log("🌿 Nettoyage de la base de données...");
+  const shouldReset = process.env.SEED_RESET === "true";
+  console.log(shouldReset ? "Resetting database before seed..." : "Seed append mode: preserving existing data.");
 
-  await prisma.$transaction([
+  if (shouldReset) await prisma.$transaction([
     prisma.ticketMessage.deleteMany(),
     prisma.ticket.deleteMany(),
     prisma.message.deleteMany(),
@@ -718,7 +720,19 @@ async function main() {
     prisma.user.deleteMany(),
   ]);
 
-  console.log("✅ Base nettoyée");
+  if (shouldReset) console.log("Database reset complete.");
+
+  if (!shouldReset) {
+    const existingDemoAdmin = await prisma.user.findUnique({
+      where: { email: "admin@iwosan.com" },
+      select: { id: true },
+    });
+
+    if (existingDemoAdmin) {
+      console.log("Demo seed already exists. Use SEED_RESET=true to rebuild it.");
+      return;
+    }
+  }
 
   // ─── ADMIN ───
   console.log("👑 Création de l'administrateur...");
@@ -1272,11 +1286,11 @@ async function main() {
   console.log("📧 Création des abonnés newsletter...");
   await prisma.newsletterSubscriber.createMany({
     data: [
-      { email: "contact@sante-afrique.org", isActive: true },
-      { email: "info@phytoafrica.net", isActive: true },
-      { email: "docteur.kofi@gmail.com", isActive: true },
-      { email: "recherche@uac.bj", isActive: true },
-      { email: "aminata.wellness@gmail.com", isActive: false },
+      { email: "contact@sante-afrique.org", unsubscribeToken: randomUUID(), isActive: true },
+      { email: "info@phytoafrica.net", unsubscribeToken: randomUUID(), isActive: true },
+      { email: "docteur.kofi@gmail.com", unsubscribeToken: randomUUID(), isActive: true },
+      { email: "recherche@uac.bj", unsubscribeToken: randomUUID(), isActive: true },
+      { email: "aminata.wellness@gmail.com", unsubscribeToken: randomUUID(), isActive: false },
     ],
   });
   console.log("✅ 5 abonnés newsletter créés");

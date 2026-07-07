@@ -5,7 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
 
-const moderatorRoles: Role[] = [Role.MODERATOR, Role.ADMIN];
+const moderatorRoles: Role[] = [Role.SUPER_ADMIN, Role.ADMIN, Role.MODERATOR];
 
 export const listQuestions = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
@@ -21,6 +21,19 @@ export const listQuestions = asyncHandler(async (req, res) => {
     prisma.question.count({ where }),
   ]);
   res.json(apiResponse(true, questions, "Questions retrieved", paginationMeta(page, limit, total)));
+});
+
+export const listMyQuestions = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  const { page, limit, skip } = getPagination(req.query);
+
+  const where = { authorId: req.user.id };
+  const [questions, total] = await prisma.$transaction([
+    prisma.question.findMany({ where, skip, take: limit, orderBy: { createdAt: "desc" } }),
+    prisma.question.count({ where }),
+  ]);
+
+  res.json(apiResponse(true, questions, "My questions retrieved", paginationMeta(page, limit, total)));
 });
 
 export const getQuestion = asyncHandler(async (req, res) => {

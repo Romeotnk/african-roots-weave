@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../config/db.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -70,4 +71,32 @@ export const getProfessional = asyncHandler(async (req, res) => {
   }
 
   res.json(apiResponse(true, professional, "Professional retrieved"));
+});
+
+export const listReceivedReviews = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+
+  const [products, profile] = await prisma.$transaction([
+    prisma.product.findMany({ where: { sellerId: req.user.id }, select: { id: true } }),
+    prisma.professionalProfile.findUnique({ where: { userId: req.user.id }, select: { id: true } }),
+  ]);
+  const productIds = products.map((product) => product.id);
+  const targets: Prisma.ReviewWhereInput[] = [];
+
+  if (profile) {
+    targets.push({ targetId: profile.id, targetType: "PROFESSIONAL" });
+  }
+  if (productIds.length > 0) {
+    targets.push({ targetId: { in: productIds }, targetType: "PRODUCT" });
+  }
+
+  const reviews = await prisma.review.findMany({
+    where: targets.length > 0 ? { OR: targets } : { id: "__none__" },
+    orderBy: { createdAt: "desc" },
+    include: {
+      author: { select: { id: true, firstName: true, lastName: true } },
+    },
+  });
+
+  res.json(apiResponse(true, reviews, "Received reviews retrieved"));
 });
