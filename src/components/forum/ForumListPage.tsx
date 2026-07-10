@@ -8,17 +8,17 @@ import { useDebounce } from "@/hooks/useDebounce";
 
 const tabs = [
   { id: "all", label: "Toutes" },
-  { id: "unanswered", label: "Non repondues" },
+  { id: "unanswered", label: "Non répondues" },
   { id: "popular", label: "Populaires" },
-  { id: "recent", label: "Recentes" },
+  { id: "recent", label: "Récentes" },
   { id: "mine", label: "Mes questions" },
 ];
 
 const sortOptions = [
-  { id: "recent", label: "Plus recent" },
-  { id: "votes", label: "Plus vote" },
-  { id: "answers", label: "Plus de reponses" },
-  { id: "featured", label: "Vedettes en tete" },
+  { id: "recent", label: "Plus récent" },
+  { id: "votes", label: "Plus voté" },
+  { id: "answers", label: "Plus de réponses" },
+  { id: "featured", label: "Vedettes en tête" },
 ];
 
 const allTags = Array.from(new Set(questions.flatMap((question) => question.tags))).sort((a, b) => a.localeCompare(b));
@@ -91,7 +91,7 @@ export function ForumListPage() {
               <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Forum Q&A</p>
               <h1 className="mt-2 text-[34px] md:text-[46px]">Discutons-en</h1>
               <p className="mt-3 max-w-2xl text-[var(--color-text-secondary)]">
-                Questions, reponses validees, votes et signalements en interface mock jusqu'a la liaison API globale.
+                Questions, réponses validées, votes et signalements en interface mock jusqu'à la liaison API globale.
               </p>
             </div>
             <Link
@@ -130,7 +130,7 @@ export function ForumListPage() {
               <div className="space-y-4">
                 <div>
                   <label className="mb-2 block text-[12px] font-bold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
-                    Categories
+                    Catégories
                   </label>
                   <div className="space-y-2">
                     {forumCategories.map((category) => (
@@ -243,15 +243,15 @@ export function ForumListPage() {
               ))}
               {filteredQuestions.length === 0 && (
                 <div className="rounded-[12px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
-                  <p className="font-bold">Aucune question trouvee</p>
+                  <p className="font-bold">Aucune question trouvée</p>
                   <p className="mt-2 text-[13px] text-[var(--color-text-muted)]">
-                    Essayez un autre tag, une categorie plus large ou une recherche plus courte.
+                    Essayez un autre tag, une catégorie plus large ou une recherche plus courte.
                   </p>
                   <button
                     onClick={resetFilters}
                     className="mt-4 h-10 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white"
                   >
-                    Reinitialiser
+                    Réinitialiser
                   </button>
                 </div>
               )}

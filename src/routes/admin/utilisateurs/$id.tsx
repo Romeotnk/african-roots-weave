@@ -14,7 +14,7 @@ function AdminUserDetail() {
   const transactions = adminFinance.transactions.filter((item) => item.user === user.name);
 
   return (
-    <AdminLayout title={user.name} description="Fiche utilisateur, roles, statut, KYC et historique mock.">
+    <AdminLayout title={user.name} description="Fiche utilisateur, rôles, statut, KYC et historique mock.">
       <div className="mb-4">
         <Link to="/admin/utilisateurs" className="text-[13px] font-bold text-emerald-300 hover:text-emerald-200">
           Retour aux utilisateurs
@@ -34,7 +34,7 @@ function AdminUserDetail() {
           </div>
 
           <div className="mt-6 space-y-3 text-[13px]">
-            <InfoRow label="Role" value={user.role} />
+            <InfoRow label="Rôle" value={user.role} />
             <InfoRow label="Pays" value={user.country} />
             <InfoRow label="Statut" value={user.status} />
             <InfoRow label="Inscription" value={user.joinedAt} />
@@ -42,7 +42,7 @@ function AdminUserDetail() {
           </div>
 
           <div className="mt-6 grid gap-2">
-            {["Changer le role", "Suspendre le compte", "Reinitialiser le mot de passe", "Envoyer un message"].map((action) => (
+            {["Changer le rôle", "Suspendre le compte", "Réinitialiser le mot de passe", "Envoyer un message"].map((action) => (
               <button key={action} className="rounded-lg bg-white/5 px-4 py-3 text-left text-[13px] font-bold text-slate-200 hover:bg-white/10">
                 {action}
               </button>
@@ -52,7 +52,7 @@ function AdminUserDetail() {
 
         <div className="space-y-6">
           <AdminCard>
-            <h2 className="mb-4 text-[18px] font-bold text-white">Activite et moderation</h2>
+            <h2 className="mb-4 text-[18px] font-bold text-white">Activité et modération</h2>
             <div className="grid gap-3 md:grid-cols-4">
               {[
                 ["Annonces", user.role === "Vendeur" ? "8" : "0"],
@@ -69,7 +69,7 @@ function AdminUserDetail() {
           </AdminCard>
 
           <AdminCard>
-            <h2 className="mb-4 text-[18px] font-bold text-white">Transactions liees</h2>
+            <h2 className="mb-4 text-[18px] font-bold text-white">Transactions liées</h2>
             <AdminTable
               headers={["Date", "Type", "Montant", "Statut", "Reference"]}
               rows={(transactions.length ? transactions : adminFinance.transactions.slice(0, 3)).map((transaction) => [
@@ -85,7 +85,7 @@ function AdminUserDetail() {
           <AdminCard>
             <h2 className="mb-4 text-[18px] font-bold text-white">Notes internes</h2>
             <textarea
-              defaultValue="Historique support, decisions de moderation et remarques internes visibles uniquement par les administrateurs."
+              defaultValue="Historique support, décisions de modération et remarques internes visibles uniquement par les administrateurs."
               className="min-h-32 w-full rounded-lg border border-white/10 bg-white/5 p-3 text-[13px] text-slate-200 outline-none"
             />
           </AdminCard>

@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   BarChart3,
@@ -17,7 +17,8 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getAccessTokenClaims, isAdminToken } from "@/lib/authToken";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 const navGroups = [
   {
@@ -30,12 +31,12 @@ const navGroups = [
       { to: "/admin/site/accueil", label: "Accueil", icon: Home },
       { to: "/admin/site/menus", label: "Menus", icon: Menu },
       { to: "/admin/site/pages", label: "Pages", icon: FileText },
-      { to: "/admin/site/identite", label: "Identite", icon: Palette },
-      { to: "/admin/site/publicites", label: "Publicites", icon: Bell },
+      { to: "/admin/site/identite", label: "Identité", icon: Palette },
+      { to: "/admin/site/publicites", label: "Publicités", icon: Bell },
     ],
   },
   {
-    label: "Operations",
+    label: "Opérations",
     links: [
       { to: "/admin/contenus", label: "Contenus", icon: FileText },
       { to: "/admin/marketplace", label: "Marketplace", icon: Store },
@@ -47,7 +48,7 @@ const navGroups = [
     label: "Communication",
     links: [
       { to: "/admin/communication", label: "Communication", icon: MessageSquare },
-      { to: "/admin/communaute", label: "Communaute", icon: ShieldCheck },
+      { to: "/admin/communaute", label: "Communauté", icon: ShieldCheck },
       { to: "/admin/affiliation", label: "Affiliation", icon: BarChart3 },
       { to: "/admin/logs", label: "Logs", icon: FileText },
     ],
@@ -56,18 +57,19 @@ const navGroups = [
 
 export function AdminLayout({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
-  const [adminState, setAdminState] = useState<"mock" | "forbidden" | "admin">("mock");
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const navigate = useNavigate();
+  const { roles, signOut } = useAuth();
+  const adminState = roles.some((role) => ["super_admin", "admin", "moderator", "editor"].includes(role))
+    ? "admin"
+    : "forbidden";
 
   useEffect(() => setOpen(false), [pathname]);
-  useEffect(() => {
-    const claims = getAccessTokenClaims();
-    if (!claims) {
-      setAdminState("mock");
-      return;
-    }
-    setAdminState(isAdminToken() ? "admin" : "forbidden");
-  }, [pathname]);
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate({ to: "/" });
+  };
 
   const sidebar = (
     <aside className="flex h-full w-[270px] shrink-0 flex-col bg-[#151529] text-white">
@@ -108,6 +110,7 @@ export function AdminLayout({ title, description, children }: { title: string; d
   );
 
   return (
+    <ProtectedRoute requireAnyRole={["super_admin", "admin", "moderator", "editor"]}>
     <main className="min-h-screen bg-[#0f1020] text-slate-100">
       <div className="lg:hidden">
         <button
@@ -142,7 +145,11 @@ export function AdminLayout({ title, description, children }: { title: string; d
                   <p className="text-[13px] font-bold">Admin Iwosan</p>
                   <p className="text-[11px] text-emerald-300">ADMIN</p>
                 </div>
-                <button className="grid h-10 w-10 place-items-center rounded-full border border-white/15" aria-label="Deconnexion">
+                <button
+                  onClick={handleLogout}
+                  className="grid h-10 w-10 place-items-center rounded-full border border-white/15"
+                  aria-label="Déconnexion"
+                >
                   <LogOut size={16} />
                 </button>
               </div>
@@ -153,21 +160,19 @@ export function AdminLayout({ title, description, children }: { title: string; d
               className={cn(
                 "mb-4 rounded-lg border px-4 py-3 text-[13px] font-semibold",
                 adminState === "admin" && "border-emerald-400/30 bg-emerald-500/10 text-emerald-200",
-                adminState === "mock" && "border-amber-300/30 bg-amber-500/10 text-amber-100",
                 adminState === "forbidden" && "border-red-400/30 bg-red-500/10 text-red-100",
               )}
             >
               {adminState === "admin"
-                ? "Session ADMIN detectee : les endpoints admin peuvent etre utilises."
-                : adminState === "forbidden"
-                  ? "Token connecte non admin : l'interface reste en mode mock, les appels admin seront refuses par l'API."
-                  : "Mode mock admin : connectez-vous avec un compte ADMIN pour activer les donnees API."}
+                ? "Session admin active : accès autorisé aux outils de pilotage."
+                : "Accès admin requis pour utiliser cette interface."}
             </div>
             {children}
           </div>
         </section>
       </div>
     </main>
+    </ProtectedRoute>
   );
 }
 

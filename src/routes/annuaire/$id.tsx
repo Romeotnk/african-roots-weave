@@ -11,7 +11,7 @@ export const Route = createFileRoute("/annuaire/$id")({
   component: ProfessionalProfile,
 });
 
-const fallbackAvailability = {
+const fallbackAvailability: Record<string, string[]> = {
   Lundi: ["09:00", "11:00"],
   Mercredi: ["14:00"],
   Samedi: ["10:00"],
@@ -25,10 +25,12 @@ function ProfessionalProfile() {
   const [selectedDay, setSelectedDay] = useState(Object.keys(pro.availability ?? fallbackAvailability)[0]);
   const [selectedSlot, setSelectedSlot] = useState("");
   const [mode, setMode] = useState<"onsite" | "online">("onsite");
-  const [success, setSuccess] = useState(false);
+  const [reason, setReason] = useState("");
+  const [feedback, setFeedback] = useState("");
+  const [messageFeedback, setMessageFeedback] = useState("");
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
 
-  const availability = pro.availability ?? fallbackAvailability;
+  const availability: Record<string, string[]> = pro.availability ?? fallbackAvailability;
   const gallery = pro.gallery ?? [pro.cover, pro.avatar];
   const price = pro.consultationPrice ?? 15000;
   const slots = availability[selectedDay] ?? [];
@@ -56,6 +58,19 @@ function ProfessionalProfile() {
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [gallery.length, galleryIndex]);
+
+  const requestBooking = () => {
+    setMessageFeedback("");
+    if (!selectedSlot) {
+      setFeedback("Choisissez un creneau avant de demander le rendez-vous.");
+      return;
+    }
+    if (reason.trim().length < 10) {
+      setFeedback("Precisez le motif de consultation en quelques mots.");
+      return;
+    }
+    setFeedback(`Demande envoyee pour ${selectedDay} a ${selectedSlot}. Le praticien devra confirmer le rendez-vous.`);
+  };
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">
@@ -95,8 +110,8 @@ function ProfessionalProfile() {
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-6">
             <h2 className="text-[22px] font-bold">Galerie</h2>
             <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
-              {gallery.map((image) => (
-                <button key={image} onClick={() => setGalleryIndex(gallery.indexOf(image))} className="aspect-[4/3] overflow-hidden rounded-lg">
+              {gallery.map((image, index) => (
+                <button key={`${image}-${index}`} type="button" onClick={() => setGalleryIndex(index)} className="aspect-[4/3] overflow-hidden rounded-lg">
                   <img src={image} alt="" className="h-full w-full object-cover transition hover:scale-105" />
                 </button>
               ))}
@@ -108,31 +123,34 @@ function ProfessionalProfile() {
           <h2 className="flex items-center gap-2 text-[20px] font-bold"><CalendarDays size={20} /> Prendre rendez-vous</h2>
           <div className="mt-5 flex flex-wrap gap-2">
             {dayItems.map((day) => (
-              <button key={day} onClick={() => { setSelectedDay(day); setSelectedSlot(""); }} className={`rounded-full px-3 py-1 text-[12px] font-semibold ${selectedDay === day ? "bg-[var(--brand-primary)] text-white" : "bg-[var(--brand-surface-alt)]"}`}>
+              <button key={day} type="button" onClick={() => { setSelectedDay(day); setSelectedSlot(""); setFeedback(""); }} className={`rounded-full px-3 py-1 text-[12px] font-semibold ${selectedDay === day ? "bg-[var(--brand-primary)] text-white" : "bg-[var(--brand-surface-alt)]"}`}>
                 {day}
               </button>
             ))}
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
-            {slots.map((slot) => (
-              <button key={slot} onClick={() => setSelectedSlot(slot)} className={`rounded-lg border p-3 text-[13px] font-semibold ${selectedSlot === slot ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]" : "border-[var(--brand-border)]"}`}>
+            {slots.length > 0 ? slots.map((slot) => (
+              <button key={slot} type="button" onClick={() => { setSelectedSlot(slot); setFeedback(""); }} className={`rounded-lg border p-3 text-[13px] font-semibold ${selectedSlot === slot ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]" : "border-[var(--brand-border)]"}`}>
                 {slot}
               </button>
-            ))}
+            )) : (
+              <p className="col-span-2 rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px] text-[var(--color-text-muted)]">Aucun creneau disponible ce jour.</p>
+            )}
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <button onClick={() => setMode("onsite")} className={`rounded-lg border p-3 text-[13px] font-semibold ${mode === "onsite" ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)]" : "border-[var(--brand-border)]"}`}>Presentiel</button>
-            <button onClick={() => setMode("online")} className={`rounded-lg border p-3 text-[13px] font-semibold ${mode === "online" ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)]" : "border-[var(--brand-border)]"}`}><Video size={14} className="inline" /> En ligne</button>
+            <button type="button" onClick={() => setMode("onsite")} className={`rounded-lg border p-3 text-[13px] font-semibold ${mode === "onsite" ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)]" : "border-[var(--brand-border)]"}`}>Presentiel</button>
+            <button type="button" onClick={() => setMode("online")} className={`rounded-lg border p-3 text-[13px] font-semibold ${mode === "online" ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)]" : "border-[var(--brand-border)]"}`}><Video size={14} className="inline" /> En ligne</button>
           </div>
-          <textarea rows={4} placeholder="Motif de consultation" className="mt-4 w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
+          <textarea value={reason} onChange={(event) => { setReason(event.target.value); setFeedback(""); }} rows={4} placeholder="Motif de consultation" className="mt-4 w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
           <div className="mt-4 rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">
-            {selectedDay} {selectedSlot || "creneau"} - {mode === "online" ? "En ligne" : "Presentiel"} - {price.toLocaleString("fr-FR")} FCFA
+            {selectedDay} {selectedSlot || "creneau a choisir"} - {mode === "online" ? "En ligne" : "Presentiel"} - {price.toLocaleString("fr-FR")} FCFA
           </div>
-          {success && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[13px] text-emerald-800">Reservation confirmee. Email mock envoye.</p>}
-          <button onClick={() => setSuccess(true)} className="mt-4 h-11 w-full rounded-full bg-[var(--brand-primary)] font-semibold text-white">
-            Confirmer et payer
+          {feedback && <p className={`mt-3 rounded-lg p-3 text-[13px] ${feedback.startsWith("Demande") ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"}`}>{feedback}</p>}
+          {messageFeedback && <p className="mt-3 rounded-lg bg-[var(--brand-primary-subtle)] p-3 text-[13px] text-[var(--brand-primary)]">{messageFeedback}</p>}
+          <button type="button" onClick={requestBooking} className="mt-4 h-11 w-full rounded-full bg-[var(--brand-primary)] font-semibold text-white">
+            Demander le rendez-vous
           </button>
-          <button className="mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[13px] font-semibold">
+          <button type="button" onClick={() => { setFeedback(""); setMessageFeedback(`Message pret a etre envoye a ${pro.name}. La messagerie sera branchee a l'API.`); }} className="mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[13px] font-semibold">
             <MessageSquare size={15} /> Envoyer un message
           </button>
         </aside>

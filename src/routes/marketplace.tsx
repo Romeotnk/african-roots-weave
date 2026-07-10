@@ -25,7 +25,7 @@ export const Route = createFileRoute("/marketplace")({
       {
         name: "description",
         content:
-          "Produits, services et ressources numeriques de la medecine traditionnelle africaine.",
+          "Produits, services et ressources numériques de la médecine traditionnelle africaine.",
       },
     ],
   }),
@@ -82,17 +82,17 @@ function Marketplace() {
   const activeFilterSummary = useMemo(() => {
     const parts = [
       debouncedSearch && `Recherche "${debouncedSearch}"`,
-      selectedCategories.length > 0 && `${selectedCategories.length} categorie(s)`,
+      selectedCategories.length > 0 && `${selectedCategories.length} catégorie(s)`,
       selectedTypes.length > 0 && `${selectedTypes.length} type(s)`,
       (priceMin || priceMax || priceRange[0] > 0 || priceRange[1] < 50000) &&
         `${priceMin || priceRange[0]}-${priceMax || priceRange[1]} FCFA`,
       country && `Pays: ${country}`,
       city && `Ville: ${city}`,
       minRating > 0 && `Note ${minRating}+`,
-      auctionOnly && "Encheres",
-      verifiedOnly && "Vendeurs verifies",
+      auctionOnly && "Enchères",
+      verifiedOnly && "Vendeurs vérifiés",
     ].filter(Boolean);
-    return parts.join(", ") || "Tous les resultats marketplace";
+    return parts.join(", ") || "Tous les résultats marketplace";
   }, [
     auctionOnly,
     city,
@@ -238,7 +238,7 @@ function Marketplace() {
       })
       .catch((apiError) => {
         if (!cancelled) {
-          setError(apiError instanceof Error ? apiError.message : "API indisponible, donnees locales affichees.");
+          setError(apiError instanceof Error ? apiError.message : "API indisponible, données locales affichées.");
           setItems(fallbackProducts);
         }
       })
@@ -257,7 +257,7 @@ function Marketplace() {
         image="https://images.unsplash.com/photo-1597318181409-cf64d0b9d3d2?w=1920&q=80"
         badge="Marketplace"
         title="Marketplace Iwosan"
-        subtitle="Produits, services et ressources numeriques de la medecine traditionnelle africaine - verifies par notre equipe."
+        subtitle="Produits, services et ressources numériques de la médecine traditionnelle africaine - vérifiés par notre équipe."
         size="md"
         breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Marketplace" }]}
       >
@@ -275,12 +275,12 @@ function Marketplace() {
                 onClick={resetFilters}
                 className="text-[12px] text-[var(--brand-primary)] font-semibold"
               >
-                Reinitialiser {activeFilterCount > 0 ? `(${activeFilterCount})` : ""}
+                Réinitialiser {activeFilterCount > 0 ? `(${activeFilterCount})` : ""}
               </button>
             </div>
             <details open className="border-t border-[var(--brand-border-light)] py-4">
               <summary className="font-semibold text-[14px] cursor-pointer flex items-center justify-between">
-                Categorie <ChevronDown size={14} />
+                Catégorie <ChevronDown size={14} />
               </summary>
               <div className="mt-3 space-y-2 max-h-72 overflow-y-auto pr-2">
                 {categories.map((item) => (
@@ -305,7 +305,7 @@ function Marketplace() {
                 {[
                   ["physical", "Produit physique"],
                   ["service", "Service"],
-                  ["digital", "Produit numerique"],
+                  ["digital", "Produit numérique"],
                 ].map(([value, label]) => (
                   <label key={value} className="flex items-center gap-2 text-[13px]">
                     <input
@@ -386,13 +386,13 @@ function Marketplace() {
                   <Slider value={distance} min={0} max={500} step={10} onValueChange={setDistance} />
                 </div>
                 <button className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-[var(--brand-border)] text-[12px] font-semibold">
-                  <Navigation size={14} /> Geolocalisation activee
+                  <Navigation size={14} /> Géolocalisation activée
                 </button>
               </div>
             </details>
             <details className="border-t border-[var(--brand-border-light)] py-4">
               <summary className="font-semibold text-[14px] cursor-pointer flex items-center justify-between">
-                Publication & qualite <ChevronDown size={14} />
+                Publication & qualité <ChevronDown size={14} />
               </summary>
               <div className="mt-3 space-y-3">
                 <select
@@ -413,7 +413,7 @@ function Marketplace() {
                         key={rating}
                         onClick={() => setMinRating(minRating === rating ? 0 : rating)}
                         className={rating <= minRating ? "text-[var(--brand-gold)]" : "text-[var(--brand-border)]"}
-                        aria-label={`${rating} etoiles minimum`}
+                        aria-label={`${rating} étoiles minimum`}
                       >
                         <Star size={18} fill="currentColor" />
                       </button>
@@ -421,10 +421,10 @@ function Marketplace() {
                   </div>
                 </div>
                 <label className="flex items-center justify-between gap-3 text-[13px]">
-                  Encheres uniquement <Switch checked={auctionOnly} onCheckedChange={setAuctionOnly} />
+                  Enchères uniquement <Switch checked={auctionOnly} onCheckedChange={setAuctionOnly} />
                 </label>
                 <label className="flex items-center justify-between gap-3 text-[13px]">
-                  Vendeurs KYC verifies <Switch checked={verifiedOnly} onCheckedChange={setVerifiedOnly} />
+                  Vendeurs KYC vérifiés <Switch checked={verifiedOnly} onCheckedChange={setVerifiedOnly} />
                 </label>
               </div>
             </details>
@@ -434,7 +434,7 @@ function Marketplace() {
             <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
               <p className="text-[14px] text-[var(--color-text-muted)]">
                 <span className="font-bold text-[var(--color-text-primary)]">
-                  {isLoading ? "Chargement..." : `${filteredItems.length} resultats`}
+                  {isLoading ? "Chargement..." : `${filteredItems.length} résultats`}
                 </span>
                 {debouncedSearch && !isLoading ? ` pour "${debouncedSearch}"` : ""}
               </p>
@@ -443,13 +443,13 @@ function Marketplace() {
                   onClick={() => setAlertOpen(true)}
                   className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
                 >
-                  <Bell size={15} /> Creer une alerte
+                  <Bell size={15} /> Créer une alerte
                 </button>
                 <Link
                   to="/marketplace/deposer"
                   className="inline-flex h-10 items-center rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white"
                 >
-                  Deposer une annonce
+                  Déposer une annonce
                 </Link>
                 <div className="inline-flex h-10 rounded-full border border-[var(--brand-border)] bg-white p-1">
                   <button
@@ -471,10 +471,10 @@ function Marketplace() {
                   className="h-10 px-4 rounded-full border border-[var(--brand-border)] text-[13px] bg-white"
                 >
                   <option value="relevance">Pertinence</option>
-                  <option value="newest">Les plus recents</option>
+                  <option value="newest">Les plus récents</option>
                   <option value="price_asc">Prix croissant</option>
-                  <option value="price_desc">Prix decroissant</option>
-                  <option value="rating">Les mieux notes</option>
+                  <option value="price_desc">Prix décroissant</option>
+                  <option value="rating">Les mieux notés</option>
                   <option value="popular">Plus populaire</option>
                 </select>
               </div>
@@ -525,7 +525,7 @@ function Marketplace() {
                 <div className="relative min-h-[560px] overflow-hidden rounded-[16px] border border-[var(--brand-border-light)] bg-[linear-gradient(135deg,#e3f3ec,#f5efd6)]">
                   <div className="absolute inset-0 opacity-70 [background-image:linear-gradient(#fff_1px,transparent_1px),linear-gradient(90deg,#fff_1px,transparent_1px)] [background-size:44px_44px]" />
                   <div className="absolute left-5 top-5 rounded-full bg-white/90 px-4 py-2 text-[12px] font-semibold shadow-iwosan-sm">
-                    {filteredItems.length} marqueurs synchronises
+                    {filteredItems.length} marqueurs synchronisés
                   </div>
                   <div className="absolute bottom-5 left-5 rounded-full border border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] px-4 py-2 text-[12px] font-semibold text-[var(--brand-primary)]">
                     Rayon mock: {distance[0]} km
@@ -564,9 +564,9 @@ function Marketplace() {
             )}
             {!isLoading && filteredItems.length === 0 && (
               <div className="rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-10 text-center">
-                <p className="text-[18px] font-bold">Aucun resultat</p>
+                <p className="text-[18px] font-bold">Aucun résultat</p>
                 <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-                  Essayez une autre recherche ou reinitialisez les filtres.
+                  Essayez une autre recherche ou réinitialisez les filtres.
                 </p>
                 <button
                   onClick={resetFilters}
@@ -582,9 +582,9 @@ function Marketplace() {
       <Dialog open={alertOpen} onOpenChange={setAlertOpen}>
         <DialogContent className="bg-white">
           <DialogHeader>
-            <DialogTitle>Creer une alerte</DialogTitle>
+            <DialogTitle>Créer une alerte</DialogTitle>
             <DialogDescription>
-              Recevez une notification mock lorsque de nouvelles annonces correspondent a ces filtres.
+              Recevez une notification mock lorsque de nouvelles annonces correspondent à ces filtres.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -596,7 +596,7 @@ function Marketplace() {
             />
             <div className="rounded-lg bg-[var(--brand-surface-alt)] p-4">
               <p className="text-[12px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-                Filtres appliques
+                Filtres appliqués
               </p>
               <p className="mt-2 text-[14px] text-[var(--color-text-secondary)]">{activeFilterSummary}</p>
             </div>

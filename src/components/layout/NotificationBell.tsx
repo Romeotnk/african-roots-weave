@@ -2,10 +2,10 @@ import { Link } from "@tanstack/react-router";
 import { Bell, CheckCheck, MessageSquare, PackageCheck, Star, Store, Users } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import type { NotificationType } from "@/data/notifications";
+import type { AppNotification, NotificationType } from "@/data/notifications";
 import { notificationKeys, useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from "@/hooks/useNotificationsApi";
 import { useNotificationsSocket } from "@/hooks/useNotificationsSocket";
-import { toNotification } from "@/lib/api/notifications";
+import { toNotification, type BackendNotification } from "@/lib/api/notifications";
 
 const icons: Record<NotificationType, typeof Bell> = {
   message: MessageSquare,
@@ -27,8 +27,11 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
   }, [notifications]);
   useNotificationsSocket({
     onNotificationNew: useCallback(
-      (notification) => {
-        queryClient.setQueryData(notificationKeys.all, (current = []) => [toNotification(notification), ...current]);
+      (notification: BackendNotification) => {
+        queryClient.setQueryData<AppNotification[]>(notificationKeys.all, (current = []) => [
+          toNotification(notification),
+          ...current,
+        ]);
       },
       [queryClient],
     ),

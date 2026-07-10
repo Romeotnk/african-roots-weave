@@ -12,7 +12,6 @@ const navLinks = [
   { to: "/", label: "Accueil" },
   { to: "/marketplace", label: "Marketplace" },
   { to: "/annuaire", label: "Annuaire" },
-  { to: "/devenir-pro", label: "Devenir pro" },
   { to: "/pharmacopee", label: "Pharmacopée" },
 ];
 const communityLinks = [
@@ -32,7 +31,6 @@ const accountLinks = [
   { to: "/mon-compte/portefeuille", label: "Portefeuille" },
   { to: "/mon-compte/affiliation", label: "Affiliation" },
   { to: "/mon-compte/kyc", label: "KYC" },
-  { to: "/dashboard/pro", label: "Dashboard pro" },
   { to: "/mon-compte/alertes", label: "Alertes" },
   { to: "/mon-compte/tickets", label: "Tickets" },
 ];
@@ -95,9 +93,12 @@ export function Navbar() {
   const [commOpen, setCommOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { lang, setLang } = useLanguage();
-  const { user, signOut } = useAuth();
+  const { user, signOut, roles } = useAuth();
   const navigate = useNavigate();
   const handleLogout = async () => { await signOut(); navigate({ to: "/" }); };
+  const isProAccount = roles.includes("professional") || roles.includes("researcher") || roles.includes("admin") || roles.includes("super_admin");
+  const accountHomePath = isProAccount ? "/tableau-de-bord" : "/mon-compte";
+  const accountHomeLabel = isProAccount ? "Tableau de bord" : "Mon compte";
   const { itemCount } = useCart();
 
   useEffect(() => {
@@ -242,8 +243,8 @@ export function Navbar() {
 
           {user ? (
             <>
-              <Link to="/tableau-de-bord" className="inline-flex items-center gap-1 whitespace-nowrap text-[12px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] active:scale-95 transition xl:text-[13px]">
-                <LayoutDashboard size={16} /> Tableau de bord
+              <Link to={accountHomePath as never} className="inline-flex items-center gap-1 whitespace-nowrap text-[12px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] active:scale-95 transition xl:text-[13px]">
+                <LayoutDashboard size={16} /> {accountHomeLabel}
               </Link>
               <button onClick={handleLogout} className="h-9 px-3 inline-flex items-center gap-1 rounded-full border border-[var(--brand-border)] text-[0px] font-semibold hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] active:scale-95 transition">
                 <span className="text-[12px] xl:text-[13px]">{displayLabels.logout}</span>
@@ -280,7 +281,7 @@ export function Navbar() {
             )}
           </Link>
           {user ? (
-            <Link to="/tableau-de-bord" className="hidden h-10 items-center gap-1.5 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white shadow-iwosan-sm transition active:scale-95 sm:inline-flex lg:hidden" aria-label="Tableau de bord">
+            <Link to={accountHomePath as never} className="hidden h-10 items-center gap-1.5 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white shadow-iwosan-sm transition active:scale-95 sm:inline-flex lg:hidden" aria-label={accountHomeLabel}>
               <LayoutDashboard size={15} /> Espace
             </Link>
           ) : (
@@ -333,7 +334,7 @@ export function Navbar() {
             </div>
             {user ? (
               <div className="grid grid-cols-2 gap-2">
-                <Link to="/tableau-de-bord" className="h-9 inline-flex items-center justify-center gap-1 rounded-full bg-[var(--brand-primary)] text-white font-semibold text-[12px] active:scale-95 transition hover:bg-[var(--brand-primary-dark)]">
+                <Link to={accountHomePath as never} className="h-9 inline-flex items-center justify-center gap-1 rounded-full bg-[var(--brand-primary)] text-white font-semibold text-[12px] active:scale-95 transition hover:bg-[var(--brand-primary-dark)]">
                   <LayoutDashboard size={16} /> Mon espace
                 </Link>
                 <button onClick={handleLogout} className="h-9 inline-flex items-center justify-center gap-1 rounded-full border border-[var(--brand-border)] text-[0px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition hover:border-red-400 hover:text-red-600">
@@ -397,30 +398,34 @@ export function Navbar() {
             ))}
           </nav>
 
-          <div className="h-px bg-[#eadfce]" />
+          {user && (
+            <>
+              <div className="h-px bg-[#eadfce]" />
 
-          <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain bg-white px-3 py-2 pb-5 text-left">
-            {accountLinks.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                className={cn(
-                  "flex min-h-9 w-full items-center justify-start rounded-md px-3 text-left text-[14px] font-semibold transition active:scale-[0.98]",
-                  pathname === l.to
-                    ? "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]"
-                    : "text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)]",
-                )}
-              >
-                {l.label}
-              </Link>
-            ))}
-            <Link
-              to="/mon-compte/notifications"
-              className="flex min-h-9 w-full items-center justify-start rounded-md px-3 text-left text-[14px] font-semibold text-[var(--color-text-secondary)] transition hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)] active:scale-[0.98]"
-            >
-              Notifications
-            </Link>
-          </nav>
+              <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain bg-white px-3 py-2 pb-5 text-left">
+                {accountLinks.map((l) => (
+                  <Link
+                    key={l.to}
+                    to={l.to}
+                    className={cn(
+                      "flex min-h-9 w-full items-center justify-start rounded-md px-3 text-left text-[14px] font-semibold transition active:scale-[0.98]",
+                      pathname === l.to
+                        ? "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]"
+                        : "text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)]",
+                    )}
+                  >
+                    {l.label}
+                  </Link>
+                ))}
+                <Link
+                  to="/mon-compte/notifications"
+                  className="flex min-h-9 w-full items-center justify-start rounded-md px-3 text-left text-[14px] font-semibold text-[var(--color-text-secondary)] transition hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)] active:scale-[0.98]"
+                >
+                  Notifications
+                </Link>
+              </nav>
+            </>
+          )}
         </div>
       </div>
     </header>

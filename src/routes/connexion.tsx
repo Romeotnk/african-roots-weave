@@ -4,7 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { login } from "@/lib/api/auth";
 
 export const Route = createFileRoute("/connexion")({
-  head: () => ({ meta: [{ title: "Connexion — IWOSAN" }] }),
+  head: () => ({ meta: [{ title: "Connexion - IWOSAN" }] }),
   component: Connexion,
 });
 
@@ -24,12 +24,7 @@ function Connexion() {
       await login(email, password);
       navigate({ to: "/tableau-de-bord" });
     } catch (apiError) {
-      const message = apiError instanceof Error ? apiError.message : "Connexion impossible pour le moment.";
-      if (message.toLowerCase().includes("invalid")) {
-        setError("Email ou mot de passe incorrect.");
-      } else {
-        setError(message);
-      }
+      setError(apiError instanceof Error ? apiError.message : "Connexion impossible pour le moment.");
     } finally {
       setIsSubmitting(false);
     }
@@ -64,7 +59,12 @@ function Connexion() {
                 required
                 className="w-full h-12 px-4 pr-11 rounded-lg border border-[var(--brand-border)] outline-none focus:border-[var(--brand-primary)] bg-[var(--color-surface)]"
               />
-              <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" aria-label={show ? "Masquer" : "Afficher"}>
+              <button
+                type="button"
+                onClick={() => setShow((current) => !current)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
+                aria-label={show ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              >
                 {show ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
@@ -77,7 +77,7 @@ function Connexion() {
               <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">{error}</p>
             )}
             <button disabled={isSubmitting} className="w-full h-12 rounded-full bg-[var(--brand-primary)] text-white font-semibold hover:bg-[var(--brand-primary-dark)] disabled:opacity-70 transition">
-              {isSubmitting ? "Connexion…" : "Se connecter"}
+              {isSubmitting ? "Connexion..." : "Se connecter"}
             </button>
           </form>
           <p className="mt-6 text-center text-[14px] text-[var(--color-text-muted)]">

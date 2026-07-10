@@ -5,8 +5,9 @@ import { ArticleCard, articlePath } from "@/components/shared/ArticleCard";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { articles } from "@/data/articles";
-import { useArticles, type ArticleSpace } from "@/hooks/useContentApi";
+import { useArticles } from "@/hooks/useContentApi";
 import { useDebounce } from "@/hooks/useDebounce";
+import type { ArticleSpace } from "@/lib/api/content";
 import type { Article } from "@/types";
 
 interface ArticleListPageProps {
@@ -143,7 +144,7 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
 
             {filteredArticles.length === 0 && (
               <div className="rounded-[12px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
-                <p className="font-bold">Aucun article trouve</p>
+                <p className="font-bold">Aucun article trouvé</p>
                 <button
                   onClick={() => {
                     setSearch("");
@@ -160,7 +161,7 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
           <aside className="space-y-6">
             <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-6">
               <h3 className="mb-4 text-[15px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-                Categories
+                Catégories
               </h3>
               <ul className="space-y-2 text-[14px]">
                 {categories.slice(1).map((item) => (

@@ -15,7 +15,7 @@ export const notifications: AppNotification[] = [
     id: "n1",
     type: "message",
     title: "Nouveau message",
-    body: "Mama Aissata a repondu a votre demande de consultation.",
+    body: "Mama Aissata a répondu à votre demande de consultation.",
     href: "/messages",
     read: false,
     date: "2026-07-02 09:20",
@@ -23,7 +23,7 @@ export const notifications: AppNotification[] = [
   {
     id: "n2",
     type: "listing",
-    title: "Annonce approuvee",
+    title: "Annonce approuvée",
     body: "Votre annonce Kinkeliba premium est maintenant visible.",
     href: "/dashboard/annonces",
     read: false,
@@ -32,7 +32,7 @@ export const notifications: AppNotification[] = [
   {
     id: "n3",
     type: "order",
-    title: "Commande recue",
+    title: "Commande reçue",
     body: "Une nouvelle commande attend votre confirmation.",
     href: "/mes-commandes",
     read: true,
@@ -41,8 +41,8 @@ export const notifications: AppNotification[] = [
   {
     id: "n4",
     type: "forum",
-    title: "Reponse forum",
-    body: "Une reponse a ete ajoutee a votre question sur le neem.",
+    title: "Réponse forum",
+    body: "Une réponse a été ajoutée à votre question sur le neem.",
     href: "/forum",
     read: true,
     date: "2026-06-28 08:05",

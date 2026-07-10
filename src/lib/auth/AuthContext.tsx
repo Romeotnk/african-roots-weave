@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 import { authTokenStore } from "@/lib/api/client";
-import { backendAuthUserStore, type AuthUser } from "@/lib/api/auth";
+import { backendAuthUserStore, logout as backendLogout, type AuthUser } from "@/lib/api/auth";
 
 export type AppRole = "user" | "professional" | "researcher" | "moderator" | "editor" | "admin" | "super_admin";
 
@@ -35,6 +35,7 @@ const rolesFromBackendUser = (backendUser: AuthUser): AppRole[] => {
   if (backendUser.role === "PROFESSIONAL") roles.add("user");
   if (backendUser.role === "RESEARCHER" || backendUser.isResearcher) {
     roles.add("researcher");
+    roles.add("professional");
     roles.add("user");
   }
   if (backendUser.adminSubRole === "MODERATOR") roles.add("moderator");
@@ -68,7 +69,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     try {
       const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
-      setRoles((data ?? []).map((r) => r.role as AppRole));
+      const mappedRoles = new Set<AppRole>((data ?? []).map((r) => r.role as AppRole));
+      if (mappedRoles.has("researcher")) {
+        mappedRoles.add("professional");
+        mappedRoles.add("user");
+      }
+      if (mappedRoles.has("professional")) mappedRoles.add("user");
+      setRoles([...mappedRoles]);
     } catch (error) {
       console.warn("Supabase roles unavailable, keeping backend roles only.", error);
       setRoles([]);
@@ -153,8 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
-    authTokenStore.set(null);
-    backendAuthUserStore.set(null);
+    await backendLogout();
     if (!isSupabaseConfigured) {
       setRoles([]);
       setSession(null);

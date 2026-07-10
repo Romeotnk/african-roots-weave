@@ -8,12 +8,17 @@ import {
   affiliateTree,
 } from "@/data/affiliate";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAffiliateLink, useMlmEarnings, useMlmStats, useMlmTree } from "@/hooks/useMlmApi";
 import type { AffiliateEarning, AffiliateNode } from "@/types";
 
 export const Route = createFileRoute("/mon-compte/affiliation")({
   head: () => ({ meta: [{ title: "Affiliation - IWOSAN" }] }),
-  component: AffiliationPage,
+  component: () => (
+    <ProtectedRoute requireAnyRole={["user", "researcher", "professional", "admin", "super_admin"]}>
+      <AffiliationPage />
+    </ProtectedRoute>
+  ),
 });
 
 const earningLabels: Record<AffiliateEarning["type"], string> = {
@@ -138,6 +143,7 @@ function AffiliationPage() {
   const [selectedNode, setSelectedNode] = useState<AffiliateNode | null>(null);
   const activeNode = selectedNode ?? treeRoot;
   const [copied, setCopied] = useState(false);
+  const [actionMessage, setActionMessage] = useState("");
   const affiliateLink = affiliateLinkQuery.data?.link ?? affiliateProfile.link;
   const affiliateCode = affiliateLinkQuery.data?.code ?? affiliateProfile.code;
   const mlmStats = mlmStatsQuery.data as
@@ -161,13 +167,27 @@ function AffiliationPage() {
     };
   }, [liveEarnings, mlmStats?.commissionsAmount, nodes]);
 
-  const share = async () => {
-    if (navigator.share) {
-      await navigator.share({ title: "IWOSAN", text: "Rejoignez-moi sur IWOSAN", url: affiliateLink });
-      return;
+  const copyAffiliateLink = async () => {
+    try {
+      await navigator.clipboard?.writeText(affiliateLink);
+      setCopied(true);
+      setActionMessage("Lien copie dans le presse-papiers.");
+    } catch {
+      setActionMessage("Copie automatique indisponible. Selectionnez le lien puis copiez-le manuellement.");
     }
-    await navigator.clipboard?.writeText(affiliateLink);
-    setCopied(true);
+  };
+
+  const share = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "IWOSAN", text: "Rejoignez-moi sur IWOSAN", url: affiliateLink });
+        setActionMessage("Fenetre de partage ouverte.");
+        return;
+      }
+      await copyAffiliateLink();
+    } catch {
+      setActionMessage("Partage annule ou indisponible sur cet appareil.");
+    }
   };
 
   return (
@@ -199,10 +219,13 @@ function AffiliationPage() {
                 <Copy size={15} /> Copier
               </button>
             </div>
-            {copied && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[13px] text-emerald-800">Lien copie.</p>}
+            {(copied || actionMessage) && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[13px] text-emerald-800">{actionMessage || "Lien copie."}</p>}
             <div className="mt-4 flex flex-wrap gap-2">
               <button
-                onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(affiliateLink)}`, "_blank", "noopener,noreferrer")}
+                onClick={() => {
+                  window.open(`https://wa.me/?text=${encodeURIComponent(affiliateLink)}`, "_blank", "noopener,noreferrer");
+                  setActionMessage("Ouverture du partage WhatsApp.");
+                }}
                 className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[12px] font-semibold"
               >
                 <MessageCircle size={14} /> WhatsApp

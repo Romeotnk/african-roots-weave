@@ -27,33 +27,33 @@ import { ProductCard } from "@/components/shared/ProductCard";
 import type { Product } from "@/types";
 
 export const Route = createFileRoute("/marketplace/deposer")({
-  head: () => ({ meta: [{ title: "Deposer une annonce - IWOSAN" }] }),
+  head: () => ({ meta: [{ title: "Déposer une annonce - IWOSAN" }] }),
   component: DepositListing,
 });
 
 const sellerReadiness = [
-  { label: "Email verifie", done: true },
-  { label: "KYC soumis et approuve", done: true },
-  { label: "Photo de profil ajoutee", done: true },
-  { label: "Numero de telephone verifie", done: true },
+  { label: "Email vérifié", done: true },
+  { label: "KYC soumis et approuvé", done: true },
+  { label: "Photo de profil ajoutée", done: true },
+  { label: "Numéro de téléphone vérifié", done: true },
 ];
 
 const productTypes = [
-  { id: "physical", label: "Physique", desc: "Plantes, remedes, huiles, produits a livrer.", icon: Package },
-  { id: "service", label: "Service", desc: "Consultation, accompagnement, preparation sur demande.", icon: Stethoscope },
-  { id: "digital", label: "Digital", desc: "PDF, formation, fichier ou ressource telechargeable.", icon: FileArchive },
+  { id: "physical", label: "Physique", desc: "Plantes, remèdes, huiles, produits à livrer.", icon: Package },
+  { id: "service", label: "Service", desc: "Consultation, accompagnement, préparation sur demande.", icon: Stethoscope },
+  { id: "digital", label: "Digital", desc: "PDF, formation, fichier ou ressource téléchargeable.", icon: FileArchive },
 ] as const;
 
 const medicalCategories = [
-  "Gyneco-obstetriques",
+  "Gynéco-obstétriques",
   "Gastro-intestinales",
   "Maladies de l'enfance",
-  "Etats febriles/Icteres",
-  "Affections cutanees",
-  "Systeme nerveux",
-  "Osteo-articulaire",
+  "États fébriles/Ictères",
+  "Affections cutanées",
+  "Système nerveux",
+  "Ostéo-articulaire",
   "Pulmonaire",
-  "Uro-genital",
+  "Uro-génital",
   "ORL",
   "Ophtalmologique",
   "Bucco-dentaire",
@@ -62,7 +62,7 @@ const medicalCategories = [
   "Mystique",
 ];
 
-const steps = ["Base", "Localisation", "Medias", "Options", "Recapitulatif"];
+const steps = ["Base", "Localisation", "Médias", "Options", "Récapitulatif"];
 
 function DepositListing() {
   const [step, setStep] = useState(0);
@@ -70,7 +70,7 @@ function DepositListing() {
   const [type, setType] = useState<(typeof productTypes)[number]["id"]>("physical");
   const [category, setCategory] = useState(medicalCategories[0]);
   const [description, setDescription] = useState(
-    "Preparation traditionnelle documentee, issue de feuilles selectionnees et sechees a l'ombre.",
+    "Préparation traditionnelle documentée, issue de feuilles sélectionnées et séchées à l'ombre.",
   );
   const [price, setPrice] = useState("8500");
   const [currency, setCurrency] = useState("XOF");
@@ -91,6 +91,7 @@ function DepositListing() {
   const [terms, setTerms] = useState(false);
   const [salesPolicy, setSalesPolicy] = useState(false);
   const [confirmation, setConfirmation] = useState("");
+  const [formError, setFormError] = useState("");
 
   const canAccess = sellerReadiness.every((item) => item.done);
   const estimatedCommission = Math.round((Number(price) || 0) * 0.1);
@@ -129,15 +130,47 @@ function DepositListing() {
     setTagInput("");
   };
 
+  const validateStep = (targetStep = step) => {
+    if (targetStep >= 0) {
+      if (title.trim().length < 8) return "Ajoutez un titre plus descriptif.";
+      if (description.trim().length < 40) return "Ajoutez une description plus complete.";
+      if (!quoteRequest && (!Number.isFinite(Number(price)) || Number(price) <= 0)) return "Indiquez un prix valide ou activez la demande de devis.";
+      if (type === "physical" && (!Number.isFinite(Number(quantity)) || Number(quantity) <= 0)) return "Indiquez une quantite disponible valide.";
+    }
+    if (targetStep >= 1 && !city.trim()) return "Indiquez la ville de l'annonce.";
+    if (targetStep >= 2) {
+      if (media.length === 0) return "Ajoutez au moins une photo.";
+      if (type === "digital" && !digitalUrl.trim()) return "Ajoutez l'URL ou la reference du fichier digital.";
+    }
+    if (targetStep >= 3 && tags.length === 0) return "Ajoutez au moins un tag.";
+    return "";
+  };
+
+  const goNext = () => {
+    const validationMessage = validateStep(step);
+    if (validationMessage) {
+      setFormError(validationMessage);
+      return;
+    }
+    setFormError("");
+    setStep((current) => Math.min(steps.length - 1, current + 1));
+  };
+
   const publish = (mode: "draft" | "publish") => {
+    const validationMessage = validateStep(3);
+    if (validationMessage) {
+      setFormError(validationMessage);
+      return;
+    }
+    setFormError("");
     if (mode === "publish" && (!terms || !salesPolicy)) {
       setConfirmation("Veuillez accepter les CGU et la politique de vente avant publication.");
       return;
     }
     setConfirmation(
       mode === "draft"
-        ? "Brouillon enregistre localement. La liaison API sera branchee en section finale."
-        : "Votre annonce est soumise a moderation et sera visible sous 24h.",
+        ? "Brouillon enregistré localement. La liaison API sera branchée en section finale."
+        : "Votre annonce est soumise à modération et sera visible sous 24h.",
     );
   };
 
@@ -148,10 +181,10 @@ function DepositListing() {
           <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--brand-primary)]">
             Marketplace
           </p>
-          <h1 className="mt-2 text-[32px] md:text-[44px]">Deposer une annonce</h1>
+          <h1 className="mt-2 text-[32px] md:text-[44px]">Déposer une annonce</h1>
           <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[var(--color-text-secondary)]">
             Publiez un produit, un service ou une ressource digitale avec un parcours complet en mock,
-            pret pour la moderation puis le branchement API.
+            prêt pour la modération puis le branchement API.
           </p>
         </div>
       </section>
@@ -174,7 +207,7 @@ function DepositListing() {
             </div>
             {!canAccess && (
               <div className="mt-4 rounded-lg bg-amber-50 p-3 text-[13px] text-amber-800">
-                Completez les etapes manquantes pour publier une annonce.
+                Complétez les étapes manquantes pour publier une annonce.
               </div>
             )}
           </div>
@@ -197,12 +230,15 @@ function DepositListing() {
         </aside>
 
         <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5 md:p-7">
+          {formError && (
+            <p className="mb-5 rounded-lg bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-700">{formError}</p>
+          )}
           {!canAccess ? (
             <div className="p-8 text-center">
               <ShieldCheck className="mx-auto text-[var(--brand-primary)]" size={42} />
-              <h2 className="mt-4 text-[24px]">Verification requise</h2>
+              <h2 className="mt-4 text-[24px]">Vérification requise</h2>
               <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-                La publication est bloquee tant que le profil vendeur n'est pas complet.
+                La publication est bloquée tant que le profil vendeur n'est pas complet.
               </p>
             </div>
           ) : (
@@ -214,7 +250,7 @@ function DepositListing() {
                     <input
                       value={title}
                       maxLength={150}
-                      onChange={(event) => setTitle(event.target.value)}
+                      onChange={(event) => { setTitle(event.target.value); setFormError(""); }}
                       className="mt-2 h-11 w-full rounded-lg border border-[var(--brand-border)] px-4 outline-none focus:border-[var(--brand-primary)]"
                     />
                     <p className="mt-1 text-right text-[12px] text-[var(--color-text-muted)]">
@@ -240,7 +276,7 @@ function DepositListing() {
                   </div>
 
                   <div>
-                    <p className="text-[13px] font-semibold">Categorie medicale</p>
+                    <p className="text-[13px] font-semibold">Catégorie médicale</p>
                     <div className="mt-3 grid sm:grid-cols-2 xl:grid-cols-3 gap-2">
                       {medicalCategories.map((item) => (
                         <button
@@ -258,7 +294,7 @@ function DepositListing() {
                     <label className="text-[13px] font-semibold">Description longue</label>
                     <textarea
                       value={description}
-                      onChange={(event) => setDescription(event.target.value)}
+                      onChange={(event) => { setDescription(event.target.value); setFormError(""); }}
                       rows={6}
                       className="mt-2 w-full rounded-lg border border-[var(--brand-border)] px-4 py-3 outline-none focus:border-[var(--brand-primary)]"
                     />
@@ -294,7 +330,7 @@ function DepositListing() {
                           type="number"
                           value={oldPrice}
                           onChange={(event) => setOldPrice(event.target.value)}
-                          placeholder="Prix barre"
+                          placeholder="Prix barré"
                           className="h-11 rounded-lg border border-[var(--brand-border)] px-4"
                         />
                       </>
@@ -304,14 +340,14 @@ function DepositListing() {
                         type="number"
                         value={quantity}
                         onChange={(event) => setQuantity(event.target.value)}
-                        placeholder="Quantite"
+                        placeholder="Quantité"
                         className="h-11 rounded-lg border border-[var(--brand-border)] px-4"
                       />
                     )}
                   </div>
                   {!quoteRequest && (
                     <p className="rounded-lg bg-[var(--brand-primary-subtle)] px-4 py-3 text-[13px] text-[var(--brand-primary)]">
-                      Commission estimee: {estimatedCommission.toLocaleString("fr-FR")} {currency} (10%).
+                      Commission estimée : {estimatedCommission.toLocaleString("fr-FR")} {currency} (10%).
                     </p>
                   )}
                 </div>
@@ -328,14 +364,14 @@ function DepositListing() {
                   <div className="grid md:grid-cols-2 gap-3">
                     <input
                       value={city}
-                      onChange={(event) => setCity(event.target.value)}
+                      onChange={(event) => { setCity(event.target.value); setFormError(""); }}
                       placeholder="Ville"
                       className="h-11 rounded-lg border border-[var(--brand-border)] px-4"
                     />
                     <input
                       value={address}
                       onChange={(event) => setAddress(event.target.value)}
-                      placeholder="Adresse precise (optionnel)"
+                      placeholder="Adresse précise (optionnel)"
                       className="h-11 rounded-lg border border-[var(--brand-border)] px-4"
                     />
                   </div>
@@ -387,7 +423,7 @@ function DepositListing() {
                   >
                     <Upload className="text-[var(--brand-primary)]" size={34} />
                     <p className="mt-3 font-bold">Glissez vos photos ici</p>
-                    <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">Min 1, max 10. La premiere photo est principale.</p>
+                    <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">Min 1, max 10. La première photo est principale.</p>
                     <input type="file" multiple accept="image/*" className="sr-only" onChange={(event) => handleFiles(event.target.files)} />
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -417,7 +453,7 @@ function DepositListing() {
                   </div>
                   <div className="rounded-lg border border-[var(--brand-border-light)] p-4">
                     <p className="flex items-center gap-2 text-[13px] font-semibold">
-                      <Sparkles size={16} className="text-[var(--brand-gold)]" /> Apercu du filigrane IWOSAN
+                      <Sparkles size={16} className="text-[var(--brand-gold)]" /> Aperçu du filigrane IWOSAN
                     </p>
                     <div className="mt-3 inline-flex rounded bg-black/70 px-4 py-2 text-[12px] font-bold tracking-[0.2em] text-white">
                       IWOSAN
@@ -426,8 +462,8 @@ function DepositListing() {
                   {type === "digital" && (
                     <input
                       value={digitalUrl}
-                      onChange={(event) => setDigitalUrl(event.target.value)}
-                      placeholder="URL de telechargement ou reference du fichier"
+                      onChange={(event) => { setDigitalUrl(event.target.value); setFormError(""); }}
+                      placeholder="URL de téléchargement ou référence du fichier"
                       className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4"
                     />
                   )}
@@ -439,15 +475,15 @@ function DepositListing() {
                   <div className="rounded-lg border border-[var(--brand-border-light)] p-4">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <p className="font-bold">Activer les encheres</p>
-                        <p className="text-[13px] text-[var(--color-text-muted)]">Prix de depart, reserve et date de cloture.</p>
+                        <p className="font-bold">Activer les enchères</p>
+                        <p className="text-[13px] text-[var(--color-text-muted)]">Prix de départ, réserve et date de clôture.</p>
                       </div>
                       <Switch checked={auction} onCheckedChange={setAuction} />
                     </div>
                     {auction && (
                       <div className="mt-4 grid md:grid-cols-3 gap-3">
-                        <input placeholder="Prix de depart" className="h-10 rounded-lg border border-[var(--brand-border)] px-3" />
-                        <input placeholder="Prix de reserve" className="h-10 rounded-lg border border-[var(--brand-border)] px-3" />
+                        <input placeholder="Prix de départ" className="h-10 rounded-lg border border-[var(--brand-border)] px-3" />
+                        <input placeholder="Prix de réserve" className="h-10 rounded-lg border border-[var(--brand-border)] px-3" />
                         <input type="date" className="h-10 rounded-lg border border-[var(--brand-border)] px-3" />
                       </div>
                     )}
@@ -456,13 +492,13 @@ function DepositListing() {
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <p className="font-bold">Demande de devis</p>
-                        <p className="text-[13px] text-[var(--color-text-muted)]">Masque le prix fixe et invite l'acheteur a vous contacter.</p>
+                        <p className="text-[13px] text-[var(--color-text-muted)]">Masque le prix fixe et invite l'acheteur à vous contacter.</p>
                       </div>
                       <Switch checked={quoteRequest} onCheckedChange={setQuoteRequest} />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[13px] font-semibold">Tags / mots-cles</label>
+                    <label className="text-[13px] font-semibold">Tags / mots-clés</label>
                     <div className="mt-2 flex gap-2">
                       <input
                         value={tagInput}
@@ -493,7 +529,7 @@ function DepositListing() {
                     </div>
                   </div>
                   <textarea
-                    placeholder="Conditions speciales, ex: Livraison dans Cotonou uniquement"
+                    placeholder="Conditions spéciales, ex: livraison dans Cotonou uniquement"
                     className="min-h-[120px] w-full rounded-lg border border-[var(--brand-border)] px-4 py-3"
                   />
                 </div>
@@ -503,10 +539,10 @@ function DepositListing() {
                 <div className="grid lg:grid-cols-[1fr_320px] gap-6">
                   <div className="space-y-4">
                     <div className="rounded-lg bg-[var(--brand-surface-alt)] p-4">
-                      <h2 className="font-bold">Recapitulatif</h2>
+                      <h2 className="font-bold">Récapitulatif</h2>
                       <dl className="mt-3 grid sm:grid-cols-2 gap-3 text-[13px]">
                         <div><dt className="text-[var(--color-text-muted)]">Titre</dt><dd className="font-semibold">{title}</dd></div>
-                        <div><dt className="text-[var(--color-text-muted)]">Categorie</dt><dd className="font-semibold">{category}</dd></div>
+                        <div><dt className="text-[var(--color-text-muted)]">Catégorie</dt><dd className="font-semibold">{category}</dd></div>
                         <div><dt className="text-[var(--color-text-muted)]">Localisation</dt><dd className="font-semibold">{city}</dd></div>
                         <div><dt className="text-[var(--color-text-muted)]">Commission</dt><dd className="font-semibold">{estimatedCommission.toLocaleString("fr-FR")} {currency}</dd></div>
                       </dl>
@@ -546,7 +582,7 @@ function DepositListing() {
                   <ArrowLeft size={15} /> Retour
                 </button>
                 <button
-                  onClick={() => setStep((current) => Math.min(steps.length - 1, current + 1))}
+                  onClick={goNext}
                   disabled={step === steps.length - 1}
                   className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-40"
                 >

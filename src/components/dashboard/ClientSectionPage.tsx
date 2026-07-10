@@ -50,7 +50,7 @@ const money = (value: unknown) => {
 export const defaultRenderItem = (item: Record<string, unknown>) => {
   const product = item.product as Record<string, unknown> | undefined;
   const author = item.author as Record<string, unknown> | undefined;
-  const title = text(item.title ?? item.subject ?? product?.title ?? item.code ?? item.reference ?? item.type, "Element");
+  const title = text(item.title ?? item.subject ?? product?.title ?? item.code ?? item.reference ?? item.type, "Élément");
   const status = text(item.status ?? item.kycStatus ?? item.isPublished ?? item.isActive);
   const subtitle = text(
     item.description ?? item.content ?? item.category ?? author?.firstName ?? item.message ?? item.link,
@@ -143,25 +143,25 @@ export function ClientSectionPage({ config }: { config: ClientSectionConfig }) {
                 Statut
               </p>
               <p className="mt-2 text-[14px] font-semibold">
-                {query.isLoading ? "Chargement" : query.isError ? "Erreur API" : "Operationnel"}
+                {query.isLoading ? "Chargement" : query.isError ? "Erreur API" : "Opérationnel"}
               </p>
             </div>
           </div>
 
           {query.isLoading ? (
             <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-8 text-[14px] text-[var(--color-text-muted)]">
-              Chargement des donnees...
+              Chargement des données...
             </div>
           ) : query.isError ? (
             <div className="rounded-[8px] border border-red-100 bg-red-50 p-5 text-[14px] text-red-700">
-              Impossible de charger cette section. Verifiez votre connexion ou reconnectez-vous.
+              Impossible de charger cette section. Vérifiez votre connexion ou reconnectez-vous.
             </div>
           ) : items.length === 0 ? (
             <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-8 text-center">
               <Icon className="mx-auto text-[var(--brand-primary)]" size={34} />
               <h2 className="mt-4 text-[20px] font-bold">{config.emptyLabel}</h2>
               <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-                Cette page est connectee au backend et affichera vos donnees des qu'elles existent.
+                Cette page est connectée au backend et affichera vos données dès qu'elles existent.
               </p>
             </div>
           ) : (

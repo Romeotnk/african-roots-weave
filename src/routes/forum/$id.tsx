@@ -37,11 +37,24 @@ function QuestionDetail() {
     [question.answerItems],
   );
   const [questionVotes, setQuestionVotes] = useState(question.votes);
+  const [answerVotes, setAnswerVotes] = useState<Record<string, number>>({});
   const [followed, setFollowed] = useState(Boolean(question.followed));
   const [reported, setReported] = useState(false);
-  const [acceptedAnswerId, setAcceptedAnswerId] = useState(sortedAnswers.find((answer) => answer.accepted)?.id ?? "");
+  const [reportedAnswerIds, setReportedAnswerIds] = useState<string[]>([]);
+  const [acceptedAnswerId, setAcceptedAnswerId] = useState(sortedAnswers.find((answerItem) => answerItem.accepted)?.id ?? "");
   const [answer, setAnswer] = useState("");
   const [answerSubmitted, setAnswerSubmitted] = useState(false);
+
+  const voteAnswer = (answerId: string, initialVotes: number, delta: number) => {
+    setAnswerVotes((current) => ({
+      ...current,
+      [answerId]: (current[answerId] ?? initialVotes) + delta,
+    }));
+  };
+
+  const reportAnswer = (answerId: string) => {
+    setReportedAnswerIds((current) => (current.includes(answerId) ? current : [...current, answerId]));
+  };
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">
@@ -88,6 +101,7 @@ function QuestionDetail() {
       <section className="container-iwosan grid gap-8 py-8 lg:grid-cols-[88px_1fr_280px]">
         <aside className="flex gap-3 lg:flex-col">
           <button
+            type="button"
             onClick={() => setQuestionVotes((current) => current + 1)}
             className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--brand-border)] bg-white"
             aria-label="Voter pour"
@@ -98,6 +112,7 @@ function QuestionDetail() {
             {questionVotes}
           </div>
           <button
+            type="button"
             onClick={() => setQuestionVotes((current) => current - 1)}
             className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--brand-border)] bg-white"
             aria-label="Voter contre"
@@ -149,6 +164,7 @@ function QuestionDetail() {
             <h2 className="text-[24px] font-bold">{sortedAnswers.length} reponses</h2>
             {sortedAnswers.map((item) => {
               const accepted = acceptedAnswerId === item.id;
+              const itemReported = reportedAnswerIds.includes(item.id);
               return (
                 <article
                   key={item.id}
@@ -158,13 +174,13 @@ function QuestionDetail() {
                 >
                   <div className="flex flex-col gap-4 sm:flex-row">
                     <div className="flex gap-2 sm:flex-col">
-                      <button className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--brand-border)]">
+                      <button type="button" onClick={() => voteAnswer(item.id, item.votes, 1)} className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--brand-border)]" aria-label="Voter pour cette reponse">
                         <ArrowUp size={15} />
                       </button>
                       <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--brand-surface-alt)] text-[13px] font-bold">
-                        {item.votes}
+                        {answerVotes[item.id] ?? item.votes}
                       </span>
-                      <button className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--brand-border)]">
+                      <button type="button" onClick={() => voteAnswer(item.id, item.votes, -1)} className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--brand-border)]" aria-label="Voter contre cette reponse">
                         <ArrowDown size={15} />
                       </button>
                     </div>
@@ -180,16 +196,18 @@ function QuestionDetail() {
                         <strong className="text-[var(--color-text-primary)]">{item.authorName}</strong>
                         <span>{item.authorReputation} pts</span>
                         <span>{formatDate(item.date)}</span>
-                        <button className="inline-flex items-center gap-1 font-semibold">
-                          <Flag size={13} /> Signaler
+                        <button type="button" onClick={() => reportAnswer(item.id)} className="inline-flex items-center gap-1 font-semibold">
+                          <Flag size={13} /> {itemReported ? "Signalee" : "Signaler"}
                         </button>
                         <button
+                          type="button"
                           onClick={() => setAcceptedAnswerId(item.id)}
                           className="inline-flex items-center gap-1 font-semibold text-emerald-700"
                         >
                           <Check size={13} /> Accepter cette reponse
                         </button>
                       </div>
+                      {itemReported && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">Signalement de la reponse enregistre en mock.</p>}
                       {item.comments.length > 0 && (
                         <div className="mt-4 space-y-2 rounded-lg bg-[var(--brand-surface-alt)] p-3">
                           {item.comments.map((comment) => (
@@ -212,18 +230,25 @@ function QuestionDetail() {
             </h2>
             <textarea
               value={answer}
-              onChange={(event) => setAnswer(event.target.value)}
+              onChange={(event) => {
+                setAnswer(event.target.value);
+                setAnswerSubmitted(false);
+              }}
               rows={6}
               placeholder="Redigez une reponse argumentee, prudente et utile..."
               className="mt-4 w-full rounded-lg border border-[var(--brand-border)] px-4 py-3"
             />
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-              <button className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
+              <button type="button" className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
                 <Paperclip size={15} /> Ajouter une image
               </button>
               <button
-                onClick={() => setAnswerSubmitted(true)}
-                disabled={!answer.trim()}
+                type="button"
+                onClick={() => {
+                  setAnswerSubmitted(true);
+                  setAnswer("");
+                }}
+                disabled={answer.trim().length < 20}
                 className="h-10 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white disabled:opacity-50"
               >
                 Publier la reponse
@@ -239,6 +264,7 @@ function QuestionDetail() {
 
         <aside className="h-fit space-y-3 rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
           <button
+            type="button"
             onClick={() => setFollowed((current) => !current)}
             className={`h-11 w-full rounded-full text-[13px] font-semibold ${
               followed ? "bg-[var(--brand-primary)] text-white" : "border border-[var(--brand-border)]"
@@ -247,10 +273,11 @@ function QuestionDetail() {
             {followed ? "Question suivie" : "Suivre"}
           </button>
           <button
+            type="button"
             onClick={() => setReported(true)}
             className="h-11 w-full rounded-full border border-[var(--brand-border)] text-[13px] font-semibold"
           >
-            Signaler
+            {reported ? "Signalee" : "Signaler"}
           </button>
           {reported && <p className="rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">Signalement enregistre en mock.</p>}
           <div className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[12px] text-[var(--color-text-muted)]">

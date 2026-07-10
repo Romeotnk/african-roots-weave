@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Nouveau mot de passe — IWOSAN" }] }),
+  head: () => ({ meta: [{ title: "Nouveau mot de passe - IWOSAN" }] }),
   component: ResetPasswordInfo,
 });
 
@@ -12,9 +12,9 @@ function ResetPasswordInfo() {
         <Link to="/" className="mb-6 block">
           <span className="text-[24px] font-extrabold text-[var(--brand-primary)]">IWOSAN</span>
         </Link>
-        <h1 className="text-[24px] font-bold">Lien de reinitialisation requis</h1>
+        <h1 className="text-[24px] font-bold">Lien de réinitialisation requis</h1>
         <p className="mt-3 text-[14px] leading-6 text-[var(--color-text-muted)]">
-          Pour changer votre mot de passe, ouvrez le lien recu par email ou demandez un nouveau lien.
+          Pour changer votre mot de passe, ouvrez le lien reçu par email ou demandez un nouveau lien.
         </p>
         <Link
           to="/mot-de-passe-oublie"

@@ -22,6 +22,7 @@ function MessagesPage() {
   const [query, setQuery] = useState("");
   const [draft, setDraft] = useState("");
   const [mobileConversationOpen, setMobileConversationOpen] = useState(false);
+  const [actionMessage, setActionMessage] = useState("");
   const conversationsQuery = useQuery({
     queryKey: ["messages", "conversations"],
     queryFn: listConversations,
@@ -110,7 +111,15 @@ function MessagesPage() {
 
   const sendMessage = async () => {
     const content = draft.trim();
-    if (!content || !active) return;
+    if (!active) {
+      setActionMessage("Selectionnez une conversation avant d'envoyer un message.");
+      return;
+    }
+    if (!content) {
+      setActionMessage("Ecrivez un message avant de l'envoyer.");
+      return;
+    }
+
     const nextMessage: ChatMessage = {
       id: `local-${Date.now()}`,
       sender: "me",
@@ -126,23 +135,43 @@ function MessagesPage() {
       ),
     );
     setDraft("");
+    setActionMessage("Message ajoute a la conversation.");
+
     if (authenticated && !active.id.startsWith("conv")) {
-      const sent = await sendSocketMessage(active.id, content);
-      if (sent?.id) {
-        setConversations((current) =>
-          current.map((conversation) =>
-            conversation.id === active.id
-              ? {
-                  ...conversation,
-                  messages: conversation.messages.map((message) =>
-                    message.id === nextMessage.id ? { ...message, id: sent.id, read: Boolean(sent.isRead) } : message,
-                  ),
-                }
-              : conversation,
-          ),
-        );
+      try {
+        const sent = await sendSocketMessage(active.id, content);
+        if (sent?.id) {
+          setConversations((current) =>
+            current.map((conversation) =>
+              conversation.id === active.id
+                ? {
+                    ...conversation,
+                    messages: conversation.messages.map((message) =>
+                      message.id === nextMessage.id ? { ...message, id: sent.id, read: Boolean(sent.isRead) } : message,
+                    ),
+                  }
+                : conversation,
+            ),
+          );
+        }
+      } catch {
+        setActionMessage("Message conserve localement. La synchronisation serveur sera retentee plus tard.");
       }
     }
+  };
+
+  const handleComposerAction = (action: "emoji" | "attachment" | "photo") => {
+    if (action === "emoji") {
+      setDraft((current) => `${current} :)`.trimStart());
+      setActionMessage("Emoji ajoute au message.");
+      return;
+    }
+
+    setActionMessage(
+      action === "attachment"
+        ? "L'ajout de piece jointe sera relie au stockage de fichiers."
+        : "L'ajout de photo sera relie au stockage de fichiers.",
+    );
   };
 
   return (
@@ -164,6 +193,11 @@ function MessagesPage() {
             </div>
             <ScrollArea className="h-[620px]">
               <div className="p-2">
+                {filtered.length === 0 && (
+                  <div className="rounded-[12px] border border-dashed border-[var(--brand-border)] bg-white p-5 text-center text-[13px] text-[var(--color-text-muted)]">
+                    Aucune conversation ne correspond a cette recherche.
+                  </div>
+                )}
                 {filtered.map((conversation) => {
                   const last = conversation.messages.at(-1);
                   return (
@@ -257,11 +291,6 @@ function MessagesPage() {
                       </div>
                     </div>
                   ))}
-                  {active.online && (
-                    <div className="w-fit rounded-full bg-white px-4 py-2 text-[12px] text-[var(--color-text-muted)]">
-                      {active.participantName} est en train d'ecrire...
-                    </div>
-                  )}
                 </div>
               </ScrollArea>
 
@@ -270,10 +299,10 @@ function MessagesPage() {
                   <button className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Emoji">
                     <Laugh size={17} />
                   </button>
-                  <button className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Piece jointe">
+                  <button type="button" onClick={() => handleComposerAction("attachment")} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Piece jointe">
                     <Paperclip size={17} />
                   </button>
-                  <button className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Photo">
+                  <button type="button" onClick={() => handleComposerAction("photo")} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Photo">
                     <Image size={17} />
                   </button>
                   <textarea

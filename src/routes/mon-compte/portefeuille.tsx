@@ -36,18 +36,18 @@ export const Route = createFileRoute("/mon-compte/portefeuille")({
 });
 
 const typeLabels: Record<WalletTransactionType, string> = {
-  deposit: "Depot",
+  deposit: "Dépôt",
   withdrawal: "Retrait",
   payment: "Paiement",
-  reception: "Reception",
+  reception: "Réception",
   refund: "Remboursement",
   commission: "Commission",
 };
 
 const statusLabels: Record<WalletTransactionStatus, string> = {
   pending: "En attente",
-  completed: "Complete",
-  failed: "Echoue",
+  completed: "Complété",
+  failed: "Échoué",
 };
 
 const statusClasses: Record<WalletTransactionStatus, string> = {
@@ -109,7 +109,7 @@ function WalletPage() {
 
   const submitWalletAction = async () => {
     if (dialog === "pin") {
-      closeDialog("PIN enregistre pour cette session.");
+      closeDialog("PIN enregistré pour cette session.");
       return;
     }
 
@@ -122,12 +122,12 @@ function WalletPage() {
     try {
       if (dialog === "deposit") {
         await deposit.mutateAsync({ amount, method: walletForm.method });
-        closeDialog("Depot initialise. Suivez les instructions de paiement recues.");
+        closeDialog("Dépôt initialisé. Suivez les instructions de paiement reçues.");
         return;
       }
       if (dialog === "withdraw") {
         await withdraw.mutateAsync({ amount, destination: walletForm.destination || "Destination principale" });
-        closeDialog("Demande de retrait envoyee a l'administration.");
+        closeDialog("Demande de retrait envoyée à l'administration.");
         return;
       }
       if (dialog === "transfer") {
@@ -136,7 +136,7 @@ function WalletPage() {
           return;
         }
         await transfer.mutateAsync({ amount, receiver: walletForm.receiver.trim() });
-        closeDialog("Transfert effectue.");
+        closeDialog("Transfert effectué.");
       }
     } catch (error) {
       setActionMessage(error instanceof Error ? error.message : "Action portefeuille impossible.");
@@ -176,7 +176,7 @@ function WalletPage() {
           </p>
           <h1 className="mt-2 text-[32px] md:text-[42px]">Portefeuille Iwosan</h1>
           <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-            Solde, transactions, depot, retrait et transfert lies a votre compte connecte.
+            Solde, transactions, dépôt, retrait et transfert liés à votre compte connecté.
           </p>
         </div>
       </section>
@@ -196,19 +196,19 @@ function WalletPage() {
                   <Info size={14} /> En attente escrow: {displayedSummary.pending.toLocaleString("fr-FR")} FCFA
                 </span>
                 <span className="rounded-full bg-white/10 px-3 py-1">
-                  Total gagne: {displayedSummary.lifetime.toLocaleString("fr-FR")} FCFA
+                  Total gagné : {displayedSummary.lifetime.toLocaleString("fr-FR")} FCFA
                 </span>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2">
               <button onClick={() => setDialog("deposit")} className="rounded-[12px] bg-white px-4 py-3 text-[13px] font-bold text-[var(--brand-primary)]">
-                <ArrowDownToLine className="mx-auto mb-1" size={18} /> Deposer
+                <ArrowDownToLine className="mx-auto mb-1" size={18} /> Déposer
               </button>
               <button onClick={() => setDialog("withdraw")} className="rounded-[12px] bg-white/10 px-4 py-3 text-[13px] font-bold">
                 <ArrowUpFromLine className="mx-auto mb-1" size={18} /> Retirer
               </button>
               <button onClick={() => setDialog("transfer")} className="rounded-[12px] bg-white/10 px-4 py-3 text-[13px] font-bold">
-                <Send className="mx-auto mb-1" size={18} /> Transferer
+                <Send className="mx-auto mb-1" size={18} /> Transférer
               </button>
             </div>
           </div>
@@ -232,7 +232,7 @@ function WalletPage() {
                   ))}
                 </select>
                 <select value={periodFilter} onChange={(event) => setPeriodFilter(event.target.value)} className="h-10 rounded-full border border-[var(--brand-border)] bg-white px-3 text-[13px]">
-                  <option value="all">Toute periode</option>
+                  <option value="all">Toute période</option>
                   <option value="week">7 jours</option>
                   <option value="month">30 jours</option>
                 </select>
@@ -242,12 +242,18 @@ function WalletPage() {
                     <option key={value} value={value}>{label}</option>
                   ))}
                 </select>
+                {(typeFilter !== "all" || periodFilter !== "all" || statusFilter !== "all") && (
+                  <button onClick={() => { setTypeFilter("all"); setPeriodFilter("all"); setStatusFilter("all"); }} className="h-10 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">Reinitialiser</button>
+                )}
                 <button onClick={exportCsv} className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white">
                   <Download size={15} /> CSV
                 </button>
               </div>
             </div>
             <div className="divide-y divide-[var(--brand-border-light)]">
+              {filteredTransactions.length === 0 && (
+                <div className="p-8 text-center text-[13px] text-[var(--color-text-muted)]">Aucune transaction ne correspond aux filtres.</div>
+              )}
               {filteredTransactions.map((transaction) => (
                 <article key={transaction.id} className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-3">
@@ -279,7 +285,7 @@ function WalletPage() {
               <div className="flex items-center gap-3">
                 <ShieldCheck className="text-[var(--brand-primary)]" size={24} />
                 <div>
-                  <h2 className="font-bold">Securite du portefeuille</h2>
+              <h2 className="font-bold">Sécurité du portefeuille</h2>
                   <p className="text-[12px] text-[var(--color-text-muted)]">PIN requis pour les actions sensibles.</p>
                 </div>
               </div>
@@ -288,7 +294,7 @@ function WalletPage() {
               </button>
             </div>
             <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5 text-[13px] text-[var(--color-text-secondary)]">
-              Les fonds sous escrow sont affiches en attente jusqu'a confirmation de reception par l'acheteur.
+              Les fonds sous escrow sont affichés en attente jusqu'à confirmation de réception par l'acheteur.
             </div>
           </aside>
         </div>
@@ -330,11 +336,11 @@ function WalletActionDialog({
 }) {
   const title =
     dialog === "deposit"
-      ? "Deposer des fonds"
+      ? "Déposer des fonds"
       : dialog === "withdraw"
         ? "Retirer des fonds"
         : dialog === "transfer"
-          ? "Transferer"
+          ? "Transférer"
           : "Configurer le PIN";
 
   return (
@@ -342,7 +348,7 @@ function WalletActionDialog({
       <DialogContent className="max-w-xl bg-white">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>Les actions sont envoyees au backend IWOSAN du compte connecte.</DialogDescription>
+          <DialogDescription>Les actions sont envoyées au backend IWOSAN du compte connecté.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           {dialog === "deposit" && (
@@ -363,16 +369,16 @@ function WalletActionDialog({
                 <option value="mobile_money">Mobile money</option>
                 <option value="card">Carte bancaire</option>
               </select>
-              <p className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">Confirmez ensuite la demande USSD sur votre telephone.</p>
+              <p className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">Confirmez ensuite la demande USSD sur votre téléphone.</p>
             </>
           )}
           {dialog === "withdraw" && (
             <>
-              <p className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">Solde disponible: {walletSummary.available.toLocaleString("fr-FR")} FCFA</p>
+              <p className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">Solde disponible : {walletSummary.available.toLocaleString("fr-FR")} FCFA</p>
               <input
                 type="number"
                 min="1"
-                placeholder="Montant a retirer"
+                placeholder="Montant à retirer"
                 value={walletForm.amount}
                 onChange={(event) => setWalletForm({ ...walletForm, amount: event.target.value })}
                 className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4"
@@ -383,7 +389,7 @@ function WalletActionDialog({
                 onChange={(event) => setWalletForm({ ...walletForm, destination: event.target.value })}
                 className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4"
               />
-              <p className="text-[13px] text-[var(--color-text-muted)]">Delai estime: 1-3 jours ouvrables.</p>
+              <p className="text-[13px] text-[var(--color-text-muted)]">Délai estimé : 1-3 jours ouvrables.</p>
             </>
           )}
           {dialog === "transfer" && (
@@ -416,10 +422,10 @@ function WalletActionDialog({
           </div>
           <button
             onClick={onConfirm}
-            disabled={isPending}
+            disabled={isPending || !dialog || pin.length !== 6}
             className="h-11 w-full rounded-full bg-[var(--brand-primary)] font-semibold text-white disabled:opacity-70"
           >
-            {isPending ? "Traitement..." : "Confirmer"}
+            {isPending ? "Traitement..." : pin.length !== 6 ? "PIN requis" : "Confirmer"}
           </button>
         </div>
       </DialogContent>

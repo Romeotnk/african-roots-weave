@@ -94,7 +94,7 @@ export function PractitionerAvatar({
                 type="button"
                 onClick={() => setLightboxIndex((lightboxIndex - 1 + images.length) % images.length)}
                 className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-[24px] font-bold text-white backdrop-blur transition hover:bg-white/20"
-                aria-label="Image precedente"
+                aria-label="Image précédente"
               >
                 ‹
               </button>

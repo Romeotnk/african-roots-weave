@@ -66,7 +66,7 @@ function ProDashboard() {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="font-bold">{booking.patientName}</p>
-                      <p className="text-[13px] text-[var(--color-text-muted)]">{booking.date} a {booking.time} - {booking.mode === "online" ? "En ligne" : "Presentiel"}</p>
+                      <p className="text-[13px] text-[var(--color-text-muted)]">{booking.date} à {booking.time} - {booking.mode === "online" ? "En ligne" : "Présentiel"}</p>
                       <p className="mt-1 text-[13px]">{booking.reason}</p>
                     </div>
                     <span className="rounded-full bg-[var(--brand-primary-subtle)] px-3 py-1 text-[11px] font-bold text-[var(--brand-primary)]">{booking.status}</span>
@@ -74,7 +74,7 @@ function ProDashboard() {
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button className="h-9 rounded-full bg-[var(--brand-primary)] px-4 text-[12px] font-semibold text-white">Confirmer</button>
                     <button className="h-9 rounded-full border border-[var(--brand-border)] px-4 text-[12px] font-semibold">Annuler</button>
-                    <button className="h-9 rounded-full border border-[var(--brand-border)] px-4 text-[12px] font-semibold">Marquer effectuee</button>
+                    <button className="h-9 rounded-full border border-[var(--brand-border)] px-4 text-[12px] font-semibold">Marquer effectuée</button>
                   </div>
                 </article>
               ))}
@@ -83,7 +83,7 @@ function ProDashboard() {
           </div>
 
           <aside className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="text-[20px] font-bold">Avis recus</h2>
+            <h2 className="text-[20px] font-bold">Avis reçus</h2>
             <div className="mt-4 space-y-4">
               {proReviews.map((review) => (
                 <article key={review.id} className="rounded-lg bg-[var(--brand-surface-alt)] p-4">
@@ -93,15 +93,15 @@ function ProDashboard() {
                   </div>
                   <p className="mt-2 text-[13px] text-[var(--color-text-secondary)]">{review.comment}</p>
                   {review.response ? (
-                    <p className="mt-3 rounded-lg bg-white p-3 text-[12px]">Reponse: {review.response}</p>
+                    <p className="mt-3 rounded-lg bg-white p-3 text-[12px]">Réponse : {review.response}</p>
                   ) : (
-                    <button className="mt-3 h-8 rounded-full border border-[var(--brand-border)] px-3 text-[12px] font-semibold">Repondre</button>
+                    <button className="mt-3 h-8 rounded-full border border-[var(--brand-border)] px-3 text-[12px] font-semibold">Répondre</button>
                   )}
                 </article>
               ))}
             </div>
             <div className="mt-5 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-[13px] text-emerald-800">
-              <CheckCircle2 size={15} className="inline" /> Tous les avis restent moderes avant publication.
+              <CheckCircle2 size={15} className="inline" /> Tous les avis restent modérés avant publication.
             </div>
           </aside>
         </div>

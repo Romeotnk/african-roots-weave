@@ -26,9 +26,9 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { apiRequest, authTokenStore } from "@/lib/api/client";
 
 export const Route = createFileRoute("/tableau-de-bord")({
-  head: () => ({ meta: [{ title: "Tableau de bord — IWOSAN" }] }),
+  head: () => ({ meta: [{ title: "Tableau de bord - IWOSAN" }] }),
   component: () => (
-    <ProtectedRoute>
+    <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
       <Dashboard />
     </ProtectedRoute>
   ),
@@ -52,22 +52,22 @@ const groups = [
     title: "Profil",
     items: [
       { icon: User, label: "Mon profil", to: "/tableau-de-bord/profil" },
-      { icon: Star, label: "Avis reçus", to: "/tableau-de-bord/avis" },
+      { icon: Star, label: "Avis reÃƒÂ§us", to: "/tableau-de-bord/avis" },
       { icon: FileText, label: "Mon blog", to: "/tableau-de-bord/blog" },
     ],
   },
   {
-    title: "Communauté",
+    title: "CommunautÃƒÂ©",
     items: [
       { icon: MessageSquare, label: "Mes questions", to: "/tableau-de-bord/questions" },
       { icon: GraduationCap, label: "Mes formations", to: "/tableau-de-bord/formations" },
-      { icon: Calendar, label: "Mes événements", to: "/tableau-de-bord/evenements" },
+      { icon: Calendar, label: "Mes ÃƒÂ©vÃƒÂ©nements", to: "/tableau-de-bord/evenements" },
     ],
   },
   {
-    title: "Réseau",
+    title: "RÃƒÂ©seau",
     items: [
-      { icon: Users, label: "Mon réseau", to: "/tableau-de-bord/reseau" },
+      { icon: Users, label: "Mon rÃƒÂ©seau", to: "/tableau-de-bord/reseau" },
       { icon: Users, label: "Affiliations", to: "/mon-compte/affiliation" },
       { icon: Wallet, label: "Commissions", to: "/tableau-de-bord/commissions" },
     ],
@@ -75,10 +75,10 @@ const groups = [
   {
     title: "Compte",
     items: [
-      { icon: Settings, label: "Paramètres", to: "/tableau-de-bord/parametres" },
+      { icon: Settings, label: "ParamÃƒÂ¨tres", to: "/tableau-de-bord/parametres" },
       { icon: Bell, label: "Notifications", to: "/mon-compte/notifications" },
       { icon: ShieldCheck, label: "KYC", to: "/mon-compte/kyc" },
-      { icon: LogOut, label: "Déconnexion" },
+      { icon: LogOut, label: "DÃƒÂ©connexion" },
     ],
   },
 ];
@@ -86,7 +86,7 @@ const groups = [
 const stats = [
   { label: "Revenus du mois", value: "248 500 FCFA", trend: "+18%", up: true },
   { label: "Commandes actives", value: "14", trend: "+3", up: true },
-  { label: "Produits publiés", value: "27", trend: "0", up: true },
+  { label: "Produits publiÃƒÂ©s", value: "27", trend: "0", up: true },
   { label: "Messages non lus", value: "8", trend: "-2", up: false },
 ];
 
@@ -97,16 +97,16 @@ const orders = [
     buyer: "Awa D.",
     date: "08/06",
     amount: "8 500",
-    status: "Expédiée",
+    status: "ExpÃƒÂ©diÃƒÂ©e",
     color: "bg-blue-50 text-blue-700",
   },
   {
     id: "#10247",
-    product: "Beurre de karité 250g",
+    product: "Beurre de karitÃƒÂ© 250g",
     buyer: "Marc L.",
     date: "07/06",
     amount: "6 500",
-    status: "Livrée",
+    status: "LivrÃƒÂ©e",
     color: "bg-green-50 text-green-700",
   },
   {
@@ -124,7 +124,7 @@ const orders = [
     buyer: "Issa K.",
     date: "05/06",
     amount: "12 000",
-    status: "Livrée",
+    status: "LivrÃƒÂ©e",
     color: "bg-green-50 text-green-700",
   },
 ];
@@ -158,29 +158,25 @@ function Dashboard() {
     retry: false,
   });
 
-  const fallbackName = (user?.user_metadata?.first_name as string) || user?.email?.split("@")[0] || "Invité";
+  const fallbackName = (user?.user_metadata?.first_name as string) || user?.email?.split("@")[0] || "InvitÃƒÂ©";
   const displayName = profile
     ? `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim() || fallbackName
     : fallbackName;
   const firstName = displayName.split(" ")[0] || "cher utilisateur";
   const roleLabel = roles.includes("admin")
     ? "Admin"
-    : roles.includes("professional")
-      ? "Praticien"
-      : roles.includes("researcher")
-        ? "Chercheur"
-        : profile?.role === "PROFESSIONAL"
-          ? "Praticien"
-          : profile?.role === "RESEARCHER"
-            ? "Chercheur"
-            : "Utilisateur";
-  const accountStatus = profile?.isBanned ? "Bloqué" : profile?.isActive ? "Actif" : "Inactif";
+    : roles.includes("professional") || roles.includes("researcher")
+      ? "Professionnel"
+        : profile?.role === "PROFESSIONAL" || profile?.role === "RESEARCHER"
+          ? "Professionnel"
+          : "Utilisateur";
+  const accountStatus = profile?.isBanned ? "BloquÃƒÂ©" : profile?.isActive ? "Actif" : "Inactif";
   const joinedAt = profile?.createdAt
     ? new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(profile.createdAt))
-    : "À définir";
+    : "Ãƒâ‚¬ dÃƒÂ©finir";
   const lastLoginAt = profile?.lastLoginAt
     ? new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(profile.lastLoginAt))
-    : "À définir";
+    : "Ãƒâ‚¬ dÃƒÂ©finir";
 
   const handleLogout = async () => {
     await signOut();
@@ -220,7 +216,7 @@ function Dashboard() {
               </h4>
               <ul className="space-y-0.5">
                 {g.items.map((it) => {
-                  const isLogout = it.label === "Déconnexion";
+                  const isLogout = it.label === "DÃƒÂ©connexion";
                   const itemClassName = `w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-md text-[14px] cursor-pointer transition active:scale-[0.98] ${"active" in it && it.active ? "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)] font-semibold border-l-[3px] border-[var(--brand-primary)] -ml-3 pl-[14px]" : isLogout ? "text-red-600 hover:bg-red-50" : "text-[var(--color-text-secondary)] hover:bg-[var(--brand-surface-alt)]"}`;
                   const to = "to" in it ? it.to : undefined;
                   return (
@@ -246,8 +242,8 @@ function Dashboard() {
       <div className="flex-1 min-w-0">
         <header className="bg-white border-b border-[var(--brand-border-light)] px-5 md:px-8 h-[72px] flex items-center justify-between">
           <div>
-            <h1 className="text-[20px] md:text-[24px] font-bold">Bonjour, {firstName} 👋</h1>
-            <p className="text-[12px] text-[var(--color-text-muted)]">{profile?.email ?? user?.email ?? "Compte connecté"}</p>
+            <h1 className="text-[20px] md:text-[24px] font-bold">Bonjour, {firstName} Ã°Å¸â€˜â€¹</h1>
+            <p className="text-[12px] text-[var(--color-text-muted)]">{profile?.email ?? user?.email ?? "Compte connectÃƒÂ©"}</p>
           </div>
           <button className="relative w-10 h-10 rounded-full hover:bg-[var(--brand-surface-alt)] flex items-center justify-center">
             <Bell size={18} />
@@ -260,14 +256,14 @@ function Dashboard() {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">
-                  Profil connecté
+                  Profil connectÃƒÂ©
                 </p>
                 <h2 className="mt-1 text-[20px] font-bold text-[var(--color-text-primary)]">{displayName}</h2>
-                <p className="mt-1 text-[13px] text-[var(--color-text-secondary)]">{profile?.email ?? user?.email ?? "—"}</p>
+                <p className="mt-1 text-[13px] text-[var(--color-text-secondary)]">{profile?.email ?? user?.email ?? "Ã¢â‚¬â€"}</p>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-[12px] bg-[var(--brand-surface-alt)] px-3 py-2">
-                  <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-muted)]">Rôle</p>
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-muted)]">RÃƒÂ´le</p>
                   <p className="mt-1 text-[13px] font-semibold">{roleLabel}</p>
                 </div>
                 <div className="rounded-[12px] bg-[var(--brand-surface-alt)] px-3 py-2">
@@ -276,13 +272,13 @@ function Dashboard() {
                 </div>
                 <div className="rounded-[12px] bg-[var(--brand-surface-alt)] px-3 py-2">
                   <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-muted)]">KYC</p>
-                  <p className="mt-1 text-[13px] font-semibold">{profile?.kycStatus ?? "NON_DÉMARRÉ"}</p>
+                  <p className="mt-1 text-[13px] font-semibold">{profile?.kycStatus ?? "NON_DÃƒâ€°MARRÃƒâ€°"}</p>
                 </div>
               </div>
             </div>
             <div className="mt-4 flex flex-wrap gap-4 border-t border-[var(--brand-border-light)] pt-4 text-[12px] text-[var(--color-text-muted)]">
               <span>Inscrit le {joinedAt}</span>
-              <span>Dernière connexion {lastLoginAt}</span>
+              <span>DerniÃƒÂ¨re connexion {lastLoginAt}</span>
             </div>
           </div>
 
@@ -321,17 +317,20 @@ function Dashboard() {
             >
               Gerer mes annonces
             </Link>
-            <button className="bg-white border border-[var(--brand-border)] rounded-[12px] p-4 font-semibold text-left hover:border-[var(--brand-primary)] transition">
+            <Link
+              to="/messages"
+              className="bg-white border border-[var(--brand-border)] rounded-[12px] p-4 font-semibold text-left hover:border-[var(--brand-primary)] transition"
+            >
               Voir mes messages
-            </button>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white rounded-[12px] border border-[var(--brand-border-light)] overflow-hidden">
               <div className="px-5 py-4 border-b border-[var(--brand-border-light)] flex items-center justify-between">
-                <h3 className="font-bold text-[15px]">Commandes récentes</h3>
+                <h3 className="font-bold text-[15px]">Commandes rÃƒÂ©centes</h3>
                 <a className="text-[12px] font-semibold text-[var(--brand-primary)] cursor-pointer">
-                  Tout voir →
+                  Tout voir Ã¢â€ â€™
                 </a>
               </div>
               <div className="overflow-x-auto">
@@ -368,9 +367,9 @@ function Dashboard() {
 
             <div className="bg-white rounded-[12px] border border-[var(--brand-border-light)] overflow-hidden">
               <div className="px-5 py-4 border-b border-[var(--brand-border-light)] flex items-center justify-between">
-                <h3 className="font-bold text-[15px]">Messages récents</h3>
+                <h3 className="font-bold text-[15px]">Messages rÃƒÂ©cents</h3>
                 <a className="text-[12px] font-semibold text-[var(--brand-primary)] cursor-pointer">
-                  Tout voir →
+                  Tout voir Ã¢â€ â€™
                 </a>
               </div>
               <ul>
@@ -390,7 +389,7 @@ function Dashboard() {
                     "Je souhaiterais reporter mon rendez-vous de jeudi",
                     "il y a 3h",
                   ],
-                  ["Issa K.", "L'ebook est-il téléchargeable plusieurs fois ?", "hier"],
+                  ["Issa K.", "L'ebook est-il tÃƒÂ©lÃƒÂ©chargeable plusieurs fois ?", "hier"],
                 ].map(([n, m, t]) => (
                   <li
                     key={n}

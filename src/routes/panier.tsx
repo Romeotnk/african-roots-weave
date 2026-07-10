@@ -10,7 +10,7 @@ export const Route = createFileRoute("/panier")({
 });
 
 function CartPage() {
-  const { items, subtotal, discount, serviceFee, total, coupon, updateQuantity, removeItem, applyCoupon } = useCart();
+  const { items, subtotal, discount, serviceFee, total, coupon, updateQuantity, removeItem, applyCoupon, clearCart } = useCart();
   const [couponInput, setCouponInput] = useState(coupon);
   const [couponMessage, setCouponMessage] = useState("");
   const validateCoupon = useValidateCoupon();
@@ -73,17 +73,17 @@ function CartPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="grid h-9 w-9 place-items-center rounded-full border border-[var(--brand-border)]">
+                    <button type="button" onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="grid h-9 w-9 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Diminuer la quantite">
                       <Minus size={15} />
                     </button>
                     <span className="w-8 text-center font-bold">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="grid h-9 w-9 place-items-center rounded-full border border-[var(--brand-border)]">
+                    <button type="button" onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="grid h-9 w-9 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Augmenter la quantite">
                       <Plus size={15} />
                     </button>
                   </div>
                   <div className="text-right">
                     <p className="font-bold">{(item.product.price * item.quantity).toLocaleString("fr-FR")} {item.product.currency}</p>
-                    <button onClick={() => removeItem(item.product.id)} className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-red-600">
+                    <button type="button" onClick={() => removeItem(item.product.id)} className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-red-600">
                       <Trash2 size={14} /> Supprimer
                     </button>
                   </div>
@@ -92,10 +92,16 @@ function CartPage() {
             </div>
 
             <aside className="h-fit rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-              <h2 className="font-bold">Recapitulatif</h2>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="font-bold">Recapitulatif</h2>
+                <button type="button" onClick={clearCart} className="text-[12px] font-semibold text-red-600">
+                  Vider
+                </button>
+              </div>
               <div className="mt-4 flex gap-2">
                 <input value={couponInput} onChange={(event) => setCouponInput(event.target.value)} placeholder="Code coupon" className="h-10 min-w-0 flex-1 rounded-lg border border-[var(--brand-border)] px-3" />
                 <button
+                  type="button"
                   onClick={handleApplyCoupon}
                   disabled={validateCoupon.isPending}
                   className="h-10 rounded-lg bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-60"
@@ -112,7 +118,7 @@ function CartPage() {
                 <div className="flex justify-between border-t border-[var(--brand-border-light)] pt-3 text-[18px] font-extrabold"><dt>Total</dt><dd>{total.toLocaleString("fr-FR")} FCFA</dd></div>
               </dl>
               <Link to="/checkout" className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-full bg-[var(--brand-primary)] font-semibold text-white">
-                Passer au checkout
+                Valider mon panier
               </Link>
             </aside>
           </div>

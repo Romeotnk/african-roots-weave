@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { resetPassword } from "@/lib/api/auth";
 
 export const Route = createFileRoute("/reset-password/$token")({
-  head: () => ({ meta: [{ title: "Nouveau mot de passe — IWOSAN" }] }),
+  head: () => ({ meta: [{ title: "Nouveau mot de passe - IWOSAN" }] }),
   component: ResetPasswordWithToken,
 });
 
@@ -12,6 +13,8 @@ function ResetPasswordWithToken() {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,7 +24,7 @@ function ResetPasswordWithToken() {
     setError(null);
 
     if (password.length < 8) {
-      setError("Au moins 8 caracteres.");
+      setError("Le mot de passe doit contenir au moins 8 caractères.");
       return;
     }
 
@@ -36,7 +39,7 @@ function ResetPasswordWithToken() {
       setDone(true);
       window.setTimeout(() => navigate({ to: "/connexion" }), 1800);
     } catch (apiError) {
-      setError(apiError instanceof Error ? apiError.message : "Lien invalide ou expire.");
+      setError(apiError instanceof Error ? apiError.message : "Lien invalide ou expiré.");
     } finally {
       setLoading(false);
     }
@@ -51,27 +54,47 @@ function ResetPasswordWithToken() {
         <h1 className="text-center text-[24px] font-bold">Nouveau mot de passe</h1>
         {done ? (
           <p className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-center text-[13px] text-emerald-700">
-            Mot de passe mis a jour. Redirection...
+            Mot de passe mis à jour. Redirection...
           </p>
         ) : (
           <form onSubmit={submit} className="mt-6 space-y-4">
-            <input
-              type="password"
-              placeholder="Nouveau mot de passe"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              minLength={8}
-              className="h-12 w-full rounded-lg border border-[var(--brand-border)] bg-[var(--color-surface)] px-4 outline-none focus:border-[var(--brand-primary)]"
-            />
-            <input
-              type="password"
-              placeholder="Confirmer"
-              value={confirm}
-              onChange={(event) => setConfirm(event.target.value)}
-              required
-              className="h-12 w-full rounded-lg border border-[var(--brand-border)] bg-[var(--color-surface)] px-4 outline-none focus:border-[var(--brand-primary)]"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Nouveau mot de passe"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+                minLength={8}
+                className="h-12 w-full rounded-lg border border-[var(--brand-border)] bg-[var(--color-surface)] px-4 pr-11 outline-none focus:border-[var(--brand-primary)]"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((current) => !current)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
+                aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                type={showConfirm ? "text" : "password"}
+                placeholder="Confirmer"
+                value={confirm}
+                onChange={(event) => setConfirm(event.target.value)}
+                required
+                className="h-12 w-full rounded-lg border border-[var(--brand-border)] bg-[var(--color-surface)] px-4 pr-11 outline-none focus:border-[var(--brand-primary)]"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm((current) => !current)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
+                aria-label={showConfirm ? "Masquer la confirmation du mot de passe" : "Afficher la confirmation du mot de passe"}
+              >
+                {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             {error && (
               <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">
                 {error}
@@ -81,7 +104,7 @@ function ResetPasswordWithToken() {
               disabled={loading}
               className="h-12 w-full rounded-full bg-[var(--brand-primary)] font-semibold text-white transition hover:bg-[var(--brand-primary-dark)] disabled:opacity-70"
             >
-              {loading ? "Mise a jour..." : "Mettre a jour"}
+              {loading ? "Mise à jour..." : "Mettre à jour"}
             </button>
           </form>
         )}

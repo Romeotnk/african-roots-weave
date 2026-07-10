@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Camera, KeyRound, Save, User } from "lucide-react";
+import { Camera, Eye, EyeOff, KeyRound, Save, User } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import { apiRequest } from "@/lib/api/client";
@@ -18,6 +18,16 @@ type ProfileForm = {
   country: string;
   language: "fr" | "en" | "ar";
   avatarUrl: string;
+};
+
+const isValidUrl = (value: string) => {
+  if (!value.trim()) return true;
+  try {
+    const url = new URL(value.trim());
+    return ["http:", "https:"].includes(url.protocol);
+  } catch {
+    return false;
+  }
 };
 
 function ProfilePage() {
@@ -60,9 +70,9 @@ function ProfilePage() {
   const profileMutation = useMutation({
     mutationFn: () =>
       updateMe({
-        firstName: form.firstName,
-        lastName: form.lastName,
-        country: form.country,
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        country: form.country.trim(),
         language: form.language,
         avatarUrl: form.avatarUrl.trim() || null,
       }),
@@ -89,16 +99,39 @@ function ProfilePage() {
   const submitProfile = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setProfileMessage("");
+
+    if (form.firstName.trim().length < 2 || form.lastName.trim().length < 2) {
+      setProfileMessage("Renseignez un prenom et un nom d'au moins 2 caracteres.");
+      return;
+    }
+
+    if (!isValidUrl(form.avatarUrl)) {
+      setProfileMessage("L'URL de la photo doit commencer par http:// ou https://.");
+      return;
+    }
+
     profileMutation.mutate();
   };
 
   const submitPassword = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setPasswordMessage("");
+
+    if (!passwords.currentPassword) {
+      setPasswordMessage("Saisissez votre mot de passe actuel.");
+      return;
+    }
+
+    if (passwords.password.length < 8) {
+      setPasswordMessage("Le nouveau mot de passe doit contenir au moins 8 caracteres.");
+      return;
+    }
+
     if (passwords.password !== passwords.confirmPassword) {
       setPasswordMessage("Les deux nouveaux mots de passe ne correspondent pas.");
       return;
     }
+
     passwordMutation.mutate();
   };
 
@@ -110,9 +143,7 @@ function ProfilePage() {
             <AccountBackLink />
             <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
-                <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">
-                  Profil
-                </p>
+                <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Profil</p>
                 <h1 className="mt-2 text-[32px] md:text-[42px]">Mon profil</h1>
                 <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
                   Identite, photo de compte et securite du compte connecte.
@@ -127,9 +158,7 @@ function ProfilePage() {
                   )}
                 </div>
                 <div>
-                  <p className="text-[14px] font-bold">
-                    {form.firstName} {form.lastName}
-                  </p>
+                  <p className="text-[14px] font-bold">{form.firstName || "Prenom"} {form.lastName || "Nom"}</p>
                   <p className="text-[12px] text-[var(--color-text-muted)]">{profileQuery.data?.role ?? "Compte"}</p>
                 </div>
               </div>
@@ -201,21 +230,18 @@ function ProfilePage() {
             </div>
 
             <div className="mt-5 grid gap-4">
-              <Field
+              <PasswordField
                 label="Mot de passe actuel"
-                type="password"
                 value={passwords.currentPassword}
                 onChange={(currentPassword) => setPasswords((current) => ({ ...current, currentPassword }))}
               />
-              <Field
+              <PasswordField
                 label="Nouveau mot de passe"
-                type="password"
                 value={passwords.password}
                 onChange={(password) => setPasswords((current) => ({ ...current, password }))}
               />
-              <Field
+              <PasswordField
                 label="Confirmer"
-                type="password"
                 value={passwords.confirmPassword}
                 onChange={(confirmPassword) => setPasswords((current) => ({ ...current, confirmPassword }))}
               />
@@ -265,6 +291,33 @@ function Field({
         onChange={(event) => onChange(event.target.value)}
         className="h-11 rounded-[8px] border border-[var(--brand-border-light)] px-3 text-[14px] text-[var(--color-text-primary)] outline-none focus:border-[var(--brand-primary)]"
       />
+    </label>
+  );
+}
+
+function PasswordField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  const [visible, setVisible] = useState(false);
+  const Icon = visible ? EyeOff : Eye;
+
+  return (
+    <label className="grid gap-2 text-[13px] font-semibold text-[var(--color-text-secondary)]">
+      {label}
+      <span className="flex h-11 items-center rounded-[8px] border border-[var(--brand-border-light)] bg-white focus-within:border-[var(--brand-primary)]">
+        <input
+          type={visible ? "text" : "password"}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="min-w-0 flex-1 bg-transparent px-3 text-[14px] text-[var(--color-text-primary)] outline-none"
+        />
+        <button
+          type="button"
+          onClick={() => setVisible((current) => !current)}
+          className="grid h-10 w-10 place-items-center text-[var(--color-text-muted)]"
+          aria-label={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+        >
+          <Icon size={17} />
+        </button>
+      </span>
     </label>
   );
 }

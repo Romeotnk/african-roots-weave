@@ -18,6 +18,8 @@ function NewQuestion() {
   const [tags, setTags] = useState<string[]>(["pharmacopee"]);
   const [draftTag, setDraftTag] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
+  const [formError, setFormError] = useState("");
   const debouncedTitle = useDebounce(title, 300);
 
   const similarQuestions = useMemo(() => {
@@ -34,6 +36,32 @@ function NewQuestion() {
     if (!clean || tags.includes(clean)) return;
     setTags((current) => [...current, clean].slice(0, 6));
     setDraftTag("");
+    setDraftSaved(false);
+  };
+
+  const saveDraft = () => {
+    window.localStorage.setItem("iwosan.forumDraft", JSON.stringify({ title, body, category, tags }));
+    setDraftSaved(true);
+    setFormError("");
+  };
+
+  const submitQuestion = () => {
+    if (title.trim().length < 12) {
+      setFormError("Le titre doit contenir au moins 12 caracteres.");
+      return;
+    }
+    if (body.trim().length < 40) {
+      setFormError("Ajoutez plus de contexte dans le corps de la question.");
+      return;
+    }
+    if (tags.length === 0) {
+      setFormError("Ajoutez au moins un tag.");
+      return;
+    }
+
+    setFormError("");
+    setSubmitted(true);
+    setDraftSaved(false);
   };
 
   return (
@@ -45,7 +73,7 @@ function NewQuestion() {
           </Link>
           <h1 className="mt-4 text-[34px] md:text-[46px]">Poser une question</h1>
           <p className="mt-3 max-w-2xl text-[var(--color-text-secondary)]">
-            Formulaire mock avec detection de doublons, categorie, tags, editeur simple et pieces jointes.
+            Formulaire avec detection de doublons, categorie, tags, brouillon local et validation avant publication.
           </p>
         </div>
       </section>
@@ -54,15 +82,21 @@ function NewQuestion() {
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            setSubmitted(true);
+            submitQuestion();
           }}
           className="space-y-5"
         >
+          {formError && <p className="rounded-[12px] bg-red-50 p-4 text-[13px] font-semibold text-red-700">{formError}</p>}
+
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
             <label className="mb-2 block text-[13px] font-bold">Titre</label>
             <input
               value={title}
-              onChange={(event) => setTitle(event.target.value)}
+              onChange={(event) => {
+                setTitle(event.target.value);
+                setSubmitted(false);
+                setDraftSaved(false);
+              }}
               maxLength={160}
               placeholder="Ex. Quelle posologie de kinkeliba pour un adulte ?"
               className="h-12 w-full rounded-lg border border-[var(--brand-border)] px-4"
@@ -94,11 +128,19 @@ function NewQuestion() {
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
             <label className="mb-2 block text-[13px] font-bold">Corps de la question</label>
             <div className="mb-3 flex flex-wrap gap-2">
-              {[Bold, Italic, List, Code, Image].map((Icon, index) => (
+              {[
+                { icon: Bold, label: "Gras" },
+                { icon: Italic, label: "Italique" },
+                { icon: List, label: "Liste" },
+                { icon: Code, label: "Code" },
+                { icon: Image, label: "Image" },
+              ].map(({ icon: Icon, label }) => (
                 <button
-                  key={index}
+                  key={label}
                   type="button"
                   className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--brand-border)]"
+                  aria-label={label}
+                  title={label}
                 >
                   <Icon size={16} />
                 </button>
@@ -106,14 +148,19 @@ function NewQuestion() {
             </div>
             <textarea
               value={body}
-              onChange={(event) => setBody(event.target.value)}
+              onChange={(event) => {
+                setBody(event.target.value);
+                setSubmitted(false);
+                setDraftSaved(false);
+              }}
               rows={10}
               placeholder="Contexte, age, pays, preparation utilisee, precautions deja prises..."
               className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3"
             />
-            <p className="mt-2 text-[12px] text-[var(--color-text-muted)]">
-              TipTap sera branche plus tard si necessaire. Ici, l'editeur simple couvre le flux UI.
-            </p>
+            <div className="mt-2 flex justify-between text-[12px] text-[var(--color-text-muted)]">
+              <span>Donnez assez de contexte pour recevoir une reponse utile.</span>
+              <span>{body.trim().length} caracteres</span>
+            </div>
           </div>
 
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
@@ -190,7 +237,7 @@ function NewQuestion() {
               <Paperclip size={24} className="text-[var(--brand-primary)]" />
               <p className="font-semibold">Ajouter des images ou fichiers utiles</p>
               <p className="max-w-md text-[13px] text-[var(--color-text-muted)]">
-                Mock UI : photos de plante, ordonnance anonymisee, schema de preparation. Upload reel en section API.
+                Upload reel a brancher plus tard. Pour l'instant, le bouton confirme simplement l'emplacement du flux.
               </p>
               <button type="button" className="h-10 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
                 Choisir des fichiers
@@ -198,20 +245,24 @@ function NewQuestion() {
             </div>
           </div>
 
+          {draftSaved && (
+            <div className="rounded-[12px] border border-amber-200 bg-amber-50 p-4 text-[13px] text-amber-800">
+              Brouillon enregistre localement.
+            </div>
+          )}
           {submitted && (
             <div className="rounded-[12px] border border-emerald-200 bg-emerald-50 p-4 text-[13px] text-emerald-800">
-              Question creee en mock. Apres connexion API, elle sera sauvegardee et visible dans le forum.
+              Question prete a publier. Apres connexion API, elle sera sauvegardee et visible dans le forum.
             </div>
           )}
 
           <div className="flex flex-wrap justify-end gap-3">
-            <button type="button" className="h-11 rounded-full border border-[var(--brand-border)] px-5 text-[13px] font-semibold">
+            <button type="button" onClick={saveDraft} className="h-11 rounded-full border border-[var(--brand-border)] px-5 text-[13px] font-semibold">
               Enregistrer brouillon
             </button>
             <button
               type="submit"
-              disabled={!title.trim() || !body.trim() || tags.length === 0}
-              className="inline-flex h-11 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white disabled:opacity-50"
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white"
             >
               <Send size={15} /> Publier
             </button>

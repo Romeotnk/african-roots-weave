@@ -52,14 +52,37 @@ function Annuaire() {
   );
 
   const filteredItems = useMemo(
-    () =>
-      items.filter((professional) => {
+    () => {
+      const normalizedSearch = search.trim().toLowerCase();
+      return items.filter((professional) => {
+        const searchableText = [
+          professional.name,
+          professional.specialty,
+          professional.location,
+          professional.country,
+          professional.bio,
+          ...professional.specialties,
+        ]
+          .join(" ")
+          .toLowerCase();
+        const matchesSearch = !normalizedSearch || searchableText.includes(normalizedSearch);
         const matchesSpecialty = !specialty || professional.specialties.includes(specialty);
         const matchesCountry = !country || professional.country === country;
-        return matchesSpecialty && matchesCountry;
-      }),
-    [country, items, specialty],
+        const matchesVerified = !verifiedOnly || professional.verified;
+        return matchesSearch && matchesSpecialty && matchesCountry && matchesVerified;
+      });
+    },
+    [country, items, search, specialty, verifiedOnly],
   );
+
+  const hasActiveFilters = Boolean(search || specialty || country || verifiedOnly);
+
+  const resetFilters = () => {
+    setSearch("");
+    setSpecialty("");
+    setCountry("");
+    setVerifiedOnly(false);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -70,9 +93,9 @@ function Annuaire() {
       .then(({ professionals }) => {
         if (!cancelled) setItems(professionals);
       })
-      .catch((apiError) => {
+      .catch(() => {
         if (!cancelled) {
-          setError(apiError instanceof Error ? apiError.message : "API indisponible, donnees locales affichees.");
+          setError("API indisponible, donnees locales affichees.");
           setItems(fallbackProfessionals);
         }
       })
@@ -127,11 +150,21 @@ function Annuaire() {
             ))}
           </select>
           <button
+            type="button"
             onClick={() => setVerifiedOnly((value) => !value)}
             className={`px-4 h-10 rounded-full text-[13px] font-semibold border ${verifiedOnly ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]" : "border-[var(--brand-border)] text-[var(--color-text-secondary)]"}`}
           >
-            Verifie uniquement
+            Verifies uniquement
           </button>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="h-10 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold text-[var(--color-text-secondary)]"
+            >
+              Reinitialiser
+            </button>
+          )}
         </div>
       </section>
 
@@ -142,6 +175,7 @@ function Annuaire() {
               <span className="font-bold text-[var(--color-text-primary)]">
                 {isLoading ? "Chargement..." : `${filteredItems.length} praticiens`}
               </span>
+              {hasActiveFilters && !isLoading ? " correspondent a vos filtres" : " disponibles"}
             </p>
           </div>
           {error && (
@@ -158,12 +192,8 @@ function Annuaire() {
             <div className="mt-6 rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
               <p className="font-bold">Aucun praticien trouve</p>
               <button
-                onClick={() => {
-                  setSearch("");
-                  setSpecialty("");
-                  setCountry("");
-                  setVerifiedOnly(false);
-                }}
+                type="button"
+                onClick={resetFilters}
                 className="mt-4 h-10 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white"
               >
                 Effacer les filtres

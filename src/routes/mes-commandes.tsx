@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, MessageSquare, PackageCheck, Star } from "lucide-react";
 import { useState } from "react";
 import { orders } from "@/data/orders";
-import type { OrderStatus } from "@/types";
+import type { Order, OrderStatus } from "@/types";
 
 export const Route = createFileRoute("/mes-commandes")({
   head: () => ({ meta: [{ title: "Mes commandes - IWOSAN" }] }),
@@ -18,10 +18,46 @@ const timeline: { id: OrderStatus; label: string }[] = [
   { id: "completed", label: "Terminee" },
 ];
 
+type ReviewDraft = { rating: number; comment: string; submitted?: boolean };
+
 function OrdersPage() {
   const [tab, setTab] = useState<"buyer" | "seller">("buyer");
+  const [localOrders, setLocalOrders] = useState<Order[]>(orders);
+  const [actionMessage, setActionMessage] = useState("");
+  const [reviewOrderId, setReviewOrderId] = useState("");
+  const [orderReviews, setOrderReviews] = useState<Record<string, ReviewDraft>>({});
   const [buyerRatings, setBuyerRatings] = useState<Record<string, { rating: number; comment: string }>>({});
-  const filtered = orders.filter((order) => order.role === tab);
+  const filtered = localOrders.filter((order) => order.role === tab);
+
+  const confirmReception = (orderId: string) => {
+    setLocalOrders((current) =>
+      current.map((order) => (order.id === orderId ? { ...order, status: "completed" } : order)),
+    );
+    setActionMessage(`Reception confirmee pour la commande ${orderId}.`);
+  };
+
+  const openReview = (orderId: string) => {
+    setReviewOrderId((current) => (current === orderId ? "" : orderId));
+    setOrderReviews((current) => ({
+      ...current,
+      [orderId]: current[orderId] ?? { rating: 5, comment: "" },
+    }));
+  };
+
+  const submitReview = (orderId: string) => {
+    const review = orderReviews[orderId];
+    if (!review?.rating) {
+      setActionMessage("Choisissez une note avant d'envoyer l'avis.");
+      return;
+    }
+
+    setOrderReviews((current) => ({
+      ...current,
+      [orderId]: { ...review, submitted: true },
+    }));
+    setReviewOrderId("");
+    setActionMessage(`Avis enregistre pour la commande ${orderId}.`);
+  };
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">
@@ -35,6 +71,7 @@ function OrdersPage() {
             ].map(([value, label]) => (
               <button
                 key={value}
+                type="button"
                 onClick={() => setTab(value as "buyer" | "seller")}
                 className={`rounded-full px-4 py-2 text-[13px] font-semibold ${tab === value ? "bg-[var(--brand-primary)] text-white" : ""}`}
               >
@@ -46,8 +83,27 @@ function OrdersPage() {
       </section>
 
       <section className="container-iwosan py-8 space-y-4">
+        {actionMessage && (
+          <p className="rounded-[8px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-[13px] font-semibold text-emerald-800">
+            {actionMessage}
+          </p>
+        )}
+
+        {filtered.length === 0 && (
+          <div className="rounded-[12px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
+            <h2 className="text-[20px] font-bold">Aucune commande pour ce role</h2>
+            <p className="mt-2 text-[13px] text-[var(--color-text-muted)]">
+              Les nouvelles commandes apparaitront ici des qu'elles seront creees.
+            </p>
+          </div>
+        )}
+
         {filtered.map((order) => {
           const statusIndex = timeline.findIndex((step) => step.id === order.status);
+          const canConfirmReception = tab === "buyer" && order.status === "delivered";
+          const receptionConfirmed = order.status === "completed";
+          const review = orderReviews[order.id];
+
           return (
             <article key={order.id} className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -90,13 +146,71 @@ function OrdersPage() {
                 >
                   <MessageSquare size={15} /> Signaler un probleme
                 </Link>
-                <button className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white">
-                  <PackageCheck size={15} /> Confirmer la reception
-                </button>
-                <button className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
-                  <Star size={15} /> Laisser un avis
-                </button>
+
+                {tab === "buyer" && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => confirmReception(order.id)}
+                      disabled={!canConfirmReception}
+                      className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-[13px] font-semibold ${canConfirmReception ? "bg-[var(--brand-primary)] text-white" : "cursor-not-allowed bg-[var(--brand-surface-alt)] text-[var(--color-text-muted)]"}`}
+                    >
+                      <PackageCheck size={15} /> {receptionConfirmed ? "Reception confirmee" : canConfirmReception ? "Confirmer la reception" : "Attendre la livraison"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openReview(order.id)}
+                      className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold"
+                    >
+                      <Star size={15} /> {review?.submitted ? "Modifier l'avis" : "Laisser un avis"}
+                    </button>
+                  </>
+                )}
               </div>
+
+              {tab === "buyer" && reviewOrderId === order.id && (
+                <div className="mt-5 rounded-lg border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-bold">Votre avis</h3>
+                      <p className="text-[13px] text-[var(--color-text-muted)]">
+                        Notez votre experience apres reception de la commande.
+                      </p>
+                    </div>
+                    {review?.submitted && (
+                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-[12px] font-bold text-emerald-700">
+                        Avis deja enregistre
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setOrderReviews((current) => ({ ...current, [order.id]: { rating: value, comment: current[order.id]?.comment ?? "", submitted: false } }))}
+                        className={`grid h-10 w-10 place-items-center rounded-full border ${review?.rating >= value ? "border-[var(--brand-gold)] bg-[var(--brand-gold)] text-[var(--brand-primary-dark)]" : "border-[var(--brand-border)] bg-white"}`}
+                        aria-label={`${value} etoiles`}
+                      >
+                        <Star size={16} />
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    value={review?.comment ?? ""}
+                    onChange={(event) => setOrderReviews((current) => ({ ...current, [order.id]: { rating: current[order.id]?.rating ?? 5, comment: event.target.value, submitted: false } }))}
+                    placeholder="Commentaire optionnel"
+                    className="mt-3 min-h-20 w-full rounded-lg border border-[var(--brand-border)] bg-white px-3 py-2 text-[13px]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => submitReview(order.id)}
+                    className="mt-3 h-10 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white"
+                  >
+                    Enregistrer l'avis
+                  </button>
+                </div>
+              )}
 
               {tab === "seller" && ["delivered", "completed"].includes(order.status) && (
                 <div className="mt-5 rounded-lg border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-4">

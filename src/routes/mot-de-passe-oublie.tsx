@@ -4,7 +4,7 @@ import { Mail } from "lucide-react";
 import { forgotPassword } from "@/lib/api/auth";
 
 export const Route = createFileRoute("/mot-de-passe-oublie")({
-  head: () => ({ meta: [{ title: "Mot de passe oublié — IWOSAN" }] }),
+  head: () => ({ meta: [{ title: "Mot de passe oublié - IWOSAN" }] }),
   component: Forgot,
 });
 
@@ -36,13 +36,17 @@ function Forgot() {
         </Link>
         <h1 className="text-[24px] font-bold text-center">Réinitialiser le mot de passe</h1>
         <p className="text-center text-[14px] text-[var(--color-text-muted)] mt-2">
-          Saisissez votre email — nous vous enverrons un lien sécurisé.
+          Saisissez votre email. Nous vous enverrons un lien sécurisé.
         </p>
         {sent ? (
           <div className="mt-6 text-center">
             <Mail className="mx-auto text-[var(--brand-primary)]" size={48} />
-            <p className="mt-3 text-[14px]">Email envoyé à <strong>{email}</strong>. Vérifiez votre boîte de réception.</p>
-            <Link to="/connexion" className="mt-6 inline-block text-[var(--brand-primary)] font-semibold">← Retour à la connexion</Link>
+            <p className="mt-3 text-[14px]">
+              Email envoyé à <strong>{email}</strong>. Vérifiez votre boîte de réception.
+            </p>
+            <Link to="/connexion" className="mt-6 inline-block text-[var(--brand-primary)] font-semibold">
+              Retour à la connexion
+            </Link>
           </div>
         ) : (
           <form onSubmit={submit} className="mt-6 space-y-4">
@@ -56,10 +60,10 @@ function Forgot() {
             />
             {error && <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">{error}</p>}
             <button disabled={loading} className="w-full h-12 rounded-full bg-[var(--brand-primary)] text-white font-semibold hover:bg-[var(--brand-primary-dark)] disabled:opacity-70 transition">
-              {loading ? "Envoi…" : "Envoyer le lien"}
+              {loading ? "Envoi..." : "Envoyer le lien"}
             </button>
             <Link to="/connexion" className="block text-center text-[13px] text-[var(--brand-primary)] font-semibold hover:underline">
-              ← Retour à la connexion
+              Retour à la connexion
             </Link>
           </form>
         )}
