@@ -11,7 +11,7 @@ type FrontendServer = {
 let frontendServerPromise: Promise<FrontendServer> | null = null;
 
 const getFrontendServer = async () => {
-  const serverEntry = path.resolve(process.cwd(), "..", "dist", "server", "server.js");
+  const serverEntry = path.resolve(process.cwd(), "dist", "server", "server.js");
 
   if (!fs.existsSync(serverEntry)) {
     return null;

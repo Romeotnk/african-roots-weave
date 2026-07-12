@@ -17,7 +17,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard professionnel - IWOSAN" }] }),
   component: () => (
-    <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
       <ProfessionalHome />
     </ProtectedRoute>
   ),
