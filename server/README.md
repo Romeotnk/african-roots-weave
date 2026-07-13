@@ -60,9 +60,20 @@ A l'inscription, un `MLMNode` est cree. Si un code parrain existe, le node est r
 | MODERATOR    | Moderation forum                         |
 | ADMIN        | Administration complete                  |
 
-## Deploiement Railway
+## Deploiement Render / Hostinger Node.js
 
-Configurer `DATABASE_URL`, `REDIS_URL`, secrets JWT et variables fournisseur. Lancer `npm run build`, `npx prisma migrate deploy`, puis `npm start`.
+Depuis la racine du repo, utiliser :
+
+```bash
+npm run render:build
+npm start
+```
+
+Le build compile le frontend TanStack Start, installe le backend, genere Prisma Client, applique les migrations avec `prisma migrate deploy`, puis compile Express.
+
+Variables obligatoires en production : `DATABASE_URL`, `DIRECT_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_EMAIL_SECRET`, `JWT_PASSWORD_RESET_SECRET`, `CLIENT_URL`.
+
+Si l'hebergeur ne fournit pas d'URL directe PostgreSQL separee, mettre `DIRECT_URL` a la meme valeur que `DATABASE_URL`.
 
 ## Deploiement VPS
 

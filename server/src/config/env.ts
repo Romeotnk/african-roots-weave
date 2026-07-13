@@ -1,5 +1,6 @@
 const requiredInProduction = [
   "DATABASE_URL",
+  "DIRECT_URL",
   "JWT_ACCESS_SECRET",
   "JWT_REFRESH_SECRET",
   "JWT_EMAIL_SECRET",
