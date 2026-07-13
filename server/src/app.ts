@@ -39,7 +39,25 @@ const allowedOrigins = [
   "http://127.0.0.1:3001",
 ].filter(Boolean) as string[];
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        baseUri: ["'self'"],
+        connectSrc: ["'self'", "https:", "wss:"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+        formAction: ["'self'"],
+        frameAncestors: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        objectSrc: ["'none'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrcAttr: ["'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      },
+    },
+  }),
+);
 app.use(
   cors({
     origin: (origin, callback) => {

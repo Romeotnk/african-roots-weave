@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import { Readable } from "node:stream";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import express from "express";
 import type { RequestHandler } from "express";
 
 type FrontendServer = {
@@ -9,23 +10,88 @@ type FrontendServer = {
 };
 
 let frontendServerPromise: Promise<FrontendServer> | null = null;
+let frontendPaths:
+  | {
+      serverEntry: string;
+      clientDir: string | null;
+    }
+  | null
+  | undefined;
+let frontendStaticMiddleware: RequestHandler | null | undefined;
+
+const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+
+const uniquePaths = (paths: Array<string | undefined>) => {
+  return [...new Set(paths.filter((item): item is string => Boolean(item)))];
+};
+
+const resolveFrontendPaths = () => {
+  if (frontendPaths !== undefined) {
+    return frontendPaths;
+  }
+
+  const distCandidates = uniquePaths([
+    process.env.FRONTEND_DIST_DIR,
+    path.resolve(process.cwd(), "dist"),
+    path.resolve(process.cwd(), "..", "dist"),
+    path.resolve(moduleDir, "..", "..", "..", "dist"),
+  ]);
+
+  for (const distDir of distCandidates) {
+    const serverEntry = path.join(distDir, "server", "server.js");
+    if (!fs.existsSync(serverEntry)) {
+      continue;
+    }
+
+    const clientDir = path.join(distDir, "client");
+    frontendPaths = {
+      serverEntry,
+      clientDir: fs.existsSync(clientDir) ? clientDir : null,
+    };
+    return frontendPaths;
+  }
+
+  frontendPaths = null;
+  return frontendPaths;
+};
 
 const getFrontendServer = async () => {
-  const serverEntry = path.resolve(process.cwd(), "dist", "server", "server.js");
-  console.log("CWD:", process.cwd());
-  console.log("Server entry path:", serverEntry);
-  console.log("File exists:", fs.existsSync(serverEntry));
-  
-  if (!fs.existsSync(serverEntry)) {
+  const paths = resolveFrontendPaths();
+  if (!paths) {
     return null;
   }
 
-  frontendServerPromise ??= import(pathToFileURL(serverEntry).href).then((module) => {
+  frontendServerPromise ??= import(pathToFileURL(paths.serverEntry).href).then((module) => {
     const server = (module.default ?? module) as FrontendServer;
     return server;
   });
 
   return frontendServerPromise;
+};
+
+const getFrontendStaticMiddleware = () => {
+  if (frontendStaticMiddleware !== undefined) {
+    return frontendStaticMiddleware;
+  }
+
+  const paths = resolveFrontendPaths();
+  if (!paths?.clientDir) {
+    frontendStaticMiddleware = null;
+    return frontendStaticMiddleware;
+  }
+
+  frontendStaticMiddleware = express.static(paths.clientDir, {
+    index: false,
+    immutable: true,
+    maxAge: "1y",
+    setHeaders: (response, filePath) => {
+      if (!filePath.includes(`${path.sep}assets${path.sep}`)) {
+        response.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+      }
+    },
+  });
+
+  return frontendStaticMiddleware;
 };
 
 const toWebRequest = (req: Parameters<RequestHandler>[0]) => {
@@ -52,17 +118,7 @@ const toWebRequest = (req: Parameters<RequestHandler>[0]) => {
   return new Request(url, init as RequestInit);
 };
 
-export const frontendMiddleware: RequestHandler = async (req, res, next) => {
-  if (req.path.startsWith("/api")) {
-    next();
-    return;
-  }
-
-  if (req.method !== "GET" && req.method !== "HEAD") {
-    next();
-    return;
-  }
-
+const renderFrontend: RequestHandler = async (req, res, next) => {
   try {
     const frontendServer = await getFrontendServer();
     if (!frontendServer) {
@@ -83,4 +139,31 @@ export const frontendMiddleware: RequestHandler = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+export const frontendMiddleware: RequestHandler = (req, res, next) => {
+  if (req.path.startsWith("/api")) {
+    next();
+    return;
+  }
+
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    next();
+    return;
+  }
+
+  const staticMiddleware = getFrontendStaticMiddleware();
+  if (staticMiddleware) {
+    staticMiddleware(req, res, (error) => {
+      if (error) {
+        next(error);
+        return;
+      }
+
+      renderFrontend(req, res, next);
+    });
+    return;
+  }
+
+  renderFrontend(req, res, next);
 };
