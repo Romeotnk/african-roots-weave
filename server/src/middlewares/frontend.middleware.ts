@@ -12,7 +12,10 @@ let frontendServerPromise: Promise<FrontendServer> | null = null;
 
 const getFrontendServer = async () => {
   const serverEntry = path.resolve(process.cwd(), "dist", "server", "server.js");
-
+  console.log("CWD:", process.cwd());
+  console.log("Server entry path:", serverEntry);
+  console.log("File exists:", fs.existsSync(serverEntry));
+  
   if (!fs.existsSync(serverEntry)) {
     return null;
   }
