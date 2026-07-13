@@ -11,6 +11,9 @@
     "build:dev": "vite build --mode development",
     "render:build": "npm install --include=dev && npm run build && npm --prefix server install --include=dev && npm --prefix server run prisma:generate && npm --prefix server run build",
     "render:start": "npm --prefix server start",
+    "start": "npm run render:start",
+    "hostinger:build": "npm run render:build",
+    "hostinger:start": "npm run render:start",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."

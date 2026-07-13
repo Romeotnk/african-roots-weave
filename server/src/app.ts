@@ -29,6 +29,18 @@ import { apiResponse } from "./utils/apiResponse.js";
 
 export const app = express();
 
+app.set("trust proxy", 1);
+
+const normalizeOrigin = (value?: string) => {
+  if (!value) return null;
+
+  try {
+    return new URL(value).origin;
+  } catch {
+    return value.replace(/\/+$/, "");
+  }
+};
+
 const allowedOrigins = [
   process.env.CLIENT_URL,
   "http://localhost:8080",
@@ -37,7 +49,17 @@ const allowedOrigins = [
   "http://127.0.0.1:3000",
   "http://localhost:3001",
   "http://127.0.0.1:3001",
-].filter(Boolean) as string[];
+]
+  .map(normalizeOrigin)
+  .filter(Boolean) as string[];
+
+const isSameHostOrigin = (origin: string, host?: string) => {
+  try {
+    return new URL(origin).host === host;
+  } catch {
+    return false;
+  }
+};
 
 app.use(
   helmet({
@@ -59,16 +81,15 @@ app.use(
   }),
 );
 app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-        return;
-      }
+  cors((req, callback) => {
+    const origin = req.header("Origin");
+    const isAllowed =
+      !origin || allowedOrigins.includes(origin) || isSameHostOrigin(origin, req.get("host"));
 
-      callback(new Error(`Origin not allowed by CORS: ${origin}`));
-    },
-    credentials: true,
+    callback(isAllowed ? null : new Error(`Origin not allowed by CORS: ${origin}`), {
+      origin: origin && isAllowed ? origin : false,
+      credentials: true,
+    });
   }),
 );
 app.use(compression());
