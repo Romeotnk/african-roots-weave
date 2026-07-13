@@ -15,6 +15,8 @@ import {
   type MonographPayload,
 } from "@/lib/api/content";
 
+const isBrowser = typeof window !== "undefined";
+
 export const contentKeys = {
   articles: (params: ArticleQuery = {}) => ["content", "articles", params] as const,
   article: (slug: string) => ["content", "article", slug] as const,
@@ -26,6 +28,7 @@ export function useArticles(params: ArticleQuery = {}) {
   return useQuery({
     queryKey: contentKeys.articles(params),
     queryFn: () => listArticles(params),
+    enabled: isBrowser,
     retry: false,
   });
 }
@@ -76,6 +79,7 @@ export function useMonographs() {
   return useQuery({
     queryKey: contentKeys.monographs,
     queryFn: listMonographs,
+    enabled: isBrowser,
     retry: false,
   });
 }

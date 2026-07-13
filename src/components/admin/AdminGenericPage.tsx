@@ -66,8 +66,8 @@ const labels: Record<AdminPageKind, { title: string; description: string }> = {
   logs: { title: "Logs d'activite", description: "Journal admin en lecture seule." },
 };
 
-function ActionButton({ children }: { children: React.ReactNode }) {
-  return <button className="rounded-full bg-emerald-400 px-4 py-2 text-[12px] font-bold text-[#111827]">{children}</button>;
+function ActionButton({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+  return <button type="button" onClick={onClick} className="rounded-full bg-emerald-400 px-4 py-2 text-[12px] font-bold text-[#111827]">{children}</button>;
 }
 
 function Field({ label, value, type = "text" }: { label: string; value: string; type?: string }) {
@@ -164,7 +164,7 @@ export function AdminGenericPage({ kind }: { kind: AdminPageKind }) {
           <AdminCard>
             <h2 className="mb-4 text-[18px] font-bold text-white">Apercu</h2>
             <div className="rounded-lg bg-white p-4 text-[#111827]">
-              <div className="flex items-center justify-between border-b pb-3"><strong>IWOSAN</strong><button className="rounded-full bg-[#1A5C2A] px-4 py-2 text-white">Bouton</button></div>
+              <div className="flex items-center justify-between border-b pb-3"><strong>IWOSAN</strong><button type="button" className="rounded-full bg-[#1A5C2A] px-4 py-2 text-white">Bouton</button></div>
               <p className="mt-4 rounded bg-[#F8F4E8] p-4">Carte, badge et lien de previsualisation.</p>
             </div>
             <textarea className="mt-4 min-h-32 w-full rounded-lg border border-red-400/40 bg-red-500/10 p-3 text-[13px]" defaultValue="/* CSS personnalise reserve aux admins techniques */" />
@@ -228,7 +228,7 @@ export function AdminGenericPage({ kind }: { kind: AdminPageKind }) {
     }
 
     if (kind === "notifications") {
-      return <AdminCard><h2 className="mb-4 text-[18px] font-bold text-white">Envoyer une notification</h2><div className="grid gap-4 md:grid-cols-2"><Field label="Titre" value="Nouvelle annonce disponible" /><Field label="Lien" value="/marketplace" /><textarea className="min-h-32 rounded-lg border border-white/10 bg-white/5 p-3 md:col-span-2" defaultValue="Corps du message push in-app." /></div><button onClick={() => setNotice("Notification envoyee en mock.")} className="mt-4 rounded-full bg-emerald-400 px-4 py-2 text-[12px] font-bold text-[#111827]">Envoyer</button></AdminCard>;
+      return <AdminCard><h2 className="mb-4 text-[18px] font-bold text-white">Envoyer une notification</h2><div className="grid gap-4 md:grid-cols-2"><Field label="Titre" value="Nouvelle annonce disponible" /><Field label="Lien" value="/marketplace" /><textarea className="min-h-32 rounded-lg border border-white/10 bg-white/5 p-3 md:col-span-2" defaultValue="Corps du message push in-app." /></div><button type="button" onClick={() => setNotice("Notification envoyee en mock.")} className="mt-4 rounded-full bg-emerald-400 px-4 py-2 text-[12px] font-bold text-[#111827]">Envoyer</button></AdminCard>;
     }
 
     if (kind === "tickets") {
@@ -259,11 +259,11 @@ export function AdminGenericPage({ kind }: { kind: AdminPageKind }) {
       <div className="grid gap-6 xl:grid-cols-2">
         <AdminCard>
           <h2 className="mb-4 text-[18px] font-bold text-white">Synthese</h2>
-          <p className="text-[14px] leading-7 text-slate-300">Module admin mock pret. Les endpoints backend seront branches a la section 14 via client API centralise.</p>
+          <p className="text-[14px] leading-7 text-slate-300">Module admin mock pret. Les endpoints backend seront branches via le client API centralise.</p>
         </AdminCard>
         <AdminCard>
           <h2 className="mb-4 text-[18px] font-bold text-white">Actions</h2>
-          <div className="space-y-3"><ActionButton>Creer</ActionButton><ActionButton>Exporter CSV</ActionButton><ActionButton>Enregistrer</ActionButton></div>
+          <div className="space-y-3"><ActionButton onClick={() => setNotice("Brouillon cree en mock.")}>Creer</ActionButton><ActionButton onClick={() => setNotice("Export CSV prepare en mock.")}>Exporter CSV</ActionButton><ActionButton onClick={() => setNotice("Modifications enregistrees en mock.")}>Enregistrer</ActionButton></div>
         </AdminCard>
       </div>
     );

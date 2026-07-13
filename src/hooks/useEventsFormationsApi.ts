@@ -15,6 +15,8 @@ import {
   type FormationQuery,
 } from "@/lib/api/eventsFormations";
 
+const isBrowser = typeof window !== "undefined";
+
 export const eventsFormationKeys = {
   events: (params: EventQuery = {}) => ["events", params] as const,
   event: (id: string) => ["events", id] as const,
@@ -26,6 +28,7 @@ export function useEvents(params: EventQuery = {}) {
   return useQuery({
     queryKey: eventsFormationKeys.events(params),
     queryFn: () => listEvents(params),
+    enabled: isBrowser,
     retry: false,
   });
 }
@@ -67,6 +70,7 @@ export function useFormations(params: FormationQuery = {}) {
   return useQuery({
     queryKey: eventsFormationKeys.formations(params),
     queryFn: () => listFormations(params),
+    enabled: isBrowser,
     retry: false,
   });
 }

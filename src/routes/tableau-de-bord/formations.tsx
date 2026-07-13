@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Archive, Eye, GraduationCap, PlayCircle, Plus, Upload } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Archive, Eye, GraduationCap, PlayCircle, Plus, Search, Upload } from "lucide-react";
+import { useMemo, useState, type FormEvent } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import { trainings } from "@/data/trainings";
@@ -15,7 +15,24 @@ export const Route = createFileRoute("/tableau-de-bord/formations")({
 });
 
 type CourseStatus = "published" | "draft" | "archived";
+type CourseLevel = (typeof trainings)[number]["level"];
 type LocalCourse = (typeof trainings)[number] & { status: CourseStatus; progress: number };
+
+type CourseForm = {
+  title: string;
+  category: string;
+  level: CourseLevel;
+  duration: string;
+  price: string;
+};
+
+const emptyCourseForm: CourseForm = {
+  title: "",
+  category: "Pharmacopee",
+  level: "Debutant",
+  duration: "2h",
+  price: "0",
+};
 
 const statusLabels: Record<CourseStatus, string> = {
   published: "Publiee",
@@ -25,12 +42,30 @@ const statusLabels: Record<CourseStatus, string> = {
 
 function TrainingsDashboard() {
   const [courses, setCourses] = useState<LocalCourse[]>(
-    trainings.map((course, index) => ({ ...course, status: index === 1 ? "draft" : "published", progress: index === 2 ? 65 : 100 })),
+    trainings.map((course, index) => ({
+      ...course,
+      status: index === 1 ? "draft" : "published",
+      progress: index === 2 ? 65 : 100,
+    })),
   );
   const [filter, setFilter] = useState<CourseStatus | "all">("all");
+  const [query, setQuery] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState<CourseForm>(emptyCourseForm);
   const [message, setMessage] = useState("");
 
-  const filtered = useMemo(() => courses.filter((course) => filter === "all" || course.status === filter), [courses, filter]);
+  const filtered = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    return courses.filter((course) => {
+      const matchesStatus = filter === "all" || course.status === filter;
+      const matchesSearch =
+        !normalized ||
+        course.title.toLowerCase().includes(normalized) ||
+        course.category.toLowerCase().includes(normalized) ||
+        course.level.toLowerCase().includes(normalized);
+      return matchesStatus && matchesSearch;
+    });
+  }, [courses, filter, query]);
 
   const updateStatus = (id: string, status: CourseStatus) => {
     setCourses((current) => current.map((course) => (course.id === id ? { ...course, status } : course)));
@@ -42,6 +77,53 @@ function TrainingsDashboard() {
     if (!source) return;
     setCourses((current) => [{ ...source, id: `local-${Date.now()}`, title: `${source.title} - copie`, status: "draft", progress: 20 }, ...current]);
     setMessage("Copie creee en brouillon.");
+  };
+
+  const createCourse = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const title = form.title.trim();
+    const price = Number(form.price);
+
+    if (title.length < 6) {
+      setMessage("Le titre de la formation doit contenir au moins 6 caracteres.");
+      return;
+    }
+
+    if (Number.isNaN(price) || price < 0) {
+      setMessage("Le prix doit etre un nombre positif ou 0 pour une formation gratuite.");
+      return;
+    }
+
+    const id = `local-${Date.now()}`;
+    setCourses((current) => [
+      {
+        id,
+        slug: title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || id,
+        title,
+        instructor: "Votre espace professionnel",
+        instructorAvatar: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=120&q=80",
+        instructorBio: "Formation ajoutee depuis le tableau de bord professionnel.",
+        duration: form.duration.trim() || "2h",
+        level: form.level,
+        format: "video",
+        category: form.category.trim() || "General",
+        price,
+        currency: "XOF",
+        rating: 0,
+        students: 0,
+        image: "https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=1200&q=80",
+        prerequisites: ["A completer avant publication"],
+        learnings: ["Objectifs pedagogiques a renseigner"],
+        modules: [{ title: "Module 1", lessons: [{ id: `${id}-lesson`, title: "Introduction", duration: "10 min", type: "video" }] }],
+        reviews: [],
+        status: "draft",
+        progress: 25,
+      },
+      ...current,
+    ]);
+    setForm(emptyCourseForm);
+    setShowForm(false);
+    setMessage("Formation creee en brouillon. Completez les modules avant publication.");
   };
 
   return (
@@ -57,9 +139,9 @@ function TrainingsDashboard() {
                 Gere les ressources de formation que vous avez creees ou publiees.
               </p>
             </div>
-            <Link to="/formations" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white">
-              <Plus size={17} /> Catalogue formations
-            </Link>
+            <button type="button" onClick={() => setShowForm((value) => !value)} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white">
+              <Plus size={17} /> {showForm ? "Fermer" : "Nouvelle formation"}
+            </button>
           </div>
         </div>
       </section>
@@ -71,22 +153,49 @@ function TrainingsDashboard() {
           <StatCard label="Apprenants" value={courses.reduce((sum, course) => sum + course.students, 0)} icon={PlayCircle} />
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-2">
-          {([
-            ["all", "Toutes"],
-            ["published", "Publiees"],
-            ["draft", "Brouillons"],
-            ["archived", "Archivees"],
-          ] as const).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setFilter(value)}
-              className={`h-10 rounded-full border px-4 text-[13px] font-semibold ${filter === value ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white" : "border-[var(--brand-border)] bg-white"}`}
-            >
-              {label}
-            </button>
-          ))}
+        {showForm && (
+          <form onSubmit={createCourse} className="mt-6 rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
+            <div className="grid gap-4 md:grid-cols-5">
+              <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="Titre de la formation" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px] md:col-span-2" />
+              <input value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} placeholder="Categorie" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
+              <select value={form.level} onChange={(event) => setForm((current) => ({ ...current, level: event.target.value as CourseLevel }))} className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]">
+                <option value="Debutant">Debutant</option>
+                <option value="Intermediaire">Intermediaire</option>
+                <option value="Avance">Avance</option>
+              </select>
+              <button type="submit" className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-gold)] px-5 text-[13px] font-bold text-[var(--color-text-primary)]">
+                Creer
+              </button>
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <input value={form.duration} onChange={(event) => setForm((current) => ({ ...current, duration: event.target.value }))} placeholder="Duree ex. 2h" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
+              <input value={form.price} onChange={(event) => setForm((current) => ({ ...current, price: event.target.value }))} inputMode="numeric" placeholder="Prix XOF" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
+            </div>
+          </form>
+        )}
+
+        <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <label className="relative block max-w-md flex-1">
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Rechercher une formation..." className="h-10 w-full rounded-full border border-[var(--brand-border)] bg-white pl-10 pr-4 text-[13px]" />
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {([[
+              "all", "Toutes"],
+              ["published", "Publiees"],
+              ["draft", "Brouillons"],
+              ["archived", "Archivees"],
+            ] as const).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setFilter(value)}
+                className={`h-10 rounded-full border px-4 text-[13px] font-semibold ${filter === value ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white" : "border-[var(--brand-border)] bg-white"}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {message && <p className="mt-5 rounded-[8px] bg-emerald-50 p-3 text-[13px] font-semibold text-emerald-800">{message}</p>}
@@ -95,8 +204,8 @@ function TrainingsDashboard() {
           {filtered.length === 0 && (
             <div className="rounded-[8px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
               <GraduationCap className="mx-auto text-[var(--brand-primary)]" size={32} />
-              <h2 className="mt-3 text-[20px] font-bold">Aucune formation dans ce filtre</h2>
-              <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Changez le filtre ou creez une nouvelle ressource.</p>
+              <h2 className="mt-3 text-[20px] font-bold">Aucune formation trouvee</h2>
+              <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Changez le filtre, la recherche ou creez une nouvelle ressource.</p>
             </div>
           )}
 

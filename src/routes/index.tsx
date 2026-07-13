@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -27,11 +27,6 @@ import { professionals } from "@/data/professionals";
 import { products } from "@/data/products";
 import { plants } from "@/data/plants";
 import { events } from "@/data/events";
-import { useProducts, useProfessionals } from "@/hooks/useApiCatalog";
-import { useMonographs } from "@/hooks/useContentApi";
-import { useEvents } from "@/hooks/useEventsFormationsApi";
-import { mapMonographsToPlants } from "@/lib/mappers/plantMonograph";
-import type { EventItem } from "@/types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -262,56 +257,11 @@ const spaces = [
   },
 ];
 
-const eventTypes = ["WEBINAIRE", "FORMATION", "SALON", "CONFERENCE", "ATELIER"] as const;
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
-const asString = (value: unknown, fallback = "") =>
-  typeof value === "string" && value.trim() ? value.trim() : fallback;
-
-const mapApiEvent = (item: unknown): EventItem | null => {
-  if (!isRecord(item)) return null;
-  const id = asString(item.id);
-  const title = asString(item.title);
-  if (!id || !title) return null;
-  const rawType = asString(item.type, "CONFERENCE");
-  const type = eventTypes.includes(rawType as EventItem["type"]) ? (rawType as EventItem["type"]) : "CONFERENCE";
-  const online = Boolean(item.isOnline);
-
-  return {
-    id,
-    title,
-    type,
-    date: asString(item.startDate, new Date().toISOString()),
-    endDate: asString(item.endDate),
-    category: asString(item.category),
-    location: online ? "En ligne" : asString(item.location, "Lieu a confirmer"),
-    online,
-    description: asString(item.description, "Evenement IWOSAN."),
-    image: asString(item.coverImage, "https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=1200&q=80&auto=format&fit=crop"),
-    capacity: typeof item.maxAttendees === "number" ? item.maxAttendees : undefined,
-  };
-};
-
 function Home() {
-  const productParams = useMemo(() => new URLSearchParams({ limit: "4" }), []);
-  const professionalParams = useMemo(() => new URLSearchParams({ limit: "4", verified: "true" }), []);
-  const eventParams = useMemo(() => ({ limit: 3 }), []);
-  const { data: apiProducts } = useProducts(productParams);
-  const { data: apiProfessionals } = useProfessionals(professionalParams);
-  const { data: monographs } = useMonographs();
-  const { data: apiEvents } = useEvents(eventParams);
-  const displayedProducts = apiProducts?.products.length ? apiProducts.products : products;
-  const displayedProfessionals = apiProfessionals?.professionals.length ? apiProfessionals.professionals : professionals;
-  const displayedPlants = useMemo(() => {
-    const apiPlants = mapMonographsToPlants(monographs);
-    return apiPlants.length ? apiPlants : plants;
-  }, [monographs]);
-  const displayedEvents = useMemo(() => {
-    const mappedEvents = (apiEvents?.events ?? []).map(mapApiEvent).filter((event): event is EventItem => Boolean(event));
-    return mappedEvents.length ? mappedEvents : events;
-  }, [apiEvents]);
+  const displayedProducts = products;
+  const displayedProfessionals = professionals;
+  const displayedPlants = plants;
+  const displayedEvents = events;
   const featured = displayedProfessionals[0];
   return (
     <>

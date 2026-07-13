@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Calendar, Copy, Eye, Plus, XCircle } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Calendar, Copy, Eye, Plus, Search, Ticket, XCircle } from "lucide-react";
+import { useMemo, useState, type FormEvent } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import { events } from "@/data/events";
+import type { EventItem } from "@/types";
 
 export const Route = createFileRoute("/tableau-de-bord/evenements")({
   head: () => ({ meta: [{ title: "Mes evenements - IWOSAN" }] }),
@@ -15,7 +16,27 @@ export const Route = createFileRoute("/tableau-de-bord/evenements")({
 });
 
 type EventStatus = "confirmed" | "pending" | "cancelled";
-type LocalEvent = (typeof events)[number] & { localStatus: EventStatus };
+type LocalEvent = EventItem & { localStatus: EventStatus };
+
+type EventForm = {
+  title: string;
+  category: string;
+  date: string;
+  location: string;
+  capacity: string;
+  price: string;
+  online: boolean;
+};
+
+const emptyEventForm: EventForm = {
+  title: "",
+  category: "Atelier",
+  date: "",
+  location: "En ligne",
+  capacity: "30",
+  price: "0",
+  online: true,
+};
 
 const statusLabels: Record<EventStatus, string> = {
   confirmed: "Publie",
@@ -26,9 +47,23 @@ const statusLabels: Record<EventStatus, string> = {
 function EventsDashboard() {
   const [items, setItems] = useState<LocalEvent[]>(events.map((event) => ({ ...event, localStatus: event.status ?? "confirmed" })));
   const [filter, setFilter] = useState<EventStatus | "all">("all");
+  const [query, setQuery] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState<EventForm>(emptyEventForm);
   const [message, setMessage] = useState("");
 
-  const filtered = useMemo(() => items.filter((event) => filter === "all" || event.localStatus === filter), [filter, items]);
+  const filtered = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    return items.filter((event) => {
+      const matchesStatus = filter === "all" || event.localStatus === filter;
+      const matchesSearch =
+        !normalized ||
+        event.title.toLowerCase().includes(normalized) ||
+        event.location.toLowerCase().includes(normalized) ||
+        (event.category ?? "").toLowerCase().includes(normalized);
+      return matchesStatus && matchesSearch;
+    });
+  }, [filter, items, query]);
   const registeredTotal = items.reduce((sum, event) => sum + (event.registered ?? 0), 0);
 
   const updateStatus = (id: string, status: EventStatus) => {
@@ -41,6 +76,58 @@ function EventsDashboard() {
     if (!source) return;
     setItems((current) => [{ ...source, id: `local-${Date.now()}`, title: `${source.title} - copie`, localStatus: "pending", registered: 0 }, ...current]);
     setMessage("Copie creee en brouillon.");
+  };
+
+  const createEvent = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const title = form.title.trim();
+    const capacity = Number(form.capacity);
+    const price = Number(form.price);
+
+    if (title.length < 6) {
+      setMessage("Le titre de l'evenement doit contenir au moins 6 caracteres.");
+      return;
+    }
+
+    if (!form.date) {
+      setMessage("Ajoutez une date avant de creer l'evenement.");
+      return;
+    }
+
+    if (Number.isNaN(capacity) || capacity < 1) {
+      setMessage("La capacite doit etre superieure a 0.");
+      return;
+    }
+
+    if (Number.isNaN(price) || price < 0) {
+      setMessage("Le prix doit etre un nombre positif ou 0 pour un evenement gratuit.");
+      return;
+    }
+
+    const id = `local-${Date.now()}`;
+    setItems((current) => [
+      {
+        id,
+        title,
+        type: form.category.toLowerCase().includes("webinaire") ? "WEBINAIRE" : form.category.toLowerCase().includes("formation") ? "FORMATION" : "ATELIER",
+        category: form.category.trim() || "Atelier",
+        date: new Date(form.date).toISOString(),
+        location: form.location.trim() || (form.online ? "En ligne" : "Lieu a confirmer"),
+        online: form.online,
+        description: "Description a completer avant publication.",
+        image: "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200&q=80&auto=format&fit=crop",
+        price,
+        currency: "XOF",
+        capacity,
+        registered: 0,
+        status: "pending",
+        localStatus: "pending",
+      },
+      ...current,
+    ]);
+    setForm(emptyEventForm);
+    setShowForm(false);
+    setMessage("Evenement cree en brouillon. Completez la description avant publication.");
   };
 
   return (
@@ -56,9 +143,9 @@ function EventsDashboard() {
                 Gere les webinaires, salons, ateliers et formations que vous proposez.
               </p>
             </div>
-            <Link to="/agenda" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white">
-              <Plus size={17} /> Voir l'agenda
-            </Link>
+            <button type="button" onClick={() => setShowForm((value) => !value)} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white">
+              <Plus size={17} /> {showForm ? "Fermer" : "Nouvel evenement"}
+            </button>
           </div>
         </div>
       </section>
@@ -67,25 +154,53 @@ function EventsDashboard() {
         <div className="grid gap-4 md:grid-cols-3">
           <StatCard label="Evenements" value={items.length} icon={Calendar} />
           <StatCard label="Publies" value={items.filter((event) => event.localStatus === "confirmed").length} icon={Eye} />
-          <StatCard label="Inscrits" value={registeredTotal} icon={Plus} />
+          <StatCard label="Inscrits" value={registeredTotal} icon={Ticket} />
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-2">
-          {([
-            ["all", "Tous"],
-            ["confirmed", "Publies"],
-            ["pending", "Brouillons"],
-            ["cancelled", "Annules"],
-          ] as const).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setFilter(value)}
-              className={`h-10 rounded-full border px-4 text-[13px] font-semibold ${filter === value ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white" : "border-[var(--brand-border)] bg-white"}`}
-            >
-              {label}
-            </button>
-          ))}
+        {showForm && (
+          <form onSubmit={createEvent} className="mt-6 rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
+            <div className="grid gap-4 md:grid-cols-6">
+              <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="Titre de l'evenement" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px] md:col-span-2" />
+              <input value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} placeholder="Categorie" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
+              <input type="datetime-local" value={form.date} onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))} className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
+              <input value={form.capacity} onChange={(event) => setForm((current) => ({ ...current, capacity: event.target.value }))} inputMode="numeric" placeholder="Capacite" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
+              <button type="submit" className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-gold)] px-5 text-[13px] font-bold text-[var(--color-text-primary)]">
+                Creer
+              </button>
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-[1fr_160px_160px]">
+              <input value={form.location} onChange={(event) => setForm((current) => ({ ...current, location: event.target.value }))} placeholder="Lieu" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
+              <input value={form.price} onChange={(event) => setForm((current) => ({ ...current, price: event.target.value }))} inputMode="numeric" placeholder="Prix XOF" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
+              <label className="inline-flex h-11 items-center gap-2 rounded-[8px] border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
+                <input type="checkbox" checked={form.online} onChange={(event) => setForm((current) => ({ ...current, online: event.target.checked, location: event.target.checked ? "En ligne" : current.location }))} />
+                En ligne
+              </label>
+            </div>
+          </form>
+        )}
+
+        <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <label className="relative block max-w-md flex-1">
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Rechercher un evenement..." className="h-10 w-full rounded-full border border-[var(--brand-border)] bg-white pl-10 pr-4 text-[13px]" />
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {([[
+              "all", "Tous"],
+              ["confirmed", "Publies"],
+              ["pending", "Brouillons"],
+              ["cancelled", "Annules"],
+            ] as const).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setFilter(value)}
+                className={`h-10 rounded-full border px-4 text-[13px] font-semibold ${filter === value ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white" : "border-[var(--brand-border)] bg-white"}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {message && <p className="mt-5 rounded-[8px] bg-emerald-50 p-3 text-[13px] font-semibold text-emerald-800">{message}</p>}
@@ -94,8 +209,8 @@ function EventsDashboard() {
           {filtered.length === 0 && (
             <div className="rounded-[8px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
               <Calendar className="mx-auto text-[var(--brand-primary)]" size={32} />
-              <h2 className="mt-3 text-[20px] font-bold">Aucun evenement dans ce filtre</h2>
-              <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Changez le filtre ou preparez un nouvel evenement.</p>
+              <h2 className="mt-3 text-[20px] font-bold">Aucun evenement trouve</h2>
+              <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Changez le filtre, la recherche ou preparez un nouvel evenement.</p>
             </div>
           )}
 

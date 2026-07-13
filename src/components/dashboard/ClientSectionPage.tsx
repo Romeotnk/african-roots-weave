@@ -50,7 +50,7 @@ const money = (value: unknown) => {
 export const defaultRenderItem = (item: Record<string, unknown>) => {
   const product = item.product as Record<string, unknown> | undefined;
   const author = item.author as Record<string, unknown> | undefined;
-  const title = text(item.title ?? item.subject ?? product?.title ?? item.code ?? item.reference ?? item.type, "Élément");
+  const title = text(item.title ?? item.subject ?? product?.title ?? item.code ?? item.reference ?? item.type, "Element");
   const status = text(item.status ?? item.kycStatus ?? item.isPublished ?? item.isActive);
   const subtitle = text(
     item.description ?? item.content ?? item.category ?? author?.firstName ?? item.message ?? item.link,
@@ -102,13 +102,9 @@ export function ClientSectionPage({ config }: { config: ClientSectionConfig }) {
             <AccountBackLink />
             <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
-                <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">
-                  {config.eyebrow}
-                </p>
+                <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">{config.eyebrow}</p>
                 <h1 className="mt-2 text-[32px] md:text-[42px]">{config.title}</h1>
-                <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-                  {config.description}
-                </p>
+                <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">{config.description}</p>
               </div>
               {config.action && (
                 <Link
@@ -126,42 +122,36 @@ export function ClientSectionPage({ config }: { config: ClientSectionConfig }) {
           <div className="mb-5 grid gap-4 md:grid-cols-3">
             <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
               <Icon size={22} className="text-[var(--brand-primary)]" />
-              <p className="mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">
-                Total
-              </p>
+              <p className="mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">Total</p>
               <p className="mt-1 text-[28px] font-extrabold">{items.length}</p>
             </div>
             <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
               <ExternalLink size={22} className="text-[var(--brand-primary)]" />
-              <p className="mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">
-                Source
-              </p>
+              <p className="mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">Source</p>
               <p className="mt-1 text-[14px] font-semibold">{config.endpoint ? "API IWOSAN" : "Page locale"}</p>
             </div>
             <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
-              <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">
-                Statut
-              </p>
+              <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">Statut</p>
               <p className="mt-2 text-[14px] font-semibold">
-                {query.isLoading ? "Chargement" : query.isError ? "Erreur API" : "Opérationnel"}
+                {query.isLoading ? "Chargement" : query.isError ? "Erreur API" : "Operationnel"}
               </p>
             </div>
           </div>
 
           {query.isLoading ? (
             <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-8 text-[14px] text-[var(--color-text-muted)]">
-              Chargement des données...
+              Chargement des donnees...
             </div>
           ) : query.isError ? (
             <div className="rounded-[8px] border border-red-100 bg-red-50 p-5 text-[14px] text-red-700">
-              Impossible de charger cette section. Vérifiez votre connexion ou reconnectez-vous.
+              Impossible de charger cette section. Verifiez votre connexion ou reconnectez-vous.
             </div>
           ) : items.length === 0 ? (
             <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-8 text-center">
               <Icon className="mx-auto text-[var(--brand-primary)]" size={34} />
               <h2 className="mt-4 text-[20px] font-bold">{config.emptyLabel}</h2>
               <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-                Cette page est connectée au backend et affichera vos données dès qu'elles existent.
+                Cette page est connectee au backend et affichera vos donnees des qu'elles existent.
               </p>
             </div>
           ) : (

@@ -14,6 +14,8 @@ import {
   type UpdateProductPayload,
 } from "@/lib/api/catalog";
 
+const isBrowser = typeof window !== "undefined";
+
 export const catalogKeys = {
   products: (query: string) => ["products", query] as const,
   product: (slug: string) => ["products", "detail", slug] as const,
@@ -27,6 +29,7 @@ export function useProducts(params: URLSearchParams) {
   return useQuery({
     queryKey: catalogKeys.products(query),
     queryFn: () => getProducts(params),
+    enabled: isBrowser,
   });
 }
 
@@ -44,6 +47,7 @@ export function useProfessionals(params: URLSearchParams) {
   return useQuery({
     queryKey: catalogKeys.professionals(query),
     queryFn: () => getProfessionals(params),
+    enabled: isBrowser,
   });
 }
 
