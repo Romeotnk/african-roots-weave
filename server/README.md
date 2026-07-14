@@ -71,9 +71,9 @@ npm start
 
 Le build compile le frontend TanStack Start, installe le backend, genere Prisma Client, applique les migrations avec `prisma migrate deploy`, puis compile Express.
 
-Variables obligatoires en production : `DATABASE_URL`, `DIRECT_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_EMAIL_SECRET`, `JWT_PASSWORD_RESET_SECRET`, `CLIENT_URL`.
+Variables obligatoires en production : `DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_EMAIL_SECRET`, `JWT_PASSWORD_RESET_SECRET`, `CLIENT_URL`.
 
-Si l'hebergeur ne fournit pas d'URL directe PostgreSQL separee, mettre `DIRECT_URL` a la meme valeur que `DATABASE_URL`.
+Pour Supabase sur Render/Hostinger, utiliser l'URL Supavisor Session pooler dans `DATABASE_URL` (hote `*.pooler.supabase.com`, port `5432`) plutot que l'hote direct `db.*.supabase.co`.
 
 ## Deploiement VPS
 
