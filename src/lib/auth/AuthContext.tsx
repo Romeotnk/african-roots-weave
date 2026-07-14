@@ -88,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
       const mappedRoles = new Set<AppRole>((data ?? []).map((r) => r.role as AppRole));
+      if (mappedRoles.size === 0) mappedRoles.add("user");
       if (mappedRoles.has("researcher")) {
         mappedRoles.add("professional");
         mappedRoles.add("user");
@@ -95,9 +96,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (mappedRoles.has("professional")) mappedRoles.add("user");
       setRoles([...mappedRoles]);
     } catch (error) {
-      console.warn("Supabase roles unavailable, keeping backend roles only.", error);
-      setRoles([]);
+      console.warn("Supabase roles unavailable, using default user role.", error);
+      setRoles(["user"]);
     }
+  };
+
+  const hydrateFromSupabaseSession = async (supabaseSession: Session | null) => {
+    if (!supabaseSession?.user) return false;
+
+    const synced = await syncBackendFromSupabaseSession(supabaseSession);
+    if (synced) return true;
+
+    setSession(supabaseSession);
+    setUser(supabaseSession.user);
+    await loadRoles(supabaseSession.user.id);
+    return true;
   };
 
   useEffect(() => {
@@ -142,10 +155,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let sub: { subscription: { unsubscribe: () => void } } | null = null;
     try {
       const listener = supabase.auth.onAuthStateChange((_event, s) => {
-        setSession(s);
-        setUser(s?.user ?? null);
+        setLoading(true);
         // Defer Supabase calls to avoid deadlocks
-        setTimeout(() => loadRoles(s?.user?.id), 0);
+        setTimeout(() => {
+          if (!s) {
+            loadBackendUser();
+            return;
+          }
+          hydrateFromSupabaseSession(s).finally(() => setLoading(false));
+        }, 0);
       });
       sub = listener.data;
 
@@ -153,9 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .getSession()
         .then(({ data }) => {
           if (data.session?.user) {
-            setSession(data.session);
-            setUser(data.session.user);
-            loadRoles(data.session.user.id).finally(() => setLoading(false));
+            hydrateFromSupabaseSession(data.session).finally(() => setLoading(false));
             return;
           }
 

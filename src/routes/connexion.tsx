@@ -12,27 +12,31 @@ export const Route = createFileRoute("/connexion")({
 
 function Connexion() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, loading, roles } = useAuth();
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSocialSubmitting, setIsSocialSubmitting] = useState<SocialAuthProvider | null>(null);
+  const isProAccount = roles.some((role) => ["professional", "researcher", "admin", "super_admin"].includes(role));
+  const accountTarget = isProAccount ? "/tableau-de-bord" : "/mon-compte";
 
   useEffect(() => {
     if (!loading && user) {
-      navigate({ to: "/tableau-de-bord" });
+      navigate({ to: accountTarget });
     }
-  }, [loading, navigate, user]);
+  }, [accountTarget, loading, navigate, user]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setIsSubmitting(true);
     try {
-      await login(email, password);
-      navigate({ to: "/tableau-de-bord" });
+      const response = await login(email, password);
+      const backendRole = response.data?.user.role;
+      const backendIsPro = ["PROFESSIONAL", "RESEARCHER", "ADMIN", "SUPER_ADMIN"].includes(backendRole ?? "");
+      navigate({ to: backendIsPro ? "/tableau-de-bord" : "/mon-compte" });
     } catch (apiError) {
       setError(apiError instanceof Error ? apiError.message : "Connexion impossible pour le moment.");
     } finally {
