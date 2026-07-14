@@ -122,7 +122,7 @@ export function ForumListPage() {
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[300px_1fr]">
-          <aside className="space-y-5">
+          <aside data-filter-panel className="space-y-5">
             <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
               <h2 className="mb-4 flex items-center gap-2 text-[15px] font-bold">
                 <Filter size={16} /> Filtres

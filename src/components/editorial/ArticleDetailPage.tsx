@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { Copy, Facebook, MessageCircle } from "lucide-react";
 import { ArticleCard } from "@/components/shared/ArticleCard";
 import { articles } from "@/data/articles";
@@ -7,6 +8,20 @@ export function ArticleDetailPage({ slug, fallbackSpace }: { slug: string; fallb
   const article = articles.find((item) => item.slug === slug) ?? articles.find((item) => item.space === fallbackSpace) ?? articles[0];
   const related = articles.filter((item) => item.id !== article.id && item.space === article.space).slice(0, 3);
   const breadcrumbSpace = article.space === "Sante au quotidien" ? "Sante" : article.space;
+  const [shareNotice, setShareNotice] = useState("");
+  const shareArticle = (label: string) => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    const encodedUrl = encodeURIComponent(url);
+    const encodedTitle = encodeURIComponent(article.title);
+    if (label === "Copier") {
+      navigator.clipboard?.writeText(url).catch(() => undefined);
+      setShareNotice("Lien de l article copie.");
+      return;
+    }
+    const target = label === "WhatsApp" ? `https://wa.me/?text=${encodedTitle}%20${encodedUrl}` : `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+    window.open(target, "_blank", "noopener,noreferrer");
+    setShareNotice(`Ouverture du partage ${label}.`);
+  };
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">
@@ -78,11 +93,12 @@ export function ArticleDetailPage({ slug, fallbackSpace }: { slug: string; fallb
                 { icon: Facebook, label: "Facebook" },
                 { icon: Copy, label: "Copier" },
               ].map(({ icon: Icon, label }) => (
-                <button key={label} className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-3 text-[12px] font-semibold">
+                <button key={label} type="button" onClick={() => shareArticle(label)} className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-3 text-[12px] font-semibold">
                   <Icon size={14} /> {label}
                 </button>
               ))}
             </div>
+            {shareNotice && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[12px] text-emerald-800">{shareNotice}</p>}
           </div>
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
             <h2 className="mb-4 text-[15px] font-bold">Articles connexes</h2>

@@ -263,6 +263,8 @@ function Home() {
   const displayedPlants = plants;
   const displayedEvents = events;
   const featured = displayedProfessionals[0];
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterMessage, setNewsletterMessage] = useState("");
   return (
     <>
       <HeroCarousel />
@@ -307,13 +309,15 @@ function Home() {
               </div>
               <div className="mt-7 flex flex-col sm:flex-row gap-3">
                 <Link
-                  to="/annuaire"
+                  to="/annuaire/$id"
+                  params={{ id: featured.id }}
                   className="h-11 inline-flex items-center justify-center px-5 rounded-full bg-[var(--brand-primary)] text-white font-semibold hover:bg-[var(--brand-primary-dark)] transition"
                 >
                   Voir le profil complet
                 </Link>
                 <Link
-                  to="/annuaire"
+                  to="/annuaire/$id"
+                  params={{ id: featured.id }}
                   className="h-11 inline-flex items-center justify-center px-5 rounded-full border border-[var(--brand-border)] font-semibold hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] transition"
                 >
                   Prendre rendez-vous
@@ -506,15 +510,39 @@ function Home() {
               publiés sur Iwosan.
             </p>
           </div>
-          <form className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="email"
-              placeholder="votre@email.com"
-              className="flex-1 h-12 px-5 rounded-full bg-white text-[15px] outline-none focus:ring-4 focus:ring-white/20"
-            />
-            <button className="h-12 px-7 rounded-full bg-[var(--brand-gold)] text-[var(--color-text-primary)] font-semibold hover:bg-[var(--brand-gold-light)] transition whitespace-nowrap">
-              S'abonner
-            </button>
+          <form
+            className="flex flex-col gap-3"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const email = newsletterEmail.trim();
+              if (!email || !email.includes("@")) {
+                setNewsletterMessage("Entrez une adresse email valide.");
+                return;
+              }
+              setNewsletterEmail("");
+              setNewsletterMessage("Inscription newsletter enregistree en mode test.");
+            }}
+          >
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="email"
+                value={newsletterEmail}
+                onChange={(event) => {
+                  setNewsletterEmail(event.target.value);
+                  setNewsletterMessage("");
+                }}
+                placeholder="votre@email.com"
+                className="flex-1 h-12 px-5 rounded-full bg-white text-[15px] outline-none focus:ring-4 focus:ring-white/20"
+              />
+              <button type="submit" className="h-12 px-7 rounded-full bg-[var(--brand-gold)] text-[var(--color-text-primary)] font-semibold hover:bg-[var(--brand-gold-light)] transition whitespace-nowrap">
+                S'abonner
+              </button>
+            </div>
+            {newsletterMessage && (
+              <p className="rounded-lg bg-white/10 px-4 py-3 text-[13px] font-semibold text-white">
+                {newsletterMessage}
+              </p>
+            )}
           </form>
         </div>
       </section>

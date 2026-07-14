@@ -4,12 +4,14 @@ import { Bell, ChevronDown, Grid2X2, Map, MapPin, Navigation, Star, X } from "lu
 import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { ProductCard } from "@/components/shared/ProductCard";
+import { RatingStars } from "@/components/shared/RatingStars";
 import { products as fallbackProducts } from "@/data/products";
 import type { Product } from "@/types";
 import { getProducts } from "@/lib/api/catalog";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import { useCart } from "@/cart/CartContext";
 import {
   Dialog,
   DialogContent,
@@ -53,6 +55,9 @@ function Marketplace() {
   const [alertName, setAlertName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [locationMessage, setLocationMessage] = useState("");
+  const { addItem } = useCart();
   const debouncedSearch = useDebounce(search, 300);
 
   const query = useMemo(() => {
@@ -227,6 +232,20 @@ function Marketplace() {
     );
   };
 
+
+  const activateGeolocation = () => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setLocationMessage("Geolocalisation indisponible sur cet appareil. Renseignez la ville manuellement.");
+      return;
+    }
+
+    setLocationMessage("Recherche de votre position...");
+    navigator.geolocation.getCurrentPosition(
+      () => setLocationMessage("Position detectee. Ajustez le rayon pour affiner les resultats proches."),
+      () => setLocationMessage("Permission refusee. Vous pouvez renseigner la ville manuellement."),
+      { enableHighAccuracy: true, timeout: 8000 },
+    );
+  };
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
@@ -268,7 +287,7 @@ function Marketplace() {
 
       <section className="py-12">
         <div className="container-iwosan grid lg:grid-cols-[280px_1fr] gap-8">
-          <aside className="hidden lg:block bg-white rounded-[16px] border border-[var(--brand-border-light)] p-6 h-fit sticky top-[88px]">
+          <aside data-filter-panel className="hidden lg:block bg-white rounded-[16px] border border-[var(--brand-border-light)] p-6 h-fit sticky top-[88px]">
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-bold text-[16px]">Filtres</h3>
               <button
@@ -385,8 +404,12 @@ function Marketplace() {
                   </div>
                   <Slider value={distance} min={0} max={500} step={10} onValueChange={setDistance} />
                 </div>
-                <button className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-[var(--brand-border)] text-[12px] font-semibold">
-                  <Navigation size={14} /> Géolocalisation activée
+                <button
+                  type="button"
+                  onClick={activateGeolocation}
+                  className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-[var(--brand-border)] text-[12px] font-semibold"
+                >
+                  <Navigation size={14} /> {locationMessage || "Activer ma geolocalisation"}
                 </button>
               </div>
             </details>
@@ -533,6 +556,8 @@ function Marketplace() {
                   {filteredItems.map((product, index) => (
                     <button
                       key={product.id}
+                      type="button"
+                      onClick={() => setSelectedProduct(product)}
                       className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--brand-primary)] px-3 py-2 text-[12px] font-bold text-white shadow-iwosan-md"
                       style={{
                         left: `${18 + ((index * 23) % 68)}%`,
@@ -553,7 +578,7 @@ function Marketplace() {
                         <p className="mt-1 text-[12px] text-[var(--color-text-muted)]">
                           {product.location ?? "Localisation"} - {product.price.toLocaleString("fr-FR")} {product.currency}
                         </p>
-                        <button className="mt-2 h-8 rounded-full bg-[var(--brand-primary)] px-3 text-[12px] font-semibold text-white">
+                        <button type="button" onClick={() => setSelectedProduct(product)} className="mt-2 h-8 rounded-full bg-[var(--brand-primary)] px-3 text-[12px] font-semibold text-white">
                           Voir
                         </button>
                       </div>
@@ -579,6 +604,31 @@ function Marketplace() {
           </div>
         </div>
       </section>
+      <Dialog open={Boolean(selectedProduct)} onOpenChange={(open) => { if (!open) setSelectedProduct(null); }}>
+        <DialogContent className="max-w-2xl bg-white">
+          {selectedProduct && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selectedProduct.title}</DialogTitle>
+                <DialogDescription>Fiche rapide issue du mode carte marketplace.</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 md:grid-cols-[220px_1fr]">
+                <img src={selectedProduct.image} alt={selectedProduct.title} className="h-56 w-full rounded-lg object-cover" />
+                <div className="space-y-3 text-[14px]">
+                  <p className="text-[18px] font-bold text-[var(--brand-primary)]">{selectedProduct.price.toLocaleString("fr-FR")} {selectedProduct.currency}</p>
+                  <p>Vendeur : {selectedProduct.sellerName}</p>
+                  {selectedProduct.location && <p>Lieu : {selectedProduct.location}{selectedProduct.country ? `, ${selectedProduct.country}` : ""}</p>}
+                  <RatingStars rating={selectedProduct.rating} reviewCount={selectedProduct.reviewCount} />
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <button type="button" onClick={() => addItem(selectedProduct)} className="h-10 rounded-full bg-[var(--brand-primary)] font-semibold text-white">Ajouter au panier</button>
+                    <button type="button" onClick={() => setSelectedProduct(null)} className="h-10 rounded-full border border-[var(--brand-border)] font-semibold">Fermer</button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
       <Dialog open={alertOpen} onOpenChange={setAlertOpen}>
         <DialogContent className="bg-white">
           <DialogHeader>

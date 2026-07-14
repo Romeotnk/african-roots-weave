@@ -165,9 +165,15 @@ function Agenda() {
             <div className="space-y-4">
               <h3 className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">Evenements a venir</h3>
               {filteredEvents.map((event) => (
-                <button key={event.id} onClick={() => setSelectedEvent(event)} className="block w-full text-left">
-                  <EventCard event={event} />
-                </button>
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  actionLabel="Voir / s'inscrire"
+                  onRegister={() => {
+                    setSelectedEvent(event);
+                    setRegistered(false);
+                  }}
+                />
               ))}
             </div>
           )}

@@ -123,7 +123,7 @@ function Annuaire() {
         </div>
       </HeroSection>
 
-      <section className="sticky top-[72px] z-30 bg-white/95 backdrop-blur border-b border-[var(--brand-border-light)] py-4">
+      <section data-filter-panel className="sticky top-[72px] z-30 bg-white/95 backdrop-blur border-b border-[var(--brand-border-light)] py-4">
         <div className="container-iwosan flex items-center gap-3 flex-wrap">
           <select
             value={specialty}

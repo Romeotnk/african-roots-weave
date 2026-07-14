@@ -85,6 +85,7 @@ function Pharmacopee() {
               placeholder="Rechercher une plante par nom scientifique ou vernaculaire..."
               value={search}
               onChange={setSearch}
+              showFilters={false}
             />
           </div>
         </div>

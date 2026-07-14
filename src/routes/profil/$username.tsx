@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { Flag, MessageSquare, Star, Store, Trophy, UserRound } from "lucide-react";
 import { publicProfiles } from "@/data/publicProfiles";
 
@@ -10,6 +11,7 @@ export const Route = createFileRoute("/profil/$username")({
 function PublicProfilePage() {
   const { username } = Route.useParams();
   const profile = publicProfiles.find((item) => item.username === username) ?? publicProfiles[0];
+  const [reportNotice, setReportNotice] = useState("");
 
   return (
     <main className="bg-[var(--brand-bg)]">
@@ -21,11 +23,16 @@ function PublicProfilePage() {
             <h1 className="mt-2 text-[34px] md:text-[48px] text-white">{profile.name}</h1>
             <p className="mt-2 text-white/75">{profile.role} - {profile.country} - membre depuis {profile.memberSince}</p>
           </div>
+          {reportNotice && (
+            <p className="rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-[13px] font-semibold text-white/90 md:basis-full">
+              {reportNotice}
+            </p>
+          )}
           <div className="flex flex-wrap gap-2">
             <Link to="/messages" className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-[13px] font-bold text-[var(--brand-primary-dark)]">
               <MessageSquare size={16} /> Contacter
             </Link>
-            <button className="inline-flex h-11 items-center gap-2 rounded-full border border-white/30 px-5 text-[13px] font-bold text-white">
+            <button type="button" onClick={() => setReportNotice(`Signalement prepare pour ${profile.name}. Le formulaire de moderation sera relie a l API.`)} className="inline-flex h-11 items-center gap-2 rounded-full border border-white/30 px-5 text-[13px] font-bold text-white">
               <Flag size={16} /> Signaler
             </button>
           </div>

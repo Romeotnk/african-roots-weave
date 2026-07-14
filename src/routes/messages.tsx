@@ -296,7 +296,7 @@ function MessagesPage() {
 
               <footer className="border-t border-[var(--brand-border-light)] p-4">
                 <div className="flex items-end gap-2">
-                  <button className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Emoji">
+                  <button type="button" onClick={() => handleComposerAction("emoji")} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Emoji">
                     <Laugh size={17} />
                   </button>
                   <button type="button" onClick={() => handleComposerAction("attachment")} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Piece jointe">

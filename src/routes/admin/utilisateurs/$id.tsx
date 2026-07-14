@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { AdminCard, AdminLayout, AdminTable } from "@/components/admin/AdminLayout";
 import { adminFinance, adminKycQueue, adminUsers } from "@/data/admin";
 
@@ -12,6 +13,13 @@ function AdminUserDetail() {
   const user = adminUsers.find((item) => item.id === id) ?? adminUsers[0];
   const kyc = adminKycQueue.find((item) => item.user === user.name);
   const transactions = adminFinance.transactions.filter((item) => item.user === user.name);
+  const [adminNotice, setAdminNotice] = useState("");
+  const adminActions = [
+    { label: "Changer le role", message: `Modification du role preparee pour ${user.name}. Le formulaire admin API sera branche ici.` },
+    { label: "Suspendre le compte", message: `Suspension preparee pour ${user.name}. Une confirmation sera exigee en production.` },
+    { label: "Reinitialiser le mot de passe", message: `Email de reinitialisation pret a etre envoye a ${user.email}.` },
+    { label: "Envoyer un message", message: `Conversation admin ouverte en brouillon pour ${user.name}.` },
+  ];
 
   return (
     <AdminLayout title={user.name} description="Fiche utilisateur, rôles, statut, KYC et historique mock.">
@@ -42,12 +50,17 @@ function AdminUserDetail() {
           </div>
 
           <div className="mt-6 grid gap-2">
-            {["Changer le rôle", "Suspendre le compte", "Réinitialiser le mot de passe", "Envoyer un message"].map((action) => (
-              <button key={action} className="rounded-lg bg-white/5 px-4 py-3 text-left text-[13px] font-bold text-slate-200 hover:bg-white/10">
-                {action}
+            {adminActions.map((action) => (
+              <button key={action.label} type="button" onClick={() => setAdminNotice(action.message)} className="rounded-lg bg-white/5 px-4 py-3 text-left text-[13px] font-bold text-slate-200 hover:bg-white/10">
+                {action.label}
               </button>
             ))}
           </div>
+          {adminNotice && (
+            <p className="mt-4 rounded-lg border border-emerald-400/30 bg-emerald-400/10 p-3 text-[12px] font-semibold text-emerald-200">
+              {adminNotice}
+            </p>
+          )}
         </AdminCard>
 
         <div className="space-y-6">

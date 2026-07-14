@@ -20,6 +20,8 @@ function NewQuestion() {
   const [submitted, setSubmitted] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
   const [formError, setFormError] = useState("");
+  const [editorNotice, setEditorNotice] = useState("");
+  const [attachmentNotice, setAttachmentNotice] = useState("");
   const debouncedTitle = useDebounce(title, 300);
 
   const similarQuestions = useMemo(() => {
@@ -36,6 +38,20 @@ function NewQuestion() {
     if (!clean || tags.includes(clean)) return;
     setTags((current) => [...current, clean].slice(0, 6));
     setDraftTag("");
+    setDraftSaved(false);
+  };
+
+  const applyFormatting = (label: string) => {
+    const snippets: Record<string, string> = {
+      Gras: "**texte important**",
+      Italique: "_precision_",
+      Liste: "\n- point important\n- autre point",
+      Code: "`extrait ou dosage`",
+      Image: "\n![description de l image](url)",
+    };
+    setBody((current) => `${current}${current ? "\n" : ""}${snippets[label] ?? ""}`);
+    setEditorNotice(`${label} ajoute dans le corps de la question.`);
+    setSubmitted(false);
     setDraftSaved(false);
   };
 
@@ -138,6 +154,7 @@ function NewQuestion() {
                 <button
                   key={label}
                   type="button"
+                  onClick={() => applyFormatting(label)}
                   className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--brand-border)]"
                   aria-label={label}
                   title={label}
@@ -157,6 +174,7 @@ function NewQuestion() {
               placeholder="Contexte, age, pays, preparation utilisee, precautions deja prises..."
               className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3"
             />
+            {editorNotice && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[12px] text-emerald-800">{editorNotice}</p>}
             <div className="mt-2 flex justify-between text-[12px] text-[var(--color-text-muted)]">
               <span>Donnez assez de contexte pour recevoir une reponse utile.</span>
               <span>{body.trim().length} caracteres</span>
@@ -239,9 +257,10 @@ function NewQuestion() {
               <p className="max-w-md text-[13px] text-[var(--color-text-muted)]">
                 Upload reel a brancher plus tard. Pour l'instant, le bouton confirme simplement l'emplacement du flux.
               </p>
-              <button type="button" className="h-10 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
+              <button type="button" onClick={() => setAttachmentNotice("Selection de fichiers preparee. Le stockage sera relie a l API.")} className="h-10 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
                 Choisir des fichiers
               </button>
+              {attachmentNotice && <p className="max-w-md rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">{attachmentNotice}</p>}
             </div>
           </div>
 

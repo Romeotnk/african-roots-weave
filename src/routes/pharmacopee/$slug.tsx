@@ -19,6 +19,8 @@ function PlantMonograph() {
   const gallery = useMemo(() => plant.gallery ?? [plant.image], [plant.gallery, plant.image]);
   const [activeImage, setActiveImage] = useState(gallery[0]);
   const [feedback, setFeedback] = useState<"error" | "improve" | null>(null);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackSent, setFeedbackSent] = useState(false);
 
   useEffect(() => {
     setActiveImage(gallery[0]);
@@ -112,22 +114,23 @@ function PlantMonograph() {
         </div>
 
         <aside className="h-fit space-y-4 rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-          <button onClick={() => setFeedback("error")} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[13px] font-semibold">
+          <button type="button" onClick={() => { setFeedback("error"); setFeedbackMessage(""); setFeedbackSent(false); }} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[13px] font-semibold">
             <Bug size={15} /> Signaler une erreur
           </button>
-          <button onClick={() => setFeedback("improve")} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] text-[13px] font-semibold text-white">
+          <button type="button" onClick={() => { setFeedback("improve"); setFeedbackMessage(""); setFeedbackSent(false); }} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] text-[13px] font-semibold text-white">
             <Lightbulb size={15} /> Suggerer une amelioration
           </button>
           {feedback && (
             <div className="rounded-lg bg-[var(--brand-surface-alt)] p-4">
               <div className="flex items-center justify-between">
                 <p className="font-bold">{feedback === "error" ? "Erreur signalee" : "Amelioration proposee"}</p>
-                <button onClick={() => setFeedback(null)}><X size={15} /></button>
+                <button type="button" onClick={() => { setFeedback(null); setFeedbackMessage(""); setFeedbackSent(false); }} aria-label="Fermer le formulaire"><X size={15} /></button>
               </div>
-              <textarea rows={4} placeholder="Votre message..." className="mt-3 w-full rounded-lg border border-[var(--brand-border)] px-3 py-2 text-[13px]" />
-              <button className="mt-3 h-9 rounded-full bg-[var(--brand-primary)] px-4 text-[12px] font-semibold text-white">
+              <textarea rows={4} value={feedbackMessage} onChange={(event) => { setFeedbackMessage(event.target.value); setFeedbackSent(false); }} placeholder="Votre message..." className="mt-3 w-full rounded-lg border border-[var(--brand-border)] px-3 py-2 text-[13px]" />
+              <button type="button" onClick={() => setFeedbackSent(true)} disabled={feedbackMessage.trim().length < 10} className="mt-3 h-9 rounded-full bg-[var(--brand-primary)] px-4 text-[12px] font-semibold text-white disabled:opacity-50">
                 Envoyer en mock
               </button>
+              {feedbackSent && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[12px] text-emerald-800">Contribution enregistree en mock. Elle sera reliee a la moderation.</p>}
             </div>
           )}
         </aside>

@@ -44,6 +44,7 @@ function QuestionDetail() {
   const [acceptedAnswerId, setAcceptedAnswerId] = useState(sortedAnswers.find((answerItem) => answerItem.accepted)?.id ?? "");
   const [answer, setAnswer] = useState("");
   const [answerSubmitted, setAnswerSubmitted] = useState(false);
+  const [attachmentNotice, setAttachmentNotice] = useState("");
 
   const voteAnswer = (answerId: string, initialVotes: number, delta: number) => {
     setAnswerVotes((current) => ({
@@ -239,7 +240,7 @@ function QuestionDetail() {
               className="mt-4 w-full rounded-lg border border-[var(--brand-border)] px-4 py-3"
             />
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-              <button type="button" className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
+              <button type="button" onClick={() => setAttachmentNotice("Ajout d image prepare. Le stockage de fichiers sera branche a l API.")} className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
                 <Paperclip size={15} /> Ajouter une image
               </button>
               <button
@@ -254,6 +255,9 @@ function QuestionDetail() {
                 Publier la reponse
               </button>
             </div>
+            {attachmentNotice && (
+              <p className="mt-3 rounded-lg bg-amber-50 p-3 text-[13px] text-amber-800">{attachmentNotice}</p>
+            )}
             {answerSubmitted && (
               <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[13px] text-emerald-800">
                 Reponse ajoutee en mock. Elle sera sauvegardee apres la liaison API.

@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import type { EventItem } from "@/types";
 import { MapPin, Wifi } from "lucide-react";
 
@@ -5,12 +6,22 @@ const typeColors: Record<string, string> = {
   WEBINAIRE: "bg-[var(--brand-info)]/10 text-[var(--brand-info)]",
   FORMATION: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]",
   SALON: "bg-[var(--brand-warning)]/10 text-[var(--brand-warning)]",
+  CONFERENCE: "bg-blue-50 text-blue-700",
+  ATELIER: "bg-amber-50 text-amber-700",
 };
 
-export function EventCard({ event }: { event: EventItem }) {
+type EventCardProps = {
+  event: EventItem;
+  actionLabel?: string;
+  onRegister?: () => void;
+};
+
+export function EventCard({ event, actionLabel = "S'inscrire", onRegister }: EventCardProps) {
   const d = new Date(event.date);
   const day = d.getDate();
   const month = d.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "").toUpperCase();
+  const actionClass = "text-[12px] font-semibold text-[var(--brand-primary)] hover:underline";
+
   return (
     <article className="bg-[var(--color-surface)] rounded-[12px] border border-[var(--brand-border-light)] shadow-iwosan-sm card-hover overflow-hidden">
       <div className="flex flex-col md:flex-row">
@@ -24,7 +35,7 @@ export function EventCard({ event }: { event: EventItem }) {
         </div>
         <div className="flex-1 p-5">
           <span
-            className={`inline-block text-[10px] font-bold uppercase tracking-[0.1em] px-2 py-1 rounded ${typeColors[event.type]}`}
+            className={`inline-block text-[10px] font-bold uppercase tracking-[0.1em] px-2 py-1 rounded ${typeColors[event.type] ?? "bg-[var(--brand-surface-alt)] text-[var(--color-text-secondary)]"}`}
           >
             {event.type}
           </span>
@@ -38,9 +49,15 @@ export function EventCard({ event }: { event: EventItem }) {
             <span className="inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)]">
               {event.online ? <Wifi size={12} /> : <MapPin size={12} />} {event.location}
             </span>
-            <button className="text-[12px] font-semibold text-[var(--brand-primary)] hover:underline">
-              S'inscrire →
-            </button>
+            {onRegister ? (
+              <button type="button" onClick={onRegister} className={actionClass}>
+                {actionLabel} -&gt;
+              </button>
+            ) : (
+              <Link to="/agenda" className={actionClass}>
+                {actionLabel} -&gt;
+              </Link>
+            )}
           </div>
         </div>
       </div>
