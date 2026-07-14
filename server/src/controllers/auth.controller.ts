@@ -8,7 +8,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { clearRefreshCookie, setRefreshCookie } from "../utils/cookies.js";
 import { ApiError } from "../utils/errors.js";
-import { generateReferralCode, hashToken } from "../utils/random.js";
+import { generateReferralCode, hashToken, randomToken } from "../utils/random.js";
 import {
   createAccessTokenForUser,
   createEmailVerification,
@@ -212,6 +212,193 @@ export const login = asyncHandler(async (req, res) => {
   setRefreshCookie(res, refreshToken);
 
   const { passwordHash: _passwordHash, ...safeUser } = user;
+  res.json(apiResponse(true, { accessToken, user: safeUser }, "Login successful"));
+});
+
+
+type SupabaseUserResponse = {
+  id: string;
+  email?: string;
+  email_confirmed_at?: string | null;
+  user_metadata?: {
+    avatar_url?: string;
+    full_name?: string;
+    name?: string;
+    first_name?: string;
+    last_name?: string;
+    picture?: string;
+  };
+};
+
+const createUniqueReferralCode = async (firstName: string, lastName: string) => {
+  let referralCode = generateReferralCode(firstName, lastName);
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const exists = await prisma.user.findUnique({ where: { referralCode }, select: { id: true } });
+    if (!exists) return referralCode;
+    referralCode = generateReferralCode(firstName, lastName);
+  }
+  return `${generateReferralCode(firstName, lastName)}${randomToken(2).toUpperCase()}`;
+};
+
+const splitDisplayName = (metadata: SupabaseUserResponse["user_metadata"] = {}) => {
+  const fullName = metadata.full_name ?? metadata.name ?? "";
+  const [first, ...rest] = fullName.trim().split(/\s+/).filter(Boolean);
+  return {
+    firstName: metadata.first_name ?? first ?? "Utilisateur",
+    lastName: metadata.last_name ?? (rest.join(" ") || "Iwosan"),
+  };
+};
+
+const getSupabaseUser = async (accessToken: string) => {
+  if (!env.supabaseUrl || !env.supabasePublishableKey) {
+    throw new ApiError(500, "Supabase OAuth is not configured");
+  }
+
+  const response = await fetch(`${env.supabaseUrl.replace(/\/+$/, "")}/auth/v1/user`, {
+    headers: {
+      apikey: env.supabasePublishableKey,
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new ApiError(401, "Invalid Supabase session");
+  }
+
+  return (await response.json()) as SupabaseUserResponse;
+};
+
+export const supabaseAuth = asyncHandler(async (req, res) => {
+  const { accessToken: supabaseAccessToken } = req.body;
+  const supabaseUser = await getSupabaseUser(supabaseAccessToken);
+
+  if (!supabaseUser.email) {
+    throw new ApiError(400, "Supabase account has no email");
+  }
+
+  const email = supabaseUser.email.toLowerCase();
+  const metadata = supabaseUser.user_metadata ?? {};
+  const { firstName, lastName } = splitDisplayName(metadata);
+  const avatarUrl = metadata.avatar_url ?? metadata.picture ?? null;
+
+  const user = await prisma.$transaction(async (tx) => {
+    const existing = await tx.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        adminSubRole: true,
+        isResearcher: true,
+        isEmailVerified: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        country: true,
+        language: true,
+        kycStatus: true,
+        isActive: true,
+        isBanned: true,
+        banReason: true,
+        banExpiresAt: true,
+      },
+    });
+
+    if (existing) {
+      return tx.user.update({
+        where: { id: existing.id },
+        data: {
+          isEmailVerified: true,
+          lastLoginAt: new Date(),
+          avatarUrl: existing.avatarUrl ?? avatarUrl,
+        },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          adminSubRole: true,
+          isResearcher: true,
+          isEmailVerified: true,
+          firstName: true,
+          lastName: true,
+          avatarUrl: true,
+          country: true,
+          language: true,
+          kycStatus: true,
+          isActive: true,
+          isBanned: true,
+          banReason: true,
+          banExpiresAt: true,
+        },
+      });
+    }
+
+    const referralCode = await createUniqueReferralCode(firstName, lastName);
+    const created = await tx.user.create({
+      data: {
+        email,
+        passwordHash: await hashPassword(randomToken(48)),
+        firstName,
+        lastName,
+        avatarUrl,
+        country: "BJ",
+        role: Role.USER,
+        adminSubRole: null,
+        isResearcher: false,
+        isEmailVerified: true,
+        language: "fr",
+        referralCode,
+        lastLoginAt: new Date(),
+      },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        adminSubRole: true,
+        isResearcher: true,
+        isEmailVerified: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        country: true,
+        language: true,
+        kycStatus: true,
+        isActive: true,
+        isBanned: true,
+        banReason: true,
+        banExpiresAt: true,
+      },
+    });
+
+    await tx.mLMNode.create({
+      data: {
+        userId: created.id,
+        level: 0,
+        affiliateCode: referralCode,
+      },
+    });
+
+    return created;
+  });
+
+  if (user.isBanned && user.banExpiresAt && user.banExpiresAt <= new Date()) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { isBanned: false, banReason: null, banExpiresAt: null },
+    });
+    user.isBanned = false;
+    user.banReason = null;
+  }
+
+  if (!user.isActive || user.isBanned) {
+    throw new ApiError(403, user.banReason ?? "Account unavailable");
+  }
+
+  const accessToken = createAccessTokenForUser(user);
+  const refreshToken = await createRefreshTokenForUser(user.id);
+  setRefreshCookie(res, refreshToken);
+
+  const { isActive: _isActive, isBanned: _isBanned, banReason: _banReason, banExpiresAt: _banExpiresAt, ...safeUser } = user;
   res.json(apiResponse(true, { accessToken, user: safeUser }, "Login successful"));
 });
 

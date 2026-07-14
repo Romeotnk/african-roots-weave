@@ -8,6 +8,7 @@ import {
   refresh,
   register,
   resetPassword,
+  supabaseAuth,
   submitKyc,
   updateMe,
   verifyEmail,
@@ -22,6 +23,7 @@ import {
   registerValidator,
   resetPasswordValidator,
   submitKycValidator,
+  supabaseAuthValidator,
   tokenParamValidator,
   updateMeValidator,
 } from "../validators/auth.validators.js";
@@ -32,6 +34,7 @@ export const authRouter = Router();
 authRouter.post("/register", authRateLimit, registerValidator, validateRequest, register);
 authRouter.post("/login", authRateLimit, loginValidator, validateRequest, login);
 authRouter.post("/refresh", refresh);
+authRouter.post("/supabase", supabaseAuthValidator, validateRequest, supabaseAuth);
 authRouter.get("/me", authMiddleware, me);
 authRouter.patch("/me", authMiddleware, updateMeValidator, validateRequest, updateMe);
 authRouter.post("/kyc", authMiddleware, submitKycValidator, validateRequest, submitKyc);

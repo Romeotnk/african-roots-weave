@@ -50,6 +50,22 @@ const translateApiMessage = (message: string) => {
   return normalized || "Erreur API Iwosan";
 };
 
+
+const translateNetworkError = (error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
+  const lower = message.toLowerCase();
+
+  if (
+    lower.includes("load failed") ||
+    lower.includes("failed to fetch") ||
+    lower.includes("networkerror") ||
+    lower.includes("network request failed")
+  ) {
+    return "Impossible de joindre le serveur. Verifiez votre connexion ou reessayez dans un instant.";
+  }
+
+  return translateApiMessage(message);
+};
 const parseApiEnvelope = async <T>(response: Response): Promise<ApiEnvelope<T>> => {
   const contentType = response.headers.get("content-type") ?? "";
   const text = await response.text();
@@ -127,12 +143,17 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers,
-    credentials: "include",
-    body: options.body instanceof FormData ? options.body : options.body === undefined ? undefined : JSON.stringify(options.body),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+      credentials: "include",
+      body: options.body instanceof FormData ? options.body : options.body === undefined ? undefined : JSON.stringify(options.body),
+    });
+  } catch (error) {
+    throw new Error(translateNetworkError(error));
+  }
 
   if (response.status === 401 && !options.skipAuthRetry) {
     const refreshed = await refreshAccessToken();

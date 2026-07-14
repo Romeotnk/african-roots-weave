@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { login } from "@/lib/api/auth";
+import { signInWithSocialProvider, type SocialAuthProvider } from "@/lib/auth/social";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 export const Route = createFileRoute("/connexion")({
   head: () => ({ meta: [{ title: "Connexion - IWOSAN" }] }),
@@ -10,11 +12,19 @@ export const Route = createFileRoute("/connexion")({
 
 function Connexion() {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSocialSubmitting, setIsSocialSubmitting] = useState<SocialAuthProvider | null>(null);
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate({ to: "/tableau-de-bord" });
+    }
+  }, [loading, navigate, user]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -30,6 +40,18 @@ function Connexion() {
     }
   };
 
+  const handleSocialSignIn = async (provider: SocialAuthProvider) => {
+    setError(null);
+    setIsSocialSubmitting(provider);
+
+    try {
+      await signInWithSocialProvider(provider);
+    } catch (socialError) {
+      setError(socialError instanceof Error ? socialError.message : "La connexion sociale n'a pas pu etre lancee.");
+      setIsSocialSubmitting(null);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-[var(--brand-bg)]">
       <div className="w-full max-w-[420px]">
@@ -39,7 +61,7 @@ function Connexion() {
         <div className="bg-[var(--color-surface)] rounded-[24px] shadow-iwosan-xl p-8 md:p-10">
           <h2 className="text-[28px] text-center font-bold">Bon retour !</h2>
           <p className="text-center text-[14px] text-[var(--color-text-muted)] mt-1">
-            Connectez-vous à votre espace Iwosan
+            Connectez-vous a votre espace Iwosan
           </p>
           <form className="mt-7 space-y-4" onSubmit={handleSubmit}>
             <input
@@ -70,7 +92,7 @@ function Connexion() {
             </div>
             <div className="text-right">
               <Link to="/mot-de-passe-oublie" className="text-[13px] font-semibold text-[var(--brand-primary)] hover:underline">
-                Mot de passe oublié ?
+                Mot de passe oublie ?
               </Link>
             </div>
             {error && (
@@ -80,9 +102,22 @@ function Connexion() {
               {isSubmitting ? "Connexion..." : "Se connecter"}
             </button>
           </form>
+
+          <div className="my-6 flex items-center gap-3 text-[12px] text-[var(--color-text-muted)]">
+            <div className="h-px flex-1 bg-[var(--brand-border-light)]" /> ou continuer avec <div className="h-px flex-1 bg-[var(--brand-border-light)]" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <button type="button" onClick={() => handleSocialSignIn("google")} disabled={isSocialSubmitting !== null} className="h-11 rounded-[8px] border border-[var(--brand-border)] text-[14px] font-semibold hover:bg-[var(--brand-surface-alt)] disabled:opacity-70">
+              {isSocialSubmitting === "google" ? "Ouverture..." : "Google"}
+            </button>
+            <button type="button" onClick={() => handleSocialSignIn("facebook")} disabled={isSocialSubmitting !== null} className="h-11 rounded-[8px] bg-[#1877F2] text-[14px] font-semibold text-white disabled:opacity-70">
+              {isSocialSubmitting === "facebook" ? "Ouverture..." : "Facebook"}
+            </button>
+          </div>
+
           <p className="mt-6 text-center text-[14px] text-[var(--color-text-muted)]">
             Pas encore inscrit ?{" "}
-            <Link to="/inscription" className="font-semibold text-[var(--brand-primary)]">Créer un compte</Link>
+            <Link to="/inscription" className="font-semibold text-[var(--brand-primary)]">Creer un compte</Link>
           </p>
         </div>
       </div>

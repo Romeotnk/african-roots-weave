@@ -17,6 +17,8 @@ export const env = {
   jwtEmailSecret: process.env.JWT_EMAIL_SECRET ?? "dev_email_secret",
   jwtPasswordResetSecret: process.env.JWT_PASSWORD_RESET_SECRET ?? "dev_password_reset_secret",
   turnstileSecretKey: process.env.TURNSTILE_SECRET_KEY,
+  supabaseUrl: process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL,
+  supabasePublishableKey: process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY,
   smtp: {
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT ?? 587),

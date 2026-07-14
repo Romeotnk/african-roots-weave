@@ -2,8 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { ArrowRight, BriefcaseBusiness, CheckCircle2, Eye, EyeOff, ShieldCheck, Sparkles, User } from "lucide-react";
 import { CountrySelect } from "@/components/shared/CountrySelect";
-import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 import { register } from "@/lib/api/auth";
+import { signInWithSocialProvider } from "@/lib/auth/social";
 
 export const Route = createFileRoute("/inscription")({
   head: () => ({ meta: [{ title: "Inscription - IWOSAN" }] }),
@@ -102,22 +102,12 @@ function Inscription() {
   const handleSocialSignIn = async (provider: "google" | "facebook") => {
     setError(null);
     setMessage(null);
-
-    if (!isSupabaseConfigured) {
-      setError("La connexion Google/Facebook n'est pas encore configuree. Ajoutez Supabase et les providers OAuth pour l'activer.");
-      return;
-    }
-
     setIsSocialSubmitting(provider);
+
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo: `${window.location.origin}/connexion` },
-      });
-      if (error) throw error;
+      await signInWithSocialProvider(provider);
     } catch (socialError) {
       setError(socialError instanceof Error ? socialError.message : "La connexion sociale n'a pas pu etre lancee.");
-    } finally {
       setIsSocialSubmitting(null);
     }
   };

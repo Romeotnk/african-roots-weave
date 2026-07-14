@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 import { authTokenStore } from "@/lib/api/client";
-import { backendAuthUserStore, logout as backendLogout, type AuthUser } from "@/lib/api/auth";
+import { backendAuthUserStore, loginWithSupabaseAccessToken, logout as backendLogout, type AuthUser } from "@/lib/api/auth";
 
 export type AppRole = "user" | "professional" | "researcher" | "moderator" | "editor" | "admin" | "super_admin";
 
@@ -62,6 +62,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const syncBackendFromSupabaseSession = async (supabaseSession: Session | null) => {
+    const token = supabaseSession?.access_token;
+    if (!token) return false;
+
+    try {
+      const response = await loginWithSupabaseAccessToken(token);
+      if (response.data?.user) {
+        setSession(null);
+        setUser(toSupabaseLikeUser(response.data.user));
+        setRoles(rolesFromBackendUser(response.data.user));
+        return true;
+      }
+    } catch (error) {
+      console.warn("Synchronisation OAuth Supabase vers backend indisponible.", error);
+    }
+
+    return false;
+  };
   const loadRoles = async (uid: string | undefined) => {
     if (!uid) {
       setRoles([]);

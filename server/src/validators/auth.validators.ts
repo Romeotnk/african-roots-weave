@@ -60,3 +60,7 @@ export const changePasswordValidator = [
 ];
 
 export const tokenParamValidator = [param("token").isString().notEmpty()];
+
+export const supabaseAuthValidator = [
+  body("accessToken").isString().notEmpty().withMessage("Supabase access token required"),
+];

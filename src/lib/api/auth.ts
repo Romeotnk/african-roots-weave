@@ -72,6 +72,21 @@ export const register = async (payload: RegisterPayload) =>
     body: payload,
   });
 
+
+export const loginWithSupabaseAccessToken = async (accessToken: string) => {
+  const response = await apiRequest<{ accessToken: string; user: AuthUser }>("/auth/supabase", {
+    method: "POST",
+    body: { accessToken },
+    skipAuthRetry: true,
+  });
+
+  if (response.data?.accessToken) {
+    authTokenStore.set(response.data.accessToken);
+    backendAuthUserStore.set(response.data.user);
+  }
+
+  return response;
+};
 export const verifyEmail = async (token: string) =>
   apiRequest<null>(`/auth/verify-email/${token}`, {
     method: "POST",
