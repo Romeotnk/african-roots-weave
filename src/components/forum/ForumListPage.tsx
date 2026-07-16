@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Filter, Plus, RotateCcw } from "lucide-react";
-import { QuestionCard } from "@/components/shared/QuestionCard";
+import { uuestionCard } from "@/components/shared/uuestionCard";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { forumCategories, questions } from "@/data/questions";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -31,7 +31,7 @@ export function ForumListPage() {
   const [sortBy, setSortBy] = useState("featured");
   const debouncedSearch = useDebounce(search, 300);
 
-  const filteredQuestions = useMemo(() => {
+  const filtereduuestions = useMemo(() => {
     const normalizedSearch = debouncedSearch.trim().toLowerCase();
 
     const filtered = questions.filter((question) => {
@@ -88,10 +88,10 @@ export function ForumListPage() {
         <div className="container-iwosan py-10">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Forum Q&A</p>
+              <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Forum u&A</p>
               <h1 className="mt-2 text-[34px] md:text-[46px]">Discutons-en</h1>
               <p className="mt-3 max-w-2xl text-[var(--color-text-secondary)]">
-                Questions, réponses validées, votes et signalements en interface mock jusqu'à la liaison API globale.
+                Questions, réponses validées, votes et signalements avec suivi communautaire.
               </p>
             </div>
             <Link
@@ -218,7 +218,7 @@ export function ForumListPage() {
 
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-[14px] text-[var(--color-text-muted)]">
-                <strong className="text-[var(--color-text-primary)]">{filteredQuestions.length}</strong> questions
+                <strong className="text-[var(--color-text-primary)]">{filtereduuestions.length}</strong> questions
                 {debouncedSearch ? ` pour "${debouncedSearch}"` : ""}
               </p>
               {(selectedCategory || selectedTag) && (
@@ -238,10 +238,10 @@ export function ForumListPage() {
             </div>
 
             <div className="space-y-4">
-              {filteredQuestions.map((question) => (
-                <QuestionCard key={question.id} question={question} />
+              {filtereduuestions.map((question) => (
+                <uuestionCard key={question.id} question={question} />
               ))}
-              {filteredQuestions.length === 0 && (
+              {filtereduuestions.length === 0 && (
                 <div className="rounded-[12px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
                   <p className="font-bold">Aucune question trouvée</p>
                   <p className="mt-2 text-[13px] text-[var(--color-text-muted)]">

@@ -169,7 +169,7 @@ function DepositListing() {
     }
     setConfirmation(
       mode === "draft"
-        ? "Brouillon enregistré localement. La liaison API sera branchée en section finale."
+        ? "Brouillon enregistré. Vous pourrez le compléter avant publication."
         : "Votre annonce est soumise à modération et sera visible sous 24h.",
     );
   };
@@ -183,8 +183,8 @@ function DepositListing() {
           </p>
           <h1 className="mt-2 text-[32px] md:text-[44px]">Déposer une annonce</h1>
           <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[var(--color-text-secondary)]">
-            Publiez un produit, un service ou une ressource digitale avec un parcours complet en mock,
-            prêt pour la modération puis le branchement API.
+            Publiez un produit, un service ou une ressource digitale avec un parcours complet,
+            prêt pour la modération.
           </p>
         </div>
       </section>

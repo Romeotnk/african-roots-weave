@@ -24,11 +24,12 @@ import {
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { apiRequest, authTokenStore } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { PROFESSIONAL_ACCOUNT_ROLES } from "@/lib/auth/roles";
 
 export const Route = createFileRoute("/tableau-de-bord")({
   head: () => ({ meta: [{ title: "Tableau de bord - IWOSAN" }] }),
   component: () => (
-    <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={PROFESSIONAL_ACCOUNT_ROLES}>
       <Dashboard />
     </ProtectedRoute>
   ),
@@ -41,7 +42,7 @@ const groups = [
     items: [
       { icon: ShoppingBag, label: "Mes produits", to: "/tableau-de-bord/mes-produits" },
       { icon: Package, label: "Commandes", to: "/tableau-de-bord/commandes" },
-      { icon: Wallet, label: "Revenus", to: "/mon-compte/portefeuille" },
+      { icon: Wallet, label: "Revenus", to: "/tableau-de-bord/commissions" },
       { icon: Tag, label: "Coupons", to: "/tableau-de-bord/coupons" },
     ],
   },
@@ -65,7 +66,7 @@ const groups = [
     title: "Reseau",
     items: [
       { icon: Users, label: "Mon reseau", to: "/tableau-de-bord/reseau" },
-      { icon: Users, label: "Affiliations", to: "/mon-compte/affiliation" },
+      { icon: Users, label: "Affiliations", to: "/tableau-de-bord/reseau" },
       { icon: Wallet, label: "Commissions", to: "/tableau-de-bord/commissions" },
     ],
   },
@@ -241,7 +242,7 @@ function Dashboard() {
 
           <section className="grid grid-cols-1 gap-3 lg:grid-cols-3">
             <ActionLink to="/marketplace/deposer" primary label="Ajouter un produit" />
-            <ActionLink to="/dashboard/annonces" label="Gerer mes annonces" />
+            <ActionLink to="/tableau-de-bord/mes-produits" label="Gerer mes annonces" />
             <ActionLink to="/messages" label="Voir mes messages" />
           </section>
 

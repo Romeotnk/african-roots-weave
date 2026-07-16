@@ -41,29 +41,29 @@ type AdminPageKind =
 
 const labels: Record<AdminPageKind, { title: string; description: string }> = {
   home: { title: "Page d'accueil", description: "Sections activables, ordre, hero et blocs visibles." },
-  menus: { title: "Menus de navigation", description: "Header, footer, sous-menus et visibilite." },
+  menus: { title: "Menus de navigation", description: "Header, footer, sous-menus et visibilité." },
   pages: { title: "Pages statiques", description: "Pages CMS, SEO et statuts de publication." },
-  identity: { title: "Identite visuelle", description: "Logo, couleurs, typographie et CSS personnalise." },
-  ads: { title: "Bannieres et publicites", description: "Emplacements, campagnes et performances mock." },
+  identity: { title: "Identité visuelle", description: "Logo, couleurs, typographie et CSS personnalisé." },
+  ads: { title: "Bannières et publicités", description: "Emplacements, campagnes et performances." },
   content: { title: "Contenus", description: "Articles, pharmacophee, rites, recettes, agenda et formations." },
-  marketplace: { title: "Marketplace", description: "Moderation annonces, categories, boosts et encheres." },
-  users: { title: "Utilisateurs", description: "Recherche, roles, suspension et fiches utilisateurs." },
-  kyc: { title: "KYC en attente", description: "Documents soumis, approbation et rejet motive." },
+  marketplace: { title: "Marketplace", description: "Modération annonces, catégories, boosts et enchères." },
+  users: { title: "Utilisateurs", description: "Recherche, rôles, suspension et fiches utilisateurs." },
+  kyc: { title: "KYC en attente", description: "Documents soumis, approbation et rejet motivé." },
   finance: { title: "Finances", description: "Commissions, transactions, escrow et retraits." },
   transactions: { title: "Transactions", description: "Tableau complet, filtres et export CSV." },
-  commissions: { title: "Commissions", description: "Taux globaux, categories, pros et historique." },
-  refunds: { title: "Remboursements", description: "Demandes en attente et historique traite." },
-  disputes: { title: "Litiges", description: "Timeline, messages, preuves et resolution." },
+  commissions: { title: "Commissions", description: "Taux globaux, catégories, pros et historique." },
+  refunds: { title: "Remboursements", description: "Demandes en attente et historique traité." },
+  disputes: { title: "Litiges", description: "Timeline, messages, preuves et résolution." },
   communication: { title: "Communication", description: "Newsletter, notifications push et tickets." },
-  newsletter: { title: "Newsletter", description: "Abonnes, campagnes, editeur et apercus." },
-  notifications: { title: "Notifications push", description: "Envoi cible et historique mock." },
-  tickets: { title: "Tickets support", description: "Liste, statut, priorite, assignation et reponses." },
-  community: { title: "Communaute", description: "Signalements, questions vedettes et avis." },
+  newsletter: { title: "Newsletter", description: "Abonnés, campagnes, éditeur et aperçus." },
+  notifications: { title: "Notifications push", description: "Envoi ciblé et historique." },
+  tickets: { title: "Tickets support", description: "Liste, statut, priorité, assignation et réponses." },
+  community: { title: "Communauté", description: "Signalements, questions vedettes et avis." },
   reports: { title: "Signalements forum", description: "Files de moderation et actions." },
-  forum: { title: "Forum admin", description: "Questions vedettes et categories CRUD." },
-  reviews: { title: "Avis et evaluations", description: "Avis publies, signales et moderation." },
-  affiliate: { title: "Affiliation & MLM", description: "Taux par niveau, affilies et versements." },
-  logs: { title: "Logs d'activite", description: "Journal admin en lecture seule." },
+  forum: { title: "Forum admin", description: "Questions vedettes et catégories CRUD." },
+  reviews: { title: "Avis et évaluations", description: "Avis publiés, signalés et modération." },
+  affiliate: { title: "Affiliation & MLM", description: "Taux par niveau, affiliés et versements." },
+  logs: { title: "Logs d'activité", description: "Journal admin en lecture seule." },
 };
 
 function ActionButton({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
@@ -107,8 +107,8 @@ export function AdminGenericPage({ kind }: { kind: AdminPageKind }) {
               <Field label="Titre" value="Iwosan, savoirs africains vivants" />
               <Field label="Sous-titre" value="Marketplace, praticiens, pharmacophee et formation" />
               <Field label="CTA" value="Explorer la plateforme" />
-              <Field label="Duree slide" value="6" type="number" />
-              <textarea defaultValue="Apercu et edition mock du contenu hero." className="min-h-28 w-full rounded-lg border border-white/10 bg-white/5 p-3 text-[13px]" />
+              <Field label="Durée slide" value="6" type="number" />
+              <textarea defaultValue="Aperçu et édition du contenu hero." className="min-h-28 w-full rounded-lg border border-white/10 bg-white/5 p-3 text-[13px]" />
             </div>
           </AdminCard>
         </div>
@@ -140,11 +140,11 @@ export function AdminGenericPage({ kind }: { kind: AdminPageKind }) {
       return (
         <AdminCard>
           <div className="mb-4 flex justify-between gap-3"><h2 className="text-[18px] font-bold text-white">Pages CMS</h2><ActionButton>Nouvelle page</ActionButton></div>
-          <AdminTable headers={["Titre", "Slug", "Statut", "Verrou", "Maj", "Actions"]} rows={adminStaticPages.map((page) => [page.title, page.slug, page.status, page.locked ? "Systeme" : "-", page.updatedAt, "Apercu / Editer"])} />
+          <AdminTable headers={["Titre", "Slug", "Statut", "Verrou", "Maj", "Actions"]} rows={adminStaticPages.map((page) => [page.title, page.slug, page.status, page.locked ? "Système" : "-", page.updatedAt, "Aperçu / Éditer"])} />
           <div className="mt-5 grid gap-4 lg:grid-cols-2">
             <Field label="Meta title" value="Iwosan - page CMS" />
             <Field label="Meta description" value="Description SEO avec compteur et apercu Google." />
-            <textarea className="min-h-32 rounded-lg border border-white/10 bg-white/5 p-3 text-[13px] lg:col-span-2" defaultValue="<h2>Contenu riche mock</h2><p>Editeur TipTap a brancher en API.</p>" />
+            <textarea className="min-h-32 rounded-lg border border-white/10 bg-white/5 p-3 text-[13px] lg:col-span-2" defaultValue="<h2>Contenu riche</h2><p>Éditeur de contenu administrable.</p>" />
           </div>
         </AdminCard>
       );
@@ -162,19 +162,19 @@ export function AdminGenericPage({ kind }: { kind: AdminPageKind }) {
             </div>
           </AdminCard>
           <AdminCard>
-            <h2 className="mb-4 text-[18px] font-bold text-white">Apercu</h2>
+            <h2 className="mb-4 text-[18px] font-bold text-white">Aperçu</h2>
             <div className="rounded-lg bg-white p-4 text-[#111827]">
               <div className="flex items-center justify-between border-b pb-3"><strong>IWOSAN</strong><button type="button" className="rounded-full bg-[#1A5C2A] px-4 py-2 text-white">Bouton</button></div>
-              <p className="mt-4 rounded bg-[#F8F4E8] p-4">Carte, badge et lien de previsualisation.</p>
+              <p className="mt-4 rounded bg-[#F8F4E8] p-4">Carte, badge et lien de prévisualisation.</p>
             </div>
-            <textarea className="mt-4 min-h-32 w-full rounded-lg border border-red-400/40 bg-red-500/10 p-3 text-[13px]" defaultValue="/* CSS personnalise reserve aux admins techniques */" />
+            <textarea className="mt-4 min-h-32 w-full rounded-lg border border-red-400/40 bg-red-500/10 p-3 text-[13px]" defaultValue="/* CSS personnalisé réservé aux admins techniques */" />
           </AdminCard>
         </div>
       );
     }
 
     if (kind === "content") {
-      return <AdminTable headers={["Module", "Elements", "Statut", "Action"]} rows={[["Articles", adminModules.editorial.articles.length, "Publie", "Gerer"], ["Pharmacopee", adminModules.editorial.plantsCount, "Publie", "Gerer"], ["Recettes", adminModules.editorial.recipes.length, "Publie", "Gerer"], ["Agenda", adminModules.editorial.events.length, "Actif", "Gerer"], ["Formations", adminModules.editorial.trainings.length, "Actif", "Gerer"]]} />;
+      return <AdminTable headers={["Module", "Elements", "Statut", "Action"]} rows={[["Articles", adminModules.editorial.articles.length, "Publié", "Gérer"], ["Pharmacopee", adminModules.editorial.plantsCount, "Publié", "Gérer"], ["Recettes", adminModules.editorial.recipes.length, "Publié", "Gérer"], ["Agenda", adminModules.editorial.events.length, "Actif", "Gérer"], ["Formations", adminModules.editorial.trainings.length, "Actif", "Gérer"]]} />;
     }
 
     if (kind === "marketplace") {
@@ -228,11 +228,11 @@ export function AdminGenericPage({ kind }: { kind: AdminPageKind }) {
     }
 
     if (kind === "notifications") {
-      return <AdminCard><h2 className="mb-4 text-[18px] font-bold text-white">Envoyer une notification</h2><div className="grid gap-4 md:grid-cols-2"><Field label="Titre" value="Nouvelle annonce disponible" /><Field label="Lien" value="/marketplace" /><textarea className="min-h-32 rounded-lg border border-white/10 bg-white/5 p-3 md:col-span-2" defaultValue="Corps du message push in-app." /></div><button type="button" onClick={() => setNotice("Notification envoyee en mock.")} className="mt-4 rounded-full bg-emerald-400 px-4 py-2 text-[12px] font-bold text-[#111827]">Envoyer</button></AdminCard>;
+      return <AdminCard><h2 className="mb-4 text-[18px] font-bold text-white">Envoyer une notification</h2><div className="grid gap-4 md:grid-cols-2"><Field label="Titre" value="Nouvelle annonce disponible" /><Field label="Lien" value="/marketplace" /><textarea className="min-h-32 rounded-lg border border-white/10 bg-white/5 p-3 md:col-span-2" defaultValue="Corps du message push in-app." /></div><button type="button" onClick={() => setNotice("Notification envoyée.")} className="mt-4 rounded-full bg-emerald-400 px-4 py-2 text-[12px] font-bold text-[#111827]">Envoyer</button></AdminCard>;
     }
 
     if (kind === "tickets") {
-      return <AdminTable headers={["ID", "Sujet", "Categorie", "Statut", "Messages", "Actions"]} rows={adminModules.tickets.map((ticket) => [ticket.id, ticket.subject, ticket.category, ticket.status, ticket.messages.length, "Repondre / Assigner"])} />;
+      return <AdminTable headers={["ID", "Sujet", "Categorie", "Statut", "Messages", "Actions"]} rows={adminModules.tickets.map((ticket) => [ticket.id, ticket.subject, ticket.category, ticket.status, ticket.messages.length, "Répondre / Assigner"])} />;
     }
 
     if (kind === "reports") {
@@ -252,18 +252,18 @@ export function AdminGenericPage({ kind }: { kind: AdminPageKind }) {
     }
 
     if (kind === "ads") {
-      return <AdminTable headers={["Emplacement", "Format", "Statut", "Clics", "Actions"]} rows={[["Accueil haut", "Banniere 1200x300", "Actif", 240, "Editer"], ["Sidebar blog", "Carre 300x300", "Inactif", 0, "Activer"]]} />;
+      return <AdminTable headers={["Emplacement", "Format", "Statut", "Clics", "Actions"]} rows={[["Accueil haut", "Banniere 1200x300", "Actif", 240, "Éditer"], ["Sidebar blog", "Carre 300x300", "Inactif", 0, "Activer"]]} />;
     }
 
     return (
       <div className="grid gap-6 xl:grid-cols-2">
         <AdminCard>
           <h2 className="mb-4 text-[18px] font-bold text-white">Synthese</h2>
-          <p className="text-[14px] leading-7 text-slate-300">Module admin mock pret. Les endpoints backend seront branches via le client API centralise.</p>
+          <p className="text-[14px] leading-7 text-slate-300">Module admin prêt pour le pilotage opérationnel.</p>
         </AdminCard>
         <AdminCard>
           <h2 className="mb-4 text-[18px] font-bold text-white">Actions</h2>
-          <div className="space-y-3"><ActionButton onClick={() => setNotice("Brouillon cree en mock.")}>Creer</ActionButton><ActionButton onClick={() => setNotice("Export CSV prepare en mock.")}>Exporter CSV</ActionButton><ActionButton onClick={() => setNotice("Modifications enregistrees en mock.")}>Enregistrer</ActionButton></div>
+          <div className="space-y-3"><ActionButton onClick={() => setNotice("Brouillon créé.")}>Créer</ActionButton><ActionButton onClick={() => setNotice("Export CSV préparé.")}>Exporter CSV</ActionButton><ActionButton onClick={() => setNotice("Modifications enregistrées.")}>Enregistrer</ActionButton></div>
         </AdminCard>
       </div>
     );

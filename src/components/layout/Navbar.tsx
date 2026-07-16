@@ -7,6 +7,7 @@ import { useTheme, type ThemeMode } from "@/components/ThemeProvider";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useCart } from "@/cart/CartContext";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { getAccountHomePath, isProfessionalAccount } from "@/lib/auth/roles";
 
 const navLinks = [
   { to: "/", label: "Accueil" },
@@ -96,8 +97,8 @@ export function Navbar() {
   const { user, signOut, roles } = useAuth();
   const navigate = useNavigate();
   const handleLogout = async () => { await signOut(); navigate({ to: "/" }); };
-  const isProAccount = roles.includes("professional") || roles.includes("researcher") || roles.includes("admin") || roles.includes("super_admin");
-  const accountHomePath = isProAccount ? "/tableau-de-bord" : "/mon-compte";
+  const isProAccount = isProfessionalAccount(roles);
+  const accountHomePath = getAccountHomePath(roles);
   const accountHomeLabel = isProAccount ? "Tableau de bord" : "Mon compte";
   const { itemCount } = useCart();
 

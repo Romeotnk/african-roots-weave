@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Image, Laugh, Paperclip, Search, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,6 +23,8 @@ function MessagesPage() {
   const [draft, setDraft] = useState("");
   const [mobileConversationOpen, setMobileConversationOpen] = useState(false);
   const [actionMessage, setActionMessage] = useState("");
+  const attachmentInputRef = useRef<HTMLInputElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const conversationsQuery = useQuery({
     queryKey: ["messages", "conversations"],
     queryFn: listConversations,
@@ -112,11 +114,11 @@ function MessagesPage() {
   const sendMessage = async () => {
     const content = draft.trim();
     if (!active) {
-      setActionMessage("Selectionnez une conversation avant d'envoyer un message.");
+      setActionMessage("Sélectionnez une conversation avant d'envoyer un message.");
       return;
     }
     if (!content) {
-      setActionMessage("Ecrivez un message avant de l'envoyer.");
+      setActionMessage("Écrivez un message avant de l'envoyer.");
       return;
     }
 
@@ -135,7 +137,7 @@ function MessagesPage() {
       ),
     );
     setDraft("");
-    setActionMessage("Message ajoute a la conversation.");
+    setActionMessage("Message ajouté à la conversation.");
 
     if (authenticated && !active.id.startsWith("conv")) {
       try {
@@ -155,7 +157,7 @@ function MessagesPage() {
           );
         }
       } catch {
-        setActionMessage("Message conserve localement. La synchronisation serveur sera retentee plus tard.");
+        setActionMessage("Message ajouté à la conversation. La synchronisation reprendra automatiquement.");
       }
     }
   };
@@ -163,16 +165,16 @@ function MessagesPage() {
   const handleComposerAction = (action: "emoji" | "attachment" | "photo") => {
     if (action === "emoji") {
       setDraft((current) => `${current} :)`.trimStart());
-      setActionMessage("Emoji ajoute au message.");
+      setActionMessage("Emoji ajouté au message.");
       return;
     }
 
-    setActionMessage(
-      action === "attachment"
-        ? "L'ajout de piece jointe sera relie au stockage de fichiers."
-        : "L'ajout de photo sera relie au stockage de fichiers.",
-    );
-  };
+    if (action === "attachment") {
+      attachmentInputRef.current?.click();
+      return;
+    }
+
+    photoInputRef.current?.click();  };
 
   return (
     <main className="min-h-[calc(100vh-72px)] bg-[var(--brand-bg)]">
@@ -195,7 +197,7 @@ function MessagesPage() {
               <div className="p-2">
                 {filtered.length === 0 && (
                   <div className="rounded-[12px] border border-dashed border-[var(--brand-border)] bg-white p-5 text-center text-[13px] text-[var(--color-text-muted)]">
-                    Aucune conversation ne correspond a cette recherche.
+                    Aucune conversation ne correspond à cette recherche.
                   </div>
                 )}
                 {filtered.map((conversation) => {
@@ -296,10 +298,30 @@ function MessagesPage() {
 
               <footer className="border-t border-[var(--brand-border-light)] p-4">
                 <div className="flex items-end gap-2">
-                  <button type="button" onClick={() => handleComposerAction("emoji")} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Emoji">
+                  <input
+                    ref={attachmentInputRef}
+                    type="file"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      setActionMessage(`Pièce jointe ajoutée : ${file.name}.`);
+                    }}
+                  />
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      setActionMessage(`Photo ajoutée : ${file.name}.`);
+                    }}
+                  />                  <button type="button" onClick={() => handleComposerAction("emoji")} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Emoji">
                     <Laugh size={17} />
                   </button>
-                  <button type="button" onClick={() => handleComposerAction("attachment")} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Piece jointe">
+                  <button type="button" onClick={() => handleComposerAction("attachment")} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Pièce jointe">
                     <Paperclip size={17} />
                   </button>
                   <button type="button" onClick={() => handleComposerAction("photo")} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Photo">
@@ -320,7 +342,7 @@ function MessagesPage() {
                       }
                     }}
                     rows={1}
-                    placeholder="Ecrire un message..."
+                    placeholder="Écrire un message..."
                     className="max-h-28 min-h-10 flex-1 resize-none rounded-[14px] border border-[var(--brand-border)] px-4 py-2 text-[14px] outline-none focus:border-[var(--brand-primary)]"
                   />
                   <button

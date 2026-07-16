@@ -26,13 +26,13 @@ function CartPage() {
       const validated = await validateCoupon.mutateAsync(code);
       if (validated) {
         applyCoupon(code);
-        setCouponMessage(`Coupon ${code} valide et applique.`);
+        setCouponMessage(`Coupon ${code} valide et appliqué.`);
         return;
       }
-      setCouponMessage(`Coupon ${code} invalide cote API.`);
+      setCouponMessage(`Coupon ${code} invalide.`);
     } catch {
       applyCoupon(code);
-      setCouponMessage(`Coupon ${code} applique en mode local.`);
+      setCouponMessage(`Coupon ${code} appliqué à votre panier.`);
     }
   };
 
@@ -42,7 +42,7 @@ function CartPage() {
         <div className="container-iwosan py-8">
           <h1 className="text-[32px] md:text-[42px]">Panier</h1>
           <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-            Votre panier est sauvegarde localement et sera synchronise avec l'API apres connexion.
+            Votre panier est conservé pendant votre navigation et restera accessible après connexion.
           </p>
         </div>
       </section>
@@ -93,7 +93,7 @@ function CartPage() {
 
             <aside className="h-fit rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="font-bold">Recapitulatif</h2>
+                <h2 className="font-bold">Récapitulatif</h2>
                 <button type="button" onClick={clearCart} className="text-[12px] font-semibold text-red-600">
                   Vider
                 </button>
@@ -106,14 +106,14 @@ function CartPage() {
                   disabled={validateCoupon.isPending}
                   className="h-10 rounded-lg bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-60"
                 >
-                  {validateCoupon.isPending ? "Verification..." : "Appliquer"}
+                  {validateCoupon.isPending ? "Vérification..." : "Appliquer"}
                 </button>
               </div>
-              {coupon && <p className="mt-2 text-[12px] text-emerald-700">Coupon {coupon} applique.</p>}
+              {coupon && <p className="mt-2 text-[12px] text-emerald-700">Coupon {coupon} appliqué.</p>}
               {couponMessage && <p className="mt-2 text-[12px] text-[var(--color-text-muted)]">{couponMessage}</p>}
               <dl className="mt-5 space-y-3 text-[14px]">
                 <div className="flex justify-between"><dt>Sous-total</dt><dd>{subtotal.toLocaleString("fr-FR")} FCFA</dd></div>
-                <div className="flex justify-between"><dt>Reduction</dt><dd>-{discount.toLocaleString("fr-FR")} FCFA</dd></div>
+                <div className="flex justify-between"><dt>Réduction</dt><dd>-{discount.toLocaleString("fr-FR")} FCFA</dd></div>
                 <div className="flex justify-between"><dt>Frais de service</dt><dd>{serviceFee.toLocaleString("fr-FR")} FCFA</dd></div>
                 <div className="flex justify-between border-t border-[var(--brand-border-light)] pt-3 text-[18px] font-extrabold"><dt>Total</dt><dd>{total.toLocaleString("fr-FR")} FCFA</dd></div>
               </dl>

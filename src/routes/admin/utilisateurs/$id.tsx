@@ -15,14 +15,14 @@ function AdminUserDetail() {
   const transactions = adminFinance.transactions.filter((item) => item.user === user.name);
   const [adminNotice, setAdminNotice] = useState("");
   const adminActions = [
-    { label: "Changer le role", message: `Modification du role preparee pour ${user.name}. Le formulaire admin API sera branche ici.` },
-    { label: "Suspendre le compte", message: `Suspension preparee pour ${user.name}. Une confirmation sera exigee en production.` },
-    { label: "Reinitialiser le mot de passe", message: `Email de reinitialisation pret a etre envoye a ${user.email}.` },
+    { label: "Changer le role", message: `Modification du rôle préparée pour ${user.name}. Une confirmation admin sera demandée.` },
+    { label: "Suspendre le compte", message: `Suspension préparée pour ${user.name}. Une confirmation admin sera demandée.` },
+    { label: "Réinitialiser le mot de passe", message: `Email de réinitialisation prêt à être envoyé à ${user.email}.` },
     { label: "Envoyer un message", message: `Conversation admin ouverte en brouillon pour ${user.name}.` },
   ];
 
   return (
-    <AdminLayout title={user.name} description="Fiche utilisateur, rôles, statut, KYC et historique mock.">
+    <AdminLayout title={user.name} description="Fiche utilisateur, rôles, statut, KYC et historique.">
       <div className="mb-4">
         <Link to="/admin/utilisateurs" className="text-[13px] font-bold text-emerald-300 hover:text-emerald-200">
           Retour aux utilisateurs

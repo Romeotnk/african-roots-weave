@@ -551,7 +551,7 @@ function Marketplace() {
                     {filteredItems.length} marqueurs synchronisés
                   </div>
                   <div className="absolute bottom-5 left-5 rounded-full border border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] px-4 py-2 text-[12px] font-semibold text-[var(--brand-primary)]">
-                    Rayon mock: {distance[0]} km
+                    Rayon sélectionné : {distance[0]} km
                   </div>
                   {filteredItems.map((product, index) => (
                     <button
@@ -610,7 +610,7 @@ function Marketplace() {
             <>
               <DialogHeader>
                 <DialogTitle>{selectedProduct.title}</DialogTitle>
-                <DialogDescription>Fiche rapide issue du mode carte marketplace.</DialogDescription>
+                <DialogDescription>Fiche rapide issue de la carte marketplace.</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 md:grid-cols-[220px_1fr]">
                 <img src={selectedProduct.image} alt={selectedProduct.title} className="h-56 w-full rounded-lg object-cover" />
@@ -634,7 +634,7 @@ function Marketplace() {
           <DialogHeader>
             <DialogTitle>Créer une alerte</DialogTitle>
             <DialogDescription>
-              Recevez une notification mock lorsque de nouvelles annonces correspondent à ces filtres.
+              Recevez une notification lorsque de nouvelles annonces correspondent à ces filtres.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">

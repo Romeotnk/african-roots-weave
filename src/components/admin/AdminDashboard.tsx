@@ -18,7 +18,7 @@ function MiniBarChart({ values }: { values: number[] }) {
 
 export function AdminDashboard() {
   return (
-    <AdminLayout title="Vue d'ensemble" description="Pilotage mock de la plateforme avant liaison API globale.">
+    <AdminLayout title="Vue d'ensemble" description="Pilotage opérationnel de la plateforme.">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {adminKpis.map((kpi) => (
           <AdminCard key={kpi.label}>
@@ -37,7 +37,7 @@ export function AdminDashboard() {
           <div className="mt-4"><MiniBarChart values={adminCharts.signups} /></div>
         </AdminCard>
         <AdminCard>
-          <h2 className="text-[18px] font-bold text-white">Repartition des roles</h2>
+          <h2 className="text-[18px] font-bold text-white">Répartition des rôles</h2>
           <div className="mt-5 space-y-3">
             {adminCharts.roles.map((row) => (
               <div key={row.label}>
@@ -51,7 +51,7 @@ export function AdminDashboard() {
 
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
         <AdminCard>
-          <h2 className="mb-4 text-[18px] font-bold text-white">Ventes par categorie</h2>
+          <h2 className="mb-4 text-[18px] font-bold text-white">Ventes par catégorie</h2>
           <div className="space-y-3">
             {adminCharts.salesByCategory.map((row) => (
               <div key={row.label} className="flex items-center gap-3">
@@ -63,7 +63,7 @@ export function AdminDashboard() {
           </div>
         </AdminCard>
         <AdminCard>
-          <h2 className="mb-4 text-[18px] font-bold text-white">A traiter</h2>
+          <h2 className="mb-4 text-[18px] font-bold text-white">À traiter</h2>
           <div className="space-y-3">
             {adminUrgentActions.map((item) => (
               <Link key={item.label} to={item.to} className="flex items-center justify-between rounded-lg bg-white/5 px-4 py-3 text-[13px] font-semibold hover:bg-white/10">

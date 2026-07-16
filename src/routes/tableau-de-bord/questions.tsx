@@ -2,13 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, Eye, MessageSquare, Plus, Star } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import type { AppRole } from "@/lib/auth/AuthContext";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import { questions } from "@/data/questions";
+import { PROFESSIONAL_ACCOUNT_ROLES } from "@/lib/auth/roles";
 
 export const Route = createFileRoute("/tableau-de-bord/questions")({
   head: () => ({ meta: [{ title: "Mes questions - IWOSAN" }] }),
   component: () => (
-    <ProtectedRoute requireAnyRole={["user", "researcher", "professional", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={PROFESSIONAL_ACCOUNT_ROLES}>
       <QuestionsPage />
     </ProtectedRoute>
   ),
@@ -16,7 +18,7 @@ export const Route = createFileRoute("/tableau-de-bord/questions")({
 
 type QuestionFilter = "all" | "open" | "resolved" | "followed";
 
-function QuestionsPage() {
+export function QuestionsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { allowedRoles?: AppRole[] } = {}) {
   const [items, setItems] = useState(questions);
   const [filter, setFilter] = useState<QuestionFilter>("all");
   const [message, setMessage] = useState("");
@@ -34,12 +36,12 @@ function QuestionsPage() {
 
   const toggleFollow = (id: string) => {
     setItems((current) => current.map((question) => (question.id === id ? { ...question, followed: !question.followed } : question)));
-    setMessage("Suivi de la question mis a jour.");
+    setMessage("Suivi de la question mis à jour.");
   };
 
   const markResolved = (id: string) => {
     setItems((current) => current.map((question) => (question.id === id ? { ...question, resolved: true } : question)));
-    setMessage("Question marquee comme resolue en mode test.");
+    setMessage("Question marquée comme résolue.");
   };
 
   return (
@@ -49,10 +51,10 @@ function QuestionsPage() {
           <AccountBackLink />
           <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Communaute</p>
+              <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Communauté</p>
               <h1 className="mt-2 text-[32px] md:text-[42px]">Mes questions</h1>
               <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-                Suivez vos questions publiees dans le forum, les reponses et les votes.
+                Suivez vos questions publiées dans le forum, les réponses et les votes.
               </p>
             </div>
             <Link to="/forum/nouvelle-question" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white">
@@ -65,7 +67,7 @@ function QuestionsPage() {
       <section className="container-iwosan py-8">
         <div className="grid gap-4 md:grid-cols-3">
           <StatCard label="Questions" value={items.length} icon={MessageSquare} />
-          <StatCard label="Resolues" value={items.filter((question) => question.resolved).length} icon={CheckCircle2} />
+          <StatCard label="Résolues" value={items.filter((question) => question.resolved).length} icon={CheckCircle2} />
           <StatCard label="Vues" value={items.reduce((sum, question) => sum + question.views, 0)} icon={Eye} />
         </div>
 
@@ -73,7 +75,7 @@ function QuestionsPage() {
           {([
             ["all", "Toutes"],
             ["open", "Ouvertes"],
-            ["resolved", "Resolues"],
+            ["resolved", "Résolues"],
             ["followed", "Suivies"],
           ] as const).map(([value, label]) => (
             <button
@@ -104,14 +106,14 @@ function QuestionsPage() {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className={`rounded-full px-3 py-1 text-[12px] font-semibold ${question.resolved ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
-                      {question.resolved ? "Resolue" : "Ouverte"}
+                      {question.resolved ? "Résolue" : "Ouverte"}
                     </span>
                     <span className="rounded-full bg-[var(--brand-surface-alt)] px-3 py-1 text-[12px] font-semibold text-[var(--color-text-secondary)]">{question.category}</span>
                   </div>
                   <h2 className="mt-3 text-[18px] font-bold">{question.title}</h2>
                   <p className="mt-2 line-clamp-2 text-[14px] text-[var(--color-text-secondary)]">{question.excerpt}</p>
                   <p className="mt-3 text-[12px] text-[var(--color-text-muted)]">
-                    {question.answers} reponse(s) - {question.votes} vote(s) - {question.views} vue(s)
+                    {question.answers} réponse(s) - {question.votes} vote(s) - {question.views} vue(s)
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-wrap gap-2">
@@ -127,7 +129,7 @@ function QuestionsPage() {
                     disabled={question.resolved}
                     className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <CheckCircle2 size={15} /> Resoudre
+                    <CheckCircle2 size={15} /> Résoudre
                   </button>
                 </div>
               </div>

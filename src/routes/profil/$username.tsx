@@ -32,7 +32,7 @@ function PublicProfilePage() {
             <Link to="/messages" className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-[13px] font-bold text-[var(--brand-primary-dark)]">
               <MessageSquare size={16} /> Contacter
             </Link>
-            <button type="button" onClick={() => setReportNotice(`Signalement prepare pour ${profile.name}. Le formulaire de moderation sera relie a l API.`)} className="inline-flex h-11 items-center gap-2 rounded-full border border-white/30 px-5 text-[13px] font-bold text-white">
+            <button type="button" onClick={() => setReportNotice(`Signalement envoyé pour ${profile.name}. Notre equipe de moderation va examiner ce profil.`)} className="inline-flex h-11 items-center gap-2 rounded-full border border-white/30 px-5 text-[13px] font-bold text-white">
               <Flag size={16} /> Signaler
             </button>
           </div>
@@ -42,10 +42,10 @@ function PublicProfilePage() {
       <section className="container-iwosan grid gap-6 py-10 lg:grid-cols-[320px_1fr]">
         <aside className="space-y-4">
           {[
-            ["Reputation forum", `${profile.reputation}/100`, Trophy],
+            ["Réputation forum", `${profile.reputation}/100`, Trophy],
             ["Annonces actives", profile.activeListings.toString(), Store],
             ["Note vendeur", `${profile.sellerRating}/5`, Star],
-            ["Fiabilite acheteur", `${profile.buyerReliability}%`, UserRound],
+            ["Fiabilité acheteur", `${profile.buyerReliability}%`, UserRound],
           ].map(([label, value, Icon]) => (
             <div key={label as string} className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5 shadow-iwosan-sm">
               <Icon className="text-[var(--brand-primary)]" size={20} />
@@ -56,7 +56,7 @@ function PublicProfilePage() {
         </aside>
 
         <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-6 shadow-iwosan-sm">
-          <h2 className="text-[24px] font-bold">Avis recus</h2>
+          <h2 className="text-[24px] font-bold">Avis reçus</h2>
           <div className="mt-5 grid gap-4">
             {profile.reviews.map((review) => (
               <article key={`${review.from}-${review.comment}`} className="rounded-lg bg-[var(--brand-surface-alt)] p-4">

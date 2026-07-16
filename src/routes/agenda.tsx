@@ -148,7 +148,7 @@ function Agenda() {
                               {dayEvents.map((event) => (
                                 <p key={event.id} className="line-clamp-2 font-semibold">{new Date(event.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })} · {event.title}</p>
                               ))}
-                              <p className="mt-2 text-[11px] text-[var(--color-text-muted)]">Cliquez pour voir les details</p>
+                              <p className="mt-2 text-[11px] text-[var(--color-text-muted)]">Cliquez pour voir les détails</p>
                             </div>
                           )}
                         </>
@@ -158,12 +158,12 @@ function Agenda() {
                 })}
               </div>
               <button onClick={() => setView("list")} className="mt-5 h-10 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
-                Voir tous les evenements du mois
+                Voir tous les événements du mois
               </button>
             </div>
           ) : (
             <div className="space-y-4">
-              <h3 className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">Evenements a venir</h3>
+              <h3 className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">Événements à venir</h3>
               {filteredEvents.map((event) => (
                 <EventCard
                   key={event.id}
@@ -215,9 +215,9 @@ function Agenda() {
               <p className="mt-1">{(selectedEvent.capacity ?? 0) - (selectedEvent.registered ?? 0)} places restantes sur {selectedEvent.capacity}</p>
               <div className="mt-2 h-2 rounded-full bg-white"><div className="h-2 rounded-full bg-[var(--brand-primary)]" style={{ width: `${((selectedEvent.registered ?? 0) / (selectedEvent.capacity ?? 1)) * 100}%` }} /></div>
             </div>
-            <button onClick={() => setRegistered(true)} className="mt-5 h-11 w-full rounded-full bg-[var(--brand-primary)] font-semibold text-white">S'inscrire a cet evenement</button>
-            {registered && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[13px] text-emerald-800">Inscription enregistree en mock.</p>}
-            <Link to="/dashboard/inscriptions" className="mt-4 inline-flex text-[13px] font-semibold text-[var(--brand-primary)]">Voir mes inscriptions</Link>
+            <button onClick={() => setRegistered(true)} className="mt-5 h-11 w-full rounded-full bg-[var(--brand-primary)] font-semibold text-white">S'inscrire à cet événement</button>
+            {registered && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[13px] text-emerald-800">Inscription enregistrée. Retrouvez cet événement dans votre espace.</p>}
+            <Link to="/mon-compte/inscriptions" className="mt-4 inline-flex text-[13px] font-semibold text-[var(--brand-primary)]">Voir mes inscriptions</Link>
           </div>
         </div>
       )}

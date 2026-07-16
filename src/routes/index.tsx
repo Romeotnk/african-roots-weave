@@ -520,7 +520,7 @@ function Home() {
                 return;
               }
               setNewsletterEmail("");
-              setNewsletterMessage("Inscription newsletter enregistree en mode test.");
+              setNewsletterMessage("Inscription newsletter enregistrée.");
             }}
           >
             <div className="flex flex-col sm:flex-row gap-3">

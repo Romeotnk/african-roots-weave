@@ -19,7 +19,7 @@ export const faqCategories = [
     items: [
       {
         question: "Quand mon annonce devient-elle visible ?",
-        answer: "Apres publication, une moderation mock indique un delai de 24h avant visibilite publique.",
+        answer: "Après publication, une modération vérifie le contenu avant sa visibilité publique.",
       },
       {
         question: "Comment ouvrir un litige ?",

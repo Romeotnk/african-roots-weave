@@ -4,7 +4,18 @@ const requiredInProduction = [
   "JWT_REFRESH_SECRET",
   "JWT_EMAIL_SECRET",
   "JWT_PASSWORD_RESET_SECRET",
+  "CLIENT_URL",
 ] as const;
+
+const jwtSecretKeys = [
+  "JWT_ACCESS_SECRET",
+  "JWT_REFRESH_SECRET",
+  "JWT_EMAIL_SECRET",
+  "JWT_PASSWORD_RESET_SECRET",
+] as const;
+
+const isUnsafeSecret = (value: string) =>
+  value.length < 32 || value.startsWith("dev_") || value.startsWith("change-me") || value.includes("change-me");
 
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
@@ -36,5 +47,10 @@ export const validateEnv = () => {
   const missing = requiredInProduction.filter((key) => !process.env[key]);
   if (missing.length > 0) {
     throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
+  }
+
+  const unsafeSecrets = jwtSecretKeys.filter((key) => isUnsafeSecret(process.env[key] ?? ""));
+  if (unsafeSecrets.length > 0) {
+    throw new Error(`Unsafe JWT secret values in production: ${unsafeSecrets.join(", ")}`);
   }
 };

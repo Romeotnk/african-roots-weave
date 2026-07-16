@@ -13,11 +13,11 @@ export const Route = createFileRoute("/mes-commandes/$id/litige")({
 });
 
 const reasons = [
-  "Produit non recu",
-  "Produit different de l'annonce",
-  "Produit endommage",
-  "Service non realise",
-  "Autre probleme",
+  "Produit non reçu",
+  "Produit différent de l'annonce",
+  "Produit endommagé",
+  "Service non réalisé",
+  "Autre problème",
 ];
 
 function DisputePage() {
@@ -33,17 +33,17 @@ function DisputePage() {
     const cleanDescription = description.trim();
 
     if (!reason) {
-      setFormMessage("Selectionnez une raison pour ouvrir le litige.");
+      setFormMessage("Sélectionnez une raison pour ouvrir le litige.");
       return;
     }
 
     if (cleanDescription.length < 25) {
-      setFormMessage("Ajoutez une description plus precise, au moins 25 caracteres.");
+      setFormMessage("Ajoutez une description plus précise, au moins 25 caracteres.");
       return;
     }
 
     setSubmitted(true);
-    setFormMessage("Litige soumis. Le statut passe a En cours d'examen dans cette interface de test.");
+    setFormMessage("Litige soumis. Le statut passe à En cours d'examen.");
   };
 
   return (
@@ -55,7 +55,7 @@ function DisputePage() {
           </p>
           <h1 className="mt-2 text-[32px] md:text-[42px]">Ouvrir un litige</h1>
           <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-            Decrivez clairement le probleme pour accelerer la mediation entre acheteur, vendeur et support IWOSAN.
+            Décrivez clairement le problème pour accélérer la médiation entre acheteur, vendeur et support IWOSAN.
           </p>
         </div>
       </section>
@@ -81,7 +81,7 @@ function DisputePage() {
           </div>
 
           <div>
-            <label className="text-[13px] font-semibold" htmlFor="dispute-description">Description detaillee</label>
+            <label className="text-[13px] font-semibold" htmlFor="dispute-description">Description détaillée</label>
             <textarea
               id="dispute-description"
               rows={7}
@@ -90,10 +90,10 @@ function DisputePage() {
                 setDescription(event.target.value);
                 setSubmitted(false);
               }}
-              placeholder="Expliquez ce qui s'est passe, les dates, les echanges et ce que vous attendez comme resolution."
+              placeholder="Expliquez ce qui s'est passé, les dates, les échanges et ce que vous attendez comme résolution."
               className="mt-2 w-full rounded-lg border border-[var(--brand-border)] px-4 py-3"
             />
-            <p className="mt-1 text-[12px] text-[var(--color-text-muted)]">{description.trim().length}/25 caracteres minimum</p>
+            <p className="mt-1 text-[12px] text-[var(--color-text-muted)]">{description.trim().length}/25 caractères minimum</p>
           </div>
 
           <label className="flex min-h-[150px] cursor-pointer flex-col items-center justify-center rounded-[12px] border-2 border-dashed border-[var(--brand-border)] bg-[var(--brand-surface-alt)] p-5 text-center">

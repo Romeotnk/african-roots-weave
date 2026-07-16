@@ -2,8 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { login } from "@/lib/api/auth";
-import { signInWithSocialProvider, type SocialAuthProvider } from "@/lib/auth/social";
+import { consumePendingSocialAccountType, signInWithSocialProvider, type SocialAuthProvider } from "@/lib/auth/social";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { getAccountHomePath } from "@/lib/auth/roles";
 
 export const Route = createFileRoute("/connexion")({
   head: () => ({ meta: [{ title: "Connexion - IWOSAN" }] }),
@@ -19,11 +20,15 @@ function Connexion() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSocialSubmitting, setIsSocialSubmitting] = useState<SocialAuthProvider | null>(null);
-  const isProAccount = roles.some((role) => ["professional", "researcher", "admin", "super_admin"].includes(role));
-  const accountTarget = isProAccount ? "/tableau-de-bord" : "/mon-compte";
+  const accountTarget = getAccountHomePath(roles);
 
   useEffect(() => {
     if (!loading && user) {
+      const pendingAccountType = consumePendingSocialAccountType();
+      if (pendingAccountType === "professional" && accountTarget === "/mon-compte") {
+        navigate({ to: "/devenir-pro" });
+        return;
+      }
       navigate({ to: accountTarget });
     }
   }, [accountTarget, loading, navigate, user]);
@@ -51,7 +56,7 @@ function Connexion() {
     try {
       await signInWithSocialProvider(provider);
     } catch (socialError) {
-      setError(socialError instanceof Error ? socialError.message : "La connexion sociale n'a pas pu etre lancee.");
+      setError(socialError instanceof Error ? socialError.message : "La connexion sociale n'a pas pu être lancée.");
       setIsSocialSubmitting(null);
     }
   };
@@ -65,7 +70,7 @@ function Connexion() {
         <div className="bg-[var(--color-surface)] rounded-[24px] shadow-iwosan-xl p-8 md:p-10">
           <h2 className="text-[28px] text-center font-bold">Bon retour !</h2>
           <p className="text-center text-[14px] text-[var(--color-text-muted)] mt-1">
-            Connectez-vous a votre espace Iwosan
+            Connectez-vous à votre espace Iwosan
           </p>
           <form className="mt-7 space-y-4" onSubmit={handleSubmit}>
             <input
@@ -96,7 +101,7 @@ function Connexion() {
             </div>
             <div className="text-right">
               <Link to="/mot-de-passe-oublie" className="text-[13px] font-semibold text-[var(--brand-primary)] hover:underline">
-                Mot de passe oublie ?
+                Mot de passe oublié ?
               </Link>
             </div>
             {error && (
@@ -121,7 +126,7 @@ function Connexion() {
 
           <p className="mt-6 text-center text-[14px] text-[var(--color-text-muted)]">
             Pas encore inscrit ?{" "}
-            <Link to="/inscription" className="font-semibold text-[var(--brand-primary)]">Creer un compte</Link>
+            <Link to="/inscription" className="font-semibold text-[var(--brand-primary)]">Créer un compte</Link>
           </p>
         </div>
       </div>

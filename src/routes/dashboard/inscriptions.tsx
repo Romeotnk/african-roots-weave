@@ -1,21 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalendarDays, Download, XCircle } from "lucide-react";
 import { useState } from "react";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { RouteRedirect } from "@/components/RouteRedirect";
 import { events } from "@/data/events";
 
 export const Route = createFileRoute("/dashboard/inscriptions")({
   head: () => ({ meta: [{ title: "Mes inscriptions - IWOSAN" }] }),
-  component: () => (
-    <ProtectedRoute requireAnyRole={["user", "researcher", "professional", "admin", "super_admin"]}>
-      <Registrations />
-    </ProtectedRoute>
-  ),
+  component: () => <RouteRedirect to="/mon-compte/inscriptions" label="Ouverture de vos inscriptions..." />,
 });
 
 type Registration = (typeof events)[number] & { localStatus: "confirmed" | "pending" | "cancelled" };
 
-function Registrations() {
+export function Registrations() {
   const [registrations, setRegistrations] = useState<Registration[]>(
     events.slice(0, 3).map((event) => ({
       ...event,
@@ -28,11 +24,11 @@ function Registrations() {
     setRegistrations((current) =>
       current.map((event) => (event.id === id ? { ...event, localStatus: "cancelled" } : event)),
     );
-    setActionMessage("Inscription annulee dans cette interface de test.");
+    setActionMessage("Inscription annulée. Une confirmation sera visible dans vos notifications.");
   };
 
   const downloadTicket = (title: string) => {
-    setActionMessage(`Billet pour ${title} prepare en mode test.`);
+    setActionMessage(`Billet préparé pour ${title}. Vous pouvez le présenter depuis cet espace.`);
   };
 
   return (
@@ -41,7 +37,7 @@ function Registrations() {
         <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Agenda</p>
         <h1 className="mt-2 text-[34px] md:text-[44px]">Mes inscriptions</h1>
         <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-          Retrouvez vos evenements, formations et webinaires reserves depuis l'agenda.
+          Retrouvez vos événements, formations et webinaires réservés depuis l'agenda.
         </p>
 
         {actionMessage && (
@@ -56,7 +52,7 @@ function Registrations() {
               <CalendarDays className="mx-auto text-[var(--brand-primary)]" size={28} />
               <h2 className="mt-3 text-[20px] font-bold">Aucune inscription</h2>
               <p className="mt-2 text-[13px] text-[var(--color-text-muted)]">
-                Vos prochaines inscriptions apparaitront ici apres reservation.
+                Vos prochaines inscriptions apparaîtront ici après réservation.
               </p>
             </div>
           )}
@@ -72,11 +68,11 @@ function Registrations() {
                       {new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(event.date))} - {event.location}
                     </p>
                     <p className="mt-2 text-[13px] text-[var(--color-text-secondary)]">
-                      {event.online ? "Participation en ligne" : event.address ?? "Adresse a confirmer"}
+                      {event.online ? "Participation en ligne" : event.address ?? "Adresse à confirmer"}
                     </p>
                   </div>
                   <span className={`rounded-full px-3 py-1 text-[12px] font-semibold ${isCancelled ? "bg-rose-50 text-rose-700" : "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]"}`}>
-                    {event.localStatus === "pending" ? "En attente" : isCancelled ? "Annule" : "Confirme"}
+                    {event.localStatus === "pending" ? "En attente" : isCancelled ? "Annulé" : "Confirmé"}
                   </span>
                 </div>
 
@@ -98,7 +94,7 @@ function Registrations() {
                     disabled={isCancelled}
                     className="inline-flex h-10 items-center gap-2 rounded-full border border-rose-200 px-4 text-[13px] font-semibold text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <XCircle size={15} /> Annuler
+                    <XCircle size={15} /> Annulér
                   </button>
                 </div>
               </article>

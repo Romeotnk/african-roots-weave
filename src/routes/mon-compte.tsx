@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   ShoppingBag,
   Sparkles,
+  Settings,
   Star,
   Tag,
   User,
@@ -21,11 +22,12 @@ import {
 import { useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { isProfessionalAccount, USER_ACCOUNT_ROLES } from "@/lib/auth/roles";
 
 export const Route = createFileRoute("/mon-compte")({
   head: () => ({ meta: [{ title: "Mon compte - IWOSAN" }] }),
   component: () => (
-    <ProtectedRoute requireAnyRole={["user", "researcher", "professional", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={USER_ACCOUNT_ROLES}>
       <AccountHome />
     </ProtectedRoute>
   ),
@@ -35,11 +37,14 @@ const personalSections = [
   { title: "Mes commandes", desc: "Achats, remboursements et suivi.", to: "/mes-commandes", icon: ShoppingBag },
   { title: "Messages", desc: "Conversations avec vendeurs, praticiens et support.", to: "/messages", icon: MessageSquare },
   { title: "Portefeuille", desc: "Solde, transactions et demandes.", to: "/mon-compte/portefeuille", icon: Wallet },
-  { title: "Profil", desc: "Identite, pays et preferences.", to: "/tableau-de-bord/profil", icon: User },
+  { title: "Profil", desc: "Identite, pays et preferences.", to: "/mon-compte/profil", icon: User },
+  { title: "Inscriptions", desc: "Evenements, formations et billets.", to: "/mon-compte/inscriptions", icon: Calendar },
+  { title: "Questions", desc: "Questions publiees, suivis et reponses.", to: "/mon-compte/questions", icon: MessageSquare },
   { title: "KYC", desc: "Verification d'identite et statut.", to: "/mon-compte/kyc", icon: ShieldCheck },
   { title: "Notifications", desc: "Messages, commandes et alertes.", to: "/mon-compte/notifications", icon: Bell },
   { title: "Alertes", desc: "Recherches sauvegardees marketplace.", to: "/mon-compte/alertes", icon: BookOpen },
   { title: "Tickets", desc: "Conversations avec le support.", to: "/mon-compte/tickets", icon: HelpCircle },
+  { title: "Parametres", desc: "Langue, securite et preferences.", to: "/mon-compte/parametres", icon: Settings },
 ];
 
 const proSections = [
@@ -51,14 +56,14 @@ const proSections = [
   { title: "Evenements", desc: "Agenda, salons, ateliers et inscriptions.", to: "/tableau-de-bord/evenements", icon: Calendar },
   { title: "Questions", desc: "Forum, reponses et expertise communautaire.", to: "/tableau-de-bord/questions", icon: MessageSquare },
   { title: "Avis", desc: "Avis recus et reponses publiques.", to: "/tableau-de-bord/avis", icon: Star },
-  { title: "Affiliation", desc: "Lien de parrainage, reseau et commissions.", to: "/mon-compte/affiliation", icon: Users },
+  { title: "Reseau", desc: "Parrainage, reseau et commissions.", to: "/tableau-de-bord/reseau", icon: Users },
 ];
 
 function AccountHome() {
   const { user, roles } = useAuth();
   const [showProPrompt, setShowProPrompt] = useState(true);
   const name = (user?.user_metadata?.first_name as string | undefined) || user?.email?.split("@")[0] || "Compte";
-  const isProAccount = roles.includes("professional") || roles.includes("researcher") || roles.includes("admin") || roles.includes("super_admin");
+  const isProAccount = isProfessionalAccount(roles);
   const roleLabel = isProAccount ? "Espace professionnel" : "Espace utilisateur";
 
   return (
@@ -79,8 +84,8 @@ function AccountHome() {
             </div>
             <div className="flex flex-wrap gap-2">
               {isProAccount ? (
-                <Link to="/devenir-pro" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-white px-5 text-[14px] font-bold text-[var(--brand-primary)]">
-                  <ShieldCheck size={17} /> Completer le profil pro
+                <Link to="/tableau-de-bord" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-white px-5 text-[14px] font-bold text-[var(--brand-primary)]">
+                  <BriefcaseBusiness size={17} /> Ouvrir le tableau de bord
                 </Link>
               ) : (
                 <Link to="/devenir-pro" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-bold text-white">
@@ -143,7 +148,7 @@ function ProAccountGrid() {
     <div className="space-y-8">
       <div className="grid gap-4 md:grid-cols-3">
         <Metric label="Commandes actives" value="14" />
-        <Metric label="Revenus mock" value="248 500 FCFA" />
+        <Metric label="Revenus estimes" value="248 500 FCFA" />
         <Metric label="Messages non lus" value="8" />
       </div>
       <div>
@@ -153,7 +158,7 @@ function ProAccountGrid() {
         </div>
       </div>
       <div>
-        <h2 className="text-[22px] font-extrabold">Compte personnel</h2>
+        <h2 className="text-[22px] font-extrabold">Raccourcis du compte</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {personalSections.slice(0, 6).map((section) => <SectionCard key={section.title} section={section} />)}
         </div>

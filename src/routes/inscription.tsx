@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { ArrowRight, BriefcaseBusiness, CheckCircle2, Eye, EyeOff, ShieldCheck, Sparkles, User } from "lucide-react";
 import { CountrySelect } from "@/components/shared/CountrySelect";
 import { register } from "@/lib/api/auth";
+import { getPasswordValidationError } from "@/lib/auth/password";
 import { signInWithSocialProvider } from "@/lib/auth/social";
 
 export const Route = createFileRoute("/inscription")({
@@ -31,9 +32,9 @@ const accountTypes: Array<{
   {
     id: "professional",
     label: "Professionnel",
-    badge: "Compte pro verifiable",
-    desc: "Vendre, publier, former, organiser des evenements et recevoir des demandes.",
-    details: ["Boutique et coupons", "Profil annuaire", "Formations, blog et evenements"],
+    badge: "Compte pro vérifiable",
+    desc: "Vendre, publier, former, organiser des événements et recevoir des demandes.",
+    details: ["Boutique et coupons", "Profil annuaire", "Formations, blog et événements"],
     Icon: BriefcaseBusiness,
   },
 ];
@@ -61,8 +62,9 @@ function Inscription() {
     setError(null);
     setMessage(null);
 
-    if (password.length < 8) {
-      setError("Le mot de passe doit contenir au moins 8 caracteres.");
+    const passwordError = getPasswordValidationError(password);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
 
@@ -72,7 +74,7 @@ function Inscription() {
     }
 
     if (!acceptedTerms) {
-      setError("Vous devez accepter les CGU et la politique de confidentialite.");
+      setError("Vous devez accepter les CGU et la politique de confidentialité.");
       return;
     }
 
@@ -89,8 +91,8 @@ function Inscription() {
       });
       setMessage(
         accountType === "professional"
-          ? "Compte professionnel cree. Vous pourrez completer votre profil pro apres connexion."
-          : response.message || "Compte cree. Verifiez votre email pour activer votre compte.",
+          ? "Compte professionnel créé. Vous pourrez compléter votre profil pro après connexion."
+          : response.message || "Compte créé. Vérifiez votre email pour activer votre compte.",
       );
     } catch (apiError) {
       setError(apiError instanceof Error ? apiError.message : "Inscription impossible pour le moment.");
@@ -105,9 +107,9 @@ function Inscription() {
     setIsSocialSubmitting(provider);
 
     try {
-      await signInWithSocialProvider(provider);
+      await signInWithSocialProvider(provider, accountType);
     } catch (socialError) {
-      setError(socialError instanceof Error ? socialError.message : "La connexion sociale n'a pas pu etre lancee.");
+      setError(socialError instanceof Error ? socialError.message : "La connexion sociale n'a pas pu être lancée.");
       setIsSocialSubmitting(null);
     }
   };
@@ -126,11 +128,11 @@ function Inscription() {
           <section className="overflow-hidden rounded-[8px] border border-[var(--brand-border-light)] bg-white">
             <div className="bg-[var(--brand-primary)] p-6 text-white md:p-8">
               <p className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em]">
-                <ShieldCheck size={14} /> Inscription securisee
+                <ShieldCheck size={14} /> Inscription sécurisée
               </p>
               <h1 className="mt-5 text-[34px] leading-tight md:text-[46px]">Choisissez votre espace IWOSAN</h1>
               <p className="mt-4 max-w-xl text-[15px] leading-7 text-white/85">
-                Un compte simple pour explorer. Un compte professionnel pour vendre, publier et gerer une activite verifiee.
+                Un compte simple pour explorer. Un compte professionnel pour vendre, publier et gérer une activité vérifiée.
               </p>
             </div>
 
@@ -179,7 +181,7 @@ function Inscription() {
             <div className="flex flex-col gap-2 border-b border-[var(--brand-border-light)] pb-5 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">{selectedType.badge}</p>
-                <h2 className="mt-1 text-[26px] font-extrabold">Creer un compte {selectedType.label.toLowerCase()}</h2>
+                <h2 className="mt-1 text-[26px] font-extrabold">Créer un compte {selectedType.label.toLowerCase()}</h2>
               </div>
               <span className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-surface-alt)] px-4 text-[13px] font-bold text-[var(--color-text-secondary)]">
                 <selectedType.Icon size={16} /> {selectedType.label}
@@ -188,7 +190,7 @@ function Inscription() {
 
             <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
               <div className="grid gap-3 sm:grid-cols-2">
-                <input placeholder="Prenom" value={firstName} onChange={(event) => setFirstName(event.target.value)} required className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 outline-none focus:border-[var(--brand-primary)]" />
+                <input placeholder="Prénom" value={firstName} onChange={(event) => setFirstName(event.target.value)} required className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 outline-none focus:border-[var(--brand-primary)]" />
                 <input placeholder="Nom" value={lastName} onChange={(event) => setLastName(event.target.value)} required className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 outline-none focus:border-[var(--brand-primary)]" />
               </div>
               <input type="email" placeholder="Email" value={email} onChange={(event) => setEmail(event.target.value)} required className="h-11 w-full rounded-[8px] border border-[var(--brand-border)] px-4 outline-none focus:border-[var(--brand-primary)]" />
@@ -196,7 +198,7 @@ function Inscription() {
 
               {accountType === "professional" && (
                 <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-4 text-[13px] leading-6 text-[var(--color-text-secondary)]">
-                  Apres connexion, vous pourrez completer votre profil professionnel tout de suite ou plus tard. L'interface pro apparaitra uniquement pour ce type de compte.
+                  Après connexion, vous pourrez compléter votre profil professionnel tout de suite ou plus tard. L'interface pro apparaîtra uniquement pour ce type de compte.
                 </div>
               )}
 
@@ -215,20 +217,25 @@ function Inscription() {
 
               <label className="flex items-start gap-2 text-[13px] text-[var(--color-text-secondary)]">
                 <input type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} className="mt-1 accent-[var(--brand-primary)]" />
-                <span>J'accepte les CGU et la politique de confidentialite</span>
+                <span>J'accepte les CGU et la politique de confidentialité</span>
               </label>
 
               {error && <p className="rounded-[8px] border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">{error}</p>}
               {message && <p className="rounded-[8px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-[13px] text-emerald-700">{message}</p>}
 
               <button type="submit" disabled={isSubmitting} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] font-semibold text-white hover:bg-[var(--brand-primary-dark)] disabled:cursor-not-allowed disabled:opacity-70">
-                {isSubmitting ? "Inscription..." : "Creer mon compte"} <ArrowRight size={17} />
+                {isSubmitting ? "Inscription..." : "Créer mon compte"} <ArrowRight size={17} />
               </button>
             </form>
 
             <div className="my-6 flex items-center gap-3 text-[12px] text-[var(--color-text-muted)]">
               <div className="h-px flex-1 bg-[var(--brand-border-light)]" /> ou continuer avec <div className="h-px flex-1 bg-[var(--brand-border-light)]" />
             </div>
+            {accountType === "professional" && (
+              <p className="mb-3 rounded-[8px] border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] px-3 py-2 text-[12px] leading-5 text-[var(--color-text-secondary)]">
+                Avec Google ou Facebook, vous serez d'abord connecté puis redirigé vers l'activation professionnelle.
+              </p>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <button type="button" onClick={() => handleSocialSignIn("google")} disabled={isSocialSubmitting !== null} className="h-11 rounded-[8px] border border-[var(--brand-border)] text-[14px] font-semibold hover:bg-[var(--brand-surface-alt)] disabled:opacity-70">
                 {isSocialSubmitting === "google" ? "Ouverture..." : "Google"}
@@ -238,7 +245,7 @@ function Inscription() {
               </button>
             </div>
             <p className="mt-6 text-center text-[14px] text-[var(--color-text-muted)]">
-              Deja inscrit ? <Link to="/connexion" className="font-semibold text-[var(--brand-primary)]">Se connecter</Link>
+              Déjà inscrit ? <Link to="/connexion" className="font-semibold text-[var(--brand-primary)]">Se connecter</Link>
             </p>
           </section>
         </div>

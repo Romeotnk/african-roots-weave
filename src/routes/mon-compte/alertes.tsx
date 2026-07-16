@@ -22,24 +22,24 @@ function AlertsPage() {
         item.id === alert.id ? { ...item, active } : item,
       ),
     );
-    setActionMessage(`Alerte ${active ? "activee" : "desactivee"} : ${alert.name}.`);
+    setActionMessage(`Alerte ${active ? "activée" : "desactivée"} : ${alert.name}.`);
   };
 
   const deleteAlert = (alert: MarketplaceAlert) => {
     setAlerts((current) => current.filter((item) => item.id !== alert.id));
-    setActionMessage(`Alerte supprimee : ${alert.name}.`);
+    setActionMessage(`Alerte supprimée : ${alert.name}.`);
   };
 
-  const addMockAlert = () => {
+  const addAlert = () => {
     const nextAlert: MarketplaceAlert = {
       id: `alert-${Date.now()}`,
-      name: "Nouvelle recherche marketplace",
-      summary: "Produits verifies, prix sous 20 000 FCFA, livraison locale.",
+      name: "Recherche marketplace sauvegardée",
+      summary: "Produits vérifiés, prix sous 20 000 FCFA, livraison locale.",
       active: true,
       createdAt: new Date().toISOString().slice(0, 10),
     };
     setAlerts((current) => [nextAlert, ...current]);
-    setActionMessage("Alerte de test creee localement.");
+    setActionMessage("Alerte créée. Ajustez-la depuis vos filtres marketplace.");
   };
 
   return (
@@ -54,22 +54,22 @@ function AlertsPage() {
               </p>
               <h1 className="mt-2 text-[32px] md:text-[42px]">Alertes marketplace</h1>
               <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-                Activez, desactivez ou supprimez vos recherches sauvegardees.
+                Activez, désactivez ou supprimez vos recherches sauvegardées.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={addMockAlert}
+                onClick={addAlert}
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] px-5 text-[14px] font-semibold"
               >
-                <Plus size={16} /> Test local
+                <Plus size={16} /> Créer une alerte
               </button>
               <Link
                 to="/marketplace"
                 className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white"
               >
-                Creer depuis la marketplace
+                Créer depuis la marketplace
               </Link>
             </div>
           </div>
@@ -87,10 +87,10 @@ function AlertsPage() {
               <Bell className="mx-auto text-[var(--brand-primary)]" size={42} />
               <h2 className="mt-4 text-[24px] font-bold">Aucune alerte active</h2>
               <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-                Creez une alerte depuis vos filtres marketplace pour recevoir les nouveaux resultats.
+                Créez une alerte depuis vos filtres marketplace pour recevoir les nouveaux résultats.
               </p>
               <Link to="/marketplace" className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 font-semibold text-white">
-                Aller a la marketplace
+                Aller à la marketplace
               </Link>
             </div>
           ) : (
@@ -111,7 +111,7 @@ function AlertsPage() {
                       </span>
                     </div>
                     <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">{alert.summary}</p>
-                    <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">Creee le {alert.createdAt}</p>
+                    <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">Créée le {alert.createdAt}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <Switch checked={alert.active} onCheckedChange={(checked) => toggleAlert(alert, Boolean(checked))} />

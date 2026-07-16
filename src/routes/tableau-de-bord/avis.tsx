@@ -6,7 +6,7 @@ import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import { RatingStars } from "@/components/shared/RatingStars";
 
 export const Route = createFileRoute("/tableau-de-bord/avis")({
-  head: () => ({ meta: [{ title: "Avis recus - IWOSAN" }] }),
+  head: () => ({ meta: [{ title: "Avis reçus - IWOSAN" }] }),
   component: () => (
     <ProtectedRoute requireAnyRole={["researcher", "professional", "admin", "super_admin"]}>
       <ReviewsPage />
@@ -58,10 +58,10 @@ const initialReviews: ReviewItem[] = [
 ];
 
 const statusLabels: Record<ReviewStatus, string> = {
-  published: "Publie",
+  published: "Publié",
   pending: "En attente",
-  reported: "Signale",
-  hidden: "Masque",
+  reported: "Signalé",
+  hidden: "Masqué",
 };
 
 function ReviewsPage() {
@@ -95,12 +95,12 @@ function ReviewsPage() {
 
     setReviews((current) => current.map((review) => (review.id === id ? { ...review, reply, status: review.status === "pending" ? "published" : review.status } : review)));
     setReplyDrafts((current) => ({ ...current, [id]: "" }));
-    setMessage("Reponse publique enregistree en mode test.");
+    setMessage("Réponse publique enregistrée.");
   };
 
   const setReviewStatus = (id: string, status: ReviewStatus) => {
     setReviews((current) => current.map((review) => (review.id === id ? { ...review, status } : review)));
-    setMessage(status === "published" ? "Avis publie en mode test." : status === "reported" ? "Avis signale a la moderation en mode test." : "Avis masque en mode test.");
+    setMessage(status === "published" ? "Avis publié." : status === "reported" ? "Avis signalé à la modération." : "Avis masqué.");
   };
 
   return (
@@ -109,9 +109,9 @@ function ReviewsPage() {
         <div className="container-iwosan py-8">
           <AccountBackLink />
           <p className="mt-5 text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Profil professionnel</p>
-          <h1 className="mt-2 text-[32px] md:text-[42px]">Avis recus</h1>
+          <h1 className="mt-2 text-[32px] md:text-[42px]">Avis reçus</h1>
           <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-            Suivez les retours clients, repondez publiquement et signalez les avis problematiques.
+            Suivez les retours clients, répondez publiquement et signalez les avis problématiques.
           </p>
         </div>
       </section>
@@ -124,7 +124,7 @@ function ReviewsPage() {
             <p className="mt-1 text-[28px] font-extrabold">{average.toFixed(1)}/5</p>
           </div>
           <StatBox label="Total" value={reviews.length} />
-          <StatBox label="A traiter" value={reviews.filter((review) => !review.reply && review.status !== "hidden").length} />
+          <StatBox label="À traiter" value={reviews.filter((review) => !review.reply && review.status !== "hidden").length} />
           <StatBox label="En attente" value={reviews.filter((review) => review.status === "pending").length} />
         </div>
 
@@ -136,10 +136,10 @@ function ReviewsPage() {
           <div className="flex flex-wrap gap-2">
             {([[
               "all", "Tous"],
-              ["published", "Publies"],
+              ["published", "Publiés"],
               ["pending", "En attente"],
-              ["reported", "Signales"],
-              ["hidden", "Masques"],
+              ["reported", "Signalés"],
+              ["hidden", "Masqués"],
             ] as const).map(([value, label]) => (
               <button
                 key={value}
@@ -159,8 +159,8 @@ function ReviewsPage() {
           {filteredReviews.length === 0 && (
             <div className="rounded-[8px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
               <Star className="mx-auto text-[var(--brand-primary)]" size={32} />
-              <h2 className="mt-3 text-[20px] font-bold">Aucun avis trouve</h2>
-              <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Les prochains avis clients apparaitront ici.</p>
+              <h2 className="mt-3 text-[20px] font-bold">Aucun avis trouvé</h2>
+              <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Les prochains avis clients apparaîtront ici.</p>
             </div>
           )}
 
@@ -180,7 +180,7 @@ function ReviewsPage() {
                 <div className="flex flex-wrap gap-2">
                   {review.status !== "published" && (
                     <button type="button" onClick={() => setReviewStatus(review.id, "published")} className="inline-flex h-10 items-center gap-2 rounded-full border border-emerald-200 px-4 text-[13px] font-semibold text-emerald-700">
-                      <CheckCircle2 size={15} /> Publier
+                      <CheckCircle2 size={15} /> Publiér
                     </button>
                   )}
                   <button
@@ -189,7 +189,7 @@ function ReviewsPage() {
                     disabled={review.status === "reported"}
                     className="inline-flex h-10 items-center gap-2 rounded-full border border-rose-200 px-4 text-[13px] font-semibold text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <Flag size={15} /> Signaler
+                    <Flag size={15} /> Signalér
                   </button>
                   <button
                     type="button"
@@ -197,7 +197,7 @@ function ReviewsPage() {
                     disabled={review.status === "hidden"}
                     className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <Trash2 size={15} /> Masquer
+                    <Trash2 size={15} /> Masquér
                   </button>
                 </div>
               </div>
@@ -206,7 +206,7 @@ function ReviewsPage() {
 
               {review.reply && (
                 <div className="mt-4 rounded-[8px] bg-[var(--brand-primary-subtle)] p-4 text-[13px] text-[var(--brand-primary)]">
-                  <strong>Votre reponse :</strong> {review.reply}
+                  <strong>Votre réponse :</strong> {review.reply}
                 </div>
               )}
 
@@ -215,7 +215,7 @@ function ReviewsPage() {
                   <input
                     value={replyDrafts[review.id] ?? ""}
                     onChange={(event) => setReplyDrafts((current) => ({ ...current, [review.id]: event.target.value }))}
-                    placeholder="Repondre publiquement a cet avis..."
+                    placeholder="Répondre publiquement à cet avis..."
                     className="h-11 min-w-0 flex-1 rounded-full border border-[var(--brand-border)] px-4 text-[14px]"
                   />
                   <button
@@ -223,7 +223,7 @@ function ReviewsPage() {
                     onClick={() => submitReply(review.id)}
                     className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white"
                   >
-                    <MessageSquareReply size={15} /> Repondre
+                    <MessageSquareReply size={15} /> Répondre
                   </button>
                 </div>
               )}

@@ -28,16 +28,16 @@ type CourseForm = {
 
 const emptyCourseForm: CourseForm = {
   title: "",
-  category: "Pharmacopee",
+  category: "Pharmacopée",
   level: "Debutant",
   duration: "2h",
   price: "0",
 };
 
 const statusLabels: Record<CourseStatus, string> = {
-  published: "Publiee",
+  published: "Publiée",
   draft: "Brouillon",
-  archived: "Archivee",
+  archived: "Archivée",
 };
 
 function TrainingsDashboard() {
@@ -69,14 +69,14 @@ function TrainingsDashboard() {
 
   const updateStatus = (id: string, status: CourseStatus) => {
     setCourses((current) => current.map((course) => (course.id === id ? { ...course, status } : course)));
-    setMessage(status === "published" ? "Formation publiee en mode test." : status === "archived" ? "Formation archivee en mode test." : "Formation repassee en brouillon.");
+    setMessage(status === "published" ? "Formation publiée." : status === "archived" ? "Formation archivée." : "Formation repassée en brouillon.");
   };
 
   const duplicateCourse = (id: string) => {
     const source = courses.find((course) => course.id === id);
     if (!source) return;
     setCourses((current) => [{ ...source, id: `local-${Date.now()}`, title: `${source.title} - copie`, status: "draft", progress: 20 }, ...current]);
-    setMessage("Copie creee en brouillon.");
+    setMessage("Copie créée en brouillon.");
   };
 
   const createCourse = (event: FormEvent<HTMLFormElement>) => {
@@ -85,12 +85,12 @@ function TrainingsDashboard() {
     const price = Number(form.price);
 
     if (title.length < 6) {
-      setMessage("Le titre de la formation doit contenir au moins 6 caracteres.");
+      setMessage("Le titre de la formation doit contenir au moins 6 caractères.");
       return;
     }
 
     if (Number.isNaN(price) || price < 0) {
-      setMessage("Le prix doit etre un nombre positif ou 0 pour une formation gratuite.");
+      setMessage("Le prix doit être un nombre positif ou 0 pour une formation gratuite.");
       return;
     }
 
@@ -102,18 +102,18 @@ function TrainingsDashboard() {
         title,
         instructor: "Votre espace professionnel",
         instructorAvatar: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=120&q=80",
-        instructorBio: "Formation ajoutee depuis le tableau de bord professionnel.",
+        instructorBio: "Formation ajoutée depuis le tableau de bord professionnel.",
         duration: form.duration.trim() || "2h",
         level: form.level,
         format: "video",
-        category: form.category.trim() || "General",
+        category: form.category.trim() || "Général",
         price,
         currency: "XOF",
         rating: 0,
         students: 0,
         image: "https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=1200&q=80",
-        prerequisites: ["A completer avant publication"],
-        learnings: ["Objectifs pedagogiques a renseigner"],
+        prerequisites: ["À compléter avant publication"],
+        learnings: ["Objectifs pédagogiques à renseigner"],
         modules: [{ title: "Module 1", lessons: [{ id: `${id}-lesson`, title: "Introduction", duration: "10 min", type: "video" }] }],
         reviews: [],
         status: "draft",
@@ -123,7 +123,7 @@ function TrainingsDashboard() {
     ]);
     setForm(emptyCourseForm);
     setShowForm(false);
-    setMessage("Formation creee en brouillon. Completez les modules avant publication.");
+    setMessage("Formation créée en brouillon. Complétez les modules avant publication.");
   };
 
   return (
@@ -136,7 +136,7 @@ function TrainingsDashboard() {
               <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Communaute</p>
               <h1 className="mt-2 text-[32px] md:text-[42px]">Mes formations</h1>
               <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-                Gere les ressources de formation que vous avez creees ou publiees.
+                Gérez les ressources de formation que vous avez créées ou publiées.
               </p>
             </div>
             <button type="button" onClick={() => setShowForm((value) => !value)} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white">
@@ -149,7 +149,7 @@ function TrainingsDashboard() {
       <section className="container-iwosan py-8">
         <div className="grid gap-4 md:grid-cols-3">
           <StatCard label="Formations" value={courses.length} icon={GraduationCap} />
-          <StatCard label="Publiees" value={courses.filter((course) => course.status === "published").length} icon={Upload} />
+          <StatCard label="Publiées" value={courses.filter((course) => course.status === "published").length} icon={Upload} />
           <StatCard label="Apprenants" value={courses.reduce((sum, course) => sum + course.students, 0)} icon={PlayCircle} />
         </div>
 
@@ -157,18 +157,18 @@ function TrainingsDashboard() {
           <form onSubmit={createCourse} className="mt-6 rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
             <div className="grid gap-4 md:grid-cols-5">
               <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="Titre de la formation" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px] md:col-span-2" />
-              <input value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} placeholder="Categorie" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
+              <input value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} placeholder="Catégorie" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
               <select value={form.level} onChange={(event) => setForm((current) => ({ ...current, level: event.target.value as CourseLevel }))} className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]">
-                <option value="Debutant">Debutant</option>
-                <option value="Intermediaire">Intermediaire</option>
-                <option value="Avance">Avance</option>
+                <option value="Debutant">Débutant</option>
+                <option value="Intermediaire">Intermédiaire</option>
+                <option value="Avance">Avancé</option>
               </select>
               <button type="submit" className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-gold)] px-5 text-[13px] font-bold text-[var(--color-text-primary)]">
-                Creer
+                Créer
               </button>
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <input value={form.duration} onChange={(event) => setForm((current) => ({ ...current, duration: event.target.value }))} placeholder="Duree ex. 2h" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
+              <input value={form.duration} onChange={(event) => setForm((current) => ({ ...current, duration: event.target.value }))} placeholder="Durée ex. 2h" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
               <input value={form.price} onChange={(event) => setForm((current) => ({ ...current, price: event.target.value }))} inputMode="numeric" placeholder="Prix XOF" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
             </div>
           </form>
@@ -182,9 +182,9 @@ function TrainingsDashboard() {
           <div className="flex flex-wrap gap-2">
             {([[
               "all", "Toutes"],
-              ["published", "Publiees"],
+              ["published", "Publiées"],
               ["draft", "Brouillons"],
-              ["archived", "Archivees"],
+              ["archived", "Archivées"],
             ] as const).map(([value, label]) => (
               <button
                 key={value}
@@ -204,8 +204,8 @@ function TrainingsDashboard() {
           {filtered.length === 0 && (
             <div className="rounded-[8px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
               <GraduationCap className="mx-auto text-[var(--brand-primary)]" size={32} />
-              <h2 className="mt-3 text-[20px] font-bold">Aucune formation trouvee</h2>
-              <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Changez le filtre, la recherche ou creez une nouvelle ressource.</p>
+              <h2 className="mt-3 text-[20px] font-bold">Aucune formation trouvée</h2>
+              <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Changez le filtre, la recherche ou créez une nouvelle ressource.</p>
             </div>
           )}
 
@@ -227,7 +227,7 @@ function TrainingsDashboard() {
 
                   <div className="mt-4">
                     <div className="flex justify-between text-[12px] font-semibold text-[var(--color-text-muted)]">
-                      <span>Completude</span><span>{course.progress}%</span>
+                      <span>Complétude</span><span>{course.progress}%</span>
                     </div>
                     <div className="mt-2 h-2 rounded-full bg-[var(--brand-surface-alt)]">
                       <div className="h-2 rounded-full bg-[var(--brand-primary)]" style={{ width: `${course.progress}%` }} />
@@ -236,13 +236,13 @@ function TrainingsDashboard() {
 
                   <div className="mt-5 flex flex-wrap gap-2">
                     <Link to="/formations/$id" params={{ id: course.id }} className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
-                      <Eye size={15} /> Apercu
+                      <Eye size={15} /> Aperçu
                     </Link>
                     <Link to="/formations/$id/apprendre" params={{ id: course.id }} className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
                       <PlayCircle size={15} /> Apprendre
                     </Link>
                     <button type="button" onClick={() => updateStatus(course.id, course.status === "published" ? "draft" : "published")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white">
-                      <Upload size={15} /> {course.status === "published" ? "Depublier" : "Publier"}
+                      <Upload size={15} /> {course.status === "published" ? "Dépublier" : "Publier"}
                     </button>
                     <button type="button" onClick={() => duplicateCourse(course.id)} className="inline-flex h-10 items-center rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
                       Dupliquer

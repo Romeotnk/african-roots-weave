@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { BadgeCheck, CalendarDays, MapPin, MessageSquare, Video, X } from "lucide-react";
 import { professionals } from "@/data/professionals";
@@ -27,7 +27,6 @@ function ProfessionalProfile() {
   const [mode, setMode] = useState<"onsite" | "online">("onsite");
   const [reason, setReason] = useState("");
   const [feedback, setFeedback] = useState("");
-  const [messageFeedback, setMessageFeedback] = useState("");
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
 
   const availability: Record<string, string[]> = pro.availability ?? fallbackAvailability;
@@ -60,16 +59,15 @@ function ProfessionalProfile() {
   }, [gallery.length, galleryIndex]);
 
   const requestBooking = () => {
-    setMessageFeedback("");
     if (!selectedSlot) {
-      setFeedback("Choisissez un creneau avant de demander le rendez-vous.");
+      setFeedback("Choisissez un créneau avant de demander le rendez-vous.");
       return;
     }
     if (reason.trim().length < 10) {
-      setFeedback("Precisez le motif de consultation en quelques mots.");
+      setFeedback("Précisez le motif de consultation en quelques mots.");
       return;
     }
-    setFeedback(`Demande envoyee pour ${selectedDay} a ${selectedSlot}. Le praticien devra confirmer le rendez-vous.`);
+    setFeedback(`Demande envoyée pour ${selectedDay} à ${selectedSlot}. Le praticien devra confirmer le rendez-vous.`);
   };
 
   return (
@@ -134,26 +132,24 @@ function ProfessionalProfile() {
                 {slot}
               </button>
             )) : (
-              <p className="col-span-2 rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px] text-[var(--color-text-muted)]">Aucun creneau disponible ce jour.</p>
+              <p className="col-span-2 rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px] text-[var(--color-text-muted)]">Aucun créneau disponible ce jour.</p>
             )}
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <button type="button" onClick={() => setMode("onsite")} className={`rounded-lg border p-3 text-[13px] font-semibold ${mode === "onsite" ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)]" : "border-[var(--brand-border)]"}`}>Presentiel</button>
+            <button type="button" onClick={() => setMode("onsite")} className={`rounded-lg border p-3 text-[13px] font-semibold ${mode === "onsite" ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)]" : "border-[var(--brand-border)]"}`}>Présentiel</button>
             <button type="button" onClick={() => setMode("online")} className={`rounded-lg border p-3 text-[13px] font-semibold ${mode === "online" ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)]" : "border-[var(--brand-border)]"}`}><Video size={14} className="inline" /> En ligne</button>
           </div>
           <textarea value={reason} onChange={(event) => { setReason(event.target.value); setFeedback(""); }} rows={4} placeholder="Motif de consultation" className="mt-4 w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
           <div className="mt-4 rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">
-            {selectedDay} {selectedSlot || "creneau a choisir"} - {mode === "online" ? "En ligne" : "Presentiel"} - {price.toLocaleString("fr-FR")} FCFA
+            {selectedDay} {selectedSlot || "créneau à choisir"} - {mode === "online" ? "En ligne" : "Présentiel"} - {price.toLocaleString("fr-FR")} FCFA
           </div>
           {feedback && <p className={`mt-3 rounded-lg p-3 text-[13px] ${feedback.startsWith("Demande") ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"}`}>{feedback}</p>}
-          {messageFeedback && <p className="mt-3 rounded-lg bg-[var(--brand-primary-subtle)] p-3 text-[13px] text-[var(--brand-primary)]">{messageFeedback}</p>}
           <button type="button" onClick={requestBooking} className="mt-4 h-11 w-full rounded-full bg-[var(--brand-primary)] font-semibold text-white">
             Demander le rendez-vous
           </button>
-          <button type="button" onClick={() => { setFeedback(""); setMessageFeedback(`Message pret a etre envoye a ${pro.name}. La messagerie sera branchee a l'API.`); }} className="mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[13px] font-semibold">
+          <Link to="/messages" className="mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[13px] font-semibold">
             <MessageSquare size={15} /> Envoyer un message
-          </button>
-        </aside>
+          </Link>        </aside>
       </section>
 
       {galleryIndex !== null && (

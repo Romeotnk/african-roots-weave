@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Bold, Code, Image, Italic, List, Paperclip, Send } from "lucide-react";
 import { forumCategories, questions } from "@/data/questions";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -22,6 +22,7 @@ function NewQuestion() {
   const [formError, setFormError] = useState("");
   const [editorNotice, setEditorNotice] = useState("");
   const [attachmentNotice, setAttachmentNotice] = useState("");
+  const attachmentInputRef = useRef<HTMLInputElement>(null);
   const debouncedTitle = useDebounce(title, 300);
 
   const similarQuestions = useMemo(() => {
@@ -44,13 +45,13 @@ function NewQuestion() {
   const applyFormatting = (label: string) => {
     const snippets: Record<string, string> = {
       Gras: "**texte important**",
-      Italique: "_precision_",
+      Italique: "_précision_",
       Liste: "\n- point important\n- autre point",
       Code: "`extrait ou dosage`",
       Image: "\n![description de l image](url)",
     };
     setBody((current) => `${current}${current ? "\n" : ""}${snippets[label] ?? ""}`);
-    setEditorNotice(`${label} ajoute dans le corps de la question.`);
+    setEditorNotice(`${label} ajouté dans le corps de la question.`);
     setSubmitted(false);
     setDraftSaved(false);
   };
@@ -63,7 +64,7 @@ function NewQuestion() {
 
   const submitQuestion = () => {
     if (title.trim().length < 12) {
-      setFormError("Le titre doit contenir au moins 12 caracteres.");
+      setFormError("Le titre doit contenir au moins 12 caractères.");
       return;
     }
     if (body.trim().length < 40) {
@@ -89,7 +90,7 @@ function NewQuestion() {
           </Link>
           <h1 className="mt-4 text-[34px] md:text-[46px]">Poser une question</h1>
           <p className="mt-3 max-w-2xl text-[var(--color-text-secondary)]">
-            Formulaire avec detection de doublons, categorie, tags, brouillon local et validation avant publication.
+            Formulaire avec détection de doublons, catégorie, tags, brouillon et validation avant publication.
           </p>
         </div>
       </section>
@@ -118,7 +119,7 @@ function NewQuestion() {
               className="h-12 w-full rounded-lg border border-[var(--brand-border)] px-4"
             />
             <div className="mt-2 flex justify-between text-[12px] text-[var(--color-text-muted)]">
-              <span>Soyez precis et concret.</span>
+              <span>Soyez précis et concret.</span>
               <span>{title.length}/160</span>
             </div>
 
@@ -171,20 +172,20 @@ function NewQuestion() {
                 setDraftSaved(false);
               }}
               rows={10}
-              placeholder="Contexte, age, pays, preparation utilisee, precautions deja prises..."
+              placeholder="Contexte, âge, pays, préparation utilisée, precautions deja prises..."
               className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3"
             />
             {editorNotice && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[12px] text-emerald-800">{editorNotice}</p>}
             <div className="mt-2 flex justify-between text-[12px] text-[var(--color-text-muted)]">
-              <span>Donnez assez de contexte pour recevoir une reponse utile.</span>
-              <span>{body.trim().length} caracteres</span>
+              <span>Donnez assez de contexte pour recevoir une réponse utile.</span>
+              <span>{body.trim().length} caractères</span>
             </div>
           </div>
 
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-[13px] font-bold">Categorie</label>
+                <label className="mb-2 block text-[13px] font-bold">Catégorie</label>
                 <select
                   value={category}
                   onChange={(event) => setCategory(event.target.value)}
@@ -255,23 +256,33 @@ function NewQuestion() {
               <Paperclip size={24} className="text-[var(--brand-primary)]" />
               <p className="font-semibold">Ajouter des images ou fichiers utiles</p>
               <p className="max-w-md text-[13px] text-[var(--color-text-muted)]">
-                Upload reel a brancher plus tard. Pour l'instant, le bouton confirme simplement l'emplacement du flux.
+                Ajoutez une image, une photo de plante ou un document utile pour contextualiser la question.
               </p>
-              <button type="button" onClick={() => setAttachmentNotice("Selection de fichiers preparee. Le stockage sera relie a l API.")} className="h-10 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
+              <input
+                ref={attachmentInputRef}
+                type="file"
+                className="hidden"
+                multiple
+                onChange={(event) => {
+                  const count = event.target.files?.length ?? 0;
+                  if (count === 0) return;
+                  setAttachmentNotice(`${count} fichier(s) ajouté(s) à la question.`);
+                }}
+              />
+              <button type="button" onClick={() => attachmentInputRef.current?.click()} className="h-10 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
                 Choisir des fichiers
-              </button>
-              {attachmentNotice && <p className="max-w-md rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">{attachmentNotice}</p>}
+              </button>              {attachmentNotice && <p className="max-w-md rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">{attachmentNotice}</p>}
             </div>
           </div>
 
           {draftSaved && (
             <div className="rounded-[12px] border border-amber-200 bg-amber-50 p-4 text-[13px] text-amber-800">
-              Brouillon enregistre localement.
+              Brouillon enregistré.
             </div>
           )}
           {submitted && (
             <div className="rounded-[12px] border border-emerald-200 bg-emerald-50 p-4 text-[13px] text-emerald-800">
-              Question prete a publier. Apres connexion API, elle sera sauvegardee et visible dans le forum.
+              Question prête à publier. Elle sera visible dans le forum après validation.
             </div>
           )}
 
@@ -289,12 +300,12 @@ function NewQuestion() {
         </form>
 
         <aside className="h-fit rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-          <h2 className="text-[18px] font-bold">Conseils de qualite</h2>
+          <h2 className="text-[18px] font-bold">Conseils de qualité</h2>
           <ul className="mt-4 space-y-3 text-[13px] text-[var(--color-text-secondary)]">
-            <li>Donnez le contexte sans publier de donnees medicales sensibles.</li>
-            <li>Precisez pays, age approximatif et preparation utilisee si pertinent.</li>
-            <li>Indiquez si un professionnel de sante suit deja la situation.</li>
-            <li>Ajoutez des tags clairs pour aider les praticiens a trouver la question.</li>
+            <li>Donnez le contexte sans publier de données médicales sensibles.</li>
+            <li>Précisez pays, âge approximatif et préparation utilisée si pertinent.</li>
+            <li>Indiquez si un professionnel de santé suit déjà la situation.</li>
+            <li>Ajoutez des tags clairs pour aider les praticiens à trouver la question.</li>
           </ul>
         </aside>
       </section>

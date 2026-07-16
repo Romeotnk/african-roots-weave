@@ -7,7 +7,7 @@ import { events } from "@/data/events";
 import type { EventItem } from "@/types";
 
 export const Route = createFileRoute("/tableau-de-bord/evenements")({
-  head: () => ({ meta: [{ title: "Mes evenements - IWOSAN" }] }),
+  head: () => ({ meta: [{ title: "Mes événements - IWOSAN" }] }),
   component: () => (
     <ProtectedRoute requireAnyRole={["researcher", "professional", "admin", "super_admin"]}>
       <EventsDashboard />
@@ -39,9 +39,9 @@ const emptyEventForm: EventForm = {
 };
 
 const statusLabels: Record<EventStatus, string> = {
-  confirmed: "Publie",
+  confirmed: "Publié",
   pending: "Brouillon",
-  cancelled: "Annule",
+  cancelled: "Annulé",
 };
 
 function EventsDashboard() {
@@ -68,14 +68,14 @@ function EventsDashboard() {
 
   const updateStatus = (id: string, status: EventStatus) => {
     setItems((current) => current.map((event) => (event.id === id ? { ...event, localStatus: status } : event)));
-    setMessage(status === "confirmed" ? "Evenement publie en mode test." : status === "cancelled" ? "Evenement annule en mode test." : "Evenement remis en brouillon.");
+    setMessage(status === "confirmed" ? "Événement publié." : status === "cancelled" ? "Événement annulé." : "Événement remis en brouillon.");
   };
 
   const duplicateEvent = (id: string) => {
     const source = items.find((event) => event.id === id);
     if (!source) return;
     setItems((current) => [{ ...source, id: `local-${Date.now()}`, title: `${source.title} - copie`, localStatus: "pending", registered: 0 }, ...current]);
-    setMessage("Copie creee en brouillon.");
+    setMessage("Copie créée en brouillon.");
   };
 
   const createEvent = (event: FormEvent<HTMLFormElement>) => {
@@ -85,22 +85,22 @@ function EventsDashboard() {
     const price = Number(form.price);
 
     if (title.length < 6) {
-      setMessage("Le titre de l'evenement doit contenir au moins 6 caracteres.");
+      setMessage("Le titre de l'événement doit contenir au moins 6 caractères.");
       return;
     }
 
     if (!form.date) {
-      setMessage("Ajoutez une date avant de creer l'evenement.");
+      setMessage("Ajoutez une date avant de créer l'événement.");
       return;
     }
 
     if (Number.isNaN(capacity) || capacity < 1) {
-      setMessage("La capacite doit etre superieure a 0.");
+      setMessage("La capacité doit être supérieure à 0.");
       return;
     }
 
     if (Number.isNaN(price) || price < 0) {
-      setMessage("Le prix doit etre un nombre positif ou 0 pour un evenement gratuit.");
+      setMessage("Le prix doit être un nombre positif ou 0 pour un événement gratuit.");
       return;
     }
 
@@ -112,9 +112,9 @@ function EventsDashboard() {
         type: form.category.toLowerCase().includes("webinaire") ? "WEBINAIRE" : form.category.toLowerCase().includes("formation") ? "FORMATION" : "ATELIER",
         category: form.category.trim() || "Atelier",
         date: new Date(form.date).toISOString(),
-        location: form.location.trim() || (form.online ? "En ligne" : "Lieu a confirmer"),
+        location: form.location.trim() || (form.online ? "En ligne" : "Lieu à confirmer"),
         online: form.online,
-        description: "Description a completer avant publication.",
+        description: "Description à compléter avant publication.",
         image: "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200&q=80&auto=format&fit=crop",
         price,
         currency: "XOF",
@@ -127,7 +127,7 @@ function EventsDashboard() {
     ]);
     setForm(emptyEventForm);
     setShowForm(false);
-    setMessage("Evenement cree en brouillon. Completez la description avant publication.");
+    setMessage("Événement créé en brouillon. Complétez la description avant publication.");
   };
 
   return (
@@ -137,14 +137,14 @@ function EventsDashboard() {
           <AccountBackLink />
           <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Communaute</p>
-              <h1 className="mt-2 text-[32px] md:text-[42px]">Mes evenements</h1>
+              <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Communauté</p>
+              <h1 className="mt-2 text-[32px] md:text-[42px]">Mes événements</h1>
               <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-                Gere les webinaires, salons, ateliers et formations que vous proposez.
+                Gérez les webinaires, salons, ateliers et formations que vous proposez.
               </p>
             </div>
             <button type="button" onClick={() => setShowForm((value) => !value)} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white">
-              <Plus size={17} /> {showForm ? "Fermer" : "Nouvel evenement"}
+              <Plus size={17} /> {showForm ? "Fermer" : "Nouvel événement"}
             </button>
           </div>
         </div>
@@ -152,20 +152,20 @@ function EventsDashboard() {
 
       <section className="container-iwosan py-8">
         <div className="grid gap-4 md:grid-cols-3">
-          <StatCard label="Evenements" value={items.length} icon={Calendar} />
-          <StatCard label="Publies" value={items.filter((event) => event.localStatus === "confirmed").length} icon={Eye} />
+          <StatCard label="Événements" value={items.length} icon={Calendar} />
+          <StatCard label="Publiés" value={items.filter((event) => event.localStatus === "confirmed").length} icon={Eye} />
           <StatCard label="Inscrits" value={registeredTotal} icon={Ticket} />
         </div>
 
         {showForm && (
           <form onSubmit={createEvent} className="mt-6 rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
             <div className="grid gap-4 md:grid-cols-6">
-              <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="Titre de l'evenement" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px] md:col-span-2" />
-              <input value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} placeholder="Categorie" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
+              <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="Titre de l'événement" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px] md:col-span-2" />
+              <input value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} placeholder="Catégorie" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
               <input type="datetime-local" value={form.date} onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))} className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
-              <input value={form.capacity} onChange={(event) => setForm((current) => ({ ...current, capacity: event.target.value }))} inputMode="numeric" placeholder="Capacite" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
+              <input value={form.capacity} onChange={(event) => setForm((current) => ({ ...current, capacity: event.target.value }))} inputMode="numeric" placeholder="Capacité" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
               <button type="submit" className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-gold)] px-5 text-[13px] font-bold text-[var(--color-text-primary)]">
-                Creer
+                Créer
               </button>
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-[1fr_160px_160px]">
@@ -182,14 +182,14 @@ function EventsDashboard() {
         <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <label className="relative block max-w-md flex-1">
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Rechercher un evenement..." className="h-10 w-full rounded-full border border-[var(--brand-border)] bg-white pl-10 pr-4 text-[13px]" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Rechercher un événement..." className="h-10 w-full rounded-full border border-[var(--brand-border)] bg-white pl-10 pr-4 text-[13px]" />
           </label>
           <div className="flex flex-wrap gap-2">
             {([[
               "all", "Tous"],
-              ["confirmed", "Publies"],
+              ["confirmed", "Publiés"],
               ["pending", "Brouillons"],
-              ["cancelled", "Annules"],
+              ["cancelled", "Annulés"],
             ] as const).map(([value, label]) => (
               <button
                 key={value}
@@ -209,8 +209,8 @@ function EventsDashboard() {
           {filtered.length === 0 && (
             <div className="rounded-[8px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
               <Calendar className="mx-auto text-[var(--brand-primary)]" size={32} />
-              <h2 className="mt-3 text-[20px] font-bold">Aucun evenement trouve</h2>
-              <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Changez le filtre, la recherche ou preparez un nouvel evenement.</p>
+              <h2 className="mt-3 text-[20px] font-bold">Aucun événement trouvé</h2>
+              <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Changez le filtre, la recherche ou préparez un nouvel événement.</p>
             </div>
           )}
 
@@ -255,13 +255,13 @@ function EventsDashboard() {
                         <Eye size={15} /> Agenda
                       </Link>
                       <button type="button" onClick={() => updateStatus(event.id, event.localStatus === "confirmed" ? "pending" : "confirmed")} disabled={isCancelled} className="inline-flex h-10 items-center rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
-                        {event.localStatus === "confirmed" ? "Depublier" : "Publier"}
+                        {event.localStatus === "confirmed" ? "Dépublier" : "Publiér"}
                       </button>
                       <button type="button" onClick={() => duplicateEvent(event.id)} className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
                         <Copy size={15} /> Dupliquer
                       </button>
                       <button type="button" onClick={() => updateStatus(event.id, "cancelled")} disabled={isCancelled} className="inline-flex h-10 items-center gap-2 rounded-full border border-rose-200 px-4 text-[13px] font-semibold text-rose-700 disabled:cursor-not-allowed disabled:opacity-50">
-                        <XCircle size={15} /> Annuler
+                        <XCircle size={15} /> Annulér
                       </button>
                     </div>
                   </div>

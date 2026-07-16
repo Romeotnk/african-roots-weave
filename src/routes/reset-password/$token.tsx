@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { resetPassword } from "@/lib/api/auth";
+import { getPasswordValidationError } from "@/lib/auth/password";
 
 export const Route = createFileRoute("/reset-password/$token")({
   head: () => ({ meta: [{ title: "Nouveau mot de passe - IWOSAN" }] }),
@@ -23,8 +24,9 @@ function ResetPasswordWithToken() {
     event.preventDefault();
     setError(null);
 
-    if (password.length < 8) {
-      setError("Le mot de passe doit contenir au moins 8 caractères.");
+    const passwordError = getPasswordValidationError(password);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
 

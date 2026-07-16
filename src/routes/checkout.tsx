@@ -16,9 +16,9 @@ const deliveryModes = [
 ];
 
 const paymentMethods = [
-  { id: "wallet", label: "Portefeuille Iwosan", icon: Wallet, desc: "Solde disponible mock: 42 000 FCFA" },
-  { id: "moneroo", label: "Mobile Money", icon: CreditCard, desc: "Integration paiement a brancher plus tard" },
-  { id: "bank", label: "Virement bancaire", icon: ShieldCheck, desc: "Instructions affichees apres validation" },
+  { id: "wallet", label: "Portefeuille Iwosan", icon: Wallet, desc: "Solde vérifié avant confirmation" },
+  { id: "moneroo", label: "Mobile Money", icon: CreditCard, desc: "Paiement mobile bientôt disponible" },
+  { id: "bank", label: "Virement bancaire", icon: ShieldCheck, desc: "Instructions transmises après validation" },
 ];
 
 function CheckoutPage() {
@@ -50,7 +50,7 @@ function CheckoutPage() {
     }
 
     if (step === 1 && !payment) {
-      setStepError("Choisissez un mode de reglement provisoire.");
+      setStepError("Choisissez un mode de règlement.");
       return false;
     }
 
@@ -84,10 +84,10 @@ function CheckoutPage() {
         <section className="container-iwosan py-16">
           <div className="mx-auto max-w-2xl rounded-[16px] border border-[var(--brand-border-light)] bg-white p-8 text-center">
             <CheckCircle2 className="mx-auto text-emerald-600" size={54} />
-            <h1 className="mt-4 text-[32px]">Commande enregistree</h1>
-            <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Numero de commande : {orderNumber}</p>
+            <h1 className="mt-4 text-[32px]">Commande enregistrée</h1>
+            <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Numéro de commande : {orderNumber}</p>
             <p className="mt-3 text-[13px] text-[var(--color-text-muted)]">
-              Le paiement reel n'est pas encore active. Cette validation garde le parcours pret pour la prochaine integration.
+              Votre commande est préparée. Le paiement sera confirmé selon le mode choisi dès activation du règlement.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Link to="/mes-commandes" className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 font-semibold text-white">
@@ -114,7 +114,7 @@ function CheckoutPage() {
               Ajoutez au moins un produit avant de valider une commande.
             </p>
             <Link to="/marketplace" className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 font-semibold text-white">
-              Retour a la marketplace
+              Retour à la marketplace
             </Link>
           </div>
         </section>
@@ -131,7 +131,7 @@ function CheckoutPage() {
           </Link>
           <h1 className="mt-3 text-[32px] md:text-[42px]">Validation de commande</h1>
           <div className="mt-5 flex flex-wrap gap-2">
-            {["Livraison", "Reglement", "Confirmation"].map((label, index) => (
+            {["Livraison", "Règlement", "Confirmation"].map((label, index) => (
               <button
                 key={label}
                 type="button"
@@ -183,9 +183,9 @@ function CheckoutPage() {
 
           {step === 1 && (
             <div className="space-y-5">
-              <h2 className="text-[22px] font-bold">Reglement</h2>
+              <h2 className="text-[22px] font-bold">Règlement</h2>
               <p className="rounded-lg border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-4 text-[13px]">
-                Paiement reel non active pour l'instant. Ce choix sert a preparer le recapitulatif de commande.
+                Les paiements en ligne ne sont pas encore activés. Ce choix prépare la commande et les instructions associées.
               </p>
               <div className="grid gap-3">
                 {paymentMethods.map((method) => (
@@ -205,7 +205,7 @@ function CheckoutPage() {
               </div>
               {payment === "bank" && (
                 <div className="rounded-lg bg-[var(--brand-surface-alt)] p-4 text-[13px]">
-                  Banque: Iwosan Trust Bank - IBAN mock BJ00 IWOS 2026 0001.
+                  Les instructions de virement seront communiquées après validation de la commande.
                 </div>
               )}
             </div>
@@ -213,7 +213,7 @@ function CheckoutPage() {
 
           {step === 2 && (
             <div className="space-y-5">
-              <h2 className="text-[22px] font-bold">Recapitulatif</h2>
+              <h2 className="text-[22px] font-bold">Récapitulatif</h2>
               <div className="space-y-3">
                 {cart.items.map((item) => (
                   <div key={item.product.id} className="flex justify-between rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">
@@ -254,7 +254,7 @@ function CheckoutPage() {
           <h2 className="font-bold">Total</h2>
           <dl className="mt-4 space-y-3 text-[14px]">
             <div className="flex justify-between"><dt>Sous-total</dt><dd>{cart.subtotal.toLocaleString("fr-FR")} FCFA</dd></div>
-            <div className="flex justify-between"><dt>Reduction</dt><dd>-{cart.discount.toLocaleString("fr-FR")} FCFA</dd></div>
+            <div className="flex justify-between"><dt>Réduction</dt><dd>-{cart.discount.toLocaleString("fr-FR")} FCFA</dd></div>
             <div className="flex justify-between"><dt>Frais</dt><dd>{cart.serviceFee.toLocaleString("fr-FR")} FCFA</dd></div>
             <div className="flex justify-between border-t border-[var(--brand-border-light)] pt-3 text-[18px] font-extrabold"><dt>Total</dt><dd>{cart.total.toLocaleString("fr-FR")} FCFA</dd></div>
           </dl>

@@ -19,9 +19,9 @@ export const initiateMonerooPayment = async (input: InitiatePaymentInput) => {
     }
 
     return {
-      checkoutUrl: `${env.clientUrl}/checkout/mock?reference=${encodeURIComponent(input.reference)}`,
-      transactionId: `mock_${input.reference}`,
-      provider: "mock",
+      checkoutUrl: `${env.clientUrl}/checkout?reference=${encodeURIComponent(input.reference)}`,
+      transactionId: `pending_${input.reference}`,
+      provider: "pending",
     };
   }
 

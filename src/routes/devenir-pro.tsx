@@ -170,7 +170,7 @@ function BecomePro() {
             </div>
             <div className="mt-4 rounded-[12px] border border-[var(--brand-border)] bg-[linear-gradient(135deg,#dff1e7,#f7efd4)] p-5">
               <div className="grid h-[190px] place-items-center rounded-lg bg-white/30 text-[13px] font-semibold text-[var(--brand-primary)]">
-                Carte du cabinet a brancher
+                Carte du cabinet
               </div>
             </div>
             <div className="mt-5 overflow-x-auto">

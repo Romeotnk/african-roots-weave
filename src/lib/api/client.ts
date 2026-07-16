@@ -26,9 +26,11 @@ const translateApiMessage = (message: string) => {
   const lower = normalized.toLowerCase();
 
   if (lower.includes("invalid credentials")) return "Email ou mot de passe incorrect.";
-  if (lower.includes("email already registered")) return "Cette adresse email est déjà utilisée.";
+  if (lower.includes("email already registered") || lower.includes("user already registered")) return "Cette adresse email est déjà utilisée.";
   if (lower.includes("valid email required")) return "Adresse email invalide.";
   if (lower.includes("password required")) return "Le mot de passe est requis.";
+  if (lower.includes("current password required")) return "Saisissez votre mot de passe actuel.";
+  if (lower.includes("current password is invalid")) return "Le mot de passe actuel est incorrect.";
   if (lower.includes("password must be at least 8 characters")) return "Le mot de passe doit contenir au moins 8 caractères.";
   if (lower.includes("password must include an uppercase letter")) return "Le mot de passe doit contenir une majuscule.";
   if (lower.includes("password must include a lowercase letter")) return "Le mot de passe doit contenir une minuscule.";
@@ -44,12 +46,16 @@ const translateApiMessage = (message: string) => {
   if (lower.includes("account unavailable")) return "Ce compte est indisponible.";
   if (lower.includes("email verification required")) return "Vous devez vérifier votre email avant de continuer.";
   if (lower.includes("kyc verification required")) return "Votre vérification KYC doit être validée avant de continuer.";
+  if (lower.includes("account created. please verify your email")) return "Compte créé. Vérifiez votre email pour l'activer.";
+  if (lower.includes("email verification is disabled in local development")) return "Compte créé. En local, la vérification email est désactivée : vous pouvez vous connecter.";
+  if (lower.includes("login successful")) return "Connexion réussie.";
+  if (lower.includes("supabase oauth is not configured")) return "OAuth Supabase n'est pas configuré côté serveur.";
+  if (lower.includes("invalid supabase session")) return "Session Supabase invalide. Réessayez la connexion.";
   if (lower.includes("route not found")) return "Route API introuvable.";
   if (lower.includes("internal server error")) return "Erreur serveur. Réessayez dans un instant.";
 
   return normalized || "Erreur API Iwosan";
 };
-
 
 const translateNetworkError = (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
@@ -61,7 +67,7 @@ const translateNetworkError = (error: unknown) => {
     lower.includes("networkerror") ||
     lower.includes("network request failed")
   ) {
-    return "Impossible de joindre le serveur. Verifiez votre connexion ou reessayez dans un instant.";
+    return "Impossible de joindre le serveur. Vérifiez votre connexion ou réessayez dans un instant.";
   }
 
   return translateApiMessage(message);

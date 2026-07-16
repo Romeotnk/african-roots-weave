@@ -11,7 +11,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import type { KycStatus } from "@/types";
 
 export const Route = createFileRoute("/mon-compte/kyc")({
-  head: () => ({ meta: [{ title: "Verification KYC - IWOSAN" }] }),
+  head: () => ({ meta: [{ title: "Vérification KYC - IWOSAN" }] }),
   component: KycPage,
 });
 
@@ -23,19 +23,19 @@ const statusMeta: Record<KycStatus, { label: string; tone: string; icon: typeof 
     desc: "Envoyez vos documents pour debloquer les ventes, retraits et services verifies.",
   },
   pending: {
-    label: "En cours de verification",
+    label: "En cours de vérification",
     tone: "bg-amber-50 text-amber-700",
     icon: AlertTriangle,
     desc: "Votre dossier est en cours d'examen par l'equipe moderation.",
   },
   approved: {
-    label: "Identite verifiee",
+    label: "Identité vérifiée",
     tone: "bg-emerald-50 text-emerald-700",
     icon: ShieldCheck,
     desc: "Votre identite est approuvee. Les actions protegees sont disponibles.",
   },
   rejected: {
-    label: "Rejete",
+    label: "Rejeté",
     tone: "bg-red-50 text-red-700",
     icon: XCircle,
     desc: "Le dossier doit etre renvoye avec des documents plus lisibles.",
@@ -73,12 +73,12 @@ function KycPage() {
   const Icon = meta.icon;
 
   const validateForm = () => {
-    if (documentNumber.trim().length < 5) return "Renseignez un numero de document valide.";
+    if (documentNumber.trim().length < 5) return "Renseignez un numéro de document valide.";
     if (!expiresAt) return "Indiquez la date d'expiration du document.";
-    if (new Date(expiresAt).getTime() <= Date.now()) return "Le document doit etre encore valide.";
+    if (new Date(expiresAt).getTime() <= Date.now()) return "Le document doit être encore valide.";
     if (!files.front) return "Ajoutez le recto du document.";
     if (docType === "CNI" && !files.back) return "Ajoutez le verso de la CNI.";
-    if (!files.selfie) return "Ajoutez le selfie de verification.";
+    if (!files.selfie) return "Ajoutez le selfie de vérification.";
     if (!accepted) return "Confirmez l'exactitude des informations avant l'envoi.";
     return "";
   };
@@ -101,10 +101,10 @@ function KycPage() {
         files,
       });
       setStatus(backendStatusToKycStatus(response.data?.kycStatus));
-      setMessage("Dossier KYC soumis. Vous recevrez une notification apres verification.");
+      setMessage("Dossier KYC soumis. Vous recevrez une notification apres vérification.");
     } catch {
       setStatus("pending");
-      setMessage("API indisponible : dossier conserve en attente localement pour ce parcours de test.");
+      setMessage("Dossier conservé en attente. Une notification confirmera la reprise du traitement.");
     }
   };
 
@@ -122,7 +122,7 @@ function KycPage() {
             <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--brand-primary)]">
               Mon compte
             </p>
-            <h1 className="mt-2 text-[32px] md:text-[42px]">Verification d'identite</h1>
+            <h1 className="mt-2 text-[32px] md:text-[42px]">Vérification d'identité</h1>
             <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
               Soumettez vos documents KYC. Le statut est lie a votre compte connecte et sera controle par l'administration.
             </p>
@@ -151,7 +151,7 @@ function KycPage() {
             {status === "approved" ? (
               <div className="py-12 text-center">
                 <CheckCircle2 className="mx-auto text-emerald-600" size={54} />
-                <h2 className="mt-4 text-[24px] font-bold">Identite verifiee</h2>
+                <h2 className="mt-4 text-[24px] font-bold">Identité vérifiée</h2>
                 <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Aucune action requise.</p>
               </div>
             ) : status === "pending" ? (

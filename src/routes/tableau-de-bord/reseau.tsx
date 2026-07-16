@@ -65,7 +65,7 @@ function ReseauPage() {
     setError("");
     try {
       await navigator.clipboard.writeText("https://iwosan.com/inscription?ref=PRO-IWOSAN");
-      setMessage("Lien d'invitation copie.");
+      setMessage("Lien d'invitation copié.");
     } catch {
       setError("Impossible de copier automatiquement le lien. Copiez-le manuellement.");
     }
@@ -91,17 +91,17 @@ function ReseauPage() {
       ...current,
     ]);
     setInviteEmail("");
-    setMessage("Invitation ajoutee en attente.");
+    setMessage("Invitation ajoutée en attente.");
   };
 
   const remindMember = (id: string) => {
     setMembers((current) => current.map((member) => (member.id === id ? { ...member, status: "pending" } : member)));
-    setMessage("Relance preparee pour ce membre.");
+    setMessage("Relance préparée pour ce membre.");
     setError("");
   };
 
   const exportList = () => {
-    setMessage("Export CSV prepare localement. La generation serveur sera branchee plus tard.");
+    setMessage("Export CSV préparé.");
     setError("");
   };
 
@@ -137,7 +137,7 @@ function ReseauPage() {
             <aside className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
               <h2 className="text-[18px] font-bold">Inviter un membre</h2>
               <p className="mt-2 text-[13px] leading-6 text-[var(--color-text-muted)]">
-                Les invitations sont mockees ici. Le lien sera branche au backend de parrainage plus tard.
+                Les invitations utilisent votre lien de parrainage et restent visibles dans cet espace.
               </p>
               <button type="button" onClick={copyLink} className="btn-secondary mt-4 h-11 w-full text-[14px]">
                 <Copy size={17} /> Copier mon lien

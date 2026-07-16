@@ -3,9 +3,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Camera, Eye, EyeOff, KeyRound, Save, User } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import type { AppRole } from "@/lib/auth/AuthContext";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import { apiRequest } from "@/lib/api/client";
 import { changePassword, updateMe, type AuthUser } from "@/lib/api/auth";
+import { getPasswordValidationError } from "@/lib/auth/password";
+import { PROFESSIONAL_ACCOUNT_ROLES } from "@/lib/auth/roles";
 
 export const Route = createFileRoute("/tableau-de-bord/profil")({
   head: () => ({ meta: [{ title: "Mon profil - IWOSAN" }] }),
@@ -30,7 +33,7 @@ const isValidUrl = (value: string) => {
   }
 };
 
-function ProfilePage() {
+export function ProfilePage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { allowedRoles?: AppRole[] } = {}) {
   const queryClient = useQueryClient();
   const [profileMessage, setProfileMessage] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
@@ -81,14 +84,14 @@ function ProfilePage() {
       await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
     },
     onError: (error) => {
-      setProfileMessage(error instanceof Error ? error.message : "Mise a jour impossible.");
+      setProfileMessage(error instanceof Error ? error.message : "Mise à jour impossible.");
     },
   });
 
   const passwordMutation = useMutation({
     mutationFn: () => changePassword(passwords.currentPassword, passwords.password),
     onSuccess: () => {
-      setPasswordMessage("Mot de passe change. Utilisez le nouveau mot de passe a la prochaine connexion.");
+      setPasswordMessage("Mot de passe changé. Utilisez le nouveau mot de passe à la prochaine connexion.");
       setPasswords({ currentPassword: "", password: "", confirmPassword: "" });
     },
     onError: (error) => {
@@ -101,7 +104,7 @@ function ProfilePage() {
     setProfileMessage("");
 
     if (form.firstName.trim().length < 2 || form.lastName.trim().length < 2) {
-      setProfileMessage("Renseignez un prenom et un nom d'au moins 2 caracteres.");
+      setProfileMessage("Renseignez un prénom et un nom d'au moins 2 caractères.");
       return;
     }
 
@@ -122,8 +125,9 @@ function ProfilePage() {
       return;
     }
 
-    if (passwords.password.length < 8) {
-      setPasswordMessage("Le nouveau mot de passe doit contenir au moins 8 caracteres.");
+    const passwordError = getPasswordValidationError(passwords.password);
+    if (passwordError) {
+      setPasswordMessage(passwordError.replace("Le mot de passe", "Le nouveau mot de passe"));
       return;
     }
 
@@ -136,7 +140,7 @@ function ProfilePage() {
   };
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAnyRole={allowedRoles}>
       <main className="min-h-screen bg-[var(--brand-bg)]">
         <section className="border-b border-[var(--brand-border-light)] bg-white">
           <div className="container-iwosan py-8">

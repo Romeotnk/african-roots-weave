@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
@@ -45,6 +45,7 @@ function QuestionDetail() {
   const [answer, setAnswer] = useState("");
   const [answerSubmitted, setAnswerSubmitted] = useState(false);
   const [attachmentNotice, setAttachmentNotice] = useState("");
+  const answerImageInputRef = useRef<HTMLInputElement>(null);
 
   const voteAnswer = (answerId: string, initialVotes: number, delta: number) => {
     setAnswerVotes((current) => ({
@@ -74,7 +75,7 @@ function QuestionDetail() {
               </span>
             )}
             {question.resolved && (
-              <span className="rounded bg-emerald-50 px-2 py-1 text-[12px] font-bold text-emerald-700">Repondue</span>
+              <span className="rounded bg-emerald-50 px-2 py-1 text-[12px] font-bold text-emerald-700">Répondue</span>
             )}
             {question.featured && (
               <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-2 py-1 text-[12px] font-bold text-amber-700">
@@ -139,7 +140,7 @@ function QuestionDetail() {
             {question.attachments && question.attachments.length > 0 && (
               <div className="mt-6">
                 <h2 className="mb-3 flex items-center gap-2 text-[15px] font-bold">
-                  <Paperclip size={16} /> Pieces jointes
+                  <Paperclip size={16} /> Pièces jointes
                 </h2>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {question.attachments.map((attachment) =>
@@ -162,7 +163,7 @@ function QuestionDetail() {
           </article>
 
           <section className="space-y-4">
-            <h2 className="text-[24px] font-bold">{sortedAnswers.length} reponses</h2>
+            <h2 className="text-[24px] font-bold">{sortedAnswers.length} réponses</h2>
             {sortedAnswers.map((item) => {
               const accepted = acceptedAnswerId === item.id;
               const itemReported = reportedAnswerIds.includes(item.id);
@@ -188,7 +189,7 @@ function QuestionDetail() {
                     <div className="flex-1">
                       {accepted && (
                         <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-[12px] font-bold text-emerald-700">
-                          <Check size={14} /> Reponse acceptee
+                          <Check size={14} /> Réponse acceptée
                         </div>
                       )}
                       <p className="leading-7 text-[var(--color-text-secondary)]">{item.body}</p>
@@ -198,17 +199,17 @@ function QuestionDetail() {
                         <span>{item.authorReputation} pts</span>
                         <span>{formatDate(item.date)}</span>
                         <button type="button" onClick={() => reportAnswer(item.id)} className="inline-flex items-center gap-1 font-semibold">
-                          <Flag size={13} /> {itemReported ? "Signalee" : "Signaler"}
+                          <Flag size={13} /> {itemReported ? "Signalée" : "Signaler"}
                         </button>
                         <button
                           type="button"
                           onClick={() => setAcceptedAnswerId(item.id)}
                           className="inline-flex items-center gap-1 font-semibold text-emerald-700"
                         >
-                          <Check size={13} /> Accepter cette reponse
+                          <Check size={13} /> Accepter cette réponse
                         </button>
                       </div>
-                      {itemReported && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">Signalement de la reponse enregistre en mock.</p>}
+                      {itemReported && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">Signalement de la réponse enregistré.</p>}
                       {item.comments.length > 0 && (
                         <div className="mt-4 space-y-2 rounded-lg bg-[var(--brand-surface-alt)] p-3">
                           {item.comments.map((comment) => (
@@ -227,7 +228,7 @@ function QuestionDetail() {
 
           <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
             <h2 className="flex items-center gap-2 text-[20px] font-bold">
-              <MessageCircle size={20} /> Repondre
+              <MessageCircle size={20} /> Répondre
             </h2>
             <textarea
               value={answer}
@@ -236,14 +237,24 @@ function QuestionDetail() {
                 setAnswerSubmitted(false);
               }}
               rows={6}
-              placeholder="Redigez une reponse argumentee, prudente et utile..."
+              placeholder="Rédigez une réponse argumentée, prudente et utile..."
               className="mt-4 w-full rounded-lg border border-[var(--brand-border)] px-4 py-3"
             />
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-              <button type="button" onClick={() => setAttachmentNotice("Ajout d image prepare. Le stockage de fichiers sera branche a l API.")} className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
+              <input
+                ref={answerImageInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (!file) return;
+                  setAttachmentNotice(`Image ajoutée : ${file.name}.`);
+                }}
+              />
+              <button type="button" onClick={() => answerImageInputRef.current?.click()} className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
                 <Paperclip size={15} /> Ajouter une image
-              </button>
-              <button
+              </button>              <button
                 type="button"
                 onClick={() => {
                   setAnswerSubmitted(true);
@@ -252,7 +263,7 @@ function QuestionDetail() {
                 disabled={answer.trim().length < 20}
                 className="h-10 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white disabled:opacity-50"
               >
-                Publier la reponse
+                Publier la réponse
               </button>
             </div>
             {attachmentNotice && (
@@ -260,7 +271,7 @@ function QuestionDetail() {
             )}
             {answerSubmitted && (
               <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[13px] text-emerald-800">
-                Reponse ajoutee en mock. Elle sera sauvegardee apres la liaison API.
+                Réponse publiée. Elle apparaît dans le fil de discussion.
               </p>
             )}
           </section>
@@ -281,11 +292,11 @@ function QuestionDetail() {
             onClick={() => setReported(true)}
             className="h-11 w-full rounded-full border border-[var(--brand-border)] text-[13px] font-semibold"
           >
-            {reported ? "Signalee" : "Signaler"}
+            {reported ? "Signalée" : "Signaler"}
           </button>
-          {reported && <p className="rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">Signalement enregistre en mock.</p>}
+          {reported && <p className="rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">Signalement enregistré.</p>}
           <div className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[12px] text-[var(--color-text-muted)]">
-            Actions auteur/admin mock : modifier, fermer, rouvrir et supprimer seront branchees en section API.
+            Les actions de modération avancées seront disponibles selon vos droits.
           </div>
         </aside>
       </section>

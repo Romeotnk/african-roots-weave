@@ -49,7 +49,7 @@ function Learn() {
               <div>
                 {activeLesson.type === "video" ? <PlayCircle size={54} className="mx-auto text-[var(--brand-gold)]" /> : <FileText size={54} className="mx-auto text-[var(--brand-gold)]" />}
                 <h2 className="mt-4 text-[26px] text-white">{activeLesson.title}</h2>
-                <p className="mt-2 text-white/70">{activeLesson.type === "video" ? "Lecteur video mock" : "Visionneuse document mock"} · {activeLesson.duration}</p>
+                <p className="mt-2 text-white/70">{activeLesson.type === "video" ? "Lecteur vidéo" : "Visionneuse document"} · {activeLesson.duration}</p>
               </div>
             </div>
           </div>

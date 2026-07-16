@@ -31,7 +31,7 @@ function PlantMonograph() {
       <section className="bg-[var(--brand-primary-dark)] text-white">
         <div className="container-iwosan grid gap-8 py-10 lg:grid-cols-[1fr_420px] lg:items-center">
           <div>
-            <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--brand-gold)]">Pharmacopee vivante</p>
+            <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--brand-gold)]">Pharmacopée vivante</p>
             <h1 className="mt-3 text-[38px] italic text-white md:text-[56px]">{plant.scientificName}</h1>
             <p className="mt-3 text-white/75">{plant.vernacularNames.join(" · ")}</p>
             <p className="mt-5 max-w-2xl text-white/80">{plant.summary}</p>
@@ -57,17 +57,17 @@ function PlantMonograph() {
               <div><dt className="text-[12px] font-bold uppercase text-[var(--color-text-muted)]">Noms locaux</dt><dd>{plant.vernacularNames.join(", ")}</dd></div>
               <div><dt className="text-[12px] font-bold uppercase text-[var(--color-text-muted)]">Famille</dt><dd>{plant.family}</dd></div>
               <div><dt className="text-[12px] font-bold uppercase text-[var(--color-text-muted)]">Distribution</dt><dd>{plant.region ?? plant.origin}</dd></div>
-              <div><dt className="text-[12px] font-bold uppercase text-[var(--color-text-muted)]">Categorie</dt><dd>{plant.therapeuticCategory}</dd></div>
+              <div><dt className="text-[12px] font-bold uppercase text-[var(--color-text-muted)]">Catégorie</dt><dd>{plant.therapeuticCategory}</dd></div>
             </dl>
             <p className="mt-4 leading-7 text-[var(--color-text-secondary)]">{plant.botanicalDescription}</p>
           </section>
 
           <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-6">
-            <h2 className="text-[22px] font-bold">Proprietes medicinales</h2>
+            <h2 className="text-[22px] font-bold">Propriétés médicinales</h2>
             <div className="mt-4 overflow-hidden rounded-lg border border-[var(--brand-border)]">
               <table className="w-full text-left text-[13px]">
                 <thead className="bg-[var(--brand-surface-alt)]">
-                  <tr><th className="p-3">Propriete</th><th className="p-3">Usage</th><th className="p-3">Niveau</th></tr>
+                  <tr><th className="p-3">Propriété</th><th className="p-3">Usage</th><th className="p-3">Niveau</th></tr>
                 </thead>
                 <tbody>
                   {(plant.medicinalProperties ?? []).map((item) => (
@@ -83,7 +83,7 @@ function PlantMonograph() {
           </section>
 
           <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-6">
-            <h2 className="text-[22px] font-bold">Preparations traditionnelles</h2>
+            <h2 className="text-[22px] font-bold">Préparations traditionnelles</h2>
             <ol className="mt-4 space-y-3">
               {(plant.preparations ?? []).map((step, index) => (
                 <li key={step} className="flex gap-3">
@@ -98,7 +98,7 @@ function PlantMonograph() {
 
           <section className="rounded-[12px] border border-red-200 bg-red-50 p-6 text-red-900">
             <h2 className="flex items-center gap-2 text-[20px] font-bold">
-              <AlertTriangle size={20} /> Precautions et contre-indications
+              <AlertTriangle size={20} /> Précautions et contre-indications
             </h2>
             <ul className="mt-4 list-disc space-y-2 pl-5 text-[14px]">
               {(plant.precautions ?? []).map((item) => <li key={item}>{item}</li>)}
@@ -106,7 +106,7 @@ function PlantMonograph() {
           </section>
 
           <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-6">
-            <h2 className="text-[22px] font-bold">References</h2>
+            <h2 className="text-[22px] font-bold">Références</h2>
             <ul className="mt-4 list-disc space-y-2 pl-5 text-[14px] text-[var(--color-text-secondary)]">
               {(plant.references ?? []).map((item) => <li key={item}>{item}</li>)}
             </ul>
@@ -118,19 +118,19 @@ function PlantMonograph() {
             <Bug size={15} /> Signaler une erreur
           </button>
           <button type="button" onClick={() => { setFeedback("improve"); setFeedbackMessage(""); setFeedbackSent(false); }} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] text-[13px] font-semibold text-white">
-            <Lightbulb size={15} /> Suggerer une amelioration
+            <Lightbulb size={15} /> Suggérer une amélioration
           </button>
           {feedback && (
             <div className="rounded-lg bg-[var(--brand-surface-alt)] p-4">
               <div className="flex items-center justify-between">
-                <p className="font-bold">{feedback === "error" ? "Erreur signalee" : "Amelioration proposee"}</p>
+                <p className="font-bold">{feedback === "error" ? "Erreur signalée" : "Amélioration proposée"}</p>
                 <button type="button" onClick={() => { setFeedback(null); setFeedbackMessage(""); setFeedbackSent(false); }} aria-label="Fermer le formulaire"><X size={15} /></button>
               </div>
               <textarea rows={4} value={feedbackMessage} onChange={(event) => { setFeedbackMessage(event.target.value); setFeedbackSent(false); }} placeholder="Votre message..." className="mt-3 w-full rounded-lg border border-[var(--brand-border)] px-3 py-2 text-[13px]" />
               <button type="button" onClick={() => setFeedbackSent(true)} disabled={feedbackMessage.trim().length < 10} className="mt-3 h-9 rounded-full bg-[var(--brand-primary)] px-4 text-[12px] font-semibold text-white disabled:opacity-50">
-                Envoyer en mock
+                Envoyer la contribution
               </button>
-              {feedbackSent && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[12px] text-emerald-800">Contribution enregistree en mock. Elle sera reliee a la moderation.</p>}
+              {feedbackSent && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[12px] text-emerald-800">Contribution enregistrée. Elle sera examinée par notre équipe éditoriale.</p>}
             </div>
           )}
         </aside>

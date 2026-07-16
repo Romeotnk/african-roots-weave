@@ -58,9 +58,13 @@ import { Route as RecettesSanteSlugRouteImport } from './routes/recettes-sante/$
 import { Route as ProfilUsernameRouteImport } from './routes/profil/$username'
 import { Route as PharmacopeeSlugRouteImport } from './routes/pharmacopee/$slug'
 import { Route as MonCompteTicketsRouteImport } from './routes/mon-compte/tickets'
+import { Route as MonCompteQuestionsRouteImport } from './routes/mon-compte/questions'
+import { Route as MonCompteProfilRouteImport } from './routes/mon-compte/profil'
 import { Route as MonComptePortefeuilleRouteImport } from './routes/mon-compte/portefeuille'
+import { Route as MonCompteParametresRouteImport } from './routes/mon-compte/parametres'
 import { Route as MonCompteNotificationsRouteImport } from './routes/mon-compte/notifications'
 import { Route as MonCompteKycRouteImport } from './routes/mon-compte/kyc'
+import { Route as MonCompteInscriptionsRouteImport } from './routes/mon-compte/inscriptions'
 import { Route as MonCompteAlertesRouteImport } from './routes/mon-compte/alertes'
 import { Route as MonCompteAffiliationRouteImport } from './routes/mon-compte/affiliation'
 import { Route as MarketplaceDeposerRouteImport } from './routes/marketplace/deposer'
@@ -347,9 +351,24 @@ const MonCompteTicketsRoute = MonCompteTicketsRouteImport.update({
   path: '/tickets',
   getParentRoute: () => MonCompteRoute,
 } as any)
+const MonCompteQuestionsRoute = MonCompteQuestionsRouteImport.update({
+  id: '/questions',
+  path: '/questions',
+  getParentRoute: () => MonCompteRoute,
+} as any)
+const MonCompteProfilRoute = MonCompteProfilRouteImport.update({
+  id: '/profil',
+  path: '/profil',
+  getParentRoute: () => MonCompteRoute,
+} as any)
 const MonComptePortefeuilleRoute = MonComptePortefeuilleRouteImport.update({
   id: '/portefeuille',
   path: '/portefeuille',
+  getParentRoute: () => MonCompteRoute,
+} as any)
+const MonCompteParametresRoute = MonCompteParametresRouteImport.update({
+  id: '/parametres',
+  path: '/parametres',
   getParentRoute: () => MonCompteRoute,
 } as any)
 const MonCompteNotificationsRoute = MonCompteNotificationsRouteImport.update({
@@ -360,6 +379,11 @@ const MonCompteNotificationsRoute = MonCompteNotificationsRouteImport.update({
 const MonCompteKycRoute = MonCompteKycRouteImport.update({
   id: '/kyc',
   path: '/kyc',
+  getParentRoute: () => MonCompteRoute,
+} as any)
+const MonCompteInscriptionsRoute = MonCompteInscriptionsRouteImport.update({
+  id: '/inscriptions',
+  path: '/inscriptions',
   getParentRoute: () => MonCompteRoute,
 } as any)
 const MonCompteAlertesRoute = MonCompteAlertesRouteImport.update({
@@ -608,9 +632,13 @@ export interface FileRoutesByFullPath {
   '/marketplace/deposer': typeof MarketplaceDeposerRoute
   '/mon-compte/affiliation': typeof MonCompteAffiliationRoute
   '/mon-compte/alertes': typeof MonCompteAlertesRoute
+  '/mon-compte/inscriptions': typeof MonCompteInscriptionsRoute
   '/mon-compte/kyc': typeof MonCompteKycRoute
   '/mon-compte/notifications': typeof MonCompteNotificationsRoute
+  '/mon-compte/parametres': typeof MonCompteParametresRoute
   '/mon-compte/portefeuille': typeof MonComptePortefeuilleRoute
+  '/mon-compte/profil': typeof MonCompteProfilRoute
+  '/mon-compte/questions': typeof MonCompteQuestionsRoute
   '/mon-compte/tickets': typeof MonCompteTicketsRoute
   '/pharmacopee/$slug': typeof PharmacopeeSlugRoute
   '/profil/$username': typeof ProfilUsernameRoute
@@ -700,9 +728,13 @@ export interface FileRoutesByTo {
   '/marketplace/deposer': typeof MarketplaceDeposerRoute
   '/mon-compte/affiliation': typeof MonCompteAffiliationRoute
   '/mon-compte/alertes': typeof MonCompteAlertesRoute
+  '/mon-compte/inscriptions': typeof MonCompteInscriptionsRoute
   '/mon-compte/kyc': typeof MonCompteKycRoute
   '/mon-compte/notifications': typeof MonCompteNotificationsRoute
+  '/mon-compte/parametres': typeof MonCompteParametresRoute
   '/mon-compte/portefeuille': typeof MonComptePortefeuilleRoute
+  '/mon-compte/profil': typeof MonCompteProfilRoute
+  '/mon-compte/questions': typeof MonCompteQuestionsRoute
   '/mon-compte/tickets': typeof MonCompteTicketsRoute
   '/pharmacopee/$slug': typeof PharmacopeeSlugRoute
   '/profil/$username': typeof ProfilUsernameRoute
@@ -793,9 +825,13 @@ export interface FileRoutesById {
   '/marketplace/deposer': typeof MarketplaceDeposerRoute
   '/mon-compte/affiliation': typeof MonCompteAffiliationRoute
   '/mon-compte/alertes': typeof MonCompteAlertesRoute
+  '/mon-compte/inscriptions': typeof MonCompteInscriptionsRoute
   '/mon-compte/kyc': typeof MonCompteKycRoute
   '/mon-compte/notifications': typeof MonCompteNotificationsRoute
+  '/mon-compte/parametres': typeof MonCompteParametresRoute
   '/mon-compte/portefeuille': typeof MonComptePortefeuilleRoute
+  '/mon-compte/profil': typeof MonCompteProfilRoute
+  '/mon-compte/questions': typeof MonCompteQuestionsRoute
   '/mon-compte/tickets': typeof MonCompteTicketsRoute
   '/pharmacopee/$slug': typeof PharmacopeeSlugRoute
   '/profil/$username': typeof ProfilUsernameRoute
@@ -887,9 +923,13 @@ export interface FileRouteTypes {
     | '/marketplace/deposer'
     | '/mon-compte/affiliation'
     | '/mon-compte/alertes'
+    | '/mon-compte/inscriptions'
     | '/mon-compte/kyc'
     | '/mon-compte/notifications'
+    | '/mon-compte/parametres'
     | '/mon-compte/portefeuille'
+    | '/mon-compte/profil'
+    | '/mon-compte/questions'
     | '/mon-compte/tickets'
     | '/pharmacopee/$slug'
     | '/profil/$username'
@@ -979,9 +1019,13 @@ export interface FileRouteTypes {
     | '/marketplace/deposer'
     | '/mon-compte/affiliation'
     | '/mon-compte/alertes'
+    | '/mon-compte/inscriptions'
     | '/mon-compte/kyc'
     | '/mon-compte/notifications'
+    | '/mon-compte/parametres'
     | '/mon-compte/portefeuille'
+    | '/mon-compte/profil'
+    | '/mon-compte/questions'
     | '/mon-compte/tickets'
     | '/pharmacopee/$slug'
     | '/profil/$username'
@@ -1071,9 +1115,13 @@ export interface FileRouteTypes {
     | '/marketplace/deposer'
     | '/mon-compte/affiliation'
     | '/mon-compte/alertes'
+    | '/mon-compte/inscriptions'
     | '/mon-compte/kyc'
     | '/mon-compte/notifications'
+    | '/mon-compte/parametres'
     | '/mon-compte/portefeuille'
+    | '/mon-compte/profil'
+    | '/mon-compte/questions'
     | '/mon-compte/tickets'
     | '/pharmacopee/$slug'
     | '/profil/$username'
@@ -1493,11 +1541,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MonCompteTicketsRouteImport
       parentRoute: typeof MonCompteRoute
     }
+    '/mon-compte/questions': {
+      id: '/mon-compte/questions'
+      path: '/questions'
+      fullPath: '/mon-compte/questions'
+      preLoaderRoute: typeof MonCompteQuestionsRouteImport
+      parentRoute: typeof MonCompteRoute
+    }
+    '/mon-compte/profil': {
+      id: '/mon-compte/profil'
+      path: '/profil'
+      fullPath: '/mon-compte/profil'
+      preLoaderRoute: typeof MonCompteProfilRouteImport
+      parentRoute: typeof MonCompteRoute
+    }
     '/mon-compte/portefeuille': {
       id: '/mon-compte/portefeuille'
       path: '/portefeuille'
       fullPath: '/mon-compte/portefeuille'
       preLoaderRoute: typeof MonComptePortefeuilleRouteImport
+      parentRoute: typeof MonCompteRoute
+    }
+    '/mon-compte/parametres': {
+      id: '/mon-compte/parametres'
+      path: '/parametres'
+      fullPath: '/mon-compte/parametres'
+      preLoaderRoute: typeof MonCompteParametresRouteImport
       parentRoute: typeof MonCompteRoute
     }
     '/mon-compte/notifications': {
@@ -1512,6 +1581,13 @@ declare module '@tanstack/react-router' {
       path: '/kyc'
       fullPath: '/mon-compte/kyc'
       preLoaderRoute: typeof MonCompteKycRouteImport
+      parentRoute: typeof MonCompteRoute
+    }
+    '/mon-compte/inscriptions': {
+      id: '/mon-compte/inscriptions'
+      path: '/inscriptions'
+      fullPath: '/mon-compte/inscriptions'
+      preLoaderRoute: typeof MonCompteInscriptionsRouteImport
       parentRoute: typeof MonCompteRoute
     }
     '/mon-compte/alertes': {
@@ -1972,18 +2048,26 @@ const MesCommandesRouteWithChildren = MesCommandesRoute._addFileChildren(
 interface MonCompteRouteChildren {
   MonCompteAffiliationRoute: typeof MonCompteAffiliationRoute
   MonCompteAlertesRoute: typeof MonCompteAlertesRoute
+  MonCompteInscriptionsRoute: typeof MonCompteInscriptionsRoute
   MonCompteKycRoute: typeof MonCompteKycRoute
   MonCompteNotificationsRoute: typeof MonCompteNotificationsRoute
+  MonCompteParametresRoute: typeof MonCompteParametresRoute
   MonComptePortefeuilleRoute: typeof MonComptePortefeuilleRoute
+  MonCompteProfilRoute: typeof MonCompteProfilRoute
+  MonCompteQuestionsRoute: typeof MonCompteQuestionsRoute
   MonCompteTicketsRoute: typeof MonCompteTicketsRoute
 }
 
 const MonCompteRouteChildren: MonCompteRouteChildren = {
   MonCompteAffiliationRoute: MonCompteAffiliationRoute,
   MonCompteAlertesRoute: MonCompteAlertesRoute,
+  MonCompteInscriptionsRoute: MonCompteInscriptionsRoute,
   MonCompteKycRoute: MonCompteKycRoute,
   MonCompteNotificationsRoute: MonCompteNotificationsRoute,
+  MonCompteParametresRoute: MonCompteParametresRoute,
   MonComptePortefeuilleRoute: MonComptePortefeuilleRoute,
+  MonCompteProfilRoute: MonCompteProfilRoute,
+  MonCompteQuestionsRoute: MonCompteQuestionsRoute,
   MonCompteTicketsRoute: MonCompteTicketsRoute,
 }
 
