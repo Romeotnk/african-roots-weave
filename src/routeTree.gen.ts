@@ -78,6 +78,7 @@ import { Route as DashboardProRouteImport } from './routes/dashboard/pro'
 import { Route as DashboardInscriptionsRouteImport } from './routes/dashboard/inscriptions'
 import { Route as DashboardAnnoncesRouteImport } from './routes/dashboard/annonces'
 import { Route as AnnuaireIdRouteImport } from './routes/annuaire/$id'
+import { Route as AgendaIdRouteImport } from './routes/agenda/$id'
 import { Route as AdminUtilisateursRouteImport } from './routes/admin/utilisateurs'
 import { Route as AdminNewsletterRouteImport } from './routes/admin/newsletter'
 import { Route as AdminMarketplaceRouteImport } from './routes/admin/marketplace'
@@ -454,6 +455,11 @@ const AnnuaireIdRoute = AnnuaireIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AnnuaireRoute,
 } as any)
+const AgendaIdRoute = AgendaIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AgendaRoute,
+} as any)
 const AdminUtilisateursRoute = AdminUtilisateursRouteImport.update({
   id: '/utilisateurs',
   path: '/utilisateurs',
@@ -606,7 +612,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/admin': typeof AdminRouteWithChildren
-  '/agenda': typeof AgendaRoute
+  '/agenda': typeof AgendaRouteWithChildren
   '/aide': typeof AideRoute
   '/annuaire': typeof AnnuaireRouteWithChildren
   '/checkout': typeof CheckoutRoute
@@ -641,6 +647,7 @@ export interface FileRoutesByFullPath {
   '/admin/marketplace': typeof AdminMarketplaceRoute
   '/admin/newsletter': typeof AdminNewsletterRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRouteWithChildren
+  '/agenda/$id': typeof AgendaIdRoute
   '/annuaire/$id': typeof AnnuaireIdRoute
   '/dashboard/annonces': typeof DashboardAnnoncesRoute
   '/dashboard/inscriptions': typeof DashboardInscriptionsRoute
@@ -705,7 +712,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/admin': typeof AdminRouteWithChildren
-  '/agenda': typeof AgendaRoute
+  '/agenda': typeof AgendaRouteWithChildren
   '/aide': typeof AideRoute
   '/annuaire': typeof AnnuaireRouteWithChildren
   '/checkout': typeof CheckoutRoute
@@ -740,6 +747,7 @@ export interface FileRoutesByTo {
   '/admin/marketplace': typeof AdminMarketplaceRoute
   '/admin/newsletter': typeof AdminNewsletterRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRouteWithChildren
+  '/agenda/$id': typeof AgendaIdRoute
   '/annuaire/$id': typeof AnnuaireIdRoute
   '/dashboard/annonces': typeof DashboardAnnoncesRoute
   '/dashboard/inscriptions': typeof DashboardInscriptionsRoute
@@ -805,7 +813,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/admin': typeof AdminRouteWithChildren
-  '/agenda': typeof AgendaRoute
+  '/agenda': typeof AgendaRouteWithChildren
   '/aide': typeof AideRoute
   '/annuaire': typeof AnnuaireRouteWithChildren
   '/checkout': typeof CheckoutRoute
@@ -840,6 +848,7 @@ export interface FileRoutesById {
   '/admin/marketplace': typeof AdminMarketplaceRoute
   '/admin/newsletter': typeof AdminNewsletterRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRouteWithChildren
+  '/agenda/$id': typeof AgendaIdRoute
   '/annuaire/$id': typeof AnnuaireIdRoute
   '/dashboard/annonces': typeof DashboardAnnoncesRoute
   '/dashboard/inscriptions': typeof DashboardInscriptionsRoute
@@ -941,6 +950,7 @@ export interface FileRouteTypes {
     | '/admin/marketplace'
     | '/admin/newsletter'
     | '/admin/utilisateurs'
+    | '/agenda/$id'
     | '/annuaire/$id'
     | '/dashboard/annonces'
     | '/dashboard/inscriptions'
@@ -1040,6 +1050,7 @@ export interface FileRouteTypes {
     | '/admin/marketplace'
     | '/admin/newsletter'
     | '/admin/utilisateurs'
+    | '/agenda/$id'
     | '/annuaire/$id'
     | '/dashboard/annonces'
     | '/dashboard/inscriptions'
@@ -1139,6 +1150,7 @@ export interface FileRouteTypes {
     | '/admin/marketplace'
     | '/admin/newsletter'
     | '/admin/utilisateurs'
+    | '/agenda/$id'
     | '/annuaire/$id'
     | '/dashboard/annonces'
     | '/dashboard/inscriptions'
@@ -1204,7 +1216,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SlugRoute: typeof SlugRoute
   AdminRoute: typeof AdminRouteWithChildren
-  AgendaRoute: typeof AgendaRoute
+  AgendaRoute: typeof AgendaRouteWithChildren
   AideRoute: typeof AideRoute
   AnnuaireRoute: typeof AnnuaireRouteWithChildren
   CheckoutRoute: typeof CheckoutRoute
@@ -1719,6 +1731,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnnuaireIdRouteImport
       parentRoute: typeof AnnuaireRoute
     }
+    '/agenda/$id': {
+      id: '/agenda/$id'
+      path: '/$id'
+      fullPath: '/agenda/$id'
+      preLoaderRoute: typeof AgendaIdRouteImport
+      parentRoute: typeof AgendaRoute
+    }
     '/admin/utilisateurs': {
       id: '/admin/utilisateurs'
       path: '/utilisateurs'
@@ -2016,6 +2035,17 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface AgendaRouteChildren {
+  AgendaIdRoute: typeof AgendaIdRoute
+}
+
+const AgendaRouteChildren: AgendaRouteChildren = {
+  AgendaIdRoute: AgendaIdRoute,
+}
+
+const AgendaRouteWithChildren =
+  AgendaRoute._addFileChildren(AgendaRouteChildren)
+
 interface AnnuaireRouteChildren {
   AnnuaireIdRoute: typeof AnnuaireIdRoute
 }
@@ -2257,7 +2287,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SlugRoute: SlugRoute,
   AdminRoute: AdminRouteWithChildren,
-  AgendaRoute: AgendaRoute,
+  AgendaRoute: AgendaRouteWithChildren,
   AideRoute: AideRoute,
   AnnuaireRoute: AnnuaireRouteWithChildren,
   CheckoutRoute: CheckoutRoute,

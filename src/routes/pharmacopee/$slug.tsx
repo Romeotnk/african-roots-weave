@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+﻿import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Bug, Lightbulb, X } from "lucide-react";
 import { plants } from "@/data/plants";
@@ -35,6 +35,9 @@ function PlantMonograph() {
             <h1 className="mt-3 text-[38px] italic text-white md:text-[56px]">{plant.scientificName}</h1>
             <p className="mt-3 text-white/75">{plant.vernacularNames.join(" · ")}</p>
             <p className="mt-5 max-w-2xl text-white/80">{plant.summary}</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link to="/pharmacopee" className="inline-flex h-11 items-center justify-center rounded-full bg-white px-5 text-[13px] font-semibold text-[var(--brand-primary-dark)]">Retour aux monographies</Link>
+            </div>
           </div>
           <div>
             <img src={activeImage} alt={plant.scientificName} className="aspect-[4/3] w-full rounded-[12px] object-cover" />
@@ -87,9 +90,7 @@ function PlantMonograph() {
             <ol className="mt-4 space-y-3">
               {(plant.preparations ?? []).map((step, index) => (
                 <li key={step} className="flex gap-3">
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--brand-primary)] text-[12px] font-bold text-white">
-                    {index + 1}
-                  </span>
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--brand-primary)] text-[12px] font-bold text-white">{index + 1}</span>
                   <span className="text-[var(--color-text-secondary)]">{step}</span>
                 </li>
               ))}
@@ -97,9 +98,7 @@ function PlantMonograph() {
           </section>
 
           <section className="rounded-[12px] border border-red-200 bg-red-50 p-6 text-red-900">
-            <h2 className="flex items-center gap-2 text-[20px] font-bold">
-              <AlertTriangle size={20} /> Précautions et contre-indications
-            </h2>
+            <h2 className="flex items-center gap-2 text-[20px] font-bold"><AlertTriangle size={20} /> Précautions et contre-indications</h2>
             <ul className="mt-4 list-disc space-y-2 pl-5 text-[14px]">
               {(plant.precautions ?? []).map((item) => <li key={item}>{item}</li>)}
             </ul>

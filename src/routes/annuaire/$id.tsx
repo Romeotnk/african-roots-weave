@@ -1,9 +1,10 @@
 ﻿import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { BadgeCheck, Facebook, Instagram, Linkedin, MapPin, Smartphone } from "lucide-react";
 import { professionals } from "@/data/professionals";
 import { products } from "@/data/products";
 import { events } from "@/data/events";
+import { trainings } from "@/data/trainings";
 import { RatingStars } from "@/components/shared/RatingStars";
 import { PractitionerAvatar } from "@/components/shared/PractitionerAvatar";
 import { ProductCard } from "@/components/shared/ProductCard";
@@ -18,17 +19,11 @@ function ProfessionalProfile() {
   const { id } = Route.useParams();
   const pro = professionals.find((item) => item.id === id) ?? professionals[0];
   const featuredProducts = products.filter((product) => product.sellerId === pro.id);
+  const proTrainings = trainings.filter((course) => course.instructorProfileId === pro.id);
   const futureEvents = events.filter((event) => new Date(event.date).getTime() >= Date.now());
   const [tab, setTab] = useState<"about" | "location" | "products" | "training" | "events">("about");
   const [messageState, setMessageState] = useState("");
   const [messageSeen, setMessageSeen] = useState(false);
-  const [replyOpen, setReplyOpen] = useState(false);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const prefill = params.get("message") ?? params.get("product");
-    if (prefill) { setMessageState(prefill); setTab("products"); }
-  }, []);
 
   const stats = useMemo(() => [
     [pro.yearsExperience ?? 15, "ans d'expérience"],
@@ -39,7 +34,6 @@ function ProfessionalProfile() {
   const socialLinks = [
     { label: "WhatsApp", href: `https://wa.me/22900000000?text=${encodeURIComponent(`Bonjour ${pro.name}`)}`, icon: Smartphone },
     { label: "Facebook", href: "https://facebook.com", icon: Facebook },
-    { label: "TikTok", href: "https://tiktok.com", icon: Video },
     { label: "Instagram", href: "https://instagram.com", icon: Instagram },
     { label: "LinkedIn", href: "https://linkedin.com", icon: Linkedin },
   ];
@@ -74,13 +68,7 @@ function ProfessionalProfile() {
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="space-y-8">
             <nav className="flex flex-wrap gap-2">
-              {[
-                ["about", "À propos"],
-                ["location", "Localisation"],
-                ["products", `Ses produits & services (${featuredProducts.length})`],
-                ["training", "Ses formations"],
-                ["events", "Prochains événements"],
-              ].map(([key, label]) => (
+              {[["about", "À propos"], ["location", "Localisation"], ["products", `Ses produits & services (${featuredProducts.length})`], ["training", "Ses formations"], ["events", "Prochains événements"]].map(([key, label]) => (
                 <button key={key} onClick={() => setTab(key as any)} className={`rounded-full px-4 py-2 text-[13px] font-semibold ${tab === key ? "bg-[var(--brand-primary)] text-white" : "bg-white border border-[var(--brand-border)]"}`}>{label}</button>
               ))}
             </nav>
@@ -88,7 +76,7 @@ function ProfessionalProfile() {
             {tab === "about" && (
               <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
                 <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">À PROPOS</p>
-                <p className="mt-4 text-[16px] leading-8 text-[var(--color-text-secondary)]">{pro.bio} Le praticien est présenté ici comme un mini-site premium pour faciliter la découverte, la confiance et la prise de contact responsable. Le texte peut être enrichi à partir du contenu éditorial existant sans toucher au backend.</p>
+                <p className="mt-4 text-[16px] leading-8 text-[var(--color-text-secondary)]">{pro.bio} Le praticien est présenté ici comme un mini-site premium pour faciliter la découverte, la confiance et la prise de contact responsable.</p>
                 <div className="mt-6 grid gap-4 sm:grid-cols-3">
                   {stats.map(([value, label]) => (
                     <div key={label as string} className="rounded-2xl bg-[var(--brand-surface-alt)] p-5 text-center">
@@ -107,7 +95,6 @@ function ProfessionalProfile() {
                   <iframe title="Google Maps" className="h-[280px] w-full" src="https://maps.google.com/maps?q=6.3703,2.3912&output=embed" style={{ filter: "sepia(12%) saturate(85%)" }} />
                 </div>
                 <p className="mt-4 text-[14px] text-[var(--color-text-secondary)]">Immeuble Iwosan, Avenue Steinmetz, Quartier Ganhi, Cotonou, Bénin</p>
-                <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[var(--brand-primary-subtle)] px-3 py-2 text-[13px] font-semibold text-[var(--brand-primary)]"><MapPin size={14} /> Cotonou, Bénin</div>
               </section>
             )}
 
@@ -126,14 +113,29 @@ function ProfessionalProfile() {
               <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
                 <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">FORMATIONS</p>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {[1,2].map((i) => (
+                  {proTrainings.length > 0 ? proTrainings.map((course) => (
+                    <article key={course.id} className="overflow-hidden rounded-2xl border border-[var(--brand-border-light)]">
+                      <div className="h-40 bg-[var(--brand-surface-alt)]">
+                        <img src={course.image} alt={course.title} className="h-full w-full object-cover" />
+                      </div>
+                      <div className="p-4">
+                        <span className="rounded-full bg-[var(--brand-primary-subtle)] px-3 py-1 text-[11px] font-bold text-[var(--brand-primary)]">{course.price === 0 ? "GRATUIT" : "PAYANT"}</span>
+                        <h3 className="mt-3 text-[20px] font-bold">{course.title}</h3>
+                        <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">{course.format} · {course.duration}</p>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <Link to="/formations/$id" params={{ id: course.id }} className="rounded-full bg-[var(--brand-primary)] px-4 py-2 text-[13px] font-semibold text-white">Accéder</Link>
+                          <Link to="/pro/$id" params={{ id: pro.id }} className="rounded-full border border-[var(--brand-border)] px-4 py-2 text-[13px] font-semibold">Profil pro</Link>
+                        </div>
+                      </div>
+                    </article>
+                  )) : [1, 2].map((i) => (
                     <article key={i} className="overflow-hidden rounded-2xl border border-[var(--brand-border-light)]">
                       <div className="h-40 bg-[var(--brand-surface-alt)]" />
                       <div className="p-4">
                         <span className="rounded-full bg-[var(--brand-primary-subtle)] px-3 py-1 text-[11px] font-bold text-[var(--brand-primary)]">GRATUIT</span>
                         <h3 className="mt-3 text-[20px] font-bold">Formation pratique {i}</h3>
                         <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">Vidéo · 45 min</p>
-                        <button className="mt-4 rounded-full bg-[var(--brand-primary)] px-4 py-2 text-[13px] font-semibold text-white">Accéder</button>
+                        <Link to="/formations/tr1" className="mt-4 inline-flex rounded-full bg-[var(--brand-primary)] px-4 py-2 text-[13px] font-semibold text-white">Accéder</Link>
                       </div>
                     </article>
                   ))}
@@ -179,6 +181,3 @@ function ProfessionalProfile() {
     </main>
   );
 }
-
-
-

@@ -172,7 +172,7 @@ function NewQuestion() {
                 setDraftSaved(false);
               }}
               rows={10}
-              placeholder="Contexte, âge, pays, préparation utilisée, precautions deja prises..."
+              placeholder="Contexte, âge, pays, préparation utilisée, précautions déjà prises..."
               className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3"
             />
             {editorNotice && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[12px] text-emerald-800">{editorNotice}</p>}
@@ -303,7 +303,7 @@ function NewQuestion() {
           <h2 className="text-[18px] font-bold">Conseils de qualité</h2>
           <ul className="mt-4 space-y-3 text-[13px] text-[var(--color-text-secondary)]">
             <li>Donnez le contexte sans publier de données médicales sensibles.</li>
-            <li>Précisez pays, âge approximatif et préparation utilisée si pertinent.</li>
+            <li>Précisez le pays, l'âge approximatif et la préparation utilisée si pertinent.</li>
             <li>Indiquez si un professionnel de santé suit déjà la situation.</li>
             <li>Ajoutez des tags clairs pour aider les praticiens à trouver la question.</li>
           </ul>
@@ -312,3 +312,4 @@ function NewQuestion() {
     </main>
   );
 }
+

@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+﻿import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Copy, Facebook, MessageCircle } from "lucide-react";
 import { ArticleCard } from "@/components/shared/ArticleCard";
@@ -18,7 +18,7 @@ export function ArticleDetailPage({ slug, fallbackSpace }: { slug: string; fallb
     const encodedTitle = encodeURIComponent(article.title);
     if (label === "Copier") {
       navigator.clipboard?.writeText(url).catch(() => undefined);
-      setShareNotice("Lien de l article copie.");
+      setShareNotice("Lien copié.");
       return;
     }
     const target = label === "WhatsApp" ? `https://wa.me/?text=${encodedTitle}%20${encodedUrl}` : `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
