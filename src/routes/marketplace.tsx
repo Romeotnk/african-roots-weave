@@ -407,7 +407,7 @@ function Marketplace() {
                   onClick={activateGeolocation}
                   className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-[var(--brand-border)] text-[12px] font-semibold"
                 >
-                  <Navigation size={14} /> {locationMessage || "Activer ma geolocalisation"}
+                  <Navigation size={14} /> {locationMessage || "Activer ma géolocalisation"}
                 </button>
               </div>
             </details>

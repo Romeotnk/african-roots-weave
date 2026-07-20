@@ -96,7 +96,7 @@ export const toProduct = (product: BackendProduct): Product => ({
   price: Number(product.price),
   currency: "FCFA",
   image: product.images[0] ?? fallbackImage,
-  sellerId: product.seller?.id ?? product.sellerId ?? "",
+  sellerId: product.seller?.professionalProfile?.id ?? product.seller?.id ?? product.sellerId ?? "",
   sellerName: product.seller?.professionalProfile?.displayName ?? `${product.seller?.firstName ?? ""} ${product.seller?.lastName ?? ""}`.trim(),
   sellerAvatar: fallbackAvatar,
   rating: product.seller?.professionalProfile?.averageRating ?? 0,
