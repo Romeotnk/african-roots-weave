@@ -1,42 +1,33 @@
+﻿import { Link } from "@tanstack/react-router";
+import { BadgeCheck, MapPin, ShieldCheck } from "lucide-react";
 import type { Professional } from "@/types";
-import { Link } from "@tanstack/react-router";
-import { MapPin } from "lucide-react";
 import { RatingStars } from "./RatingStars";
 import { PractitionerAvatar } from "./PractitionerAvatar";
 
 export function ProfessionalCard({ pro }: { pro: Professional }) {
   return (
-    <article className="bg-[var(--color-surface)] rounded-[12px] border border-[var(--brand-border-light)] shadow-iwosan-sm overflow-hidden card-hover">
-      <div className="h-[120px] overflow-hidden">
-        <img src={pro.cover} alt="" loading="lazy" className="w-full h-full object-cover" />
+    <article className="overflow-hidden rounded-[20px] border border-[var(--brand-border-light)] bg-white shadow-iwosan-sm transition hover:-translate-y-1 hover:border-[var(--brand-primary)] hover:shadow-iwosan-lg">
+      <div className="relative h-[120px] overflow-hidden">
+        <img src={pro.cover} alt="" className="h-full w-full object-cover" />
+        {pro.verified && <span className="absolute right-3 top-3 rounded-full bg-[var(--brand-gold)] px-3 py-1 text-[11px] font-bold text-white">Vérifié</span>}
       </div>
-      <div className="px-4 pb-4 text-center">
-        <div className="-mt-12 flex justify-center">
+      <div className="px-4 pb-5 text-center">
+        <div className="-mt-14 flex justify-center">
           <PractitionerAvatar src={pro.avatar} name={pro.name} isVerified={pro.verified} size="md" />
         </div>
-        <div className="mt-3 flex items-start justify-between gap-2">
-          <h3 className="w-full text-center text-[16px] font-bold leading-tight text-[var(--color-text-primary)]">{pro.name}</h3>
+        <h3 className="mt-4 text-[20px] font-bold">{pro.name}</h3>
+        <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">{pro.specialty}</p>
+        <p className="mt-2 inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)]"><MapPin size={12} />{pro.location}, {pro.country}</p>
+        <div className="mt-3"><RatingStars rating={pro.rating} reviewCount={pro.reviewCount} /></div>
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
+          {pro.specialties.slice(0, 3).map((item) => <span key={item} className="rounded-full bg-[var(--brand-primary-subtle)] px-3 py-1 text-[11px] font-semibold text-[var(--brand-primary)]">{item}</span>)}
         </div>
-        <p className="text-[13px] font-medium text-[var(--color-text-muted)] mt-1 line-clamp-1">
-          {pro.specialty}
-        </p>
-        <div className="flex items-center gap-1 text-[12px] text-[var(--color-text-muted)] mt-2">
-          <MapPin size={12} />
-          <span>
-            {pro.location}, {pro.country}
-          </span>
-        </div>
-        <div className="mt-3">
-          <RatingStars rating={pro.rating} reviewCount={pro.reviewCount} />
-        </div>
-        <Link
-          to="/annuaire/$id"
-          params={{ id: pro.id }}
-          className="mt-4 w-full h-9 rounded-md bg-[var(--brand-primary)] text-white text-[13px] font-semibold hover:bg-[var(--brand-primary-dark)] transition inline-flex items-center justify-center"
-        >
-          Voir le profil
-        </Link>
+        <div className="mt-5 space-y-2"><Link to="/pro/$id" params={{ id: pro.id }} className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[var(--brand-primary)] font-semibold text-white">Voir le profil officiel</Link><p className="text-[11px] text-[var(--color-text-muted)]">Fiche publique complète, réservations et contact direct.</p></div>
       </div>
     </article>
   );
 }
+
+
+
+

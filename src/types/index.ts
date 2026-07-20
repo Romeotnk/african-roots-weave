@@ -85,6 +85,13 @@ export interface Product {
     lat: number;
     lng: number;
   };
+  description?: string;
+  dosage?: string;
+  composition?: string;
+  preparation?: string;
+  contraindications?: string;
+  usage?: string;
+  sellerProfileId?: string;
 }
 
 export interface MarketplaceAlert {

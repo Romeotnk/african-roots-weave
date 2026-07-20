@@ -14,11 +14,11 @@ type Variant =
 const styles: Record<Variant, string> = {
   category: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]",
   verified: "bg-[var(--brand-gold)] text-white",
-  "status-active": "bg-green-50 text-green-700",
-  "status-pending": "bg-orange-50 text-orange-700",
-  "type-physical": "bg-blue-50 text-blue-700",
-  "type-service": "bg-purple-50 text-purple-700",
-  "type-digital": "bg-teal-50 text-teal-700",
+  "status-active": "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]",
+  "status-pending": "bg-[var(--brand-surface-alt)] text-[var(--color-text-secondary)]",
+  "type-physical": "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]",
+  "type-service": "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]",
+  "type-digital": "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]",
   gold: "bg-[var(--brand-gold)] text-white",
   outline: "border border-white/40 text-white",
 };
@@ -44,3 +44,4 @@ export function Badge({
     </span>
   );
 }
+

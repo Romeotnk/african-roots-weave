@@ -9,6 +9,9 @@ export function ArticleDetailPage({ slug, fallbackSpace }: { slug: string; fallb
   const related = articles.filter((item) => item.id !== article.id && item.space === article.space).slice(0, 3);
   const breadcrumbSpace = article.space === "Sante au quotidien" ? "Sante" : article.space;
   const [shareNotice, setShareNotice] = useState("");
+  const [commentName, setCommentName] = useState("");
+  const [commentBody, setCommentBody] = useState("");
+  const [commentNotice, setCommentNotice] = useState("");
   const shareArticle = (label: string) => {
     const url = typeof window !== "undefined" ? window.location.href : "";
     const encodedUrl = encodeURIComponent(url);
@@ -79,7 +82,15 @@ export function ArticleDetailPage({ slug, fallbackSpace }: { slug: string; fallb
                   <p className="mt-1 text-[var(--color-text-secondary)]">{comment.content}</p>
                 </div>
               ))}
-              <textarea rows={4} placeholder="Connectez-vous pour commenter..." className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
+              <div className="rounded-lg border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-4">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Répondre sans compte</p>
+                <div className="mt-3 grid gap-3">
+                  <input value={commentName} onChange={(event) => setCommentName(event.target.value)} placeholder="Votre nom (optionnel)" className="h-11 rounded-full border border-[var(--brand-border)] px-4 text-[13px]" />
+                  <textarea value={commentBody} onChange={(event) => setCommentBody(event.target.value)} rows={4} placeholder="Votre commentaire" className="w-full rounded-2xl border border-[var(--brand-border)] px-4 py-3" />
+                  <button type="button" onClick={() => { setCommentNotice(commentName ? `Commentaire de ${commentName} préparé.` : "Commentaire préparé."); setCommentBody(""); }} className="h-11 rounded-full bg-[var(--brand-primary)] px-4 font-semibold text-white">Publier</button>
+                  {commentNotice && <p className="text-[13px] text-[var(--brand-primary)]">{commentNotice}</p>}
+                </div>
+              </div>
             </div>
           </div>
         </article>

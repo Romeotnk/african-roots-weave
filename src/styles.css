@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Montserrat", system-ui, sans-serif;
-  --font-display: "Montserrat", system-ui, sans-serif;
+  --font-sans: "Work Sans", system-ui, sans-serif;
+  --font-display: "Fraunces", serif;
 
   --radius-sm: 6px;
   --radius-md: 12px;
@@ -54,11 +54,11 @@
 }
 
 :root {
-  --brand-primary: #1a5c2a;
-  --brand-primary-dark: #0f3d1a;
-  --brand-primary-light: #2e7d3c;
+  --brand-primary: #2d7a4f;
+  --brand-primary-dark: #1f5a39;
+  --brand-primary-light: #4b9b70;
   --brand-primary-subtle: #ebf5ec;
-  --brand-gold: #c8a84b;
+  --brand-gold: #c08829;
   --brand-gold-light: #f0dfa0;
   --brand-bg: #f8f5ef;
   --brand-surface: #ffffff;
@@ -68,10 +68,10 @@
   --brand-text-primary: #1a1a18;
   --brand-text-secondary: #4a4a42;
   --brand-text-muted: #7a7a70;
-  --brand-success: #2e7d3c;
-  --brand-warning: #b7791f;
-  --brand-error: #c0392b;
-  --brand-info: #1a5c8a;
+  --brand-success: #2d7a4f;
+  --brand-warning: #2d7a4f;
+  --brand-error: #8b3a2e;
+  --brand-info: #2d7a4f;
 
   --radius: 0.75rem;
 
@@ -93,11 +93,11 @@
 /* Auto dark mode — suit la préférence système (prefers-color-scheme) */
 .dark {
   /* Primary assombri pour contraste AA (texte blanc sur primary >= 4.5:1) */
-  --brand-primary: #1f7a33;
-  --brand-primary-dark: #155323;
-  --brand-primary-light: #4fb364;
+  --brand-primary: #2d7a4f;
+  --brand-primary-dark: #1f5a39;
+  --brand-primary-light: #4b9b70;
   --brand-primary-subtle: #11321a;
-  --brand-gold: #e8c76a;
+  --brand-gold: #c08829;
   --brand-gold-light: #f0dfa0;
   --brand-bg: #0e1410;
   --brand-surface: #161d17;
@@ -154,7 +154,7 @@
   body {
     background-color: var(--color-bg);
     color: var(--color-text-primary);
-    font-family: "Montserrat", system-ui, sans-serif;
+    font-family: "Work Sans", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
     text-rendering: optimizeLegibility;
@@ -163,7 +163,7 @@
   h2,
   h3,
   h4 {
-    font-family: "Montserrat", system-ui, sans-serif;
+    font-family: "Work Sans", system-ui, sans-serif;
     color: var(--color-text-primary);
   }
   h1 {
@@ -260,3 +260,6 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+
+

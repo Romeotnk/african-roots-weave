@@ -31,7 +31,7 @@ const statusLabels: Record<CommissionStatus, string> = {
 const statusClasses: Record<CommissionStatus, string> = {
   available: "bg-emerald-50 text-emerald-700 border-emerald-100",
   pending: "bg-amber-50 text-amber-700 border-amber-100",
-  paid: "bg-blue-50 text-blue-700 border-blue-100",
+  paid: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)] border-[var(--brand-border-light)]",
 };
 
 const formatMoney = (amount: number) => `${amount.toLocaleString("fr-FR")} FCFA`;

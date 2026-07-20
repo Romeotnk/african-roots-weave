@@ -22,7 +22,7 @@ const statusLabels: Record<SupportTicketStatus, string> = {
 };
 
 const statusClasses: Record<SupportTicketStatus, string> = {
-  open: "bg-blue-50 text-blue-700",
+  open: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]",
   pending: "bg-amber-50 text-amber-700",
   resolved: "bg-emerald-50 text-emerald-700",
 };

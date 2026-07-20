@@ -89,10 +89,10 @@ const stats = [
 ];
 
 const orders = [
-  { id: "#10248", product: "Tisane post-partum", buyer: "Awa D.", amount: "8 500", status: "Expediee", color: "bg-blue-50 text-blue-700" },
-  { id: "#10247", product: "Beurre de karite 250g", buyer: "Marc L.", amount: "6 500", status: "Livree", color: "bg-green-50 text-green-700" },
+  { id: "#10248", product: "Tisane post-partum", buyer: "Awa D.", amount: "8 500", status: "Expediee", color: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]" },
+  { id: "#10247", product: "Beurre de karite 250g", buyer: "Marc L.", amount: "6 500", status: "Livree", color: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]" },
   { id: "#10246", product: "Consultation 60 min", buyer: "Henriette B.", amount: "25 000", status: "En attente", color: "bg-orange-50 text-orange-700" },
-  { id: "#10245", product: "Ebook Atlas plantes", buyer: "Issa K.", amount: "12 000", status: "Livree", color: "bg-green-50 text-green-700" },
+  { id: "#10245", product: "Ebook Atlas plantes", buyer: "Issa K.", amount: "12 000", status: "Livree", color: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]" },
 ];
 
 const messages = [

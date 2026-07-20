@@ -3,11 +3,11 @@ import type { EventItem } from "@/types";
 import { MapPin, Wifi } from "lucide-react";
 
 const typeColors: Record<string, string> = {
-  WEBINAIRE: "bg-[var(--brand-info)]/10 text-[var(--brand-info)]",
+  WEBINAIRE: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]",
   FORMATION: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]",
-  SALON: "bg-[var(--brand-warning)]/10 text-[var(--brand-warning)]",
-  CONFERENCE: "bg-blue-50 text-blue-700",
-  ATELIER: "bg-amber-50 text-amber-700",
+  SALON: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]",
+  CONFERENCE: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]",
+  ATELIER: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]",
 };
 
 type EventCardProps = {
@@ -64,3 +64,4 @@ export function EventCard({ event, actionLabel = "S'inscrire", onRegister }: Eve
     </article>
   );
 }
+

@@ -1,4 +1,4 @@
-import type { TrainingCourse } from "@/types";
+﻿import type { TrainingCourse } from "@/types";
 
 export const trainings: TrainingCourse[] = [
   {
@@ -6,6 +6,7 @@ export const trainings: TrainingCourse[] = [
     slug: "pharmacopee-fondamentale",
     title: "Pharmacopee fondamentale : 80 plantes essentielles",
     instructor: "Dr. Amina Traore",
+    instructorProfileId: "p5",
     instructorAvatar: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=120&q=80",
     instructorBio: "Ethnobotaniste, specialiste des usages documentes en Afrique de l'Ouest.",
     duration: "12h",
@@ -30,6 +31,7 @@ export const trainings: TrainingCourse[] = [
     slug: "protocoles-preparation-dosage",
     title: "Protocoles de preparation et dosage clinique",
     instructor: "Dr. Kwame Mensah",
+    instructorProfileId: "p2",
     instructorAvatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=120&q=80",
     instructorBio: "Phytotherapeute et formateur en protocols de preparation.",
     duration: "18h",
@@ -54,6 +56,7 @@ export const trainings: TrainingCourse[] = [
     slug: "ethnobotanique-terrain",
     title: "Ethnobotanique de terrain : methodologie",
     instructor: "Dr. Amina Traore",
+    instructorProfileId: "p5",
     instructorAvatar: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=120&q=80",
     instructorBio: "Ethnobotaniste et chercheuse associee.",
     duration: "24h",

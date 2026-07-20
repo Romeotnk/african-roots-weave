@@ -1,54 +1,20 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  CheckCircle2,
-  Leaf,
-  Stethoscope,
-  FlaskConical,
-  ChefHat,
-  MessagesSquare,
-  GraduationCap,
-  MapPin,
-  ChevronDown,
-  ShoppingBag,
-  Users,
-  BookOpen,
-} from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Leaf, MapPin, MessagesSquare, BookOpen, Stethoscope, FlaskConical, ChefHat, GraduationCap, ShoppingBag, Users, CalendarDays, Contact2, BadgeCheck, Search, ShieldCheck, Wallet, ReceiptText, MessageCircleMore, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { ProfessionalCard } from "@/components/shared/ProfessionalCard";
-import { PlantCard } from "@/components/shared/PlantCard";
 import { EventCard } from "@/components/shared/EventCard";
-import { AnimatedCounter } from "@/components/shared/AnimatedCounter";
-import { RatingStars } from "@/components/shared/RatingStars";
-import { professionals } from "@/data/professionals";
 import { products } from "@/data/products";
-import { plants } from "@/data/plants";
+import { professionals } from "@/data/professionals";
 import { events } from "@/data/events";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "IWOSAN — Le patrimoine médical africain, documenté et accessible" },
-      {
-        name: "description",
-        content:
-          "Plateforme panafricaine connectant praticiens traditionnels, chercheurs et communautés autour d'un savoir endogène rigoureusement documenté.",
-      },
-      {
-        property: "og:title",
-        content: "IWOSAN — Plateforme panafricaine de médecine traditionnelle",
-      },
-      {
-        property: "og:description",
-        content: "500+ praticiens vérifiés, 1 200+ plantes documentées, dans 20+ pays africains.",
-      },
-      {
-        property: "og:image",
-        content: "https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=1200&q=80",
-      },
+      { title: "IWOSAN - Plateforme panafricaine" },
+      { name: "description", content: "Le savoir endogène africain, documenté, transmis, vivant." },
     ],
   }),
   component: Home,
@@ -56,42 +22,59 @@ export const Route = createFileRoute("/")({
 
 const heroSlides = [
   {
-    img: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1920&q=80&auto=format&fit=crop",
-    badge: "🌿 Plateforme panafricaine",
-    title: "Le patrimoine médical africain, enfin documenté et accessible",
-    desc: "Iwosan connecte praticiens traditionnels, chercheurs et communautés autour d'un savoir endogène rigoureusement documenté.",
-    ctaLabel: "Explorer la plateforme",
-    ctaTo: "/marketplace",
-    icon: Leaf,
+    img: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1920&q=80&auto=format&fit=crop',
+    eyebrow: 'PLATEFORME PANAFRICAINE',
+    kicker: 'Savoir endogène africain',
+    title: 'Le savoir endogène africain, documenté, transmis, vivant.',
+    desc: 'Iwosan documente, valorise et met en relation les détenteurs de savoirs endogènes africains - dans le respect du sacré, des cadres scientifiques et des communautés qui les portent.',
+    tags: ['Tout l’écosystème', 'Annuaire', 'Marketplace'],
+    primary: { label: 'Explorer l’annuaire →', to: '/annuaire' },
+    secondary: { label: 'Voir la marketplace', to: '/marketplace' },
   },
   {
-    img: "https://images.unsplash.com/photo-1532634922-8fe0b757fb13?w=1920&q=80&auto=format&fit=crop",
-    badge: "🛒 Marketplace vérifié",
-    title: "Plus de 500 produits & services certifiés à portée de clic",
-    desc: "Plantes médicinales, soins traditionnels, formations et consultations — tous validés par notre comité scientifique.",
-    ctaLabel: "Voir le marketplace",
-    ctaTo: "/marketplace",
-    icon: ShoppingBag,
+    img: 'https://images.unsplash.com/photo-1532634922-8fe0b757fb13?w=1920&q=80&auto=format&fit=crop',
+    eyebrow: 'MARKETPLACE',
+    kicker: 'Produits & services',
+    title: 'Des produits certifiés et des services réservables.',
+    desc: 'Chaque fiche peut être ouverte, partagée et reliée à la page officielle du professionnel pour réserver en confiance.',
+    tags: ['Produits', 'Réservation', 'Profil pro'],
+    primary: { label: 'Découvrir les produits', to: '/marketplace' },
+    secondary: { label: 'Voir les pros', to: '/annuaire' },
   },
   {
-    img: "https://images.unsplash.com/photo-1559757175-5700dde675bc?w=1920&q=80&auto=format&fit=crop",
-    badge: "👥 Annuaire de praticiens",
-    title: "Trouvez un praticien vérifié près de chez vous",
-    desc: "Un annuaire géolocalisé de tradipraticiens, herboristes et chercheurs, évalués par leurs pairs et la communauté.",
-    ctaLabel: "Découvrir l'annuaire",
-    ctaTo: "/annuaire",
-    icon: Users,
+    img: 'https://images.unsplash.com/photo-1526256262350-7da7584cf5eb?w=1920&q=80&auto=format&fit=crop',
+    eyebrow: 'CONNAISSANCE',
+    kicker: 'Articles & dossiers',
+    title: 'Un accès éditorial plus riche, plus lisible.',
+    desc: 'Santé au quotidien, pharmacopée, recettes et rites culturels sont regroupés pour une navigation plus simple.',
+    tags: ['Santé', 'Pharmacopée', 'Rites'],
+    primary: { label: 'Lire les contenus', to: '/sante-au-quotidien' },
+    secondary: { label: 'Explorer les recettes', to: '/recettes-sante' },
   },
   {
-    img: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1920&q=80&auto=format&fit=crop",
-    badge: "📚 Pharmacopée vivante",
-    title: "1 200+ plantes médicinales africaines documentées",
-    desc: "Nomenclature scientifique, principes actifs, usages traditionnels et préparations illustrées.",
-    ctaLabel: "Ouvrir la pharmacopée",
-    ctaTo: "/pharmacopee",
-    icon: BookOpen,
+    img: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=1920&q=80&auto=format&fit=crop',
+    eyebrow: 'COMMUNAUTÉ',
+    kicker: 'Formations & agenda',
+    title: 'Ateliers, formations et événements en une seule vue.',
+    desc: 'Le site rassemble les rendez-vous utiles pour apprendre, échanger et rejoindre les bons espaces au bon moment.',
+    tags: ['Agenda', 'Formations', 'Support'],
+    primary: { label: 'Voir l’agenda', to: '/agenda' },
+    secondary: { label: 'Découvrir les formations', to: '/formations' },
   },
-];
+] as const;
+
+const modules = [
+  { title: "Marketplace", desc: "Petites annonces : produits, services, digital", icon: ShoppingBag, to: '/marketplace' },
+  { title: "Annuaire pro", desc: "Fiches détaillées des détenteurs de savoirs", icon: Users, to: '/pro/p1' },
+  { title: "Recettes santé", desc: "Centre d'aide : base de connaissances + tickets", icon: ReceiptText, to: '/recettes-sante' },
+  { title: "Portrait de la semaine", desc: "Un professionnel mis à l'honneur en accueil", icon: BadgeCheck, to: '/pro/p1' },
+  { title: "Santé au quotidien", desc: "Blog communautaire par catégories", icon: Stethoscope, to: '/sante-au-quotidien' },
+  { title: "Pharmacopée vivante", desc: "Monographies de plantes médicinales", icon: Leaf, to: '/pharmacopee' },
+  { title: "Rites & Cultures", desc: "Exploration anthropologique et spirituelle", icon: FlaskConical, to: '/rites-cultures' },
+  { title: "Discutons-en", desc: "Questions-réponses communautaires", icon: MessageCircleMore, to: '/discutons-en' },
+  { title: "Agenda & Événements", desc: "Webconférences, formations, salons", icon: CalendarDays, to: '/agenda' },
+  { title: "Espace Formations", desc: "Bibliothèque de documents et vidéos", icon: GraduationCap, to: '/formations' },
+] as const;
 
 function HeroCarousel() {
   const [index, setIndex] = useState(0);
@@ -99,453 +82,167 @@ function HeroCarousel() {
 
   useEffect(() => {
     if (paused) return;
-    const id = setInterval(() => setIndex((i) => (i + 1) % heroSlides.length), 6000);
+    const id = setInterval(() => setIndex((i) => (i + 1) % heroSlides.length), 6500);
     return () => clearInterval(id);
   }, [paused]);
 
   const slide = heroSlides[index];
-  const Icon = slide.icon;
 
   return (
-    <section
-      className="relative min-h-[92vh] flex items-center overflow-hidden bg-[var(--brand-primary-dark)] text-white"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      aria-roledescription="carousel"
-    >
+    <section className="relative isolate min-h-[92vh] overflow-hidden bg-[var(--brand-primary-dark)] text-white" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
       <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={index}
-          initial={{ opacity: 0, x: 80 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -80 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute inset-0"
-        >
-          <img src={slide.img} alt="" className="w-full h-full object-cover" />
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(15,61,26,0.92) 0%, rgba(26,92,42,0.7) 100%)",
-            }}
-          />
+        <motion.div key={index} initial={{ opacity: 0, scale: 1.02 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.02 }} transition={{ duration: 0.55 }} className="absolute inset-0">
+          <img src={slide.img} alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(11,39,24,0.92)_0%,rgba(31,90,57,0.72)_42%,rgba(45,122,79,0.36)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.08),transparent_28%)]" />
         </motion.div>
       </AnimatePresence>
-
-      <div className="relative container-iwosan py-24 text-white text-center">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-1.5 text-[12px] font-semibold backdrop-blur-sm">
-              <Icon size={14} /> {slide.badge}
-            </span>
-            <h1 className="mt-6 text-[27px] sm:text-[40px] md:text-[56px] text-white max-w-4xl mx-auto leading-[1.1]">
-              {slide.title}
-            </h1>
-            <p className="mt-6 text-[15px] md:text-[18px] text-white/85 max-w-2xl mx-auto leading-[1.7]">
-              {slide.desc}
-            </p>
-            <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                to={slide.ctaTo}
-                className="inline-flex items-center gap-2 h-12 px-7 rounded-full bg-[var(--brand-gold)] text-[var(--color-text-primary)] font-semibold hover:bg-[var(--brand-gold-light)] transition shadow-iwosan-md"
-              >
-                {slide.ctaLabel} <ArrowRight size={18} />
-              </Link>
-              <Link
-                to="/inscription"
-                className="inline-flex items-center gap-2 h-12 px-7 rounded-full border-2 border-white text-white font-semibold hover:bg-white hover:text-[var(--brand-primary)] transition"
-              >
-                Rejoindre la communauté
-              </Link>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-
-        <div className="mt-10 flex items-center justify-center gap-3 md:gap-5 text-[13px] md:text-[14px] text-white/70 flex-wrap">
-          <span>
-            <strong className="text-white">500+</strong> Praticiens
-          </span>
-          <span className="w-1 h-1 rounded-full bg-white/40" />
-          <span>
-            <strong className="text-white">1 200+</strong> Plantes
-          </span>
-          <span className="w-1 h-1 rounded-full bg-white/40" />
-          <span>
-            <strong className="text-white">20+</strong> Pays
-          </span>
-        </div>
-
-        {/* Pagination dots */}
-        <div className="mt-8 flex items-center justify-center gap-2">
-          {heroSlides.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setIndex(i)}
-              aria-label={`Aller à la diapositive ${i + 1}`}
-              className={`h-1.5 rounded-full transition-all ${i === index ? "w-8 bg-[var(--brand-gold)]" : "w-3 bg-white/40 hover:bg-white/70"}`}
-            />
-          ))}
+      <button onClick={() => setIndex((index - 1 + heroSlides.length) % heroSlides.length)} className="absolute left-4 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-white/12 text-white backdrop-blur hover:bg-white/20" aria-label="Slide précédente"><ChevronLeft size={24} /></button>
+      <button onClick={() => setIndex((index + 1) % heroSlides.length)} className="absolute right-4 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-white/12 text-white backdrop-blur hover:bg-white/20" aria-label="Slide suivante"><ChevronRight size={24} /></button>
+      <div className="relative container-iwosan flex min-h-[92vh] flex-col justify-center py-24">
+        <div className="max-w-5xl">
+          <div className="flex flex-wrap gap-3">
+            <span className="rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-[11px] font-bold tracking-[0.18em] text-white/90 backdrop-blur">{slide.eyebrow}</span>
+            <span className="rounded-full bg-[var(--brand-gold)] px-4 py-1.5 text-[11px] font-bold tracking-[0.14em] text-white shadow-iwosan-sm">{slide.kicker}</span>
+          </div>
+          <h1 className="mt-6 max-w-4xl text-[40px] leading-[1.02] text-white md:text-[70px]">{slide.title}</h1>
+          <p className="mt-5 max-w-2xl text-[16px] leading-[1.85] text-white/86 md:text-[18px]">{slide.desc}</p>
+          <div className="mt-8 flex flex-wrap gap-2">{slide.tags.map((tag) => <span key={tag} className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[12px] font-semibold text-white/92 backdrop-blur">{tag}</span>)}</div>
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <Link to={slide.primary.to} className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--brand-gold)] px-7 font-semibold text-white shadow-iwosan-md">{slide.primary.label} <ArrowRight size={18} /></Link>
+            <Link to={slide.secondary.to} className="inline-flex h-12 items-center justify-center rounded-full border border-white/25 px-7 font-semibold text-white hover:bg-white/10">{slide.secondary.label}</Link>
+          </div>
         </div>
       </div>
-
-      <motion.div
-        animate={{ y: [0, 10, 0] }}
-        transition={{ repeat: Infinity, duration: 2 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60"
-      >
-        <ChevronDown size={28} />
-      </motion.div>
+      <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 gap-2">{heroSlides.map((_, dotIndex) => <button key={dotIndex} onClick={() => setIndex(dotIndex)} className={`h-2.5 rounded-full transition-all ${index === dotIndex ? "w-8 bg-white" : "w-2.5 bg-white/45"}`} aria-label={`Aller à la slide ${dotIndex + 1}`} />)}</div>
     </section>
   );
 }
+function ModulesStrip() {
+  const slides = useMemo(() => {
+    const chunkSize = 4;
+    const chunks = [];
+    for (let i = 0; i < modules.length; i += chunkSize) {
+      chunks.push(modules.slice(i, i + chunkSize));
+    }
+    return chunks;
+  }, []);
+  const [index, setIndex] = useState(0);
 
-const spaces = [
-  {
-    name: "Pharmacopée vivante",
-    desc: "Monographies scientifiques des plantes médicinales africaines.",
-    count: "1 200+ plantes",
-    icon: Leaf,
-    color: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]",
-    to: "/pharmacopee",
-  },
-  {
-    name: "Rites & Cultures",
-    desc: "Cérémonies, symboliques végétales et transmission ancestrale.",
-    count: "180 articles",
-    icon: FlaskConical,
-    color: "bg-purple-50 text-purple-700",
-    to: "/rites-cultures",
-  },
-  {
-    name: "Santé au quotidien",
-    desc: "Conseils, prévention et bien-être issus des savoirs africains.",
-    count: "320 articles",
-    icon: Stethoscope,
-    color: "bg-teal-50 text-teal-700",
-    to: "/sante-quotidien",
-  },
-  {
-    name: "Recettes santé",
-    desc: "Préparations traditionnelles documentées pas à pas.",
-    count: "240 recettes",
-    icon: ChefHat,
-    color: "bg-orange-50 text-orange-700",
-    to: "/recettes-sante",
-  },
-  {
-    name: "Discutons-en",
-    desc: "Forum Q&A entre praticiens, chercheurs et communauté.",
-    count: "5 400+ questions",
-    icon: MessagesSquare,
-    color: "bg-blue-50 text-blue-700",
-    to: "/discutons-en",
-  },
-  {
-    name: "Formations",
-    desc: "Cours en ligne, webinaires et certifications encadrés.",
-    count: "90 formations",
-    icon: GraduationCap,
-    color: "bg-amber-50 text-amber-700",
-    to: "/formations",
-  },
-];
+  useEffect(() => {
+    const id = setInterval(() => setIndex((current) => (current + 1) % slides.length), 4000);
+    return () => clearInterval(id);
+  }, [slides.length]);
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between gap-3">
+        <button onClick={() => setIndex((i) => (i - 1 + slides.length) % slides.length)} className="grid h-11 w-11 place-items-center rounded-full border border-[var(--brand-border)] bg-white"><ChevronLeft size={18} /></button>
+        <div className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">Slide {index + 1} / {slides.length}</div>
+        <button onClick={() => setIndex((i) => (i + 1) % slides.length)} className="grid h-11 w-11 place-items-center rounded-full border border-[var(--brand-border)] bg-white"><ChevronRight size={18} /></button>
+      </div>
+      <div className="overflow-hidden rounded-[24px] border border-[var(--brand-border-light)] bg-white shadow-iwosan-md">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div key={index} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.28 }} className="p-4 sm:p-6">
+            <div className="grid gap-4">
+              {slides[index].map((module) => (
+                <Link key={module.title} to={module.to} className="group flex items-start gap-4 rounded-[18px] border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-4 transition hover:border-[var(--brand-primary)] hover:bg-white">
+                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[var(--brand-primary)] text-white shadow-iwosan-sm"><module.icon size={21} /></div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <h3 className="text-[18px] font-bold leading-tight">{module.title}</h3>
+                      <ArrowRight className="shrink-0 text-[var(--brand-primary)] opacity-0 transition group-hover:opacity-100" size={16} />
+                    </div>
+                    <p className="mt-1 text-[13px] leading-6 text-[var(--color-text-secondary)]">{module.desc}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+      <div className="flex justify-center">
+        <Link to="/annuaire" className="inline-flex h-12 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-6 font-semibold text-white">Explorer tout l’écosystème <ArrowRight size={18} /></Link>
+      </div>
+    </div>
+  );
+}
 
 function Home() {
-  const displayedProducts = products;
-  const displayedProfessionals = professionals;
-  const displayedPlants = plants;
-  const displayedEvents = events;
-  const featured = displayedProfessionals[0];
-  const [newsletterEmail, setNewsletterEmail] = useState("");
-  const [newsletterMessage, setNewsletterMessage] = useState("");
+  const featuredProducts = products.slice(0, 4);
+  const featuredProfessionals = professionals.slice(0, 4);
+  const featuredEvents = events.slice(0, 3);
+
   return (
     <>
       <HeroCarousel />
-
-      {/* PORTRAIT DE LA SEMAINE */}
-      <section className="py-20 md:py-28 bg-[var(--brand-surface-alt)]">
+      <section className="py-20 md:py-24 bg-[var(--brand-surface-alt)]">
+        <div className="container-iwosan">
+          <SectionHeader label="Modules" title="Tout l’écosystème du site" subtitle="Une lecture claire des espaces publics utiles, avec navigation verticale et accès rapide à chaque univers." align="center" />
+          <ModulesStrip />
+        </div>
+      </section>
+      <section className="py-20 md:py-24">
         <div className="container-iwosan">
           <SectionHeader label="Mise en lumière" title="Portrait de la semaine" />
-          <div className="bg-white rounded-[20px] overflow-hidden shadow-iwosan-md grid md:grid-cols-[40%_60%]">
-            <div className="h-[280px] md:h-auto">
-              <img src={featured.cover} alt="" className="w-full h-full object-cover" />
+          <div className="grid gap-6 md:grid-cols-[40%_60%] rounded-[24px] border border-[var(--brand-border-light)] bg-white overflow-hidden shadow-iwosan-md">
+            <div className="h-[300px] md:h-auto">
+              <img src={featuredProfessionals[0].cover} alt="" className="h-full w-full object-cover" />
             </div>
             <div className="p-7 md:p-10">
-              <span className="inline-flex items-center gap-1.5 bg-[var(--brand-gold)] text-white text-[11px] font-bold uppercase tracking-[0.1em] px-3 py-1 rounded-full">
-                ⭐ Praticien de la semaine
-              </span>
-              <h3 className="mt-4 text-[28px] md:text-[32px] text-[var(--brand-primary)] font-bold">
-                {featured.name}
-              </h3>
-              <p className="mt-1 text-[15px] text-[var(--color-text-secondary)]">
-                {featured.specialty}
-              </p>
-              <p className="mt-2 inline-flex items-center gap-1.5 text-[14px] text-[var(--color-text-muted)]">
-                <MapPin size={14} /> {featured.location}, {featured.country}
-              </p>
-              <p className="mt-5 text-[15px] leading-[1.7] text-[var(--color-text-secondary)]">
-                {featured.bio}
-              </p>
-              <ul className="mt-5 space-y-2">
-                {featured.specialties.map((s) => (
-                  <li key={s} className="flex items-center gap-2 text-[14px]">
-                    <CheckCircle2 size={16} className="text-[var(--brand-gold)]" /> {s}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-5">
-                <RatingStars
-                  rating={featured.rating}
-                  reviewCount={featured.reviewCount}
-                  size="md"
-                />
-              </div>
-              <div className="mt-7 flex flex-col sm:flex-row gap-3">
-                <Link
-                  to="/annuaire/$id"
-                  params={{ id: featured.id }}
-                  className="h-11 inline-flex items-center justify-center px-5 rounded-full bg-[var(--brand-primary)] text-white font-semibold hover:bg-[var(--brand-primary-dark)] transition"
-                >
-                  Voir le profil complet
-                </Link>
-                <Link
-                  to="/annuaire/$id"
-                  params={{ id: featured.id }}
-                  className="h-11 inline-flex items-center justify-center px-5 rounded-full border border-[var(--brand-border)] font-semibold hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] transition"
-                >
-                  Prendre rendez-vous
-                </Link>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-gold)] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-white">Praticien de la semaine</span>
+              <h3 className="mt-4 text-[28px] md:text-[32px] text-[var(--brand-primary)] font-bold">{featuredProfessionals[0].name}</h3>
+              <p className="mt-1 text-[15px] text-[var(--color-text-secondary)]">{featuredProfessionals[0].specialty}</p>
+              <p className="mt-2 inline-flex items-center gap-1.5 text-[14px] text-[var(--color-text-muted)]"><MapPin size={14} /> {featuredProfessionals[0].location}, {featuredProfessionals[0].country}</p>
+              <p className="mt-5 text-[15px] leading-[1.7] text-[var(--color-text-secondary)]">{featuredProfessionals[0].bio}</p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Link to="/annuaire/$id" params={{ id: featuredProfessionals[0].id }} className="h-11 inline-flex items-center justify-center px-5 rounded-full bg-[var(--brand-primary)] text-white font-semibold">Voir le profil complet</Link>
+                <Link to="/annuaire" className="h-11 inline-flex items-center justify-center px-5 rounded-full border border-[var(--brand-border)] font-semibold">Explorer</Link>
               </div>
             </div>
           </div>
         </div>
       </section>
-
-      {/* NOS ESPACES */}
-      <section className="py-20 md:py-28">
+      <section className="py-20 md:py-24 bg-[var(--brand-surface-alt)]">
         <div className="container-iwosan">
-          <SectionHeader
-            label="Découvrir"
-            title="Six espaces de savoir"
-            subtitle="Une plateforme structurée, rigoureuse, qui met le savoir endogène au même niveau d'exigence que la science moderne."
-            align="center"
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {spaces.map((s) => (
-              <Link
-                key={s.name}
-                to={s.to}
-                className="group bg-white border border-[var(--brand-border-light)] rounded-[16px] p-7 card-hover"
-              >
-                <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${s.color} group-hover:scale-110 transition-transform`}
-                >
-                  <s.icon size={22} />
-                </div>
-                <h3 className="text-[20px] font-bold mb-2">{s.name}</h3>
-                <p className="text-[14px] text-[var(--color-text-secondary)] leading-[1.6] mb-4">
-                  {s.desc}
-                </p>
-                <div className="flex items-center justify-between pt-4 border-t border-[var(--brand-border-light)]">
-                  <span className="text-[12px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
-                    {s.count}
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[var(--brand-primary)] font-semibold text-[13px]">
-                    Explorer <ArrowRight size={14} />
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <SectionHeader label="Marketplace" title="Produits en avant" align="center" />
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">{featuredProducts.map((product) => <ProductCard key={product.id} product={product} />)}</div>
         </div>
       </section>
-
-      {/* MARKETPLACE */}
-      <section className="py-20 md:py-28 bg-[var(--brand-surface-alt)]">
+      <section className="py-20 md:py-24">
         <div className="container-iwosan">
-          <SectionHeader
-            label="Marketplace"
-            title="Produits & services en vedette"
-            action={
-              <Link
-                to="/marketplace"
-                className="text-[14px] font-semibold text-[var(--brand-primary)] inline-flex items-center gap-1"
-              >
-                Voir tout le marketplace <ArrowRight size={14} />
-              </Link>
-            }
-          />
-          <div className="flex gap-2 mb-8 flex-wrap">
-            {["Tous", "Produits", "Services", "Numériques"].map((t, i) => (
-              <button
-                key={t}
-                className={`px-4 py-2 rounded-full text-[13px] font-semibold transition ${i === 0 ? "bg-[var(--brand-primary)] text-white" : "bg-white border border-[var(--brand-border)] text-[var(--color-text-secondary)] hover:border-[var(--brand-primary)]"}`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {displayedProducts.slice(0, 4).map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-          <div className="mt-10 text-center">
-            <Link
-              to="/marketplace"
-              className="inline-flex items-center gap-2 h-12 px-7 rounded-full border-2 border-[var(--brand-primary)] text-[var(--brand-primary)] font-semibold hover:bg-[var(--brand-primary)] hover:text-white transition"
-            >
-              Voir les 500+ produits
-            </Link>
-          </div>
+          <SectionHeader label="Annuaire" title="Praticiens en vedette" align="center" />
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">{featuredProfessionals.map((pro) => <ProfessionalCard key={pro.id} pro={pro} />)}</div>
         </div>
       </section>
-
-      {/* PRATICIENS VÉRIFIÉS */}
-      <section className="py-20 md:py-28">
+      <section className="py-20 md:py-24 bg-[var(--brand-surface-alt)]">
         <div className="container-iwosan">
-          <SectionHeader
-            label="Confiance & Expertise"
-            title="Praticiens vérifiés"
-            subtitle="Chaque praticien est documenté, évalué et vérifié par notre équipe éditoriale."
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {displayedProfessionals.slice(0, 4).map((p) => (
-              <ProfessionalCard key={p.id} pro={p} />
-            ))}
-          </div>
-          <div className="mt-10 text-center">
-            <Link
-              to="/annuaire"
-              className="inline-flex items-center gap-2 h-12 px-7 rounded-full border-2 border-[var(--brand-primary)] text-[var(--brand-primary)] font-semibold hover:bg-[var(--brand-primary)] hover:text-white transition"
-            >
-              Voir l'annuaire complet
-            </Link>
-          </div>
+          <SectionHeader label="Agenda" title="Événements à venir" align="center" />
+          <div className="space-y-4">{featuredEvents.map((event) => <EventCard key={event.id} event={event} actionLabel="S'inscrire" />)}</div>
         </div>
       </section>
-
-      {/* PHARMACOPÉE — dark section */}
-      <section className="py-20 md:py-28 bg-[var(--brand-primary-dark)]">
-        <div className="container-iwosan">
-          <SectionHeader
-            label="Pharmacopée vivante"
-            title="Plantes médicinales documentées"
-            subtitle="Nomenclature scientifique, principes actifs, indications thérapeutiques et préparations illustrées."
-            invert
-          />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {displayedPlants.slice(0, 3).map((p) => (
-              <PlantCard key={p.id} plant={p} dark />
-            ))}
+      <section className="border-t border-[var(--brand-border-light)] bg-[var(--brand-primary-dark)] py-14 text-white">
+        <div className="container-iwosan grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-[20px] border border-white/10 bg-white/5 p-5 text-center backdrop-blur">
+            <div className="text-[38px] font-bold leading-none">50+</div>
+            <p className="mt-2 text-[12px] font-semibold tracking-[0.18em] text-white/72">Praticiens documentés</p>
           </div>
-          <div className="mt-10 text-center">
-            <Link
-              to="/pharmacopee"
-              className="inline-flex items-center gap-2 h-12 px-7 rounded-full border-2 border-white text-white font-semibold hover:bg-white hover:text-[var(--brand-primary-dark)] transition"
-            >
-              Explorer la pharmacopée
-            </Link>
+          <div className="rounded-[20px] border border-white/10 bg-white/5 p-5 text-center backdrop-blur">
+            <div className="text-[38px] font-bold leading-none">120+</div>
+            <p className="mt-2 text-[12px] font-semibold tracking-[0.18em] text-white/72">Plantes médicinales</p>
           </div>
-        </div>
-      </section>
-
-      {/* AGENDA */}
-      <section className="py-20 md:py-28">
-        <div className="container-iwosan">
-          <SectionHeader
-            label="Agenda"
-            title="Prochains événements"
-            action={
-              <Link to="/agenda" className="text-[14px] font-semibold text-[var(--brand-primary)]">
-                Voir tout →
-              </Link>
-            }
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayedEvents.slice(0, 3).map((e) => (
-              <EventCard key={e.id} event={e} />
-            ))}
+          <div className="rounded-[20px] border border-white/10 bg-white/5 p-5 text-center backdrop-blur">
+            <div className="text-[38px] font-bold leading-none">4000+</div>
+            <p className="mt-2 text-[12px] font-semibold tracking-[0.18em] text-white/72">Utilisateurs actifs</p>
           </div>
-        </div>
-      </section>
-
-      {/* CHIFFRES CLÉS */}
-      <section className="py-16 bg-[var(--brand-surface-alt)] border-y border-[var(--brand-border-light)]">
-        <div className="container-iwosan">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-y-10 md:divide-x divide-[var(--brand-border)]">
-            {[
-              { v: 500, s: "+", l: "Praticiens documentés" },
-              { v: 1200, s: "+", l: "Plantes médicinales" },
-              { v: 45000, s: "+", l: "Utilisateurs actifs" },
-              { v: 20, s: "+", l: "Pays africains" },
-            ].map((c, i) => (
-              <div key={i} className="text-center px-4">
-                <AnimatedCounter value={c.v} suffix={c.s} />
-                <div className="text-[13px] text-[var(--color-text-muted)] mt-2 uppercase tracking-wide font-semibold">
-                  {c.l}
-                </div>
-              </div>
-            ))}
+          <div className="rounded-[20px] border border-white/10 bg-white/5 p-5 text-center backdrop-blur">
+            <div className="text-[38px] font-bold leading-none">10+</div>
+            <p className="mt-2 text-[12px] font-semibold tracking-[0.18em] text-white/72">Pays africains</p>
           </div>
-        </div>
-      </section>
-
-      {/* NEWSLETTER */}
-      <section className="bg-[var(--brand-primary)] py-16">
-        <div className="container-iwosan grid md:grid-cols-2 gap-8 items-center">
-          <div>
-            <h2 className="text-white text-[28px] md:text-[36px]">
-              Restez informé des dernières découvertes
-            </h2>
-            <p className="mt-3 text-white/70 text-[16px] leading-[1.7]">
-              Une lettre mensuelle, sans bruit, avec les meilleurs articles et études cliniques
-              publiés sur Iwosan.
-            </p>
-          </div>
-          <form
-            className="flex flex-col gap-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              const email = newsletterEmail.trim();
-              if (!email || !email.includes("@")) {
-                setNewsletterMessage("Entrez une adresse email valide.");
-                return;
-              }
-              setNewsletterEmail("");
-              setNewsletterMessage("Inscription newsletter enregistrée.");
-            }}
-          >
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="email"
-                value={newsletterEmail}
-                onChange={(event) => {
-                  setNewsletterEmail(event.target.value);
-                  setNewsletterMessage("");
-                }}
-                placeholder="votre@email.com"
-                className="flex-1 h-12 px-5 rounded-full bg-white text-[15px] outline-none focus:ring-4 focus:ring-white/20"
-              />
-              <button type="submit" className="h-12 px-7 rounded-full bg-[var(--brand-gold)] text-[var(--color-text-primary)] font-semibold hover:bg-[var(--brand-gold-light)] transition whitespace-nowrap">
-                S'abonner
-              </button>
-            </div>
-            {newsletterMessage && (
-              <p className="rounded-lg bg-white/10 px-4 py-3 text-[13px] font-semibold text-white">
-                {newsletterMessage}
-              </p>
-            )}
-          </form>
         </div>
       </section>
     </>
   );
 }
+
+

@@ -29,6 +29,7 @@ import { Route as FormationsRouteImport } from './routes/formations'
 import { Route as DiscutonsEnRouteImport } from './routes/discutons-en'
 import { Route as DevenirProRouteImport } from './routes/devenir-pro'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ConnexionRouteImport } from './routes/connexion'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AnnuaireRouteImport } from './routes/annuaire'
@@ -39,6 +40,7 @@ import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TableauDeBordReseauRouteImport } from './routes/tableau-de-bord/reseau'
 import { Route as TableauDeBordQuestionsRouteImport } from './routes/tableau-de-bord/questions'
+import { Route as TableauDeBordProfilProRouteImport } from './routes/tableau-de-bord/profil-pro'
 import { Route as TableauDeBordProfilRouteImport } from './routes/tableau-de-bord/profil'
 import { Route as TableauDeBordParametresRouteImport } from './routes/tableau-de-bord/parametres'
 import { Route as TableauDeBordMesProduitsRouteImport } from './routes/tableau-de-bord/mes-produits'
@@ -56,6 +58,7 @@ import { Route as ResetPasswordTokenRouteImport } from './routes/reset-password/
 import { Route as RecettesSlugRouteImport } from './routes/recettes/$slug'
 import { Route as RecettesSanteSlugRouteImport } from './routes/recettes-sante/$slug'
 import { Route as ProfilUsernameRouteImport } from './routes/profil/$username'
+import { Route as ProIdRouteImport } from './routes/pro/$id'
 import { Route as PharmacopeeSlugRouteImport } from './routes/pharmacopee/$slug'
 import { Route as MonCompteTicketsRouteImport } from './routes/mon-compte/tickets'
 import { Route as MonCompteQuestionsRouteImport } from './routes/mon-compte/questions'
@@ -204,6 +207,11 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConnexionRoute = ConnexionRouteImport.update({
   id: '/connexion',
   path: '/connexion',
@@ -252,6 +260,11 @@ const TableauDeBordReseauRoute = TableauDeBordReseauRouteImport.update({
 const TableauDeBordQuestionsRoute = TableauDeBordQuestionsRouteImport.update({
   id: '/questions',
   path: '/questions',
+  getParentRoute: () => TableauDeBordRoute,
+} as any)
+const TableauDeBordProfilProRoute = TableauDeBordProfilProRouteImport.update({
+  id: '/profil-pro',
+  path: '/profil-pro',
   getParentRoute: () => TableauDeBordRoute,
 } as any)
 const TableauDeBordProfilRoute = TableauDeBordProfilRouteImport.update({
@@ -339,6 +352,11 @@ const RecettesSanteSlugRoute = RecettesSanteSlugRouteImport.update({
 const ProfilUsernameRoute = ProfilUsernameRouteImport.update({
   id: '/profil/$username',
   path: '/profil/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProIdRoute = ProIdRouteImport.update({
+  id: '/pro/$id',
+  path: '/pro/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PharmacopeeSlugRoute = PharmacopeeSlugRouteImport.update({
@@ -593,6 +611,7 @@ export interface FileRoutesByFullPath {
   '/annuaire': typeof AnnuaireRouteWithChildren
   '/checkout': typeof CheckoutRoute
   '/connexion': typeof ConnexionRoute
+  '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/devenir-pro': typeof DevenirProRoute
   '/discutons-en': typeof DiscutonsEnRoute
@@ -641,6 +660,7 @@ export interface FileRoutesByFullPath {
   '/mon-compte/questions': typeof MonCompteQuestionsRoute
   '/mon-compte/tickets': typeof MonCompteTicketsRoute
   '/pharmacopee/$slug': typeof PharmacopeeSlugRoute
+  '/pro/$id': typeof ProIdRoute
   '/profil/$username': typeof ProfilUsernameRoute
   '/recettes-sante/$slug': typeof RecettesSanteSlugRoute
   '/recettes/$slug': typeof RecettesSlugRoute
@@ -658,6 +678,7 @@ export interface FileRoutesByFullPath {
   '/tableau-de-bord/mes-produits': typeof TableauDeBordMesProduitsRoute
   '/tableau-de-bord/parametres': typeof TableauDeBordParametresRoute
   '/tableau-de-bord/profil': typeof TableauDeBordProfilRoute
+  '/tableau-de-bord/profil-pro': typeof TableauDeBordProfilProRoute
   '/tableau-de-bord/questions': typeof TableauDeBordQuestionsRoute
   '/tableau-de-bord/reseau': typeof TableauDeBordReseauRoute
   '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
@@ -689,6 +710,7 @@ export interface FileRoutesByTo {
   '/annuaire': typeof AnnuaireRouteWithChildren
   '/checkout': typeof CheckoutRoute
   '/connexion': typeof ConnexionRoute
+  '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/devenir-pro': typeof DevenirProRoute
   '/discutons-en': typeof DiscutonsEnRoute
@@ -737,6 +759,7 @@ export interface FileRoutesByTo {
   '/mon-compte/questions': typeof MonCompteQuestionsRoute
   '/mon-compte/tickets': typeof MonCompteTicketsRoute
   '/pharmacopee/$slug': typeof PharmacopeeSlugRoute
+  '/pro/$id': typeof ProIdRoute
   '/profil/$username': typeof ProfilUsernameRoute
   '/recettes-sante/$slug': typeof RecettesSanteSlugRoute
   '/recettes/$slug': typeof RecettesSlugRoute
@@ -754,6 +777,7 @@ export interface FileRoutesByTo {
   '/tableau-de-bord/mes-produits': typeof TableauDeBordMesProduitsRoute
   '/tableau-de-bord/parametres': typeof TableauDeBordParametresRoute
   '/tableau-de-bord/profil': typeof TableauDeBordProfilRoute
+  '/tableau-de-bord/profil-pro': typeof TableauDeBordProfilProRoute
   '/tableau-de-bord/questions': typeof TableauDeBordQuestionsRoute
   '/tableau-de-bord/reseau': typeof TableauDeBordReseauRoute
   '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
@@ -786,6 +810,7 @@ export interface FileRoutesById {
   '/annuaire': typeof AnnuaireRouteWithChildren
   '/checkout': typeof CheckoutRoute
   '/connexion': typeof ConnexionRoute
+  '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/devenir-pro': typeof DevenirProRoute
   '/discutons-en': typeof DiscutonsEnRoute
@@ -834,6 +859,7 @@ export interface FileRoutesById {
   '/mon-compte/questions': typeof MonCompteQuestionsRoute
   '/mon-compte/tickets': typeof MonCompteTicketsRoute
   '/pharmacopee/$slug': typeof PharmacopeeSlugRoute
+  '/pro/$id': typeof ProIdRoute
   '/profil/$username': typeof ProfilUsernameRoute
   '/recettes-sante/$slug': typeof RecettesSanteSlugRoute
   '/recettes/$slug': typeof RecettesSlugRoute
@@ -851,6 +877,7 @@ export interface FileRoutesById {
   '/tableau-de-bord/mes-produits': typeof TableauDeBordMesProduitsRoute
   '/tableau-de-bord/parametres': typeof TableauDeBordParametresRoute
   '/tableau-de-bord/profil': typeof TableauDeBordProfilRoute
+  '/tableau-de-bord/profil-pro': typeof TableauDeBordProfilProRoute
   '/tableau-de-bord/questions': typeof TableauDeBordQuestionsRoute
   '/tableau-de-bord/reseau': typeof TableauDeBordReseauRoute
   '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
@@ -884,6 +911,7 @@ export interface FileRouteTypes {
     | '/annuaire'
     | '/checkout'
     | '/connexion'
+    | '/contact'
     | '/dashboard'
     | '/devenir-pro'
     | '/discutons-en'
@@ -932,6 +960,7 @@ export interface FileRouteTypes {
     | '/mon-compte/questions'
     | '/mon-compte/tickets'
     | '/pharmacopee/$slug'
+    | '/pro/$id'
     | '/profil/$username'
     | '/recettes-sante/$slug'
     | '/recettes/$slug'
@@ -949,6 +978,7 @@ export interface FileRouteTypes {
     | '/tableau-de-bord/mes-produits'
     | '/tableau-de-bord/parametres'
     | '/tableau-de-bord/profil'
+    | '/tableau-de-bord/profil-pro'
     | '/tableau-de-bord/questions'
     | '/tableau-de-bord/reseau'
     | '/admin/communaute/avis'
@@ -980,6 +1010,7 @@ export interface FileRouteTypes {
     | '/annuaire'
     | '/checkout'
     | '/connexion'
+    | '/contact'
     | '/dashboard'
     | '/devenir-pro'
     | '/discutons-en'
@@ -1028,6 +1059,7 @@ export interface FileRouteTypes {
     | '/mon-compte/questions'
     | '/mon-compte/tickets'
     | '/pharmacopee/$slug'
+    | '/pro/$id'
     | '/profil/$username'
     | '/recettes-sante/$slug'
     | '/recettes/$slug'
@@ -1045,6 +1077,7 @@ export interface FileRouteTypes {
     | '/tableau-de-bord/mes-produits'
     | '/tableau-de-bord/parametres'
     | '/tableau-de-bord/profil'
+    | '/tableau-de-bord/profil-pro'
     | '/tableau-de-bord/questions'
     | '/tableau-de-bord/reseau'
     | '/admin/communaute/avis'
@@ -1076,6 +1109,7 @@ export interface FileRouteTypes {
     | '/annuaire'
     | '/checkout'
     | '/connexion'
+    | '/contact'
     | '/dashboard'
     | '/devenir-pro'
     | '/discutons-en'
@@ -1124,6 +1158,7 @@ export interface FileRouteTypes {
     | '/mon-compte/questions'
     | '/mon-compte/tickets'
     | '/pharmacopee/$slug'
+    | '/pro/$id'
     | '/profil/$username'
     | '/recettes-sante/$slug'
     | '/recettes/$slug'
@@ -1141,6 +1176,7 @@ export interface FileRouteTypes {
     | '/tableau-de-bord/mes-produits'
     | '/tableau-de-bord/parametres'
     | '/tableau-de-bord/profil'
+    | '/tableau-de-bord/profil-pro'
     | '/tableau-de-bord/questions'
     | '/tableau-de-bord/reseau'
     | '/admin/communaute/avis'
@@ -1173,6 +1209,7 @@ export interface RootRouteChildren {
   AnnuaireRoute: typeof AnnuaireRouteWithChildren
   CheckoutRoute: typeof CheckoutRoute
   ConnexionRoute: typeof ConnexionRoute
+  ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   DevenirProRoute: typeof DevenirProRoute
   DiscutonsEnRoute: typeof DiscutonsEnRoute
@@ -1193,6 +1230,7 @@ export interface RootRouteChildren {
   SanteAuQuotidienRoute: typeof SanteAuQuotidienRouteWithChildren
   SanteQuotidienRoute: typeof SanteQuotidienRouteWithChildren
   TableauDeBordRoute: typeof TableauDeBordRouteWithChildren
+  ProIdRoute: typeof ProIdRoute
   ProfilUsernameRoute: typeof ProfilUsernameRoute
 }
 
@@ -1338,6 +1376,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/connexion': {
       id: '/connexion'
       path: '/connexion'
@@ -1406,6 +1451,13 @@ declare module '@tanstack/react-router' {
       path: '/questions'
       fullPath: '/tableau-de-bord/questions'
       preLoaderRoute: typeof TableauDeBordQuestionsRouteImport
+      parentRoute: typeof TableauDeBordRoute
+    }
+    '/tableau-de-bord/profil-pro': {
+      id: '/tableau-de-bord/profil-pro'
+      path: '/profil-pro'
+      fullPath: '/tableau-de-bord/profil-pro'
+      preLoaderRoute: typeof TableauDeBordProfilProRouteImport
       parentRoute: typeof TableauDeBordRoute
     }
     '/tableau-de-bord/profil': {
@@ -1525,6 +1577,13 @@ declare module '@tanstack/react-router' {
       path: '/profil/$username'
       fullPath: '/profil/$username'
       preLoaderRoute: typeof ProfilUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro/$id': {
+      id: '/pro/$id'
+      path: '/pro/$id'
+      fullPath: '/pro/$id'
+      preLoaderRoute: typeof ProIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pharmacopee/$slug': {
@@ -2169,6 +2228,7 @@ interface TableauDeBordRouteChildren {
   TableauDeBordMesProduitsRoute: typeof TableauDeBordMesProduitsRoute
   TableauDeBordParametresRoute: typeof TableauDeBordParametresRoute
   TableauDeBordProfilRoute: typeof TableauDeBordProfilRoute
+  TableauDeBordProfilProRoute: typeof TableauDeBordProfilProRoute
   TableauDeBordQuestionsRoute: typeof TableauDeBordQuestionsRoute
   TableauDeBordReseauRoute: typeof TableauDeBordReseauRoute
 }
@@ -2184,6 +2244,7 @@ const TableauDeBordRouteChildren: TableauDeBordRouteChildren = {
   TableauDeBordMesProduitsRoute: TableauDeBordMesProduitsRoute,
   TableauDeBordParametresRoute: TableauDeBordParametresRoute,
   TableauDeBordProfilRoute: TableauDeBordProfilRoute,
+  TableauDeBordProfilProRoute: TableauDeBordProfilProRoute,
   TableauDeBordQuestionsRoute: TableauDeBordQuestionsRoute,
   TableauDeBordReseauRoute: TableauDeBordReseauRoute,
 }
@@ -2201,6 +2262,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnnuaireRoute: AnnuaireRouteWithChildren,
   CheckoutRoute: CheckoutRoute,
   ConnexionRoute: ConnexionRoute,
+  ContactRoute: ContactRoute,
   DashboardRoute: DashboardRouteWithChildren,
   DevenirProRoute: DevenirProRoute,
   DiscutonsEnRoute: DiscutonsEnRoute,
@@ -2221,6 +2283,7 @@ const rootRouteChildren: RootRouteChildren = {
   SanteAuQuotidienRoute: SanteAuQuotidienRouteWithChildren,
   SanteQuotidienRoute: SanteQuotidienRouteWithChildren,
   TableauDeBordRoute: TableauDeBordRouteWithChildren,
+  ProIdRoute: ProIdRoute,
   ProfilUsernameRoute: ProfilUsernameRoute,
 }
 export const routeTree = rootRouteImport

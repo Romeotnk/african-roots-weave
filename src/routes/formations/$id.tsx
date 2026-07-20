@@ -1,6 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+﻿import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, PlayCircle } from "lucide-react";
 import { RatingStars } from "@/components/shared/RatingStars";
+import { professionals } from "@/data/professionals";
 import { trainings } from "@/data/trainings";
 
 export const Route = createFileRoute("/formations/$id")({
@@ -11,6 +12,10 @@ export const Route = createFileRoute("/formations/$id")({
 function TrainingDetail() {
   const { id } = Route.useParams();
   const course = trainings.find((item) => item.id === id || item.slug === id) ?? trainings[0];
+  const instructorProfile =
+    professionals.find((item) => item.id === course.instructorProfileId) ??
+    professionals.find((item) => item.name === course.instructor) ??
+    professionals[0];
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">
@@ -25,8 +30,8 @@ function TrainingDetail() {
           <div className="rounded-[12px] bg-white p-4 text-[var(--color-text-primary)]">
             <img src={course.image} alt="" className="aspect-video w-full rounded-lg object-cover" />
             <p className="mt-4 text-[24px] font-bold">{course.price === 0 ? "Gratuit" : `${course.price.toLocaleString("fr-FR")} ${course.currency}`}</p>
-            <Link to="/formations/$id/apprendre" params={{ id: course.id }} className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full bg-[var(--brand-primary)] font-semibold text-white">
-              S'inscrire / Acheter
+            <Link to="/pro/$id" params={{ id: instructorProfile.id }} className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full bg-[var(--brand-primary)] font-semibold text-white">
+              Voir le profil du formateur
             </Link>
           </div>
         </div>
@@ -76,7 +81,7 @@ function TrainingDetail() {
         <aside className="h-fit rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
           <h2 className="text-[18px] font-bold">Instructeur</h2>
           <div className="mt-4 flex gap-3">
-            <img src={course.instructorAvatar} alt="" className="h-14 w-14 rounded-full object-cover" />
+            <img src={instructorProfile.avatar} alt="" className="h-14 w-14 rounded-full object-cover" />
             <div><p className="font-bold">{course.instructor}</p><p className="text-[13px] text-[var(--color-text-muted)]">{course.instructorBio}</p></div>
           </div>
           <h3 className="mt-6 font-bold">Prerequis</h3>

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+﻿import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/annuaire")({
       {
         name: "description",
         content:
-          "Decouvrez nos praticiens traditionnels verifies, documentes et evalues par la communaute.",
+          "Decouvrez nos praticiens traditionnels vérifiés, documentés et évalués par la communaute.",
       },
     ],
   }),
@@ -95,7 +95,7 @@ function Annuaire() {
       })
       .catch(() => {
         if (!cancelled) {
-          setError("API indisponible, donnees locales affichees.");
+          setError("API indisponible, données locales affichées.");
           setItems(fallbackProfessionals);
         }
       })
@@ -113,13 +113,13 @@ function Annuaire() {
       <HeroSection
         image="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=1920&q=80"
         badge="Annuaire"
-        title="Annuaire des Praticiens"
-        subtitle="Praticiens, specialites et localisations verifies par notre equipe editoriale."
+        title="Annuaire des praticiens"
+        subtitle="Praticiens, spécialités et localisations vérifiés par notre équipe éditoriale."
         size="md"
         breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Annuaire" }]}
       >
         <div className="max-w-2xl mx-auto">
-          <SearchBar placeholder="Nom, specialite, localisation..." value={search} onChange={setSearch} />
+          <SearchBar placeholder="Nom, spécialité, localisation..." value={search} onChange={setSearch} />
         </div>
       </HeroSection>
 
@@ -130,7 +130,7 @@ function Annuaire() {
             onChange={(event) => setSpecialty(event.target.value)}
             className="px-4 h-10 rounded-full text-[13px] font-semibold border border-[var(--brand-border)] text-[var(--color-text-secondary)] bg-white"
           >
-            <option value="">Toutes specialites</option>
+            <option value="">Toutes spécialités</option>
             {specialties.map((item) => (
               <option key={item} value={item}>
                 {item}
@@ -154,7 +154,7 @@ function Annuaire() {
             onClick={() => setVerifiedOnly((value) => !value)}
             className={`px-4 h-10 rounded-full text-[13px] font-semibold border ${verifiedOnly ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]" : "border-[var(--brand-border)] text-[var(--color-text-secondary)]"}`}
           >
-            Verifies uniquement
+            Vérifiés uniquement
           </button>
           {hasActiveFilters && (
             <button
@@ -162,7 +162,7 @@ function Annuaire() {
               onClick={resetFilters}
               className="h-10 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold text-[var(--color-text-secondary)]"
             >
-              Reinitialiser
+              Réinitialiser
             </button>
           )}
         </div>
@@ -175,7 +175,7 @@ function Annuaire() {
               <span className="font-bold text-[var(--color-text-primary)]">
                 {isLoading ? "Chargement..." : `${filteredItems.length} praticiens`}
               </span>
-              {hasActiveFilters && !isLoading ? " correspondent a vos filtres" : " disponibles"}
+              {hasActiveFilters && !isLoading ? " correspondent à vos filtres" : " disponibles"}
             </p>
           </div>
           {error && (
@@ -190,7 +190,7 @@ function Annuaire() {
           </div>
           {!isLoading && filteredItems.length === 0 && (
             <div className="mt-6 rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
-              <p className="font-bold">Aucun praticien trouve</p>
+              <p className="font-bold">Aucun praticien trouvé</p>
               <button
                 type="button"
                 onClick={resetFilters}

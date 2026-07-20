@@ -1,85 +1,77 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Menu, X, Leaf, ChevronDown, Sun, Moon, LogIn, UserPlus, LogOut, LayoutDashboard, ShoppingCart } from "lucide-react";
+import { Menu, X, Leaf, Sun, Moon, LogOut, LogIn, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useTheme, type ThemeMode } from "@/components/ThemeProvider";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { useCart } from "@/cart/CartContext";
-import { NotificationBell } from "@/components/layout/NotificationBell";
 import { getAccountHomePath, isProfessionalAccount } from "@/lib/auth/roles";
 
-const navLinks = [
+const mainLinks = [
   { to: "/", label: "Accueil" },
   { to: "/marketplace", label: "Marketplace" },
   { to: "/annuaire", label: "Annuaire" },
   { to: "/pharmacopee", label: "Pharmacopée" },
-];
-const communityLinks = [
-  { to: "/discutons-en", label: "Discutons-en" },
-  { to: "/sante-quotidien", label: "Blog" },
+  { to: "/sante-au-quotidien", label: "Santé au quotidien" },
   { to: "/rites-cultures", label: "Rites & Cultures" },
   { to: "/recettes-sante", label: "Recettes santé" },
-];
-const tailLinks = [
+  { to: "/discutons-en", label: "Discutons-en" },
   { to: "/agenda", label: "Agenda" },
   { to: "/formations", label: "Formations" },
-];
-const accountLinks = [
-  { to: "/panier", label: "Panier" },
-  { to: "/messages", label: "Messages" },
-  { to: "/mes-commandes", label: "Mes commandes" },
-  { to: "/mon-compte/portefeuille", label: "Portefeuille" },
-  { to: "/mon-compte/affiliation", label: "Affiliation" },
-  { to: "/mon-compte/kyc", label: "KYC" },
-  { to: "/mon-compte/alertes", label: "Alertes" },
-  { to: "/mon-compte/tickets", label: "Tickets" },
+  { to: "/contact", label: "Contact" },
 ];
 
-const displayLabels = {
-  community: "Communaut\u00e9",
-  logout: "D\u00e9connexion",
-};
+const groupedMobileLinks = [
+  {
+    label: "PRINCIPAL",
+    items: [
+      { to: "/", label: "Accueil" },
+      { to: "/marketplace", label: "Marketplace" },
+      { to: "/annuaire", label: "Annuaire" },
+    ],
+  },
+  {
+    label: "SAVOIRS",
+    items: [
+      { to: "/pharmacopee", label: "Pharmacopée" },
+      { to: "/sante-au-quotidien", label: "Santé au quotidien" },
+      { to: "/rites-cultures", label: "Rites & Cultures" },
+      { to: "/recettes-sante", label: "Recettes santé" },
+    ],
+  },
+  {
+    label: "COMMUNAUTÉ",
+    items: [
+      { to: "/discutons-en", label: "Discutons-en" },
+      { to: "/agenda", label: "Agenda" },
+      { to: "/formations", label: "Formations" },
+    ],
+  },
+  {
+    label: "AUTRE",
+    items: [{ to: "/contact", label: "Contact" }],
+  },
+];
 
-function ThemeSwitch({ compact = false }: { compact?: boolean }) {
-  const { mode, setMode, resolved } = useTheme();
+function ThemeSwitch() {
+  const { mode, setMode } = useTheme();
   const items: { v: ThemeMode; icon: typeof Sun; label: string }[] = [
     { v: "light", icon: Sun, label: "Clair" },
     { v: "dark", icon: Moon, label: "Sombre" },
   ];
-  if (compact) {
-    // Single toggle button used in mobile header
-    const Icon = resolved === "dark" ? Sun : Moon;
-    return (
-      <button
-        onClick={() => setMode(resolved === "dark" ? "light" : "dark")}
-        aria-label="Changer le thème"
-        className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-[var(--brand-border)] text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] hover:border-[var(--brand-primary)] active:scale-95 transition"
-      >
-        <Icon size={18} />
-      </button>
-    );
-  }
   return (
-    <div
-      className="flex items-center gap-0.5 border border-[var(--brand-border)] rounded-full p-0.5"
-      role="radiogroup"
-      aria-label="Thème"
-    >
+    <div className="flex items-center gap-0.5 rounded-full border border-white/20 p-0.5 text-white/90">
       {items.map(({ v, icon: Icon, label }) => (
         <button
           key={v}
           role="radio"
           aria-checked={mode === v}
-          aria-label={label}
-          title={label}
           onClick={() => setMode(v)}
           className={cn(
-            "inline-flex items-center justify-center w-6 h-6 rounded-full transition active:scale-90",
-            mode === v
-              ? "bg-[var(--brand-primary)] text-white"
-              : "text-[var(--color-text-muted)] hover:text-[var(--brand-primary)]",
+            "inline-flex h-7 items-center justify-center rounded-full px-2 text-[11px] transition",
+            mode === v ? "bg-white text-[var(--brand-primary-dark)]" : "hover:bg-white/10",
           )}
+          aria-label={label}
         >
           <Icon size={12} />
         </button>
@@ -89,27 +81,16 @@ function ThemeSwitch({ compact = false }: { compact?: boolean }) {
 }
 
 export function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const [commOpen, setCommOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { lang, setLang } = useLanguage();
   const { user, signOut, roles } = useAuth();
   const navigate = useNavigate();
-  const handleLogout = async () => { await signOut(); navigate({ to: "/" }); };
   const isProAccount = isProfessionalAccount(roles);
   const accountHomePath = getAccountHomePath(roles);
   const accountHomeLabel = isProAccount ? "Tableau de bord" : "Mon compte";
-  const { itemCount } = useCart();
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => {
@@ -117,317 +98,127 @@ export function Navbar() {
     };
   }, [open]);
 
-  const linkClass = (to: string) =>
-    cn(
-      "relative whitespace-nowrap text-[11px] font-semibold transition-colors py-2 xl:text-[12px]",
-      pathname === to
-        ? "text-[var(--brand-primary)]"
-        : "text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)]",
-      "after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:bg-[var(--brand-primary)] after:transition-all",
-      pathname === to ? "after:w-full" : "after:w-0 hover:after:w-full",
-    );
+  const logout = async () => {
+    await signOut();
+    navigate({ to: "/" });
+  };
+
+  const linkClass = (to: string) => cn(
+    "inline-flex items-center border-b-3 px-1 py-4 text-[12px] font-semibold transition",
+    pathname === to
+      ? "border-[var(--brand-gold)] text-white"
+      : "border-transparent text-white/85 hover:text-white hover:border-white/25",
+  );
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-50 backdrop-blur-md border-b transition-shadow",
-        "bg-[var(--color-surface)]",
-        scrolled ? "shadow-iwosan-sm border-[var(--brand-border-light)]" : "border-transparent",
-      )}
-    >
-      <div className="container-iwosan relative flex h-[72px] min-w-0 items-center justify-between gap-2 lg:h-[82px] lg:gap-3">
-        <Link to="/" className="group flex shrink-0 items-center gap-2">
-          <div className="w-9 h-9 shrink-0 rounded-lg bg-[var(--brand-primary)] flex items-center justify-center text-white">
-            <Leaf size={18} />
-          </div>
-          <div className="leading-none min-w-0">
-            <div className="font-extrabold text-[20px] tracking-tight text-[var(--brand-primary)]">
-              IWOSAN
+    <header className="sticky top-0 z-50">
+      <div className="bg-[var(--brand-primary-dark)] text-white">
+        <div className="container-iwosan flex h-14 items-center justify-between gap-4 text-white">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-white">
+              <Leaf size={18} />
             </div>
-            <div className="hidden mt-0.5 max-w-[118px] leading-[1.05] text-[var(--color-text-muted)] lg:block">
-              <span className="block text-[8px]">Savoirs africains</span>
-              <span className="block text-[8px]">document&eacute;s et vivants</span>
+            <div className="leading-tight">
+              <div className="text-[18px] font-extrabold tracking-[0.14em]">IWOSAN</div>
+              <div className="hidden text-[11px] text-white/75 sm:block">Savoirs africains documentés</div>
             </div>
-          </div>
-        </Link>
-
-        <nav className="hidden min-w-0 flex-1 flex-nowrap items-center justify-center gap-x-1 lg:flex xl:gap-x-1.5">
-          {navLinks.map((l) => (
-            <Link key={l.to} to={l.to} className={linkClass(l.to)}>
-              {l.label}
-            </Link>
-          ))}
-          <div
-            className="relative"
-            onMouseEnter={() => setCommOpen(true)}
-            onMouseLeave={() => setCommOpen(false)}
-          >
-            <button
-              className={cn(
-                "inline-flex items-center gap-1 whitespace-nowrap py-2 text-[0px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)]",
-              )}
-              aria-label={displayLabels.community}
-            >
-              <span className="text-[11px] xl:text-[12px]">{displayLabels.community}</span>
-              <ChevronDown size={14} />
-            </button>
-            <div
-              className={cn(
-                "absolute top-full left-1/2 -translate-x-1/2 mt-1 w-60 bg-[var(--color-surface)] rounded-[12px] shadow-iwosan-lg border border-[var(--brand-border-light)] p-2 transition-all duration-200 origin-top",
-                commOpen
-                  ? "opacity-100 translate-y-0 pointer-events-auto"
-                  : "opacity-0 -translate-y-2 pointer-events-none",
-              )}
-            >
-              {communityLinks.map((l) => (
-                <Link
-                  key={l.to}
-                  to={l.to}
-                  className="block px-3 py-2 rounded-md text-[14px] text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)]"
-                >
-                  {l.label}
+          </Link>
+          <div className="hidden items-center gap-3 md:flex">
+            <div className="rounded-full border border-white/20 px-0.5 py-0.5 text-[11px] font-semibold">
+              <button onClick={() => setLang("fr")} className={cn("rounded-full px-2 py-1", lang === "fr" && "bg-white text-[var(--brand-primary-dark)]")}>FR</button>
+              <button onClick={() => setLang("en")} className={cn("rounded-full px-2 py-1", lang === "en" && "bg-white text-[var(--brand-primary-dark)]")}>EN</button>
+            </div>
+            <ThemeSwitch />
+            {user ? (
+              <>
+                <Link to={accountHomePath} className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-[12px] font-semibold hover:bg-white/10">
+                  <LogOut size={14} /> {accountHomeLabel}
                 </Link>
-              ))}
-            </div>
-          </div>
-          {tailLinks.map((l) => (
-            <Link key={l.to} to={l.to} className={linkClass(l.to)}>
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* Desktop actions */}
-        <div className="hidden shrink-0 items-center gap-1.5 xl:flex">
-          <div className="flex items-center gap-0.5 text-[10px] font-semibold border border-[var(--brand-border)] rounded-full px-0.5 py-0.5">
-            <button
-              onClick={() => setLang("fr")}
-              aria-pressed={lang === "fr"}
-              className={cn(
-                "px-1 py-0.5 rounded-full transition active:scale-95",
-                lang === "fr"
-                  ? "bg-[var(--brand-primary)] text-white"
-                  : "text-[var(--color-text-muted)] hover:text-[var(--brand-primary)]",
-              )}
-            >
-              FR
-            </button>
-            <button
-              onClick={() => setLang("en")}
-              aria-pressed={lang === "en"}
-              className={cn(
-                "px-1 py-0.5 rounded-full transition active:scale-95",
-                lang === "en"
-                  ? "bg-[var(--brand-primary)] text-white"
-                  : "text-[var(--color-text-muted)] hover:text-[var(--brand-primary)]",
-              )}
-            >
-              EN
-            </button>
-          </div>
-
-          <ThemeSwitch />
-          <NotificationBell compact />
-
-          <Link
-            to="/panier"
-            className="relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--brand-border)] text-[var(--color-text-secondary)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
-            aria-label="Panier"
-          >
-            <ShoppingCart size={14} />
-            {itemCount > 0 && (
-              <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[var(--brand-gold)] px-1 text-[9px] font-bold text-[var(--color-text-primary)]">
-                {itemCount}
-              </span>
+                <button onClick={logout} className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-[12px] font-semibold hover:bg-white/10">
+                  <LogOut size={14} /> Déconnexion
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/connexion" className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] font-semibold hover:bg-white/10">
+                  <LogIn size={14} /> Se connecter
+                </Link>
+                <Link to="/inscription" className="inline-flex items-center gap-2 rounded-full bg-[var(--brand-gold)] px-4 py-2 text-[12px] font-semibold text-white">
+                  <UserPlus size={14} /> S'inscrire
+                </Link>
+              </>
             )}
-          </Link>
-
-          {user ? (
-            <>
-              <Link to={accountHomePath as never} className="inline-flex items-center gap-1 whitespace-nowrap text-[12px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] active:scale-95 transition xl:text-[13px]">
-                <LayoutDashboard size={16} /> {accountHomeLabel}
-              </Link>
-              <button onClick={handleLogout} className="h-9 px-3 inline-flex items-center gap-1 rounded-full border border-[var(--brand-border)] text-[0px] font-semibold hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] active:scale-95 transition">
-                <span className="text-[12px] xl:text-[13px]">{displayLabels.logout}</span>
-                <LogOut size={15} />
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/connexion" className="whitespace-nowrap text-[12px] font-semibold text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)] active:scale-95 transition xl:text-[13px]">
-                Se connecter
-              </Link>
-              <Link to="/inscription" className="h-9 px-3 inline-flex items-center rounded-full bg-[var(--brand-primary)] text-white text-[12px] font-semibold hover:bg-[var(--brand-primary-dark)] active:scale-95 transition shadow-iwosan-sm xl:text-[13px]">
-                S'inscrire
-              </Link>
-            </>
-          )}
+          </div>
         </div>
+      </div>
 
-        {/* Mobile compact actions: theme + hamburger always visible */}
-        <div className="ml-auto flex shrink-0 items-center gap-2 xl:hidden">
-          <div className="hidden sm:block lg:hidden">
-            <NotificationBell />
-          </div>
-          <Link
-            to="/panier"
-            className="relative hidden h-10 w-10 items-center justify-center rounded-full border border-[var(--brand-border)] sm:inline-flex lg:hidden"
-            aria-label="Panier"
-          >
-            <ShoppingCart size={17} />
-            {itemCount > 0 && (
-              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[var(--brand-gold)] px-1 text-[10px] font-bold">
-                {itemCount}
+      <div className="border-b-[3px] border-[var(--brand-gold)] bg-[var(--brand-primary)] text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)]">
+        <div className="container-iwosan flex h-14 items-center justify-between gap-4 overflow-x-auto">
+          <nav className="hidden items-center gap-5 lg:flex">
+            {mainLinks.map((link, idx) => (
+              <span key={link.to} className="flex items-center gap-5">
+                {idx > 0 && idx !== 3 && idx !== 7 && idx !== 10 && <span className="h-5 w-px bg-white/12" />}
+                <Link to={link.to} className={linkClass(link.to)}>{link.label}</Link>
               </span>
-            )}
-          </Link>
-          {user ? (
-            <Link to={accountHomePath as never} className="hidden h-10 items-center gap-1.5 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white shadow-iwosan-sm transition active:scale-95 sm:inline-flex lg:hidden" aria-label={accountHomeLabel}>
-              <LayoutDashboard size={15} /> Espace
-            </Link>
-          ) : (
-            <Link
-              to="/inscription"
-              className="hidden h-10 items-center rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white shadow-iwosan-sm transition active:scale-95 sm:inline-flex lg:hidden"
-              aria-label="S'inscrire"
-            >
-              S'inscrire
-            </Link>
-          )}
+            ))}
+          </nav>
           <button
-            className="absolute right-4 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-md text-[var(--color-text-primary)] transition hover:bg-[var(--brand-surface-alt)] active:scale-95 xl:static xl:translate-y-0"
-            onClick={() => setOpen(!open)}
-            aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
-            aria-expanded={open}
+            type="button"
+            className="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/8 text-white lg:hidden"
+            onClick={() => setOpen(true)}
+            aria-label="Ouvrir le menu"
           >
-            {open ? <X size={24} /> : <Menu size={24} />}
+            <Menu size={24} />
           </button>
         </div>
       </div>
 
-      {/* Mobile drawer */}
-      <div
-        className={cn(
-          "fixed inset-0 z-[999] xl:hidden transition-opacity",
-          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
-        )}
-      >
-        <div
-          className="absolute inset-0 bg-black/65"
-          onClick={() => setOpen(false)}
-        />
-        <div
-          className={cn(
-            "absolute inset-y-0 right-0 flex w-[88vw] max-w-[330px] flex-col border-l border-[#eadfce] bg-white text-[#1f2933] shadow-2xl opacity-100 transition-transform duration-300",
-            open ? "translate-x-0" : "translate-x-full",
-          )}
-        >
-          {/* Account actions */}
-          <div className="p-3 border-b border-[#eadfce] bg-[#faf7ef] shrink-0">
-            <div className="mb-2 flex justify-end">
-              <button
-                onClick={() => setOpen(false)}
-                aria-label="Fermer"
-                className="w-8 h-8 inline-flex items-center justify-center rounded-md hover:bg-white active:scale-95 transition"
-              >
-                <X size={20} />
-              </button>
+      <div className={cn("fixed inset-0 z-[100] lg:hidden transition-opacity", open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0")}>
+        <div className="absolute inset-0 bg-black/70" onClick={() => setOpen(false)} />
+        <aside className={cn("absolute right-0 top-0 h-full w-[88vw] max-w-sm bg-[var(--brand-primary)] text-white shadow-2xl transition-transform", open ? "translate-x-0" : "translate-x-full")}>
+          <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+            <div>
+              <div className="text-[18px] font-extrabold tracking-[0.14em]">IWOSAN</div>
+              <div className="text-[11px] text-white/70">Savoirs africains documentés</div>
             </div>
-            {user ? (
-              <div className="grid grid-cols-2 gap-2">
-                <Link to={accountHomePath as never} className="h-9 inline-flex items-center justify-center gap-1 rounded-full bg-[var(--brand-primary)] text-white font-semibold text-[12px] active:scale-95 transition hover:bg-[var(--brand-primary-dark)]">
-                  <LayoutDashboard size={16} /> Mon espace
-                </Link>
-                <button onClick={handleLogout} className="h-9 inline-flex items-center justify-center gap-1 rounded-full border border-[var(--brand-border)] text-[0px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition hover:border-red-400 hover:text-red-600">
-                  <span className="text-[12px]">{displayLabels.logout}</span>
-                  <LogOut size={16} />
-                </button>
+            <button onClick={() => setOpen(false)} className="grid h-10 w-10 place-items-center rounded-full bg-white/10">
+              <X size={22} />
+            </button>
+          </div>
+          <div className="h-[calc(100%-64px)] overflow-y-auto px-5 py-5">
+            <div className="space-y-5">
+              {groupedMobileLinks.map((group) => (
+                <div key={group.label}>
+                  <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-white/55">{group.label}</p>
+                  <div className="space-y-2">
+                    {group.items.map((item) => (
+                      <Link key={item.to} to={item.to} className="block rounded-xl border border-white/8 bg-white/5 px-4 py-3 text-[14px] font-semibold" onClick={() => setOpen(false)}>
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8 space-y-3 border-t border-white/10 pt-5">
+              <div className="flex items-center gap-2 text-[12px]">
+                <button onClick={() => setLang("fr")} className={cn("rounded-full border border-white/15 px-3 py-2", lang === "fr" && "bg-white text-[var(--brand-primary-dark)]")}>FR</button>
+                <button onClick={() => setLang("en")} className={cn("rounded-full border border-white/15 px-3 py-2", lang === "en" && "bg-white text-[var(--brand-primary-dark)]")}>EN</button>
               </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                <Link to="/connexion" className="h-9 inline-flex items-center justify-center gap-1 rounded-full border border-[#c9b99d] bg-white text-[#1f2933] font-semibold text-[12px] shadow-sm active:scale-95 transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]">
-                  <LogIn size={16} /> Se connecter
-                </Link>
-                <Link to="/inscription" className="h-9 inline-flex items-center justify-center gap-1 rounded-full bg-[var(--brand-primary)] text-white font-semibold text-[12px] active:scale-95 transition hover:bg-[var(--brand-primary-dark)]">
-                  <UserPlus size={16} /> S'inscrire
-                </Link>
-              </div>
-            )}
-            <div className="mt-3 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1 text-[12px] font-semibold border border-[var(--brand-border)] rounded-full p-1 bg-[var(--color-surface)]">
-                <button
-                  onClick={() => setLang("fr")}
-                  className={cn(
-                    "px-3 py-0.5 rounded-full transition",
-                    lang === "fr"
-                      ? "bg-[var(--brand-primary)] text-white"
-                      : "text-[var(--color-text-muted)]",
-                  )}
-                >
-                  FR
-                </button>
-                <button
-                  onClick={() => setLang("en")}
-                  className={cn(
-                    "px-3 py-0.5 rounded-full transition",
-                    lang === "en"
-                      ? "bg-[var(--brand-primary)] text-white"
-                      : "text-[var(--color-text-muted)]",
-                  )}
-                >
-                  EN
-                </button>
-              </div>
-              <ThemeSwitch />
+              {user ? (
+                <>
+                  <Link to={accountHomePath} className="block w-full rounded-full border border-white/15 px-4 py-3 text-center font-semibold" onClick={() => setOpen(false)}>{accountHomeLabel}</Link>
+                  <button onClick={logout} className="w-full rounded-full bg-white px-4 py-3 font-semibold text-[var(--brand-primary-dark)]">Déconnexion</button>
+                </>
+              ) : (
+                <>
+                  <Link to="/connexion" className="block w-full rounded-full border border-white/15 px-4 py-3 text-center font-semibold" onClick={() => setOpen(false)}>Se connecter</Link>
+                  <Link to="/inscription" className="block w-full rounded-full bg-[var(--brand-gold)] px-4 py-3 text-center font-semibold text-white" onClick={() => setOpen(false)}>S'inscrire</Link>
+                </>
+              )}
             </div>
           </div>
-
-          <nav className="flex shrink-0 flex-col gap-0.5 bg-white px-3 py-2 text-left">
-            {[...navLinks, ...communityLinks, ...tailLinks].map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                className={cn(
-                  "flex min-h-9 w-full items-center justify-start rounded-md px-3 text-left text-[14px] font-semibold transition active:scale-[0.98]",
-                  pathname === l.to
-                    ? "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]"
-                    : "text-[var(--color-text-primary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)]",
-                )}
-              >
-                {l.label}
-              </Link>
-            ))}
-          </nav>
-
-          {user && (
-            <>
-              <div className="h-px bg-[#eadfce]" />
-
-              <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain bg-white px-3 py-2 pb-5 text-left">
-                {accountLinks.map((l) => (
-                  <Link
-                    key={l.to}
-                    to={l.to}
-                    className={cn(
-                      "flex min-h-9 w-full items-center justify-start rounded-md px-3 text-left text-[14px] font-semibold transition active:scale-[0.98]",
-                      pathname === l.to
-                        ? "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]"
-                        : "text-[var(--color-text-secondary)] hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)]",
-                    )}
-                  >
-                    {l.label}
-                  </Link>
-                ))}
-                <Link
-                  to="/mon-compte/notifications"
-                  className="flex min-h-9 w-full items-center justify-start rounded-md px-3 text-left text-[14px] font-semibold text-[var(--color-text-secondary)] transition hover:bg-[var(--brand-primary-subtle)] hover:text-[var(--brand-primary)] active:scale-[0.98]"
-                >
-                  Notifications
-                </Link>
-              </nav>
-            </>
-          )}
-        </div>
+        </aside>
       </div>
     </header>
   );

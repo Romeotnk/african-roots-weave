@@ -27,11 +27,11 @@ export function SectionHeader({
           <div
             className={cn("flex items-center gap-3 mb-3", align === "center" && "justify-center")}
           >
-            <span className="h-px w-8 bg-[var(--brand-gold)]" />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--brand-gold)]">
+            <span className="h-px w-8 bg-[var(--brand-primary)]" />
+            <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--brand-primary)]">
               {label}
             </span>
-            <span className="h-px w-8 bg-[var(--brand-gold)]" />
+            <span className="h-px w-8 bg-[var(--brand-primary)]" />
           </div>
         )}
         <h2
@@ -57,3 +57,4 @@ export function SectionHeader({
     </div>
   );
 }
+

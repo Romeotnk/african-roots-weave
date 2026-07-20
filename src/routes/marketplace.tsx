@@ -11,7 +11,6 @@ import { getProducts } from "@/lib/api/catalog";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { useCart } from "@/cart/CartContext";
 import {
   Dialog,
   DialogContent,
@@ -57,7 +56,6 @@ function Marketplace() {
   const [error, setError] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [locationMessage, setLocationMessage] = useState("");
-  const { addItem } = useCart();
   const debouncedSearch = useDebounce(search, 300);
 
   const query = useMemo(() => {
@@ -620,7 +618,7 @@ function Marketplace() {
                   {selectedProduct.location && <p>Lieu : {selectedProduct.location}{selectedProduct.country ? `, ${selectedProduct.country}` : ""}</p>}
                   <RatingStars rating={selectedProduct.rating} reviewCount={selectedProduct.reviewCount} />
                   <div className="grid gap-2 sm:grid-cols-2">
-                    <button type="button" onClick={() => addItem(selectedProduct)} className="h-10 rounded-full bg-[var(--brand-primary)] font-semibold text-white">Ajouter au panier</button>
+                    <button type="button" onClick={() => { if (!selectedProduct) return; const sellerId = selectedProduct.sellerProfileId ?? selectedProduct.sellerId; const sellerProfileUrl = sellerId ? "/pro/" + sellerId : "/annuaire"; const message = `Bonjour, je souhaite réserver ce produit : ${selectedProduct.title}. Pouvez-vous me donner plus d'informations ?`; window.location.href = `${sellerProfileUrl}?message=${encodeURIComponent(message)}&product=${encodeURIComponent(selectedProduct.title)}`; }} className="h-10 rounded-full bg-[var(--brand-primary)] font-semibold text-white">Réserver ce produit</button>
                     <button type="button" onClick={() => setSelectedProduct(null)} className="h-10 rounded-full border border-[var(--brand-border)] font-semibold">Fermer</button>
                   </div>
                 </div>
