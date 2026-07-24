@@ -220,6 +220,7 @@ export const kycApprove = asyncHandler(async (req, res) => {
     where: { id: req.params.id },
     data: { kycStatus: "VERIFIED" },
   });
+  await writeAuditLog(req, { action: "KYC_APPROVED", targetId: user.id, targetType: "User" });
   res.json(apiResponse(true, user, "KYC approved"));
 });
 
@@ -227,6 +228,12 @@ export const kycReject = asyncHandler(async (req, res) => {
   const user = await prisma.user.update({
     where: { id: req.params.id },
     data: { kycStatus: "REJECTED" },
+  });
+  await writeAuditLog(req, {
+    action: "KYC_REJECTED",
+    targetId: user.id,
+    targetType: "User",
+    metadata: { reason: req.body.reason },
   });
   res.json(apiResponse(true, user, "KYC rejected"));
 });
@@ -249,6 +256,7 @@ export const approveProduct = asyncHandler(async (req, res) => {
     where: { id: req.params.id },
     data: { isApproved: true, isActive: true },
   });
+  await writeAuditLog(req, { action: "PRODUCT_APPROVED", targetId: product.id, targetType: "Product" });
   res.json(apiResponse(true, product, "Product approved"));
 });
 
@@ -256,6 +264,12 @@ export const rejectProduct = asyncHandler(async (req, res) => {
   const product = await prisma.product.update({
     where: { id: req.params.id },
     data: { isApproved: false, isActive: false },
+  });
+  await writeAuditLog(req, {
+    action: "PRODUCT_REJECTED",
+    targetId: product.id,
+    targetType: "Product",
+    metadata: { reason: req.body.reason },
   });
   res.json(apiResponse(true, product, "Product rejected"));
 });
@@ -278,6 +292,7 @@ export const approveArticle = asyncHandler(async (req, res) => {
     where: { id: req.params.id },
     data: { isApproved: true },
   });
+  await writeAuditLog(req, { action: "ARTICLE_APPROVED", targetId: article.id, targetType: "Article" });
   res.json(apiResponse(true, article, "Article approved"));
 });
 
@@ -285,6 +300,12 @@ export const rejectArticle = asyncHandler(async (req, res) => {
   const article = await prisma.article.update({
     where: { id: req.params.id },
     data: { isApproved: false, isPublished: false },
+  });
+  await writeAuditLog(req, {
+    action: "ARTICLE_REJECTED",
+    targetId: article.id,
+    targetType: "Article",
+    metadata: { reason: req.body.reason },
   });
   res.json(apiResponse(true, article, "Article rejected"));
 });
@@ -302,6 +323,7 @@ export const verifyProfessional = asyncHandler(async (req, res) => {
     where: { id: req.params.id },
     data: { isVerified: true, verifiedAt: new Date() },
   });
+  await writeAuditLog(req, { action: "PROFESSIONAL_VERIFIED", targetId: profile.id, targetType: "ProfessionalProfile" });
   res.json(apiResponse(true, profile, "Professional verified"));
 });
 

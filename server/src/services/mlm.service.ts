@@ -1,10 +1,12 @@
 import { CommissionType, Prisma } from "@prisma/client";
 import { prisma } from "../config/db.js";
-
-const mlmRates = [0.03, 0.02, 0.01] as const;
+import { getCommissionRates } from "../utils/commissionConfig.js";
 
 export const calculateOrderCommissions = async (orderId: string) =>
   prisma.$transaction(async (tx) => {
+    const rates = await getCommissionRates(tx);
+    const mlmRates = [rates.level1, rates.level2, rates.level3];
+
     const order = await tx.order.findUnique({
       where: { id: orderId },
       select: {

@@ -9,12 +9,25 @@ import { EventCard } from "@/components/shared/EventCard";
 import { products } from "@/data/products";
 import { professionals } from "@/data/professionals";
 import { events } from "@/data/events";
+import { getSiteConfig } from "@/lib/api/site";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
+  loader: async () => {
+    try {
+      const response = await getSiteConfig();
+      return response.data ?? {};
+    } catch {
+      return {};
+    }
+  },
+  head: ({ loaderData }) => ({
     meta: [
-      { title: "IWOSAN - Plateforme panafricaine" },
-      { name: "description", content: "Le savoir endogène africain, documenté, transmis, vivant." },
+      { title: loaderData?.["site.home.metaTitle"] || "IWOSAN - Plateforme panafricaine" },
+      {
+        name: "description",
+        content: loaderData?.["site.home.metaDescription"] || "Le savoir endogène africain, documenté, transmis, vivant.",
+      },
     ],
   }),
   component: Home,
@@ -172,9 +185,16 @@ function Home() {
   const featuredProducts = products.slice(0, 4);
   const featuredProfessionals = professionals.slice(0, 4);
   const featuredEvents = events.slice(0, 3);
+  const siteConfigQuery = useSiteConfig();
+  const announcement = siteConfigQuery.data?.data?.["site.home.announcement"]?.trim();
 
   return (
     <>
+      {announcement && (
+        <div className="bg-[var(--brand-gold)] px-4 py-2.5 text-center text-[13px] font-semibold text-[var(--brand-primary-dark)]">
+          {announcement}
+        </div>
+      )}
       <HeroCarousel />
       <section className="py-20 md:py-24 bg-[var(--brand-surface-alt)]">
         <div className="container-iwosan">

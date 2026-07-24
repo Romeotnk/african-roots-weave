@@ -1,11 +1,15 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { cmsPages } from "@/data/pages";
+import { getSitePage } from "@/lib/api/site";
 
 export const Route = createFileRoute("/$slug")({
-  loader: ({ params }) => {
-    const page = cmsPages.find((item) => item.slug === params.slug && item.isPublished);
-    if (!page) throw notFound();
-    return page;
+  loader: async ({ params }) => {
+    try {
+      const response = await getSitePage(params.slug);
+      if (!response.data) throw notFound();
+      return response.data;
+    } catch {
+      throw notFound();
+    }
   },
   head: ({ loaderData }) => ({
     meta: [

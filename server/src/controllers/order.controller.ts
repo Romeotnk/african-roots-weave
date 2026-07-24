@@ -3,8 +3,7 @@ import { prisma } from "../config/db.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
-
-const defaultCommissionRate = 0.1;
+import { getCommissionRates } from "../utils/commissionConfig.js";
 
 export const listMyOrders = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
@@ -59,7 +58,8 @@ export const createOrder = asyncHandler(async (req, res) => {
       throw new ApiError(400, "Insufficient stock");
 
     const totalAmount = product.price.mul(quantity);
-    const commissionRate = product.commissionRate ?? defaultCommissionRate;
+    const rates = await getCommissionRates(tx);
+    const commissionRate = product.commissionRate ?? rates.global;
     const commissionAmount = totalAmount.mul(commissionRate);
 
     const created = await tx.order.create({

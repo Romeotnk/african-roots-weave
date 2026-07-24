@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -268,13 +269,15 @@ model Coupon {
 }
 
 model Review {
-  id         String       @id @default(cuid())
-  authorId   String
-  targetId   String
-  targetType ReviewTarget
-  rating     Int
-  comment    String?      @db.Text
-  createdAt  DateTime     @default(now())
+  id           String       @id @default(cuid())
+  authorId     String
+  targetId     String
+  targetType   ReviewTarget
+  rating       Int
+  comment      String?      @db.Text
+  isHidden     Boolean      @default(false)
+  hiddenReason String?
+  createdAt    DateTime     @default(now())
 
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
@@ -406,6 +409,7 @@ model ForumComment {
   targetId   String
   targetType String
   content    String   @db.Text
+  isHidden   Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 

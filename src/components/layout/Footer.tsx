@@ -1,7 +1,34 @@
 ﻿import { Link } from "@tanstack/react-router";
 import { Facebook, Twitter, Instagram, Linkedin, Youtube, Leaf } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNewsletterSubscription } from "@/hooks/useNewsletterApi";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+
+const parseMenuLinks = (value: string | undefined): { to: string; label: string }[] | null => {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
+const defaultFooterNav = [
+  { to: "/", label: "Accueil" },
+  { to: "/marketplace", label: "Marketplace" },
+  { to: "/annuaire", label: "Annuaire" },
+  { to: "/agenda", label: "Agenda" },
+  { to: "/formations", label: "Formations" },
+];
+
+const defaultFooterEspaces = [
+  { to: "/pharmacopee", label: "Pharmacopée vivante" },
+  { to: "/rites-cultures", label: "Rites & Cultures" },
+  { to: "/sante-quotidien", label: "Santé au quotidien" },
+  { to: "/recettes-sante", label: "Recettes santé" },
+  { to: "/discutons-en", label: "Discutons-en" },
+];
 
 const colTitle = "text-white text-[11px] font-semibold uppercase tracking-[0.1em] mb-5";
 const link =
@@ -20,6 +47,15 @@ export function Footer() {
   const [subscribed, setSubscribed] = useState(false);
   const [subscriptionError, setSubscriptionError] = useState("");
   const newsletter = useNewsletterSubscription();
+  const siteConfigQuery = useSiteConfig();
+  const footerNav = useMemo(
+    () => parseMenuLinks(siteConfigQuery.data?.data?.["site.menus.footerNav"]) ?? defaultFooterNav,
+    [siteConfigQuery.data],
+  );
+  const footerEspaces = useMemo(
+    () => parseMenuLinks(siteConfigQuery.data?.data?.["site.menus.footerEspaces"]) ?? defaultFooterEspaces,
+    [siteConfigQuery.data],
+  );
 
   return (
     <footer className="bg-[var(--brand-primary-dark)] text-white">
@@ -53,19 +89,15 @@ export function Footer() {
           </div>
           <div>
             <h4 className={colTitle}>Navigation</h4>
-            <Link className={link} to="/">Accueil</Link>
-            <Link className={link} to="/marketplace">Marketplace</Link>
-            <Link className={link} to="/annuaire">Annuaire</Link>
-            <Link className={link} to="/agenda">Agenda</Link>
-            <Link className={link} to="/formations">Formations</Link>
+            {footerNav.map((item) => (
+              <Link key={item.to} className={link} to={item.to}>{item.label}</Link>
+            ))}
           </div>
           <div>
             <h4 className={colTitle}>Nos Espaces</h4>
-            <Link className={link} to="/pharmacopee">Pharmacopée vivante</Link>
-            <Link className={link} to="/rites-cultures">Rites & Cultures</Link>
-            <Link className={link} to="/sante-quotidien">Santé au quotidien</Link>
-            <Link className={link} to="/recettes-sante">Recettes santé</Link>
-            <Link className={link} to="/discutons-en">Discutons-en</Link>
+            {footerEspaces.map((item) => (
+              <Link key={item.to} className={link} to={item.to}>{item.label}</Link>
+            ))}
           </div>
           <div>
             <h4 className={colTitle}>Contact & Légal</h4>

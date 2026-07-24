@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Menu, X, Leaf, Sun, Moon, LogOut, LogIn, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -6,6 +6,17 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useTheme, type ThemeMode } from "@/components/ThemeProvider";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { getAccountHomePath, isProfessionalAccount } from "@/lib/auth/roles";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+
+const parseMenuLinks = (value: string | undefined): { to: string; label: string }[] | null => {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+};
 
 const mainLinks = [
   { to: "/", label: "Accueil" },
@@ -90,6 +101,13 @@ export function Navbar() {
   const accountHomePath = getAccountHomePath(roles);
   const accountHomeLabel = isProAccount ? "Tableau de bord" : "Mon compte";
 
+  const siteConfigQuery = useSiteConfig();
+  const customHeaderLinks = useMemo(
+    () => parseMenuLinks(siteConfigQuery.data?.data?.["site.menus.header"]),
+    [siteConfigQuery.data],
+  );
+  const navLinks = customHeaderLinks ?? mainLinks;
+
   useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -155,12 +173,15 @@ export function Navbar() {
       <div className="border-b-[3px] border-[var(--brand-gold)] bg-[var(--brand-primary)] text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)]">
         <div className="container-iwosan flex h-14 items-center justify-between gap-4 overflow-x-auto">
           <nav className="hidden items-center gap-5 lg:flex">
-            {mainLinks.map((link, idx) => (
-              <span key={link.to} className="flex items-center gap-5">
-                {idx > 0 && idx !== 3 && idx !== 7 && idx !== 10 && <span className="h-5 w-px bg-white/12" />}
-                <Link to={link.to} className={linkClass(link.to)}>{link.label}</Link>
-              </span>
-            ))}
+            {navLinks.map((link, idx) => {
+              const showSeparator = customHeaderLinks ? idx > 0 : idx > 0 && idx !== 3 && idx !== 7 && idx !== 10;
+              return (
+                <span key={link.to} className="flex items-center gap-5">
+                  {showSeparator && <span className="h-5 w-px bg-white/12" />}
+                  <Link to={link.to} className={linkClass(link.to)}>{link.label}</Link>
+                </span>
+              );
+            })}
           </nav>
           <button
             type="button"
@@ -187,18 +208,31 @@ export function Navbar() {
           </div>
           <div className="h-[calc(100%-64px)] overflow-y-auto px-5 py-5">
             <div className="space-y-5">
-              {groupedMobileLinks.map((group) => (
-                <div key={group.label}>
-                  <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-white/55">{group.label}</p>
+              {customHeaderLinks ? (
+                <div>
+                  <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-white/55">MENU</p>
                   <div className="space-y-2">
-                    {group.items.map((item) => (
+                    {customHeaderLinks.map((item) => (
                       <Link key={item.to} to={item.to} className="block rounded-xl border border-white/8 bg-white/5 px-4 py-3 text-[14px] font-semibold" onClick={() => setOpen(false)}>
                         {item.label}
                       </Link>
                     ))}
                   </div>
                 </div>
-              ))}
+              ) : (
+                groupedMobileLinks.map((group) => (
+                  <div key={group.label}>
+                    <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-white/55">{group.label}</p>
+                    <div className="space-y-2">
+                      {group.items.map((item) => (
+                        <Link key={item.to} to={item.to} className="block rounded-xl border border-white/8 bg-white/5 px-4 py-3 text-[14px] font-semibold" onClick={() => setOpen(false)}>
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
             <div className="mt-8 space-y-3 border-t border-white/10 pt-5">
               <div className="flex items-center gap-2 text-[12px]">

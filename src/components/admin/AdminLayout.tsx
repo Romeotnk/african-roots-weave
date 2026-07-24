@@ -18,15 +18,23 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useAuth, type AppRole } from "@/lib/auth/AuthContext";
 
-const navGroups = [
+type NavLink = { to: string; label: string; icon: typeof LayoutDashboard; roles?: AppRole[] };
+type NavGroup = { label: string; roles?: AppRole[]; links: NavLink[] };
+
+// `roles` restricts a link to the roles listed (lowercase, matching useAuth().roles).
+// Omitting `roles` means "visible to any admin-panel role". Kept in sync with the
+// backend's own checkRole() gates so the menu never promises an action a role
+// can't actually perform.
+const navGroups: NavGroup[] = [
   {
     label: "Tableau de bord",
     links: [{ to: "/admin", label: "Vue d'ensemble", icon: LayoutDashboard }],
   },
   {
     label: "Site & apparence",
+    roles: ["super_admin"],
     links: [
       { to: "/admin/site/accueil", label: "Accueil", icon: Home },
       { to: "/admin/site/menus", label: "Menus", icon: Menu },
@@ -38,19 +46,19 @@ const navGroups = [
   {
     label: "Opérations",
     links: [
-      { to: "/admin/contenus", label: "Contenus", icon: FileText },
-      { to: "/admin/marketplace", label: "Marketplace", icon: Store },
-      { to: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
-      { to: "/admin/finances", label: "Finances", icon: CreditCard },
+      { to: "/admin/contenus", label: "Contenus", icon: FileText, roles: ["super_admin", "admin", "editor"] },
+      { to: "/admin/marketplace", label: "Marketplace", icon: Store, roles: ["super_admin", "admin"] },
+      { to: "/admin/utilisateurs", label: "Utilisateurs", icon: Users, roles: ["super_admin", "admin", "moderator"] },
+      { to: "/admin/finances", label: "Finances", icon: CreditCard, roles: ["super_admin", "admin"] },
     ],
   },
   {
     label: "Communication",
     links: [
       { to: "/admin/communication", label: "Communication", icon: MessageSquare },
-      { to: "/admin/communaute", label: "Communauté", icon: ShieldCheck },
-      { to: "/admin/affiliation", label: "Affiliation", icon: BarChart3 },
-      { to: "/admin/logs", label: "Logs", icon: FileText },
+      { to: "/admin/communaute", label: "Communauté", icon: ShieldCheck, roles: ["super_admin", "admin", "moderator"] },
+      { to: "/admin/affiliation", label: "Affiliation", icon: BarChart3, roles: ["super_admin", "admin"] },
+      { to: "/admin/logs", label: "Logs", icon: FileText, roles: ["super_admin"] },
     ],
   },
 ];
@@ -59,7 +67,7 @@ export function AdminLayout({ title, description, children }: { title: string; d
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const navigate = useNavigate();
-  const { roles, signOut } = useAuth();
+  const { roles, signOut, user } = useAuth();
   const adminState = roles.some((role) => ["super_admin", "admin", "moderator", "editor"].includes(role))
     ? "admin"
     : "forbidden";
@@ -83,28 +91,34 @@ export function AdminLayout({ title, description, children }: { title: string; d
         </button>
       </div>
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        {navGroups.map((group) => (
-          <div key={group.label} className="mb-5">
-            <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-[0.14em] text-white/40">{group.label}</p>
-            <div className="space-y-1">
-              {group.links.map(({ to, label, icon: Icon }) => {
-                const active = pathname === to || (to !== "/admin" && pathname.startsWith(to));
-                return (
-                  <Link
-                    key={to}
-                    to={to}
-                    className={cn(
-                      "flex h-10 items-center gap-3 rounded-lg px-3 text-[13px] font-semibold transition",
-                      active ? "bg-emerald-500 text-[#111827]" : "text-white/75 hover:bg-white/10 hover:text-white",
-                    )}
-                  >
-                    <Icon size={16} /> {label}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+        {navGroups
+          .filter((group) => !group.roles || group.roles.some((role) => roles.includes(role)))
+          .map((group) => {
+            const links = group.links.filter((link) => !link.roles || link.roles.some((role) => roles.includes(role)));
+            if (links.length === 0) return null;
+            return (
+              <div key={group.label} className="mb-5">
+                <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-[0.14em] text-white/40">{group.label}</p>
+                <div className="space-y-1">
+                  {links.map(({ to, label, icon: Icon }) => {
+                    const active = pathname === to || (to !== "/admin" && pathname.startsWith(to));
+                    return (
+                      <Link
+                        key={to}
+                        to={to}
+                        className={cn(
+                          "flex h-10 items-center gap-3 rounded-lg px-3 text-[13px] font-semibold transition",
+                          active ? "bg-emerald-500 text-[#111827]" : "text-white/75 hover:bg-white/10 hover:text-white",
+                        )}
+                      >
+                        <Icon size={16} /> {label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
       </nav>
     </aside>
   );
@@ -142,8 +156,8 @@ export function AdminLayout({ title, description, children }: { title: string; d
                   Voir le site
                 </Link>
                 <div className="hidden text-right sm:block">
-                  <p className="text-[13px] font-bold">Admin Iwosan</p>
-                  <p className="text-[11px] text-emerald-300">ADMIN</p>
+                  <p className="text-[13px] font-bold">{user?.email ?? "Admin Iwosan"}</p>
+                  <p className="text-[11px] text-emerald-300">{roles[0]?.toUpperCase().replaceAll("_", " ") ?? "ADMIN"}</p>
                 </div>
                 <button
                   onClick={handleLogout}
@@ -178,6 +192,29 @@ export function AdminLayout({ title, description, children }: { title: string; d
 
 export function AdminCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return <div className={cn("rounded-[12px] border border-white/10 bg-white/[0.04] p-5 shadow-xl", className)}>{children}</div>;
+}
+
+export function AdminHubPage({
+  title,
+  description,
+  links,
+}: {
+  title: string;
+  description: string;
+  links: { to: string; label: string; description: string }[];
+}) {
+  return (
+    <AdminLayout title={title} description={description}>
+      <div className="grid gap-4 md:grid-cols-2">
+        {links.map((link) => (
+          <Link key={link.to} to={link.to} className="block rounded-[12px] border border-white/10 bg-white/[0.04] p-5 transition hover:border-emerald-400/40 hover:bg-white/[0.07]">
+            <p className="text-[16px] font-bold text-white">{link.label}</p>
+            <p className="mt-2 text-[13px] text-slate-400">{link.description}</p>
+          </Link>
+        ))}
+      </div>
+    </AdminLayout>
+  );
 }
 
 export function AdminTable({ headers, rows }: { headers: string[]; rows: (string | number | React.ReactNode)[][] }) {
