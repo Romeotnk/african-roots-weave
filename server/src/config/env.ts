@@ -17,6 +17,13 @@ const jwtSecretKeys = [
 const isUnsafeSecret = (value: string) =>
   value.length < 32 || value.startsWith("dev_") || value.startsWith("change-me") || value.includes("change-me");
 
+// Environments where weak/placeholder secrets are tolerated. Anything else —
+// including typos like "prod" or "Production", or an environment variable
+// that was simply never set on the host — is treated as production-grade
+// and validated strictly. This is deliberately a whitelist (fail closed),
+// not a check for the single string "production" (fail open).
+const trustedDevEnvironments = new Set(["development", "test"]);
+
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   port: Number(process.env.PORT ?? 4000),
@@ -39,18 +46,30 @@ export const env = {
   },
 };
 
+export const isTrustedDevEnvironment = () => trustedDevEnvironments.has(env.nodeEnv);
+
 export const validateEnv = () => {
-  if (env.nodeEnv !== "production") {
+  const unsafeSecrets = jwtSecretKeys.filter((key) => isUnsafeSecret(process.env[key] ?? ""));
+
+  if (!isTrustedDevEnvironment()) {
+    const missing = requiredInProduction.filter((key) => !process.env[key]);
+    if (missing.length > 0) {
+      throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
+    }
+
+    if (unsafeSecrets.length > 0) {
+      throw new Error(
+        `Unsafe JWT secret values for NODE_ENV="${env.nodeEnv}": ${unsafeSecrets.join(", ")}. ` +
+          "Use long random values (e.g. `openssl rand -hex 32`) for any non-development environment.",
+      );
+    }
     return;
   }
 
-  const missing = requiredInProduction.filter((key) => !process.env[key]);
-  if (missing.length > 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
-  }
-
-  const unsafeSecrets = jwtSecretKeys.filter((key) => isUnsafeSecret(process.env[key] ?? ""));
   if (unsafeSecrets.length > 0) {
-    throw new Error(`Unsafe JWT secret values in production: ${unsafeSecrets.join(", ")}`);
+    console.warn(
+      `[env] Weak JWT secret placeholders in use (${unsafeSecrets.join(", ")}). ` +
+        "This is fine for local development only — never deploy with these values.",
+    );
   }
 };

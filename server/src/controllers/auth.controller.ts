@@ -678,9 +678,15 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   });
 
   if (user) {
-    const token = signPasswordResetToken(user.id);
-    const resetUrl = await createPasswordReset(user.id, token);
-    await sendPasswordResetEmail(user.email, resetUrl);
+    try {
+      const token = signPasswordResetToken(user.id);
+      const resetUrl = await createPasswordReset(user.id, token);
+      await sendPasswordResetEmail(user.email, resetUrl);
+    } catch (error) {
+      // Never let an SMTP/email failure leak account existence via a 500
+      // response — always fall through to the same generic response below.
+      console.error("Password reset email failed:", error);
+    }
   }
 
   res.json(apiResponse(true, null, "If the email exists, a reset link has been sent"));

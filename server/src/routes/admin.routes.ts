@@ -58,7 +58,11 @@ adminRouter.put("/users/:id/ban", checkRole(Role.SUPER_ADMIN, Role.ADMIN, Role.M
 adminRouter.post("/users/:id/ban", checkRole(Role.SUPER_ADMIN, Role.ADMIN, Role.MODERATOR), banUser);
 adminRouter.post("/users/:id/unban", checkRole(Role.SUPER_ADMIN, Role.ADMIN), unbanUser);
 adminRouter.put("/users/:id/role", checkRole(Role.SUPER_ADMIN, Role.ADMIN), updateRole);
-adminRouter.get("/users/:id/kyc-documents", kycDocuments);
+adminRouter.get(
+  "/users/:id/kyc-documents",
+  checkRole(Role.SUPER_ADMIN, Role.ADMIN),
+  kycDocuments,
+);
 adminRouter.put("/users/:id/kyc-approve", checkRole(Role.SUPER_ADMIN, Role.ADMIN), kycApprove);
 adminRouter.put("/users/:id/kyc-reject", checkRole(Role.SUPER_ADMIN, Role.ADMIN), kycReject);
 adminRouter.get("/audit-log", checkRole(Role.SUPER_ADMIN), auditLog);
@@ -73,8 +77,16 @@ adminRouter.put("/articles/:id/reject", checkRole(Role.SUPER_ADMIN, Role.ADMIN, 
 
 // Professionals.
 adminRouter.get("/professionals/pending", pendingProfessionals);
-adminRouter.put("/professionals/:id/verify", verifyProfessional);
-adminRouter.put("/professionals/:id/portrait-of-week", portraitOfWeek);
+adminRouter.put(
+  "/professionals/:id/verify",
+  checkRole(Role.SUPER_ADMIN, Role.ADMIN),
+  verifyProfessional,
+);
+adminRouter.put(
+  "/professionals/:id/portrait-of-week",
+  checkRole(Role.SUPER_ADMIN, Role.ADMIN),
+  portraitOfWeek,
+);
 
 // Subscriptions and commissions.
 adminRouter.get("/subscriptions", checkRole(Role.SUPER_ADMIN), listSubscriptions);
@@ -92,7 +104,7 @@ adminRouter.post("/banners", createBanner);
 adminRouter.put("/banners/:id", updateBanner);
 adminRouter.delete("/banners/:id", deleteBanner);
 adminRouter.get("/config", crudList("siteConfig"));
-adminRouter.put("/config", updateConfig);
+adminRouter.put("/config", checkRole(Role.SUPER_ADMIN), updateConfig);
 adminRouter.post("/maintenance", checkRole(Role.SUPER_ADMIN), maintenance);
 adminRouter.post("/custom-css", checkRole(Role.SUPER_ADMIN), updateConfig);
 adminRouter.post("/custom-js", checkRole(Role.SUPER_ADMIN), updateConfig);
@@ -101,5 +113,5 @@ adminRouter.post("/custom-js", checkRole(Role.SUPER_ADMIN), updateConfig);
 adminRouter.get("/tickets", listTickets);
 adminRouter.put("/tickets/:id/status", updateTicketStatus);
 adminRouter.post("/tickets/:id/reply", replyTicket);
-adminRouter.post("/newsletter/send", sendNewsletter);
+adminRouter.post("/newsletter/send", checkRole(Role.SUPER_ADMIN, Role.ADMIN), sendNewsletter);
 adminRouter.get("/newsletter/subscribers", newsletterSubscribers);

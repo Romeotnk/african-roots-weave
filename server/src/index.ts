@@ -10,6 +10,14 @@ import { initSocket } from "./services/socket.service.js";
 
 validateEnv();
 
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled promise rejection:", reason);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught exception:", error);
+});
+
 const port = env.port;
 const server = http.createServer(app);
 

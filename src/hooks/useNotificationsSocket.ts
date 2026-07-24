@@ -22,11 +22,9 @@ export function useNotificationsSocket({ onNotificationNew }: UseNotificationsSo
     const socket = io(socketUrl, {
       transports: ["websocket"],
       withCredentials: true,
+      auth: { token },
     });
 
-    socket.on("connect", () => {
-      socket.emit("authenticate", token);
-    });
     socket.on("notification:new", (notification: BackendNotification) => {
       onNotificationNew?.(notification);
     });

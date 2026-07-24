@@ -9,6 +9,20 @@ import { getPagination, paginationMeta } from "../utils/pagination.js";
 
 const adminAssignableRoles: Role[] = [Role.MODERATOR, Role.EDITOR, Role.RESEARCHER];
 
+// Higher rank = more authority. SUPER_ADMIN always bypasses this check.
+// Anyone else may only act on a target strictly below their own rank, so a
+// MODERATOR can never ban/promote/demote another MODERATOR, an ADMIN, or a
+// SUPER_ADMIN.
+const roleRank: Record<Role, number> = {
+  [Role.SUPER_ADMIN]: 4,
+  [Role.ADMIN]: 3,
+  [Role.MODERATOR]: 2,
+  [Role.EDITOR]: 2,
+  [Role.RESEARCHER]: 1,
+  [Role.PROFESSIONAL]: 1,
+  [Role.USER]: 0,
+};
+
 const assertCanTouchUser = async (actorRole: Role, targetId: string) => {
   const target = await prisma.user.findUnique({
     where: { id: targetId },
@@ -16,7 +30,7 @@ const assertCanTouchUser = async (actorRole: Role, targetId: string) => {
   });
 
   if (!target) throw new ApiError(404, "User not found");
-  if (target.role === Role.SUPER_ADMIN && actorRole !== Role.SUPER_ADMIN) {
+  if (actorRole !== Role.SUPER_ADMIN && roleRank[target.role] >= roleRank[actorRole]) {
     throw new ApiError(403, "Accès non autorisé");
   }
 
@@ -91,7 +105,7 @@ export const listUsers = asyncHandler(async (req, res) => {
       skip,
       take: limit,
       orderBy: { createdAt: "desc" },
-      omit: { passwordHash: true },
+      omit: { passwordHash: true, kycDocuments: true },
     }),
     prisma.user.count({ where }),
   ]);
@@ -101,7 +115,7 @@ export const listUsers = asyncHandler(async (req, res) => {
 export const getUser = asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.params.id },
-    omit: { passwordHash: true },
+    omit: { passwordHash: true, kycDocuments: true },
     include: { professionalProfile: true, subscription: true, mlmNode: true },
   });
   res.json(apiResponse(true, user, "User retrieved"));

@@ -42,17 +42,18 @@ export function useMessagesSocket(options: UseMessagesSocketOptions = {}) {
       transports: ["websocket"],
       withCredentials: true,
       autoConnect: true,
+      auth: { token },
     });
     socketRef.current = socket;
 
-    const authenticate = () => {
+    socket.on("connect", () => {
       setConnected(true);
-      socket.emit("authenticate", token, (payload: { success?: boolean }) => {
-        setAuthenticated(Boolean(payload?.success));
-      });
-    };
-
-    socket.on("connect", authenticate);
+      setAuthenticated(true);
+    });
+    socket.on("connect_error", () => {
+      setConnected(false);
+      setAuthenticated(false);
+    });
     socket.on("disconnect", () => {
       setConnected(false);
       setAuthenticated(false);

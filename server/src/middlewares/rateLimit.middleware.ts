@@ -1,6 +1,10 @@
 import rateLimit from "express-rate-limit";
+import { isTrustedDevEnvironment } from "../config/env.js";
 
-const skipWhenDisabled = () => process.env.DISABLE_RATE_LIMIT === "true";
+// DISABLE_RATE_LIMIT is a local-development convenience only: it is ignored
+// outside development/test so a stray env var can never disable rate
+// limiting on a real deployment.
+const skipWhenDisabled = () => isTrustedDevEnvironment() && process.env.DISABLE_RATE_LIMIT === "true";
 
 export const globalRateLimit = rateLimit({
   skip: skipWhenDisabled,

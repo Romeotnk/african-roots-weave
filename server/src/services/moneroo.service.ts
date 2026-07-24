@@ -62,7 +62,9 @@ export const initiateMonerooPayment = async (input: InitiatePaymentInput) => {
 
 export const verifyMonerooSignature = (rawBody: string, signature?: string) => {
   if (!monerooConfig.webhookSecret) {
-    return true;
+    // Never accept an unverifiable webhook once real money can move.
+    // Mirrors the same production guard already used by initiateMonerooPayment.
+    return env.nodeEnv !== "production";
   }
 
   if (!signature) {
