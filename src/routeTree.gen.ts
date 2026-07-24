@@ -17,7 +17,6 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RecettesSanteRouteImport } from './routes/recettes-sante'
 import { Route as RecettesRouteImport } from './routes/recettes'
 import { Route as PharmacopeeRouteImport } from './routes/pharmacopee'
-import { Route as PanierRouteImport } from './routes/panier'
 import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
 import { Route as MonCompteRouteImport } from './routes/mon-compte'
 import { Route as MessagesRouteImport } from './routes/messages'
@@ -31,7 +30,6 @@ import { Route as DevenirProRouteImport } from './routes/devenir-pro'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ConnexionRouteImport } from './routes/connexion'
-import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AnnuaireRouteImport } from './routes/annuaire'
 import { Route as AideRouteImport } from './routes/aide'
 import { Route as AgendaRouteImport } from './routes/agenda'
@@ -148,11 +146,6 @@ const PharmacopeeRoute = PharmacopeeRouteImport.update({
   path: '/pharmacopee',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PanierRoute = PanierRouteImport.update({
-  id: '/panier',
-  path: '/panier',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const MotDePasseOublieRoute = MotDePasseOublieRouteImport.update({
   id: '/mot-de-passe-oublie',
   path: '/mot-de-passe-oublie',
@@ -216,11 +209,6 @@ const ContactRoute = ContactRouteImport.update({
 const ConnexionRoute = ConnexionRouteImport.update({
   id: '/connexion',
   path: '/connexion',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CheckoutRoute = CheckoutRouteImport.update({
-  id: '/checkout',
-  path: '/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AnnuaireRoute = AnnuaireRouteImport.update({
@@ -615,7 +603,6 @@ export interface FileRoutesByFullPath {
   '/agenda': typeof AgendaRouteWithChildren
   '/aide': typeof AideRoute
   '/annuaire': typeof AnnuaireRouteWithChildren
-  '/checkout': typeof CheckoutRoute
   '/connexion': typeof ConnexionRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRouteWithChildren
@@ -629,7 +616,6 @@ export interface FileRoutesByFullPath {
   '/messages': typeof MessagesRoute
   '/mon-compte': typeof MonCompteRouteWithChildren
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
-  '/panier': typeof PanierRoute
   '/pharmacopee': typeof PharmacopeeRouteWithChildren
   '/recettes': typeof RecettesRouteWithChildren
   '/recettes-sante': typeof RecettesSanteRouteWithChildren
@@ -715,7 +701,6 @@ export interface FileRoutesByTo {
   '/agenda': typeof AgendaRouteWithChildren
   '/aide': typeof AideRoute
   '/annuaire': typeof AnnuaireRouteWithChildren
-  '/checkout': typeof CheckoutRoute
   '/connexion': typeof ConnexionRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRouteWithChildren
@@ -729,7 +714,6 @@ export interface FileRoutesByTo {
   '/messages': typeof MessagesRoute
   '/mon-compte': typeof MonCompteRouteWithChildren
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
-  '/panier': typeof PanierRoute
   '/pharmacopee': typeof PharmacopeeRouteWithChildren
   '/recettes': typeof RecettesRouteWithChildren
   '/recettes-sante': typeof RecettesSanteRouteWithChildren
@@ -816,7 +800,6 @@ export interface FileRoutesById {
   '/agenda': typeof AgendaRouteWithChildren
   '/aide': typeof AideRoute
   '/annuaire': typeof AnnuaireRouteWithChildren
-  '/checkout': typeof CheckoutRoute
   '/connexion': typeof ConnexionRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRouteWithChildren
@@ -830,7 +813,6 @@ export interface FileRoutesById {
   '/messages': typeof MessagesRoute
   '/mon-compte': typeof MonCompteRouteWithChildren
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
-  '/panier': typeof PanierRoute
   '/pharmacopee': typeof PharmacopeeRouteWithChildren
   '/recettes': typeof RecettesRouteWithChildren
   '/recettes-sante': typeof RecettesSanteRouteWithChildren
@@ -918,7 +900,6 @@ export interface FileRouteTypes {
     | '/agenda'
     | '/aide'
     | '/annuaire'
-    | '/checkout'
     | '/connexion'
     | '/contact'
     | '/dashboard'
@@ -932,7 +913,6 @@ export interface FileRouteTypes {
     | '/messages'
     | '/mon-compte'
     | '/mot-de-passe-oublie'
-    | '/panier'
     | '/pharmacopee'
     | '/recettes'
     | '/recettes-sante'
@@ -1018,7 +998,6 @@ export interface FileRouteTypes {
     | '/agenda'
     | '/aide'
     | '/annuaire'
-    | '/checkout'
     | '/connexion'
     | '/contact'
     | '/dashboard'
@@ -1032,7 +1011,6 @@ export interface FileRouteTypes {
     | '/messages'
     | '/mon-compte'
     | '/mot-de-passe-oublie'
-    | '/panier'
     | '/pharmacopee'
     | '/recettes'
     | '/recettes-sante'
@@ -1118,7 +1096,6 @@ export interface FileRouteTypes {
     | '/agenda'
     | '/aide'
     | '/annuaire'
-    | '/checkout'
     | '/connexion'
     | '/contact'
     | '/dashboard'
@@ -1132,7 +1109,6 @@ export interface FileRouteTypes {
     | '/messages'
     | '/mon-compte'
     | '/mot-de-passe-oublie'
-    | '/panier'
     | '/pharmacopee'
     | '/recettes'
     | '/recettes-sante'
@@ -1219,7 +1195,6 @@ export interface RootRouteChildren {
   AgendaRoute: typeof AgendaRouteWithChildren
   AideRoute: typeof AideRoute
   AnnuaireRoute: typeof AnnuaireRouteWithChildren
-  CheckoutRoute: typeof CheckoutRoute
   ConnexionRoute: typeof ConnexionRoute
   ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRouteWithChildren
@@ -1233,7 +1208,6 @@ export interface RootRouteChildren {
   MessagesRoute: typeof MessagesRoute
   MonCompteRoute: typeof MonCompteRouteWithChildren
   MotDePasseOublieRoute: typeof MotDePasseOublieRoute
-  PanierRoute: typeof PanierRoute
   PharmacopeeRoute: typeof PharmacopeeRouteWithChildren
   RecettesRoute: typeof RecettesRouteWithChildren
   RecettesSanteRoute: typeof RecettesSanteRouteWithChildren
@@ -1302,13 +1276,6 @@ declare module '@tanstack/react-router' {
       path: '/pharmacopee'
       fullPath: '/pharmacopee'
       preLoaderRoute: typeof PharmacopeeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/panier': {
-      id: '/panier'
-      path: '/panier'
-      fullPath: '/panier'
-      preLoaderRoute: typeof PanierRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mot-de-passe-oublie': {
@@ -1400,13 +1367,6 @@ declare module '@tanstack/react-router' {
       path: '/connexion'
       fullPath: '/connexion'
       preLoaderRoute: typeof ConnexionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/checkout': {
-      id: '/checkout'
-      path: '/checkout'
-      fullPath: '/checkout'
-      preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/annuaire': {
@@ -2290,7 +2250,6 @@ const rootRouteChildren: RootRouteChildren = {
   AgendaRoute: AgendaRouteWithChildren,
   AideRoute: AideRoute,
   AnnuaireRoute: AnnuaireRouteWithChildren,
-  CheckoutRoute: CheckoutRoute,
   ConnexionRoute: ConnexionRoute,
   ContactRoute: ContactRoute,
   DashboardRoute: DashboardRouteWithChildren,
@@ -2304,7 +2263,6 @@ const rootRouteChildren: RootRouteChildren = {
   MessagesRoute: MessagesRoute,
   MonCompteRoute: MonCompteRouteWithChildren,
   MotDePasseOublieRoute: MotDePasseOublieRoute,
-  PanierRoute: PanierRoute,
   PharmacopeeRoute: PharmacopeeRouteWithChildren,
   RecettesRoute: RecettesRouteWithChildren,
   RecettesSanteRoute: RecettesSanteRouteWithChildren,

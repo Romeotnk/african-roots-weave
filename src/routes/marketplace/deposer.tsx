@@ -6,13 +6,11 @@ import {
   Check,
   CheckCircle2,
   FileArchive,
-  Gavel,
   ImagePlus,
   Info,
   Leaf,
   MapPin,
   Package,
-  Save,
   Send,
   ShieldCheck,
   Sparkles,
@@ -24,6 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { CountrySelect } from "@/components/shared/CountrySelect";
 import { ProductCard } from "@/components/shared/ProductCard";
+import { useCreateProduct, useUploadProductImages } from "@/hooks/useApiCatalog";
 import type { Product } from "@/types";
 
 export const Route = createFileRoute("/marketplace/deposer")({
@@ -62,6 +61,27 @@ const medicalCategories = [
   "Mystique",
 ];
 
+// Same order as the `MedCategory` enum in server/prisma/schema.prisma.
+const medicalCategoryEnum = [
+  "GYNECO_OBSTETRIQUE",
+  "GASTRO_INTESTINAL",
+  "MALADIES_ENFANCE",
+  "ETATS_FEBRILES_ICTERES",
+  "AFFECTIONS_CUTANEES",
+  "SYSTEME_NERVEUX",
+  "OSTEO_ARTICULAIRE",
+  "PULMONAIRE",
+  "URO_GENITAL",
+  "ORL",
+  "OPHTALMOLOGIQUE",
+  "BUCCO_DENTAIRE",
+  "CARDIO_VASCULAIRE",
+  "STOMATOLOGIQUE",
+  "MYSTIQUE",
+];
+
+const productTypeEnum = { physical: "PHYSICAL", service: "SERVICE", digital: "DIGITAL" } as const;
+
 const steps = ["Base", "Localisation", "Médias", "Options", "Récapitulatif"];
 
 function DepositListing() {
@@ -80,11 +100,9 @@ function DepositListing() {
   const [city, setCity] = useState("Cotonou");
   const [address, setAddress] = useState("");
   const [coords, setCoords] = useState({ lat: 6.37, lng: 2.43 });
-  const [media, setMedia] = useState<string[]>([
-    "https://images.unsplash.com/photo-1597318181409-cf64d0b9d3d2?w=800&q=80&auto=format&fit=crop",
-  ]);
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const media = useMemo(() => mediaFiles.map((file) => URL.createObjectURL(file)), [mediaFiles]);
   const [digitalUrl, setDigitalUrl] = useState("");
-  const [auction, setAuction] = useState(false);
   const [quoteRequest, setQuoteRequest] = useState(false);
   const [tags, setTags] = useState(["kinkeliba", "digestion"]);
   const [tagInput, setTagInput] = useState("");
@@ -92,6 +110,8 @@ function DepositListing() {
   const [salesPolicy, setSalesPolicy] = useState(false);
   const [confirmation, setConfirmation] = useState("");
   const [formError, setFormError] = useState("");
+  const createProduct = useCreateProduct();
+  const uploadImages = useUploadProductImages();
 
   const canAccess = sellerReadiness.every((item) => item.done);
   const estimatedCommission = Math.round((Number(price) || 0) * 0.1);
@@ -110,17 +130,13 @@ function DepositListing() {
       sellerAvatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&q=80",
       rating: 0,
       reviewCount: 0,
-      auction,
     }),
-    [auction, category, currency, media, price, title, type],
+    [category, currency, media, price, title, type],
   );
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return;
-    const previews = Array.from(files)
-      .slice(0, 10 - media.length)
-      .map((file) => URL.createObjectURL(file));
-    setMedia((current) => [...current, ...previews].slice(0, 10));
+    setMediaFiles((current) => [...current, ...Array.from(files)].slice(0, 10));
   };
 
   const addTag = () => {
@@ -156,22 +172,37 @@ function DepositListing() {
     setStep((current) => Math.min(steps.length - 1, current + 1));
   };
 
-  const publish = (mode: "draft" | "publish") => {
+  const publish = async () => {
     const validationMessage = validateStep(3);
     if (validationMessage) {
       setFormError(validationMessage);
       return;
     }
     setFormError("");
-    if (mode === "publish" && (!terms || !salesPolicy)) {
+    if (!terms || !salesPolicy) {
       setConfirmation("Veuillez accepter les CGU et la politique de vente avant publication.");
       return;
     }
-    setConfirmation(
-      mode === "draft"
-        ? "Brouillon enregistré. Vous pourrez le compléter avant publication."
-        : "Votre annonce est soumise à modération et sera visible sous 24h.",
-    );
+
+    try {
+      const created = await createProduct.mutateAsync({
+        title,
+        description,
+        price: quoteRequest ? 0 : Number(price),
+        category: medicalCategoryEnum[medicalCategories.indexOf(category)] ?? medicalCategoryEnum[0],
+        type: productTypeEnum[type],
+        stock: type === "physical" ? Number(quantity) || 0 : undefined,
+        fileUrl: type === "digital" ? digitalUrl : undefined,
+      });
+
+      if (created && mediaFiles.length > 0) {
+        await uploadImages.mutateAsync({ id: created.id, files: mediaFiles });
+      }
+
+      setConfirmation("Votre annonce a été publiée et est soumise à modération avant d'être visible publiquement.");
+    } catch (error) {
+      setConfirmation(error instanceof Error ? error.message : "La publication a échoué, veuillez réessayer.");
+    }
   };
 
   return (
@@ -434,7 +465,7 @@ function DepositListing() {
                           {index === 0 ? "Principale" : `Photo ${index + 1}`}
                         </span>
                         <button
-                          onClick={() => setMedia((current) => current.filter((photo) => photo !== item))}
+                          onClick={() => setMediaFiles((current) => current.filter((_, fileIndex) => fileIndex !== index))}
                           className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-white text-red-600"
                         >
                           <X size={14} />
@@ -472,22 +503,6 @@ function DepositListing() {
 
               {step === 3 && (
                 <div className="space-y-5">
-                  <div className="rounded-lg border border-[var(--brand-border-light)] p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="font-bold">Activer les enchères</p>
-                        <p className="text-[13px] text-[var(--color-text-muted)]">Prix de départ, réserve et date de clôture.</p>
-                      </div>
-                      <Switch checked={auction} onCheckedChange={setAuction} />
-                    </div>
-                    {auction && (
-                      <div className="mt-4 grid md:grid-cols-3 gap-3">
-                        <input placeholder="Prix de départ" className="h-10 rounded-lg border border-[var(--brand-border)] px-3" />
-                        <input placeholder="Prix de réserve" className="h-10 rounded-lg border border-[var(--brand-border)] px-3" />
-                        <input type="date" className="h-10 rounded-lg border border-[var(--brand-border)] px-3" />
-                      </div>
-                    )}
-                  </div>
                   <div className="rounded-lg border border-[var(--brand-border-light)] p-4">
                     <div className="flex items-center justify-between gap-4">
                       <div>
@@ -561,11 +576,12 @@ function DepositListing() {
                       </p>
                     )}
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <button onClick={() => publish("draft")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] px-5 font-semibold">
-                        <Save size={16} /> Enregistrer comme brouillon
-                      </button>
-                      <button onClick={() => publish("publish")} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 font-semibold text-white">
-                        <Send size={16} /> Publier
+                      <button
+                        onClick={publish}
+                        disabled={createProduct.isPending || uploadImages.isPending}
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 font-semibold text-white disabled:opacity-60"
+                      >
+                        <Send size={16} /> {createProduct.isPending || uploadImages.isPending ? "Publication..." : "Publier"}
                       </button>
                     </div>
                   </div>

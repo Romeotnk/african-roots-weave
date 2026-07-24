@@ -6,9 +6,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { conversations as initialConversations } from "@/data/messages";
 import { useMessagesSocket } from "@/hooks/useMessagesSocket";
+import { useProfessional } from "@/hooks/useApiCatalog";
 import { listConversations, markConversationRead } from "@/lib/api/messages";
 import { authTokenStore } from "@/lib/api/client";
-import type { ChatMessage } from "@/types";
+import type { ChatMessage, Conversation } from "@/types";
 
 export const Route = createFileRoute("/messages")({
   head: () => ({ meta: [{ title: "Messages - IWOSAN" }] }),
@@ -37,6 +38,48 @@ function MessagesPage() {
     setConversations(conversationsQuery.data);
     setActiveId((current) => current || conversationsQuery.data?.[0]?.id || "");
   }, [conversationsQuery.data]);
+
+  // Arriving from "Réserver ce produit" (?to=sellerId&text=...): open that
+  // conversation immediately, prefilled, whether or not it already exists.
+  const startParams = useMemo(
+    () => (typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams()),
+    [],
+  );
+  const startTo = startParams.get("to");
+  const startText = startParams.get("text") ?? "";
+  const alreadyHasStartConversation = conversations.some((conversation) => conversation.id === startTo);
+  const startProfileQuery = useProfessional(startTo ?? "", hasBackendAuth && Boolean(startTo) && !alreadyHasStartConversation);
+
+  useEffect(() => {
+    if (!hasBackendAuth || !startTo) return;
+
+    if (alreadyHasStartConversation) {
+      setActiveId(startTo);
+      setDraft(startText);
+      setMobileConversationOpen(true);
+      return;
+    }
+
+    const profile = startProfileQuery.data;
+    if (!profile) return;
+
+    setConversations((current) => {
+      if (current.some((conversation) => conversation.id === startTo)) return current;
+      const newConversation: Conversation = {
+        id: startTo,
+        participantName: profile.name,
+        participantRole: profile.specialty,
+        avatar: profile.avatar,
+        online: false,
+        unreadCount: 0,
+        messages: [],
+      };
+      return [newConversation, ...current];
+    });
+    setActiveId(startTo);
+    setDraft(startText);
+    setMobileConversationOpen(true);
+  }, [hasBackendAuth, startTo, startText, alreadyHasStartConversation, startProfileQuery.data]);
   const handleIncomingMessage = useCallback((message: { id: string; senderId: string; content: string; createdAt: string; isRead?: boolean }) => {
     const nextMessage: ChatMessage = {
       id: message.id,

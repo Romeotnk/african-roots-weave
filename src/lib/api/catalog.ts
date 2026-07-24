@@ -55,10 +55,19 @@ type BackendProfessional = {
   specialty: string[];
   biography: string;
   location: string;
+  latitude?: number | null;
+  longitude?: number | null;
   photos: string[];
   isVerified: boolean;
   averageRating: number;
   totalReviews: number;
+  socialLinks?: {
+    whatsapp?: string;
+    facebook?: string;
+    instagram?: string;
+    tiktok?: string;
+    linkedin?: string;
+  } | null;
   user: {
     id: string;
     firstName: string;
@@ -69,6 +78,10 @@ type BackendProfessional = {
 
 const fallbackImage = "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=80&w=1200&auto=format&fit=crop";
 const fallbackAvatar = "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=400&auto=format&fit=crop";
+// Backend/API failures fall back to sample data only in local development —
+// production must surface the real error instead of silently showing
+// fictitious sellers/products.
+const isDev = import.meta.env.DEV;
 
 const productTypeMap = {
   PHYSICAL: "physical",
@@ -96,7 +109,9 @@ export const toProduct = (product: BackendProduct): Product => ({
   price: Number(product.price),
   currency: "FCFA",
   image: product.images[0] ?? fallbackImage,
-  sellerId: product.seller?.professionalProfile?.id ?? product.seller?.id ?? product.sellerId ?? "",
+  // Product.sellerId is a User.id — the same identity messaging and the
+  // seller profile page (/pro/$id) use. Never the professionalProfile id.
+  sellerId: product.seller?.id ?? product.sellerId ?? "",
   sellerName: product.seller?.professionalProfile?.displayName ?? `${product.seller?.firstName ?? ""} ${product.seller?.lastName ?? ""}`.trim(),
   sellerAvatar: fallbackAvatar,
   rating: product.seller?.professionalProfile?.averageRating ?? 0,
@@ -105,7 +120,10 @@ export const toProduct = (product: BackendProduct): Product => ({
 });
 
 export const toProfessional = (professional: BackendProfessional): Professional => ({
-  id: professional.id,
+  // Exposed id is the User.id, not the internal professionalProfile id, so
+  // this matches Product.sellerId and can be used directly to start a
+  // conversation (Message.senderId/receiverId are User ids).
+  id: professional.user.id,
   name: professional.displayName,
   specialty: professional.specialty[0] ?? "Praticien traditionnel",
   specialties: professional.specialty,
@@ -117,6 +135,9 @@ export const toProfessional = (professional: BackendProfessional): Professional 
   verified: professional.isVerified,
   rating: professional.averageRating,
   reviewCount: professional.totalReviews,
+  socialLinks: professional.socialLinks ?? undefined,
+  latitude: professional.latitude ?? undefined,
+  longitude: professional.longitude ?? undefined,
 });
 
 export const getProducts = async (params: URLSearchParams) => {
@@ -128,7 +149,8 @@ export const getProducts = async (params: URLSearchParams) => {
       products: items.map(toProduct),
       pagination: response.pagination,
     };
-  } catch {
+  } catch (error) {
+    if (!isDev) throw error;
     return { products: fallbackProducts, pagination: undefined };
   }
 };
@@ -142,7 +164,8 @@ export const getProfessionals = async (params: URLSearchParams) => {
       professionals: items.map(toProfessional),
       pagination: response.pagination,
     };
-  } catch {
+  } catch (error) {
+    if (!isDev) throw error;
     return { professionals: fallbackProfessionals, pagination: undefined };
   }
 };
@@ -151,7 +174,8 @@ export const getProfessionalById = async (id: string) => {
   try {
     const response = await apiRequest<BackendProfessional>(`/professionals/${id}`);
     return response.data ? toProfessional(response.data) : null;
-  } catch {
+  } catch (error) {
+    if (!isDev) throw error;
     return fallbackProfessionals.find((professional) => professional.id === id) ?? null;
   }
 };
@@ -160,7 +184,8 @@ export const getProductBySlug = async (slug: string) => {
   try {
     const response = await apiRequest<BackendProduct>(`/products/${slug}`);
     return response.data ? toProduct(response.data) : null;
-  } catch {
+  } catch (error) {
+    if (!isDev) throw error;
     return fallbackProducts.find((product) => product.id === slug) ?? null;
   }
 };

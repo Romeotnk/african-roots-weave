@@ -9,6 +9,7 @@ export type EventQuery = {
 export type FormationQuery = EventQuery & {
   category?: string;
   tag?: string;
+  createdById?: string;
 };
 
 export type EventPayload = Record<string, unknown> & {

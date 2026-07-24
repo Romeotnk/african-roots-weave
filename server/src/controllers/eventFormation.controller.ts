@@ -76,6 +76,7 @@ export const listFormations = asyncHandler(async (req, res) => {
     type: req.query.type as never,
     category: req.query.category as string | undefined,
     tags: req.query.tag ? { has: String(req.query.tag) } : undefined,
+    createdById: typeof req.query.createdById === "string" ? req.query.createdById : undefined,
   };
   const [formations, total] = await prisma.$transaction([
     prisma.formation.findMany({ where, skip, take: limit, orderBy: { createdAt: "desc" } }),

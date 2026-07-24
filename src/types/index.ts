@@ -1,3 +1,11 @@
+export interface ProfessionalSocialLinks {
+  whatsapp?: string;
+  facebook?: string;
+  instagram?: string;
+  tiktok?: string;
+  linkedin?: string;
+}
+
 export interface Professional {
   id: string;
   name: string;
@@ -17,6 +25,9 @@ export interface Professional {
   consultationPrice?: number;
   online?: boolean;
   availability?: Record<string, string[]>;
+  socialLinks?: ProfessionalSocialLinks;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface ProfessionalBooking {

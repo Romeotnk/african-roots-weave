@@ -47,7 +47,6 @@ function Marketplace() {
   const [distance, setDistance] = useState([120]);
   const [dateFilter, setDateFilter] = useState("all");
   const [minRating, setMinRating] = useState(0);
-  const [auctionOnly, setAuctionOnly] = useState(false);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
   const [alertOpen, setAlertOpen] = useState(false);
@@ -92,12 +91,10 @@ function Marketplace() {
       country && `Pays: ${country}`,
       city && `Ville: ${city}`,
       minRating > 0 && `Note ${minRating}+`,
-      auctionOnly && "Enchères",
       verifiedOnly && "Vendeurs vérifiés",
     ].filter(Boolean);
     return parts.join(", ") || "Tous les résultats marketplace";
   }, [
-    auctionOnly,
     city,
     country,
     debouncedSearch,
@@ -114,7 +111,7 @@ function Marketplace() {
     const normalizedSearch = debouncedSearch.trim().toLowerCase();
     const min = priceMin === "" ? priceRange[0] : Number(priceMin);
     const max = priceMax === "" ? priceRange[1] : Number(priceMax);
-    const now = new Date("2026-06-15").getTime();
+    const now = Date.now();
 
     const filtered = items.filter((product) => {
       const matchesSearch =
@@ -139,7 +136,6 @@ function Marketplace() {
               ? now - createdAt <= 31 * 24 * 60 * 60 * 1000
               : true;
       const matchesRating = product.rating >= minRating;
-      const matchesAuction = !auctionOnly || Boolean(product.auction);
       const matchesVerified = !verifiedOnly || Boolean(product.verified);
       return (
         matchesSearch &&
@@ -150,7 +146,6 @@ function Marketplace() {
         matchesCity &&
         matchesDate &&
         matchesRating &&
-        matchesAuction &&
         matchesVerified
       );
     });
@@ -173,7 +168,6 @@ function Marketplace() {
       }
     });
   }, [
-    auctionOnly,
     city,
     country,
     dateFilter,
@@ -198,7 +192,6 @@ function Marketplace() {
     city,
     dateFilter !== "all",
     minRating,
-    auctionOnly,
     verifiedOnly,
   ].filter(Boolean).length;
   const resetFilters = () => {
@@ -213,7 +206,6 @@ function Marketplace() {
     setDistance([120]);
     setDateFilter("all");
     setMinRating(0);
-    setAuctionOnly(false);
     setVerifiedOnly(false);
     setSort("newest");
   };
@@ -441,9 +433,6 @@ function Marketplace() {
                     ))}
                   </div>
                 </div>
-                <label className="flex items-center justify-between gap-3 text-[13px]">
-                  Enchères uniquement <Switch checked={auctionOnly} onCheckedChange={setAuctionOnly} />
-                </label>
                 <label className="flex items-center justify-between gap-3 text-[13px]">
                   Vendeurs KYC vérifiés <Switch checked={verifiedOnly} onCheckedChange={setVerifiedOnly} />
                 </label>

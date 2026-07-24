@@ -50,8 +50,11 @@ export const listProfessionals = asyncHandler(async (req, res) => {
 });
 
 export const getProfessional = asyncHandler(async (req, res) => {
+  // :id is the User.id — the same identity used by Product.sellerId and by
+  // messaging (Message.senderId/receiverId) — so a product card, a seller
+  // profile link, and "start a conversation" all resolve to one identity.
   const professional = await prisma.professionalProfile.findUnique({
-    where: { id: req.params.id },
+    where: { userId: req.params.id },
     include: {
       user: {
         select: {

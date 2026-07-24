@@ -25,8 +25,8 @@ const accountTypes: Array<{
     id: "user",
     label: "Utilisateur",
     badge: "Compte personnel",
-    desc: "Acheter, apprendre, poser des questions et suivre ses commandes.",
-    details: ["Marketplace et panier", "Forum et messages", "Commandes et support"],
+    desc: "Découvrir, apprendre, poser des questions et contacter les vendeurs.",
+    details: ["Marketplace et messagerie", "Forum et messages", "Support"],
     Icon: User,
   },
   {
