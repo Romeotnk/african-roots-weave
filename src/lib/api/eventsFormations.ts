@@ -54,9 +54,32 @@ export async function getEvent(id: string) {
   return response.data;
 }
 
+export async function listMyRegistrations() {
+  const response = await apiRequest<unknown>("/events/registrations/mine");
+  return asList(response.data);
+}
+
 export async function createEvent(payload: EventPayload) {
   const response = await apiRequest<unknown>("/events", {
     method: "POST",
+    body: payload,
+  });
+  return response.data;
+}
+
+export async function listMyEvents(params: EventQuery = {}) {
+  const query = toQuery(params);
+  try {
+    const response = await apiRequest<unknown>(`/events/mine${query ? `?${query}` : ""}`);
+    return { events: asList(response.data), pagination: response.pagination };
+  } catch {
+    return { events: [], pagination: undefined };
+  }
+}
+
+export async function updateEvent(id: string, payload: Partial<EventPayload>) {
+  const response = await apiRequest<unknown>(`/events/${id}`, {
+    method: "PUT",
     body: payload,
   });
   return response.data;
@@ -86,6 +109,16 @@ export async function listFormations(params: FormationQuery = {}) {
   }
 }
 
+export async function listMyFormations(params: FormationQuery = {}) {
+  const query = toQuery(params);
+  try {
+    const response = await apiRequest<unknown>(`/formations/mine${query ? `?${query}` : ""}`);
+    return { formations: asList(response.data), pagination: response.pagination };
+  } catch {
+    return { formations: [], pagination: undefined };
+  }
+}
+
 export async function getFormation(id: string) {
   const response = await apiRequest<unknown>(`/formations/${id}`);
   return response.data;
@@ -94,6 +127,14 @@ export async function getFormation(id: string) {
 export async function createFormation(payload: FormationPayload) {
   const response = await apiRequest<unknown>("/formations", {
     method: "POST",
+    body: payload,
+  });
+  return response.data;
+}
+
+export async function updateFormation(id: string, payload: FormationPayload) {
+  const response = await apiRequest<unknown>(`/formations/${id}`, {
+    method: "PUT",
     body: payload,
   });
   return response.data;

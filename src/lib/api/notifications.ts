@@ -1,4 +1,4 @@
-import { notifications as fallbackNotifications, type AppNotification, type NotificationType } from "@/data/notifications";
+import type { AppNotification, NotificationType } from "@/data/notifications";
 import { apiRequest } from "./client";
 
 export type BackendNotification = {
@@ -37,11 +37,3 @@ export const markNotificationRead = (id: string) =>
 
 export const markAllNotificationsRead = () =>
   apiRequest<null>("/notifications/read-all", { method: "PUT" });
-
-export const getNotificationsWithFallback = async () => {
-  try {
-    return await listNotifications();
-  } catch {
-    return fallbackNotifications;
-  }
-};

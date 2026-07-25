@@ -20,6 +20,16 @@ export async function getMlmStats() {
   return response.data;
 }
 
+export async function getMyCommissions() {
+  const response = await apiRequest<unknown[]>("/mlm/commissions/mine");
+  return response.data ?? [];
+}
+
+export async function getMlmLeaderboard() {
+  const response = await apiRequest<unknown[]>("/mlm/leaderboard");
+  return response.data ?? [];
+}
+
 export async function getAffiliateLink() {
   const response = await apiRequest<AffiliateLink>("/mlm/affiliate-link");
   return response.data;

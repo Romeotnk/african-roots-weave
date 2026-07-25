@@ -1,5 +1,8 @@
 import { apiRequest } from "./client";
 
+export const listMyOrders = (scope: "all" | "buyer" | "seller" = "all") =>
+  apiRequest<unknown[]>(`/orders/mine?scope=${scope === "buyer" ? "purchases" : scope === "seller" ? "sales" : "all"}`);
+
 export const createOrder = (productId: string, quantity = 1) =>
   apiRequest<unknown>("/orders", {
     method: "POST",

@@ -1,21 +1,31 @@
-﻿import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { CheckCircle2, PlayCircle } from "lucide-react";
 import { RatingStars } from "@/components/shared/RatingStars";
 import { professionals } from "@/data/professionals";
 import { trainings } from "@/data/trainings";
+import { useFormation } from "@/hooks/useEventsFormationsApi";
+import { toTrainingCourse, type BackendFormation } from "@/lib/mappers/formation";
 
 export const Route = createFileRoute("/formations/$id")({
   head: () => ({ meta: [{ title: "Detail formation - IWOSAN" }] }),
   component: TrainingDetail,
 });
 
+const fallbackAvatar = "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=120&q=80";
+
 function TrainingDetail() {
   const { id } = Route.useParams();
-  const course = trainings.find((item) => item.id === id || item.slug === id) ?? trainings[0];
-  const instructorProfile =
+  const formationQuery = useFormation(id);
+  const apiCourse = useMemo(() => toTrainingCourse((formationQuery.data ?? {}) as BackendFormation), [formationQuery.data]);
+  const course = apiCourse ?? trainings.find((item) => item.id === id || item.slug === id) ?? trainings[0];
+
+  const fallbackInstructor =
     professionals.find((item) => item.id === course.instructorProfileId) ??
     professionals.find((item) => item.name === course.instructor) ??
     professionals[0];
+  const instructorHref = course.instructorProfileId ?? fallbackInstructor.id;
+  const instructorAvatar = course.instructorAvatar || fallbackAvatar;
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">
@@ -30,7 +40,7 @@ function TrainingDetail() {
           <div className="rounded-[12px] bg-white p-4 text-[var(--color-text-primary)]">
             <img src={course.image} alt="" className="aspect-video w-full rounded-lg object-cover" />
             <p className="mt-4 text-[24px] font-bold">{course.price === 0 ? "Gratuit" : `${course.price.toLocaleString("fr-FR")} ${course.currency}`}</p>
-            <Link to="/pro/$id" params={{ id: instructorProfile.id }} className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full bg-[var(--brand-primary)] font-semibold text-white">
+            <Link to="/pro/$id" params={{ id: instructorHref }} className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full bg-[var(--brand-primary)] font-semibold text-white">
               Voir le profil du formateur
             </Link>
           </div>
@@ -47,47 +57,55 @@ function TrainingDetail() {
               ))}
             </ul>
           </section>
-          <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-6">
-            <h2 className="text-[22px] font-bold">Programme</h2>
-            <div className="mt-4 space-y-3">
-              {course.modules.map((module) => (
-                <details key={module.title} open className="rounded-lg bg-[var(--brand-surface-alt)] p-4">
-                  <summary className="cursor-pointer font-bold">{module.title}</summary>
-                  <div className="mt-3 space-y-2">
-                    {module.lessons.map((lesson) => (
-                      <div key={lesson.id} className="flex items-center justify-between rounded bg-white px-3 py-2 text-[13px]">
-                        <span className="inline-flex items-center gap-2"><PlayCircle size={15} /> {lesson.title}</span>
-                        <span>{lesson.duration}</span>
-                      </div>
-                    ))}
+          {course.modules.length > 0 && (
+            <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-6">
+              <h2 className="text-[22px] font-bold">Programme</h2>
+              <div className="mt-4 space-y-3">
+                {course.modules.map((module) => (
+                  <details key={module.title} open className="rounded-lg bg-[var(--brand-surface-alt)] p-4">
+                    <summary className="cursor-pointer font-bold">{module.title}</summary>
+                    <div className="mt-3 space-y-2">
+                      {module.lessons.map((lesson) => (
+                        <div key={lesson.id} className="flex items-center justify-between rounded bg-white px-3 py-2 text-[13px]">
+                          <span className="inline-flex items-center gap-2"><PlayCircle size={15} /> {lesson.title}</span>
+                          <span>{lesson.duration}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </section>
+          )}
+          {course.reviews.length > 0 && (
+            <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-6">
+              <h2 className="text-[22px] font-bold">Avis des apprenants</h2>
+              <div className="mt-4 space-y-3">
+                {course.reviews.map((review, index) => (
+                  <div key={`${review.authorName}-${index}`} className="rounded-lg bg-[var(--brand-surface-alt)] p-4">
+                    <RatingStars rating={review.rating} size="sm" showCount={false} />
+                    <p className="mt-2 text-[14px] text-[var(--color-text-secondary)]">{review.comment}</p>
+                    <p className="mt-1 text-[12px] font-semibold">{review.authorName}</p>
                   </div>
-                </details>
-              ))}
-            </div>
-          </section>
-          <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-6">
-            <h2 className="text-[22px] font-bold">Avis des apprenants</h2>
-            <div className="mt-4 space-y-3">
-              {course.reviews.map((review) => (
-                <div key={review.authorName} className="rounded-lg bg-[var(--brand-surface-alt)] p-4">
-                  <RatingStars rating={review.rating} size="sm" showCount={false} />
-                  <p className="mt-2 text-[14px] text-[var(--color-text-secondary)]">{review.comment}</p>
-                  <p className="mt-1 text-[12px] font-semibold">{review.authorName}</p>
-                </div>
-              ))}
-            </div>
-          </section>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
         <aside className="h-fit rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
           <h2 className="text-[18px] font-bold">Instructeur</h2>
           <div className="mt-4 flex gap-3">
-            <img src={instructorProfile.avatar} alt="" className="h-14 w-14 rounded-full object-cover" />
+            <img src={instructorAvatar} alt="" className="h-14 w-14 rounded-full object-cover" />
             <div><p className="font-bold">{course.instructor}</p><p className="text-[13px] text-[var(--color-text-muted)]">{course.instructorBio}</p></div>
           </div>
-          <h3 className="mt-6 font-bold">Prerequis</h3>
-          <ul className="mt-3 list-disc space-y-2 pl-5 text-[13px] text-[var(--color-text-secondary)]">
-            {course.prerequisites.map((item) => <li key={item}>{item}</li>)}
-          </ul>
+          {course.prerequisites.length > 0 && (
+            <>
+              <h3 className="mt-6 font-bold">Prerequis</h3>
+              <ul className="mt-3 list-disc space-y-2 pl-5 text-[13px] text-[var(--color-text-secondary)]">
+                {course.prerequisites.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </>
+          )}
         </aside>
       </section>
     </main>

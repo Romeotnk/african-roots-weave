@@ -19,6 +19,7 @@ import { LanguageProvider } from "@/i18n/LanguageContext";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import "@/i18n/jsxPatch";
 import { siteConfig } from "@/data/siteConfig";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 function NotFoundComponent() {
   return (
@@ -107,7 +108,9 @@ function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isMinimal = ["/connexion", "/inscription", "/mot-de-passe-oublie", "/reset-password"].includes(pathname) || pathname.startsWith("/reset-password/");
   const isDashboard = pathname.startsWith("/tableau-de-bord");
-  const showMaintenance = siteConfig.maintenanceMode && !pathname.startsWith("/admin");
+  const siteConfigQuery = useSiteConfig();
+  const maintenanceEnabled = siteConfigQuery.data?.data?.["maintenance.enabled"] === "true";
+  const showMaintenance = maintenanceEnabled && !pathname.startsWith("/admin");
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>

@@ -54,8 +54,16 @@ export const listMyArticles = asyncHandler(async (req, res) => {
 });
 
 export const getArticle = asyncHandler(async (req, res) => {
-  const article = await prisma.article.update({
+  const existing = await prisma.article.findUnique({
     where: { slug: req.params.slug },
+    select: { id: true, isPublished: true, isApproved: true },
+  });
+  if (!existing || !existing.isPublished || !existing.isApproved) {
+    throw new ApiError(404, "Article not found");
+  }
+
+  const article = await prisma.article.update({
+    where: { id: existing.id },
     data: { views: { increment: 1 } },
     include: { author: { select: { id: true, firstName: true, lastName: true, role: true } } },
   });
@@ -79,6 +87,7 @@ export const createArticle = asyncHandler(async (req, res) => {
       coverImage: req.body.coverImage,
       category: req.body.category,
       tags: req.body.tags ?? [],
+      recipeData: space === "RECETTES_SANTE" ? req.body.recipeData : undefined,
       isApproved: canPublishContent(req.user.role),
       isPublished: canPublishContent(req.user.role) && Boolean(req.body.isPublished),
       publishedAt: canPublishContent(req.user.role) && req.body.isPublished ? new Date() : undefined,
@@ -105,6 +114,7 @@ export const updateArticle = asyncHandler(async (req, res) => {
       coverImage: req.body.coverImage,
       category: req.body.category,
       tags: req.body.tags,
+      recipeData: req.body.recipeData,
       isApproved: canPublishContent(req.user.role) ? req.body.isApproved : false,
     },
   });
@@ -141,7 +151,9 @@ export const listMonographs = asyncHandler(async (_req, res) => {
 });
 
 export const getMonograph = asyncHandler(async (req, res) => {
-  const monograph = await prisma.plantMonograph.findUnique({ where: { id: req.params.id } });
+  const monograph = await prisma.plantMonograph.findFirst({
+    where: { OR: [{ id: req.params.id }, { slug: req.params.id }] },
+  });
   if (!monograph) throw new ApiError(404, "Monograph not found");
   res.json(apiResponse(true, monograph, "Monograph retrieved"));
 });
@@ -149,7 +161,11 @@ export const getMonograph = asyncHandler(async (req, res) => {
 export const createMonograph = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
   const monograph = await prisma.plantMonograph.create({
-    data: { ...req.body, createdById: req.user.id },
+    data: {
+      ...req.body,
+      slug: req.body.slug || makeSlug(req.body.scientificName),
+      createdById: req.user.id,
+    },
   });
   res.status(201).json(apiResponse(true, monograph, "Monograph created"));
 });

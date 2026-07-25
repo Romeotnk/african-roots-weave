@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { MessageCircle, Send } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import { supportTickets } from "@/data/help";
-import type { SupportTicketStatus } from "@/types";
+import { useMyTickets, useReplyTicket } from "@/hooks/useTicketsApi";
+import { useAuth } from "@/lib/auth/AuthContext";
+import type { SupportTicket, SupportTicketStatus } from "@/types";
 
 export const Route = createFileRoute("/mon-compte/tickets")({
   head: () => ({ meta: [{ title: "Mes tickets - IWOSAN" }] }),
@@ -27,9 +29,55 @@ const statusClasses: Record<SupportTicketStatus, string> = {
   resolved: "bg-emerald-50 text-emerald-700",
 };
 
+const backendStatusMap: Record<string, SupportTicketStatus> = {
+  OPEN: "open",
+  IN_PROGRESS: "pending",
+  RESOLVED: "resolved",
+  CLOSED: "resolved",
+};
+
+type BackendTicket = {
+  id: string;
+  subject: string;
+  category: string;
+  status: string;
+  createdAt: string;
+  messages: { id: string; authorId: string; content: string; createdAt: string }[];
+};
+
+const formatDate = (value: string) =>
+  new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+
+function toSupportTicket(ticket: BackendTicket, myUserId: string | undefined): SupportTicket {
+  return {
+    id: ticket.id,
+    subject: ticket.subject,
+    category: ticket.category,
+    status: backendStatusMap[ticket.status] ?? "open",
+    createdAt: formatDate(ticket.createdAt),
+    messages: ticket.messages.map((message) => ({
+      id: message.id,
+      author: message.authorId === myUserId ? "me" : "support",
+      content: message.content,
+      createdAt: formatDate(message.createdAt),
+    })),
+  };
+}
+
 function TicketsPage() {
-  const [tickets, setTickets] = useState(supportTickets);
-  const [activeId, setActiveId] = useState(supportTickets[0]?.id ?? "");
+  const { user } = useAuth();
+  const ticketsQuery = useMyTickets();
+  const replyTicket = useReplyTicket();
+
+  const apiTickets = useMemo(() => {
+    const raw = (ticketsQuery.data?.data ?? []) as BackendTicket[];
+    return raw.map((ticket) => toSupportTicket(ticket, user?.id));
+  }, [ticketsQuery.data, user?.id]);
+
+  const isRealData = ticketsQuery.isSuccess;
+  const tickets = isRealData ? apiTickets : supportTickets;
+
+  const [activeId, setActiveId] = useState("");
   const [draft, setDraft] = useState("");
   const [statusFilter, setStatusFilter] = useState<SupportTicketStatus | "all">("all");
   const [actionMessage, setActionMessage] = useState("");
@@ -49,35 +97,22 @@ function TicketsPage() {
       return;
     }
 
-    const createdAt = new Intl.DateTimeFormat("fr-FR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date());
+    if (!isRealData) {
+      setDraft("");
+      setActionMessage("Reponse envoyee au support. Le ticket repasse en cours de traitement.");
+      return;
+    }
 
-    setTickets((current) =>
-      current.map((ticket) =>
-        ticket.id === active.id
-          ? {
-              ...ticket,
-              status: "pending",
-              messages: [
-                ...ticket.messages,
-                {
-                  id: `local-${Date.now()}`,
-                  author: "me" as const,
-                  content,
-                  createdAt,
-                },
-              ],
-            }
-          : ticket,
-      ),
+    replyTicket.mutate(
+      { id: active.id, content },
+      {
+        onSuccess: () => {
+          setDraft("");
+          setActionMessage("Reponse envoyee au support. Le ticket repasse en cours de traitement.");
+        },
+        onError: (error) => setActionMessage(error instanceof Error ? error.message : "Impossible d'envoyer la reponse."),
+      },
     );
-    setDraft("");
-    setActionMessage("Reponse envoyee au support. Le ticket repasse en cours de traitement.");
   };
 
   return (
@@ -192,10 +227,10 @@ function TicketsPage() {
                   <button
                     type="button"
                     onClick={sendReply}
-                    disabled={draft.trim().length < 3}
+                    disabled={draft.trim().length < 3 || replyTicket.isPending}
                     className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[var(--brand-surface-alt)] disabled:text-[var(--color-text-muted)]"
                   >
-                    <Send size={15} /> Envoyer
+                    <Send size={15} /> {replyTicket.isPending ? "Envoi..." : "Envoyer"}
                   </button>
                 </div>
               </>

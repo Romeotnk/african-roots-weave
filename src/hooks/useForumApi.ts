@@ -7,6 +7,7 @@ import {
   createQuestion,
   featureQuestion,
   getQuestion,
+  listMyQuestions,
   listQuestions,
   report,
   searchQuestions,
@@ -31,6 +32,14 @@ export function useForumQuestions(params: ForumQuestionQuery = {}) {
   return useQuery({
     queryKey: forumKeys.questions(params),
     queryFn: () => listQuestions(params),
+    retry: false,
+  });
+}
+
+export function useMyForumQuestions(params: ForumQuestionQuery = {}) {
+  return useQuery({
+    queryKey: ["forum", "questions", "mine", params] as const,
+    queryFn: () => listMyQuestions(params),
     retry: false,
   });
 }

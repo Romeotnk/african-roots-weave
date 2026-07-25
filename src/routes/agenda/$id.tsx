@@ -1,7 +1,11 @@
-﻿import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { CalendarDays, Clock3, MapPin } from "lucide-react";
 import { EventCard } from "@/components/shared/EventCard";
 import { events } from "@/data/events";
+import { useEvent, useEvents } from "@/hooks/useEventsFormationsApi";
+import { toEventItem, type BackendEvent } from "@/lib/eventMappers";
+import type { EventItem } from "@/types";
 
 export const Route = createFileRoute("/agenda/$id")({
   head: () => ({ meta: [{ title: "Événement - IWOSAN" }] }),
@@ -10,10 +14,20 @@ export const Route = createFileRoute("/agenda/$id")({
 
 function EventDetail() {
   const { id } = Route.useParams();
-  const event = events.find((item) => item.id === id) ?? events[0];
+  const eventQuery = useEvent(id);
+  const eventsQuery = useEvents();
+
+  const apiEvent = useMemo(() => toEventItem((eventQuery.data ?? {}) as BackendEvent), [eventQuery.data]);
+  const event = apiEvent ?? events.find((item) => item.id === id) ?? events[0];
   const d = new Date(event.date);
   const end = event.endDate ? new Date(event.endDate) : null;
-  const related = events.filter((item) => item.id !== event.id && item.type === event.type).slice(0, 3);
+
+  const apiEvents = useMemo(
+    () => ((eventsQuery.data?.events ?? []) as BackendEvent[]).map(toEventItem).filter((item): item is EventItem => Boolean(item)),
+    [eventsQuery.data],
+  );
+  const relatedPool = apiEvent ? apiEvents : events;
+  const related = relatedPool.filter((item) => item.id !== event.id && item.type === event.type).slice(0, 3);
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">
@@ -47,17 +61,19 @@ function EventDetail() {
 
       <section className="container-iwosan grid gap-8 py-10 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
-          <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-6 sm:p-7">
-            <h2 className="text-[22px] font-bold">Programme</h2>
-            <div className="mt-4 space-y-3">
-              {(event.program ?? []).map((item) => (
-                <div key={item.title} className="rounded-2xl bg-[var(--brand-surface-alt)] p-4">
-                  <p className="font-bold">{item.title}</p>
-                  <p className="mt-1 text-[14px] text-[var(--color-text-secondary)]">{item.detail}</p>
-                </div>
-              ))}
-            </div>
-          </section>
+          {event.program && event.program.length > 0 && (
+            <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-6 sm:p-7">
+              <h2 className="text-[22px] font-bold">Programme</h2>
+              <div className="mt-4 space-y-3">
+                {event.program.map((item) => (
+                  <div key={item.title} className="rounded-2xl bg-[var(--brand-surface-alt)] p-4">
+                    <p className="font-bold">{item.title}</p>
+                    <p className="mt-1 text-[14px] text-[var(--color-text-secondary)]">{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {event.speakers?.length ? (
             <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-6 sm:p-7">
@@ -74,12 +90,14 @@ function EventDetail() {
             </section>
           ) : null}
 
-          <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-6 sm:p-7">
-            <h2 className="text-[22px] font-bold">Événements similaires</h2>
-            <div className="mt-4 space-y-4">
-              {related.map((item) => <EventCard key={item.id} event={item} actionLabel="Voir" />)}
-            </div>
-          </section>
+          {related.length > 0 && (
+            <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-6 sm:p-7">
+              <h2 className="text-[22px] font-bold">Événements similaires</h2>
+              <div className="mt-4 space-y-4">
+                {related.map((item) => <EventCard key={item.id} event={item} actionLabel="Voir" />)}
+              </div>
+            </section>
+          )}
         </div>
 
         <aside className="h-fit rounded-[24px] border border-[var(--brand-border-light)] bg-white p-6">

@@ -11,6 +11,10 @@ import { professionals } from "@/data/professionals";
 import { events } from "@/data/events";
 import { getSiteConfig } from "@/lib/api/site";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useProducts, useProfessionals } from "@/hooks/useApiCatalog";
+import { useEvents } from "@/hooks/useEventsFormationsApi";
+import { toEventItem, type BackendEvent } from "@/lib/eventMappers";
+import type { EventItem } from "@/types";
 
 export const Route = createFileRoute("/")({
   loader: async () => {
@@ -78,9 +82,9 @@ const heroSlides = [
 
 const modules = [
   { title: "Marketplace", desc: "Petites annonces : produits, services, digital", icon: ShoppingBag, to: '/marketplace' },
-  { title: "Annuaire pro", desc: "Fiches détaillées des détenteurs de savoirs", icon: Users, to: '/pro/p1' },
+  { title: "Annuaire pro", desc: "Fiches détaillées des détenteurs de savoirs", icon: Users, to: '/annuaire' },
   { title: "Recettes santé", desc: "Centre d'aide : base de connaissances + tickets", icon: ReceiptText, to: '/recettes-sante' },
-  { title: "Portrait de la semaine", desc: "Un professionnel mis à l'honneur en accueil", icon: BadgeCheck, to: '/pro/p1' },
+  { title: "Portrait de la semaine", desc: "Un professionnel mis à l'honneur en accueil", icon: BadgeCheck, to: '/annuaire' },
   { title: "Santé au quotidien", desc: "Blog communautaire par catégories", icon: Stethoscope, to: '/sante-au-quotidien' },
   { title: "Pharmacopée vivante", desc: "Monographies de plantes médicinales", icon: Leaf, to: '/pharmacopee' },
   { title: "Rites & Cultures", desc: "Exploration anthropologique et spirituelle", icon: FlaskConical, to: '/rites-cultures' },
@@ -182,11 +186,24 @@ function ModulesStrip() {
 }
 
 function Home() {
-  const featuredProducts = products.slice(0, 4);
-  const featuredProfessionals = professionals.slice(0, 4);
-  const featuredEvents = events.slice(0, 3);
   const siteConfigQuery = useSiteConfig();
   const announcement = siteConfigQuery.data?.data?.["site.home.announcement"]?.trim();
+
+  const emptyParams = useMemo(() => new URLSearchParams(), []);
+  const productsQuery = useProducts(emptyParams);
+  const professionalsQuery = useProfessionals(emptyParams);
+  const eventsQuery = useEvents();
+
+  const apiEvents = useMemo(
+    () => ((eventsQuery.data?.events ?? []) as BackendEvent[]).map(toEventItem).filter((item): item is EventItem => Boolean(item)),
+    [eventsQuery.data],
+  );
+
+  const apiProducts = productsQuery.data?.products ?? [];
+  const apiProfessionals = professionalsQuery.data?.professionals ?? [];
+  const featuredProducts = (apiProducts.length > 0 ? apiProducts : products).slice(0, 4);
+  const featuredProfessionals = (apiProfessionals.length > 0 ? apiProfessionals : professionals).slice(0, 4);
+  const featuredEvents = (apiEvents.length > 0 ? apiEvents : events).slice(0, 3);
 
   return (
     <>
@@ -216,7 +233,7 @@ function Home() {
               <p className="mt-2 inline-flex items-center gap-1.5 text-[14px] text-[var(--color-text-muted)]"><MapPin size={14} /> {featuredProfessionals[0].location}, {featuredProfessionals[0].country}</p>
               <p className="mt-5 text-[15px] leading-[1.7] text-[var(--color-text-secondary)]">{featuredProfessionals[0].bio}</p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <Link to="/annuaire/$id" params={{ id: featuredProfessionals[0].id }} className="h-11 inline-flex items-center justify-center px-5 rounded-full bg-[var(--brand-primary)] text-white font-semibold">Voir le profil complet</Link>
+                <Link to="/pro/$id" params={{ id: featuredProfessionals[0].id }} className="h-11 inline-flex items-center justify-center px-5 rounded-full bg-[var(--brand-primary)] text-white font-semibold">Voir le profil complet</Link>
                 <Link to="/annuaire" className="h-11 inline-flex items-center justify-center px-5 rounded-full border border-[var(--brand-border)] font-semibold">Explorer</Link>
               </div>
             </div>

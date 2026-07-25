@@ -7,7 +7,7 @@ import { RatingStars } from "@/components/shared/RatingStars";
 import { trainings } from "@/data/trainings";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useFormations } from "@/hooks/useEventsFormationsApi";
-import type { TrainingCourse } from "@/types";
+import { toTrainingCourses } from "@/lib/mappers/formation";
 
 export const Route = createFileRoute("/formations")({
   head: () => ({ meta: [{ title: "Formations - IWOSAN" }] }),
@@ -17,44 +17,6 @@ export const Route = createFileRoute("/formations")({
 const levels = ["Tous", "Debutant", "Intermediaire", "Avance"];
 const formats = ["Tous formats", "video", "document", "presentiel"];
 const prices = ["Tous prix", "gratuit", "payant"];
-const fallbackFormationImage = "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=1200&q=80&auto=format&fit=crop";
-
-type BackendFormation = {
-  id?: string;
-  title?: string;
-  description?: string | null;
-  type?: "VIDEO" | "DOCUMENT" | "COURSE";
-  coverImage?: string | null;
-  category?: string;
-  downloadCount?: number;
-  createdAt?: string;
-};
-
-function toTrainingCourse(course: BackendFormation): TrainingCourse | null {
-  if (!course.id || !course.title) return null;
-  const format = course.type === "DOCUMENT" ? "document" : "video";
-  return {
-    id: course.id,
-    slug: course.id,
-    title: course.title,
-    instructor: "Equipe IWOSAN",
-    instructorAvatar: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=120&q=80",
-    instructorBio: "Ressource publiee dans la bibliotheque de formation IWOSAN.",
-    duration: format === "document" ? "Document" : "A votre rythme",
-    level: "Debutant",
-    format,
-    category: course.category ?? "Formation",
-    price: 0,
-    currency: "XOF",
-    rating: 0,
-    students: course.downloadCount ?? 0,
-    image: course.coverImage ?? fallbackFormationImage,
-    prerequisites: [],
-    learnings: [course.description ?? "Consulter la ressource et ses supports associes."],
-    modules: [],
-    reviews: [],
-  };
-}
 
 function Formations() {
   const formationsQuery = useFormations();
@@ -64,10 +26,7 @@ function Formations() {
   const [price, setPrice] = useState("Tous prix");
   const [category, setCategory] = useState("Toutes");
   const debouncedSearch = useDebounce(search, 300);
-  const apiTrainings = useMemo(
-    () => ((formationsQuery.data?.formations ?? []) as BackendFormation[]).map(toTrainingCourse).filter(Boolean) as TrainingCourse[],
-    [formationsQuery.data],
-  );
+  const apiTrainings = useMemo(() => toTrainingCourses(formationsQuery.data?.formations), [formationsQuery.data]);
   const courseList = apiTrainings.length > 0 ? apiTrainings : trainings;
   const categories = ["Toutes", ...Array.from(new Set(courseList.map((course) => course.category)))];
 

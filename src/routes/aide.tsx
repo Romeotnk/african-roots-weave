@@ -3,6 +3,8 @@ import { useMemo, useRef, useState } from "react";
 import { HelpCircle, Paperclip, Send } from "lucide-react";
 import { faqCategories } from "@/data/help";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useCreateTicket } from "@/hooks/useTicketsApi";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 export const Route = createFileRoute("/aide")({
   head: () => ({ meta: [{ title: "Centre d'aide - IWOSAN" }] }),
@@ -10,6 +12,8 @@ export const Route = createFileRoute("/aide")({
 });
 
 function HelpCenter() {
+  const { user } = useAuth();
+  const createTicket = useCreateTicket();
   const [query, setQuery] = useState("");
   const [ticketOpen, setTicketOpen] = useState(false);
   const [subject, setSubject] = useState("");
@@ -47,10 +51,23 @@ function HelpCenter() {
       return;
     }
 
-    setFormMessage(`Ticket créé dans la catégorie ${category}. Retrouvez-le dans votre espace tickets.`);
-    setSubject("");
-    setMessage("");
-    setAttachmentName("");
+    if (!user) {
+      setFormMessage("Connectez-vous pour ouvrir un ticket support.");
+      return;
+    }
+
+    createTicket.mutate(
+      { subject: cleanSubject, category, content: cleanMessage },
+      {
+        onSuccess: () => {
+          setFormMessage(`Ticket créé dans la catégorie ${category}. Retrouvez-le dans votre espace tickets.`);
+          setSubject("");
+          setMessage("");
+          setAttachmentName("");
+        },
+        onError: (error) => setFormMessage(error instanceof Error ? error.message : "Impossible de créer le ticket."),
+      },
+    );
   };
 
   return (

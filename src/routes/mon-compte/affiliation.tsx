@@ -9,7 +9,7 @@ import {
 } from "@/data/affiliate";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { useAffiliateLink, useMlmEarnings, useMlmStats, useMlmTree } from "@/hooks/useMlmApi";
+import { useAffiliateLink, useMlmEarnings, useMlmLeaderboard, useMlmStats, useMlmTree, useMyCommissions } from "@/hooks/useMlmApi";
 import type { AffiliateEarning, AffiliateNode } from "@/types";
 
 export const Route = createFileRoute("/mon-compte/affiliation")({
@@ -47,6 +47,36 @@ type BackendMlmNode = {
 type BackendMlmEarning = {
   _sum?: { amount?: string | number | null };
 };
+
+type BackendCommission = {
+  id?: string;
+  amount?: string | number;
+  type?: string;
+  status?: string;
+  createdAt?: string;
+  sourceOrder?: { product?: { title?: string } | null } | null;
+};
+
+type BackendLeaderboardRow = { rank?: number; name?: string; earnings?: string | number };
+
+const commissionTypeMap: Record<string, AffiliateEarning["type"]> = {
+  DIRECT: "direct_sale",
+  MLM_LEVEL1: "direct_sale",
+  MLM_LEVEL2: "level_2",
+  MLM_LEVEL3: "level_3",
+};
+
+function toAffiliateEarning(commission: BackendCommission): AffiliateEarning | null {
+  if (!commission.id) return null;
+  return {
+    id: commission.id,
+    date: commission.createdAt ? new Date(commission.createdAt).toLocaleDateString("fr-FR") : "-",
+    type: commissionTypeMap[commission.type ?? ""] ?? "direct_sale",
+    amount: toAmount(commission.amount),
+    status: commission.status === "PAID" ? "paid" : "pending",
+    source: commission.sourceOrder?.product?.title ?? "Commande Iwosan",
+  };
+}
 
 const toAmount = (value: unknown) => {
   const amount = Number(value ?? 0);
@@ -133,6 +163,18 @@ function AffiliationPage() {
   const mlmStatsQuery = useMlmStats();
   const mlmTreeQuery = useMlmTree();
   const mlmEarningsQuery = useMlmEarnings();
+  const commissionsQuery = useMyCommissions();
+  const leaderboardQuery = useMlmLeaderboard();
+  const displayedEarnings = useMemo(() => {
+    const rows = ((commissionsQuery.data ?? []) as BackendCommission[]).map(toAffiliateEarning).filter((row): row is AffiliateEarning => Boolean(row));
+    return rows.length > 0 ? rows : affiliateEarnings;
+  }, [commissionsQuery.data]);
+  const displayedLeaderboard = useMemo(() => {
+    const rows = (leaderboardQuery.data ?? []) as BackendLeaderboardRow[];
+    return rows.length > 0
+      ? rows.map((row) => ({ rank: row.rank ?? 0, name: row.name || "Membre Iwosan", earnings: toAmount(row.earnings) }))
+      : affiliateLeaderboard;
+  }, [leaderboardQuery.data]);
   const treeRoot = useMemo(() => {
     if (mlmTreeQuery.data && typeof mlmTreeQuery.data === "object" && "id" in mlmTreeQuery.data) {
       return fromBackendNode(mlmTreeQuery.data as BackendMlmNode);
@@ -307,7 +349,7 @@ function AffiliationPage() {
                 <tr><th className="p-3">Date</th><th className="p-3">Type</th><th className="p-3">Source</th><th className="p-3">Montant</th><th className="p-3">Statut</th></tr>
               </thead>
               <tbody>
-                {affiliateEarnings.map((earning) => (
+                {displayedEarnings.map((earning) => (
                   <tr key={earning.id} className="border-t border-[var(--brand-border-light)]">
                     <td className="p-3">{earning.date}</td>
                     <td className="p-3">{earningLabels[earning.type]}</td>
@@ -343,7 +385,7 @@ function AffiliationPage() {
           <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
             <h2 className="text-[18px] font-bold">Top affilies du mois</h2>
             <div className="mt-4 space-y-3">
-              {affiliateLeaderboard.map((row) => (
+              {displayedLeaderboard.map((row) => (
                 <div key={row.rank} className="flex items-center justify-between rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">
                   <span className="font-bold">#{row.rank} {row.name}</span>
                   <span>{row.earnings.toLocaleString("fr-FR")} FCFA</span>

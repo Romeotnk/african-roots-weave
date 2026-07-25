@@ -7,8 +7,13 @@ import {
   getFormation,
   listEvents,
   listFormations,
+  listMyEvents,
+  listMyFormations,
+  listMyRegistrations,
   registerEvent,
   unregisterEvent,
+  updateEvent,
+  updateFormation,
   type EventPayload,
   type EventQuery,
   type FormationPayload,
@@ -42,10 +47,27 @@ export function useEvent(id: string) {
   });
 }
 
+export function useMyEvents(params: EventQuery = {}) {
+  return useQuery({
+    queryKey: ["events", "mine", params] as const,
+    queryFn: () => listMyEvents(params),
+    enabled: isBrowser,
+    retry: false,
+  });
+}
+
 export function useCreateEvent() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: EventPayload) => createEvent(payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
+  });
+}
+
+export function useUpdateEvent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: Partial<EventPayload> }) => updateEvent(id, payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
   });
 }
@@ -66,10 +88,28 @@ export function useUnregisterEvent() {
   });
 }
 
+export function useMyRegistrations() {
+  return useQuery({
+    queryKey: ["events", "registrations", "mine"] as const,
+    queryFn: listMyRegistrations,
+    enabled: isBrowser,
+    retry: false,
+  });
+}
+
 export function useFormations(params: FormationQuery = {}) {
   return useQuery({
     queryKey: eventsFormationKeys.formations(params),
     queryFn: () => listFormations(params),
+    enabled: isBrowser,
+    retry: false,
+  });
+}
+
+export function useMyFormations(params: FormationQuery = {}) {
+  return useQuery({
+    queryKey: ["formations", "mine", params] as const,
+    queryFn: () => listMyFormations(params),
     enabled: isBrowser,
     retry: false,
   });
@@ -89,6 +129,17 @@ export function useCreateFormation() {
   return useMutation({
     mutationFn: (payload: FormationPayload) => createFormation(payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["formations"] }),
+  });
+}
+
+export function useUpdateFormation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: FormationPayload }) => updateFormation(id, payload),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["formations"] });
+      queryClient.invalidateQueries({ queryKey: eventsFormationKeys.formation(variables.id) });
+    },
   });
 }
 

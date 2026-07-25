@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { CheckCircle2, FileText, MessageCircle, PlayCircle } from "lucide-react";
+import { CheckCircle2, Download, FileText, MessageCircle, PlayCircle } from "lucide-react";
 import { trainings } from "@/data/trainings";
+import { useDownloadFormation, useFormation } from "@/hooks/useEventsFormationsApi";
+import { toTrainingCourse, type BackendFormation } from "@/lib/mappers/formation";
 
 export const Route = createFileRoute("/formations/$id/apprendre")({
   head: () => ({ meta: [{ title: "Espace apprenant - IWOSAN" }] }),
@@ -10,12 +12,42 @@ export const Route = createFileRoute("/formations/$id/apprendre")({
 
 function Learn() {
   const { id } = Route.useParams();
-  const course = trainings.find((item) => item.id === id || item.slug === id) ?? trainings[0];
+  const formationQuery = useFormation(id);
+  const downloadFormation = useDownloadFormation();
+  const apiCourse = useMemo(() => toTrainingCourse((formationQuery.data ?? {}) as BackendFormation), [formationQuery.data]);
+  const course = apiCourse ?? trainings.find((item) => item.id === id || item.slug === id) ?? trainings[0];
+  const rawFileUrl = (formationQuery.data as { fileUrl?: string } | undefined)?.fileUrl;
+
   const lessons = course.modules.flatMap((module) => module.lessons.map((lesson) => ({ ...lesson, module: module.title })));
   const [activeLessonId, setActiveLessonId] = useState(lessons[0]?.id);
   const [done, setDone] = useState<string[]>([]);
   const activeLesson = lessons.find((lesson) => lesson.id === activeLessonId) ?? lessons[0];
   const progress = useMemo(() => Math.round((done.length / Math.max(lessons.length, 1)) * 100), [done.length, lessons.length]);
+
+  if (lessons.length === 0) {
+    return (
+      <main className="min-h-screen bg-[var(--brand-bg)]">
+        <section className="container-iwosan py-16">
+          <Link to="/formations/$id" params={{ id: course.id }} className="text-[13px] font-semibold text-[var(--brand-primary)]">Retour au cours</Link>
+          <div className="mt-6 rounded-[12px] border border-[var(--brand-border-light)] bg-white p-8 text-center">
+            <FileText size={48} className="mx-auto text-[var(--brand-primary)]" />
+            <h1 className="mt-4 text-[24px] font-bold">{course.title}</h1>
+            <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
+              Cette ressource est une documentation à télécharger, sans découpage en leçons.
+            </p>
+            <button
+              type="button"
+              onClick={() => rawFileUrl && downloadFormation.mutate(course.id, { onSuccess: () => window.open(rawFileUrl, "_blank", "noopener,noreferrer") })}
+              disabled={downloadFormation.isPending}
+              className="mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-6 text-[13px] font-semibold text-white disabled:opacity-50"
+            >
+              <Download size={16} /> {downloadFormation.isPending ? "Préparation..." : "Télécharger la ressource"}
+            </button>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">

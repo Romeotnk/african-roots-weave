@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, MessageSquare, PackageCheck, Star } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { orders } from "@/data/orders";
+import { useConfirmOrderDelivery, useMyOrders } from "@/hooks/useOrdersApi";
+import { useCreateReview } from "@/hooks/useReviewsApi";
+import { useAuth } from "@/lib/auth/AuthContext";
 import type { Order, OrderStatus } from "@/types";
 
 export const Route = createFileRoute("/mes-commandes")({
@@ -12,17 +15,58 @@ export const Route = createFileRoute("/mes-commandes")({
 const timeline: { id: OrderStatus; label: string }[] = [
   { id: "confirmed", label: "Confirmee" },
   { id: "paid", label: "Payee" },
-  { id: "preparing", label: "Preparation" },
-  { id: "shipped", label: "Expediee" },
   { id: "delivered", label: "Livree" },
-  { id: "completed", label: "Terminee" },
 ];
+
+type BackendOrder = {
+  id: string;
+  buyerId: string;
+  sellerId: string;
+  quantity: number;
+  totalAmount: string | number;
+  status: string;
+  createdAt: string;
+  product?: { id: string; title: string; slug: string; images: string[] } | null;
+};
+
+const statusMap: Record<string, OrderStatus> = {
+  PENDING: "confirmed",
+  PAID: "paid",
+  SHIPPED: "shipped",
+  DELIVERED: "delivered",
+  DISPUTED: "delivered",
+  REFUNDED: "completed",
+  CANCELLED: "confirmed",
+};
+
+function toOrder(order: BackendOrder, myUserId: string | undefined): Order {
+  return {
+    id: order.id,
+    role: order.buyerId === myUserId ? "buyer" : "seller",
+    date: order.createdAt.slice(0, 10),
+    status: statusMap[order.status] ?? "confirmed",
+    total: Number(order.totalAmount),
+    items: [{ title: order.product?.title ?? "Produit", seller: "", quantity: order.quantity, price: Number(order.totalAmount) }],
+  };
+}
 
 type ReviewDraft = { rating: number; comment: string; submitted?: boolean };
 
 function OrdersPage() {
+  const { user } = useAuth();
   const [tab, setTab] = useState<"buyer" | "seller">("buyer");
-  const [localOrders, setLocalOrders] = useState<Order[]>(orders);
+  const ordersQuery = useMyOrders("all");
+  const confirmDelivery = useConfirmOrderDelivery();
+  const createReview = useCreateReview();
+
+  const apiOrders = useMemo(() => {
+    const raw = (ordersQuery.data?.data ?? []) as (BackendOrder & { productId?: string })[];
+    return raw.map((order) => toOrder(order, user?.id));
+  }, [ordersQuery.data, user?.id]);
+  const rawOrders = (ordersQuery.data?.data ?? []) as (BackendOrder & { productId?: string })[];
+
+  const isRealData = ordersQuery.isSuccess;
+  const localOrders = isRealData ? apiOrders : orders;
   const [actionMessage, setActionMessage] = useState("");
   const [reviewOrderId, setReviewOrderId] = useState("");
   const [orderReviews, setOrderReviews] = useState<Record<string, ReviewDraft>>({});
@@ -30,10 +74,14 @@ function OrdersPage() {
   const filtered = localOrders.filter((order) => order.role === tab);
 
   const confirmReception = (orderId: string) => {
-    setLocalOrders((current) =>
-      current.map((order) => (order.id === orderId ? { ...order, status: "completed" } : order)),
-    );
-    setActionMessage(`Reception confirmee pour la commande ${orderId}.`);
+    if (!isRealData) {
+      setActionMessage(`Reception confirmee pour la commande ${orderId}.`);
+      return;
+    }
+    confirmDelivery.mutate(orderId, {
+      onSuccess: () => setActionMessage(`Reception confirmee pour la commande ${orderId}.`),
+      onError: (error) => setActionMessage(error instanceof Error ? error.message : "Confirmation impossible."),
+    });
   };
 
   const openReview = (orderId: string) => {
@@ -48,6 +96,22 @@ function OrdersPage() {
     const review = orderReviews[orderId];
     if (!review?.rating) {
       setActionMessage("Choisissez une note avant d'envoyer l'avis.");
+      return;
+    }
+
+    const productId = rawOrders.find((order) => order.id === orderId)?.product?.id;
+    if (isRealData && productId) {
+      createReview.mutate(
+        { targetId: productId, targetType: "PRODUCT", rating: review.rating, comment: review.comment || undefined },
+        {
+          onSuccess: () => {
+            setOrderReviews((current) => ({ ...current, [orderId]: { ...review, submitted: true } }));
+            setReviewOrderId("");
+            setActionMessage(`Avis enregistre pour la commande ${orderId}.`);
+          },
+          onError: (error) => setActionMessage(error instanceof Error ? error.message : "Impossible d'enregistrer l'avis."),
+        },
+      );
       return;
     }
 
@@ -100,8 +164,8 @@ function OrdersPage() {
 
         {filtered.map((order) => {
           const statusIndex = timeline.findIndex((step) => step.id === order.status);
-          const canConfirmReception = tab === "buyer" && order.status === "delivered";
-          const receptionConfirmed = order.status === "completed";
+          const canConfirmReception = tab === "buyer" && order.status === "paid";
+          const receptionConfirmed = order.status === "delivered" || order.status === "completed";
           const review = orderReviews[order.id];
 
           return (
@@ -118,7 +182,7 @@ function OrdersPage() {
                 </span>
               </div>
 
-              <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-6">
+              <div className="mt-5 grid grid-cols-3 gap-3">
                 {timeline.map((step, index) => (
                   <div key={step.id} className="text-center">
                     <div className={`mx-auto grid h-8 w-8 place-items-center rounded-full ${index <= statusIndex ? "bg-[var(--brand-primary)] text-white" : "bg-[var(--brand-surface-alt)] text-[var(--color-text-muted)]"}`}>
@@ -152,7 +216,7 @@ function OrdersPage() {
                     <button
                       type="button"
                       onClick={() => confirmReception(order.id)}
-                      disabled={!canConfirmReception}
+                      disabled={!canConfirmReception || confirmDelivery.isPending}
                       className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-[13px] font-semibold ${canConfirmReception ? "bg-[var(--brand-primary)] text-white" : "cursor-not-allowed bg-[var(--brand-surface-alt)] text-[var(--color-text-muted)]"}`}
                     >
                       <PackageCheck size={15} /> {receptionConfirmed ? "Reception confirmee" : canConfirmReception ? "Confirmer la reception" : "Attendre la livraison"}
@@ -205,14 +269,15 @@ function OrdersPage() {
                   <button
                     type="button"
                     onClick={() => submitReview(order.id)}
-                    className="mt-3 h-10 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white"
+                    disabled={createReview.isPending}
+                    className="mt-3 h-10 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-50"
                   >
-                    Enregistrer l'avis
+                    {createReview.isPending ? "Envoi..." : "Enregistrer l'avis"}
                   </button>
                 </div>
               )}
 
-              {tab === "seller" && ["delivered", "completed"].includes(order.status) && (
+              {!isRealData && tab === "seller" && ["delivered", "completed"].includes(order.status) && (
                 <div className="mt-5 rounded-lg border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>

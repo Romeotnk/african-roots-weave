@@ -1,7 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { Bold, Code, Image, Italic, List, Paperclip, Send } from "lucide-react";
 import { forumCategories, questions } from "@/data/questions";
+import { useCreateForumQuestion } from "@/hooks/useForumApi";
 import { useDebounce } from "@/hooks/useDebounce";
 
 export const Route = createFileRoute("/forum/nouvelle-question")({
@@ -12,6 +13,8 @@ export const Route = createFileRoute("/forum/nouvelle-question")({
 const suggestedTags = ["pharmacopee", "grossesse", "securite", "posologie", "karite", "neem", "douleur", "nutrition"];
 
 function NewQuestion() {
+  const navigate = useNavigate();
+  const createQuestion = useCreateForumQuestion();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [category, setCategory] = useState(forumCategories[0].name);
@@ -77,8 +80,23 @@ function NewQuestion() {
     }
 
     setFormError("");
-    setSubmitted(true);
-    setDraftSaved(false);
+    createQuestion.mutate(
+      { title: title.trim(), content: body.trim(), category, tags },
+      {
+        onSuccess: (created) => {
+          setSubmitted(true);
+          setDraftSaved(false);
+          window.localStorage.removeItem("iwosan.forumDraft");
+          const createdId = (created as { id?: string } | null)?.id;
+          if (createdId) {
+            navigate({ to: "/forum/$id", params: { id: createdId } });
+          }
+        },
+        onError: (error) => {
+          setFormError(error instanceof Error ? error.message : "Impossible de publier la question.");
+        },
+      },
+    );
   };
 
   return (
@@ -292,9 +310,10 @@ function NewQuestion() {
             </button>
             <button
               type="submit"
-              className="inline-flex h-11 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white"
+              disabled={createQuestion.isPending}
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white disabled:opacity-50"
             >
-              <Send size={15} /> Publier
+              <Send size={15} /> {createQuestion.isPending ? "Publication..." : "Publier"}
             </button>
           </div>
         </form>

@@ -261,6 +261,7 @@ export interface TrainingCourse {
   slug: string;
   title: string;
   instructor: string;
+  instructorProfileId?: string;
   instructorAvatar: string;
   instructorBio: string;
   duration: string;
@@ -304,6 +305,7 @@ export interface AffiliateEarning {
 
 export interface Question {
   id: string;
+  authorId?: string;
   title: string;
   excerpt: string;
   body?: string;

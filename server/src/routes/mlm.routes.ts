@@ -3,6 +3,8 @@ import {
   affiliateLink,
   capturePage,
   earnings,
+  leaderboard,
+  myCommissions,
   myTree,
   stats,
   trackClick,
@@ -16,6 +18,8 @@ export const mlmRouter = Router();
 // Authenticated network insights.
 mlmRouter.get("/my-tree", authMiddleware, myTree);
 mlmRouter.get("/earnings", authMiddleware, earnings);
+mlmRouter.get("/commissions/mine", authMiddleware, myCommissions);
+mlmRouter.get("/leaderboard", authMiddleware, leaderboard);
 mlmRouter.get("/stats", authMiddleware, stats);
 mlmRouter.get("/affiliate-link", authMiddleware, affiliateLink);
 

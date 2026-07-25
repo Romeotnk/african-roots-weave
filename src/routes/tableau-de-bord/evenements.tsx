@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Calendar, Copy, Eye, Plus, Search, Ticket, XCircle } from "lucide-react";
+import { Calendar, Eye, Plus, Search, Ticket, XCircle } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import { events } from "@/data/events";
+import { useCreateEvent, useMyEvents, useUpdateEvent } from "@/hooks/useEventsFormationsApi";
+import { toEventItem, type BackendEvent } from "@/lib/eventMappers";
 import type { EventItem } from "@/types";
 
 export const Route = createFileRoute("/tableau-de-bord/evenements")({
@@ -45,7 +47,23 @@ const statusLabels: Record<EventStatus, string> = {
 };
 
 function EventsDashboard() {
-  const [items, setItems] = useState<LocalEvent[]>(events.map((event) => ({ ...event, localStatus: event.status ?? "confirmed" })));
+  const myEventsQuery = useMyEvents();
+  const createEventMutation = useCreateEvent();
+  const updateEventMutation = useUpdateEvent();
+
+  const apiEvents = useMemo(
+    () =>
+      ((myEventsQuery.data?.events ?? []) as (BackendEvent & { isPublished?: boolean })[])
+        .map((event) => {
+          const item = toEventItem(event);
+          return item ? { ...item, localStatus: (event.isPublished ? "confirmed" : "pending") as EventStatus } : null;
+        })
+        .filter((item): item is LocalEvent => Boolean(item)),
+    [myEventsQuery.data],
+  );
+  const isRealData = myEventsQuery.isSuccess;
+  const items: LocalEvent[] = isRealData ? apiEvents : events.map((event) => ({ ...event, localStatus: event.status ?? "confirmed" }));
+
   const [filter, setFilter] = useState<EventStatus | "all">("all");
   const [query, setQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -67,19 +85,19 @@ function EventsDashboard() {
   const registeredTotal = items.reduce((sum, event) => sum + (event.registered ?? 0), 0);
 
   const updateStatus = (id: string, status: EventStatus) => {
-    setItems((current) => current.map((event) => (event.id === id ? { ...event, localStatus: status } : event)));
-    setMessage(status === "confirmed" ? "Événement publié." : status === "cancelled" ? "Événement annulé." : "Événement remis en brouillon.");
+    if (!isRealData) return;
+    updateEventMutation.mutate(
+      { id, payload: { isPublished: status === "confirmed" } },
+      {
+        onSuccess: () =>
+          setMessage(status === "confirmed" ? "Événement publié." : "Événement dépublié."),
+        onError: (error) => setMessage(error instanceof Error ? error.message : "Action impossible."),
+      },
+    );
   };
 
-  const duplicateEvent = (id: string) => {
-    const source = items.find((event) => event.id === id);
-    if (!source) return;
-    setItems((current) => [{ ...source, id: `local-${Date.now()}`, title: `${source.title} - copie`, localStatus: "pending", registered: 0 }, ...current]);
-    setMessage("Copie créée en brouillon.");
-  };
-
-  const createEvent = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const createEvent = (formEvent: FormEvent<HTMLFormElement>) => {
+    formEvent.preventDefault();
     const title = form.title.trim();
     const capacity = Number(form.capacity);
     const price = Number(form.price);
@@ -104,30 +122,30 @@ function EventsDashboard() {
       return;
     }
 
-    const id = `local-${Date.now()}`;
-    setItems((current) => [
+    const startDate = new Date(form.date);
+    const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+
+    createEventMutation.mutate(
       {
-        id,
         title,
-        type: form.category.toLowerCase().includes("webinaire") ? "WEBINAIRE" : form.category.toLowerCase().includes("formation") ? "FORMATION" : "ATELIER",
-        category: form.category.trim() || "Atelier",
-        date: new Date(form.date).toISOString(),
-        location: form.location.trim() || (form.online ? "En ligne" : "Lieu à confirmer"),
-        online: form.online,
+        type: form.category.toLowerCase().includes("webinaire") ? "WEBINAR" : form.category.toLowerCase().includes("formation") ? "FORMATION" : "SALON",
         description: "Description à compléter avant publication.",
-        image: "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200&q=80&auto=format&fit=crop",
-        price,
-        currency: "XOF",
-        capacity,
-        registered: 0,
-        status: "pending",
-        localStatus: "pending",
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        location: form.online ? undefined : form.location.trim() || "Lieu à confirmer",
+        isOnline: form.online,
+        maxAttendees: capacity,
+        isPublished: false,
       },
-      ...current,
-    ]);
-    setForm(emptyEventForm);
-    setShowForm(false);
-    setMessage("Événement créé en brouillon. Complétez la description avant publication.");
+      {
+        onSuccess: () => {
+          setForm(emptyEventForm);
+          setShowForm(false);
+          setMessage("Événement créé en brouillon. Complétez la description avant publication.");
+        },
+        onError: (error) => setMessage(error instanceof Error ? error.message : "Impossible de créer l'événement."),
+      },
+    );
   };
 
   return (
@@ -254,14 +272,13 @@ function EventsDashboard() {
                       <Link to="/agenda" className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
                         <Eye size={15} /> Agenda
                       </Link>
-                      <button type="button" onClick={() => updateStatus(event.id, event.localStatus === "confirmed" ? "pending" : "confirmed")} disabled={isCancelled} className="inline-flex h-10 items-center rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
-                        {event.localStatus === "confirmed" ? "Dépublier" : "Publiér"}
-                      </button>
-                      <button type="button" onClick={() => duplicateEvent(event.id)} className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
-                        <Copy size={15} /> Dupliquer
-                      </button>
-                      <button type="button" onClick={() => updateStatus(event.id, "cancelled")} disabled={isCancelled} className="inline-flex h-10 items-center gap-2 rounded-full border border-rose-200 px-4 text-[13px] font-semibold text-rose-700 disabled:cursor-not-allowed disabled:opacity-50">
-                        <XCircle size={15} /> Annulér
+                      <button
+                        type="button"
+                        onClick={() => updateStatus(event.id, event.localStatus === "confirmed" ? "pending" : "confirmed")}
+                        disabled={isCancelled || updateEventMutation.isPending}
+                        className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {event.localStatus === "confirmed" ? <><XCircle size={15} /> Dépublier</> : "Publiér"}
                       </button>
                     </div>
                   </div>

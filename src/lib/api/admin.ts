@@ -79,6 +79,18 @@ export const approveArticle = (id: string) =>
 export const rejectArticle = (id: string, reason: string) =>
   apiRequest<unknown>(`/admin/articles/${id}/reject`, { method: "PUT", body: { reason } });
 
+export const getPendingEvents = () => apiRequest<unknown[]>("/admin/events/pending");
+export const approveEvent = (id: string) =>
+  apiRequest<unknown>(`/admin/events/${id}/approve`, { method: "PUT" });
+export const rejectEvent = (id: string, reason: string) =>
+  apiRequest<unknown>(`/admin/events/${id}/reject`, { method: "PUT", body: { reason } });
+
+export const getPendingFormations = () => apiRequest<unknown[]>("/admin/formations/pending");
+export const approveFormation = (id: string) =>
+  apiRequest<unknown>(`/admin/formations/${id}/approve`, { method: "PUT" });
+export const rejectFormation = (id: string, reason: string) =>
+  apiRequest<unknown>(`/admin/formations/${id}/reject`, { method: "PUT", body: { reason } });
+
 export const getPendingProfessionals = () => apiRequest<unknown[]>("/admin/professionals/pending");
 export const verifyProfessional = (id: string) =>
   apiRequest<unknown>(`/admin/professionals/${id}/verify`, { method: "PUT" });

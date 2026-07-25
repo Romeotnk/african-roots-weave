@@ -23,13 +23,22 @@ const fallbackCover = "https://images.unsplash.com/photo-1490818387583-1baba5e63
 const fallbackAvatar = "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=120&q=80&auto=format&fit=crop";
 
 const spaceToApi: Record<string, ArticleSpace> = {
-  "Sante au quotidien": "SANTE_NATURELLE",
+  "Sante au quotidien": "SANTE_QUOTIDIEN",
   "Rites & Cultures": "RITES_CULTURES",
   Pharmacopee: "PHARMACOPEE",
-  Recherche: "RECHERCHE",
 };
 
-type BackendArticle = {
+export type BackendRecipeData = {
+  type?: string;
+  difficulty?: string;
+  prepTime?: string;
+  plants?: { name: string; slug: string }[];
+  ingredients?: string[];
+  steps?: string[];
+  cautions?: string[];
+};
+
+export type BackendArticle = {
   id?: string;
   slug?: string;
   title?: string;
@@ -40,14 +49,16 @@ type BackendArticle = {
   tags?: string[];
   publishedAt?: string | null;
   createdAt?: string;
+  recipeData?: BackendRecipeData | null;
   author?: {
+    id?: string;
     firstName?: string | null;
     lastName?: string | null;
     role?: string | null;
   } | null;
 };
 
-function toArticle(article: BackendArticle, fallbackSpace: string): Article | null {
+export function toArticle(article: BackendArticle, fallbackSpace: string): Article | null {
   if (!article.id || !article.slug || !article.title) return null;
   const body = article.content ?? "";
   const excerpt = body.replace(/<[^>]*>/g, "").slice(0, 180) || "Article IWOSAN.";
@@ -66,6 +77,7 @@ function toArticle(article: BackendArticle, fallbackSpace: string): Article | nu
     authorName: authorName || "Equipe IWOSAN",
     authorAvatar: fallbackAvatar,
     authorSpecialty: article.author?.role ?? "Contributeur",
+    authorProfileId: article.author?.role === "PROFESSIONAL" ? article.author?.id : undefined,
   };
 }
 

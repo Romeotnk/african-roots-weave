@@ -1,5 +1,14 @@
-import { useMutation } from "@tanstack/react-query";
-import { confirmOrderDelivery, createOrder, openOrderDispute, requestOrderRefund } from "@/lib/api/orders";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { confirmOrderDelivery, createOrder, listMyOrders, openOrderDispute, requestOrderRefund } from "@/lib/api/orders";
+
+export function useMyOrders(scope: "all" | "buyer" | "seller" = "all") {
+  return useQuery({
+    queryKey: ["orders", "mine", scope] as const,
+    queryFn: () => listMyOrders(scope),
+    enabled: typeof window !== "undefined",
+    retry: false,
+  });
+}
 
 export function useCreateOrder() {
   return useMutation({
@@ -8,8 +17,10 @@ export function useCreateOrder() {
 }
 
 export function useConfirmOrderDelivery() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: confirmOrderDelivery,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["orders", "mine"] }),
   });
 }
 

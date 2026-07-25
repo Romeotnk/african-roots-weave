@@ -1,9 +1,19 @@
 import { Link } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { AlertTriangle, Clock, Leaf } from "lucide-react";
 import { recipes } from "@/data/recipes";
+import { useArticle } from "@/hooks/useContentApi";
+import { toRecipe } from "@/components/editorial/RecipeListPage";
+import type { BackendArticle } from "@/components/editorial/ArticleListPage";
 
 export function RecipeDetailPage({ slug }: { slug: string }) {
-  const recipe = recipes.find((item) => item.slug === slug) ?? recipes[0];
+  const articleQuery = useArticle(slug);
+  const apiRecipe = useMemo(() => {
+    const data = articleQuery.data as BackendArticle | undefined;
+    return data ? toRecipe(data) : null;
+  }, [articleQuery.data]);
+
+  const recipe = apiRecipe ?? recipes.find((item) => item.slug === slug) ?? recipes[0];
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">

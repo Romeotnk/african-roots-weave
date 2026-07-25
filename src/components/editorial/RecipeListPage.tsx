@@ -4,7 +4,10 @@ import { ChefHat, Clock, Coffee, Leaf, Soup } from "lucide-react";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { recipes } from "@/data/recipes";
+import { useArticles } from "@/hooks/useContentApi";
 import { useDebounce } from "@/hooks/useDebounce";
+import type { BackendArticle } from "@/components/editorial/ArticleListPage";
+import type { Recipe } from "@/types";
 
 const themes = [
   { name: "Infusion", icon: Coffee, color: "bg-amber-50 text-amber-700" },
@@ -13,14 +16,43 @@ const themes = [
   { name: "Preparation culinaire", icon: ChefHat, color: "bg-rose-50 text-rose-700" },
 ];
 
+const fallbackCover = "https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=1200&q=80&auto=format&fit=crop";
+
+export function toRecipe(article: BackendArticle): Recipe | null {
+  if (!article.id || !article.slug || !article.title) return null;
+  const recipeData = article.recipeData ?? {};
+  const body = article.content ?? "";
+  return {
+    id: article.id,
+    slug: article.slug,
+    title: article.title,
+    excerpt: body.replace(/<[^>]*>/g, "").slice(0, 180) || "Recette IWOSAN.",
+    image: article.coverImage ?? fallbackCover,
+    type: (recipeData.type as Recipe["type"]) ?? "Infusion",
+    difficulty: (recipeData.difficulty as Recipe["difficulty"]) ?? "Facile",
+    prepTime: recipeData.prepTime ?? "15 min",
+    plants: recipeData.plants ?? [],
+    ingredients: recipeData.ingredients ?? [],
+    steps: recipeData.steps ?? [],
+    cautions: recipeData.cautions ?? [],
+  };
+}
+
 export function RecipeListPage() {
+  const articlesQuery = useArticles({ space: "RECETTES_SANTE" });
   const [search, setSearch] = useState("");
   const [type, setType] = useState("Toutes");
   const debouncedSearch = useDebounce(search, 300);
 
+  const apiRecipes = useMemo(
+    () => ((articlesQuery.data?.articles ?? []) as BackendArticle[]).map(toRecipe).filter((item): item is Recipe => Boolean(item)),
+    [articlesQuery.data],
+  );
+  const allRecipes = apiRecipes.length > 0 ? apiRecipes : recipes;
+
   const filteredRecipes = useMemo(() => {
     const normalized = debouncedSearch.trim().toLowerCase();
-    return recipes.filter((recipe) => {
+    return allRecipes.filter((recipe) => {
       const searchable = [recipe.title, recipe.excerpt, recipe.type, recipe.difficulty, ...recipe.ingredients, ...recipe.plants.map((plant) => plant.name)]
         .join(" ")
         .toLowerCase();
@@ -28,7 +60,7 @@ export function RecipeListPage() {
       const matchesType = type === "Toutes" || recipe.type === type;
       return matchesSearch && matchesType;
     });
-  }, [debouncedSearch, type]);
+  }, [allRecipes, debouncedSearch, type]);
 
   return (
     <>
@@ -61,7 +93,7 @@ export function RecipeListPage() {
                 </div>
                 <h3 className="text-[16px] font-bold">{theme.name}</h3>
                 <p className="mt-1 text-[12px] uppercase tracking-wider text-[var(--color-text-muted)]">
-                  {recipes.filter((recipe) => recipe.type === theme.name).length} recettes
+                  {allRecipes.filter((recipe) => recipe.type === theme.name).length} recettes
                 </p>
               </button>
             ))}

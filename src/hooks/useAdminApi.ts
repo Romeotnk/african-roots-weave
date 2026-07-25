@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   approveArticle,
+  approveEvent,
+  approveFormation,
   approveProduct,
   approveAdminKyc,
   approveAdminRefund,
@@ -30,6 +32,8 @@ import {
   getAdminUser,
   getAdminUsers,
   getPendingArticles,
+  getPendingEvents,
+  getPendingFormations,
   getPendingProducts,
   getPendingProfessionals,
   hideAdminAnswer,
@@ -39,6 +43,8 @@ import {
   rejectAdminKyc,
   rejectAdminRefund,
   rejectArticle,
+  rejectEvent,
+  rejectFormation,
   rejectProduct,
   replyAdminTicket,
   resolveAdminDispute,
@@ -65,6 +71,8 @@ export const adminKeys = {
   auditLog: ["admin", "audit-log"] as const,
   productsPending: ["admin", "products", "pending"] as const,
   articlesPending: ["admin", "articles", "pending"] as const,
+  eventsPending: ["admin", "events", "pending"] as const,
+  formationsPending: ["admin", "formations", "pending"] as const,
   professionalsPending: ["admin", "professionals", "pending"] as const,
   tickets: ["admin", "tickets"] as const,
   ads: ["admin", "ads"] as const,
@@ -125,6 +133,14 @@ export function usePendingProducts() {
 
 export function usePendingArticles() {
   return useQuery({ queryKey: adminKeys.articlesPending, queryFn: getPendingArticles, enabled: adminEnabled(), retry: false });
+}
+
+export function usePendingEvents() {
+  return useQuery({ queryKey: adminKeys.eventsPending, queryFn: getPendingEvents, enabled: adminEnabled(), retry: false });
+}
+
+export function usePendingFormations() {
+  return useQuery({ queryKey: adminKeys.formationsPending, queryFn: getPendingFormations, enabled: adminEnabled(), retry: false });
 }
 
 export function usePendingProfessionals() {
@@ -191,6 +207,8 @@ export function useAdminModerationActions() {
   const refreshModeration = () => {
     queryClient.invalidateQueries({ queryKey: adminKeys.productsPending });
     queryClient.invalidateQueries({ queryKey: adminKeys.articlesPending });
+    queryClient.invalidateQueries({ queryKey: adminKeys.eventsPending });
+    queryClient.invalidateQueries({ queryKey: adminKeys.formationsPending });
     queryClient.invalidateQueries({ queryKey: adminKeys.professionalsPending });
   };
   return {
@@ -202,6 +220,16 @@ export function useAdminModerationActions() {
     approveArticle: useMutation({ mutationFn: approveArticle, onSuccess: refreshModeration }),
     rejectArticle: useMutation({
       mutationFn: ({ id, reason }: { id: string; reason: string }) => rejectArticle(id, reason),
+      onSuccess: refreshModeration,
+    }),
+    approveEvent: useMutation({ mutationFn: approveEvent, onSuccess: refreshModeration }),
+    rejectEvent: useMutation({
+      mutationFn: ({ id, reason }: { id: string; reason: string }) => rejectEvent(id, reason),
+      onSuccess: refreshModeration,
+    }),
+    approveFormation: useMutation({ mutationFn: approveFormation, onSuccess: refreshModeration }),
+    rejectFormation: useMutation({
+      mutationFn: ({ id, reason }: { id: string; reason: string }) => rejectFormation(id, reason),
       onSuccess: refreshModeration,
     }),
     verifyProfessional: useMutation({ mutationFn: verifyProfessional, onSuccess: refreshModeration }),

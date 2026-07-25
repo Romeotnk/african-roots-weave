@@ -22,6 +22,36 @@ export const earnings = asyncHandler(async (req, res) => {
   res.json(apiResponse(true, data, "MLM earnings retrieved"));
 });
 
+export const myCommissions = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  const commissions = await prisma.commission.findMany({
+    where: { userId: req.user.id },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+    include: { sourceOrder: { select: { id: true, product: { select: { title: true } } } } },
+  });
+  res.json(apiResponse(true, commissions, "Commissions retrieved"));
+});
+
+export const leaderboard = asyncHandler(async (_req, res) => {
+  const rows = await prisma.mLMNode.findMany({
+    orderBy: { totalEarnings: "desc" },
+    take: 10,
+    include: { user: { select: { firstName: true, lastName: true } } },
+  });
+  res.json(
+    apiResponse(
+      true,
+      rows.map((row, index) => ({
+        rank: index + 1,
+        name: `${row.user.firstName} ${row.user.lastName}`.trim(),
+        earnings: row.totalEarnings,
+      })),
+      "Leaderboard retrieved",
+    ),
+  );
+});
+
 export const stats = asyncHandler(async (_req, res) => {
   const [totalNodes, totalCommissions, totalClicks] = await prisma.$transaction([
     prisma.mLMNode.count(),

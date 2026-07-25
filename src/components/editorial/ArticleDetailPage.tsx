@@ -1,12 +1,36 @@
-﻿import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { Copy, Facebook, MessageCircle } from "lucide-react";
 import { ArticleCard } from "@/components/shared/ArticleCard";
 import { articles } from "@/data/articles";
+import { useArticle, useArticles } from "@/hooks/useContentApi";
+import { toArticle, type BackendArticle } from "@/components/editorial/ArticleListPage";
+import type { ArticleSpace } from "@/lib/api/content";
 
 export function ArticleDetailPage({ slug, fallbackSpace }: { slug: string; fallbackSpace?: string }) {
-  const article = articles.find((item) => item.slug === slug) ?? articles.find((item) => item.space === fallbackSpace) ?? articles[0];
-  const related = articles.filter((item) => item.id !== article.id && item.space === article.space).slice(0, 3);
+  const articleQuery = useArticle(slug);
+  const apiArticle = useMemo(() => {
+    const data = articleQuery.data as BackendArticle | undefined;
+    return data ? toArticle(data, fallbackSpace ?? data.space ?? "") : null;
+  }, [articleQuery.data, fallbackSpace]);
+
+  const relatedQuery = useArticles(apiArticle ? { space: apiArticle.space as ArticleSpace } : {});
+  const apiRelated = useMemo(
+    () =>
+      ((relatedQuery.data?.articles ?? []) as BackendArticle[])
+        .map((item) => toArticle(item, apiArticle?.space ?? ""))
+        .filter((item): item is NonNullable<typeof item> => Boolean(item) && item!.id !== apiArticle?.id)
+        .slice(0, 3),
+    [relatedQuery.data, apiArticle],
+  );
+
+  const fallbackArticle = useMemo(
+    () => articles.find((item) => item.slug === slug) ?? articles.find((item) => item.space === fallbackSpace) ?? articles[0],
+    [slug, fallbackSpace],
+  );
+  const article = apiArticle ?? fallbackArticle;
+  const related = apiArticle ? apiRelated : articles.filter((item) => item.id !== article.id && item.space === article.space).slice(0, 3);
+
   const breadcrumbSpace = article.space === "Sante au quotidien" ? "Sante" : article.space;
   const [shareNotice, setShareNotice] = useState("");
   const [commentName, setCommentName] = useState("");
@@ -65,7 +89,7 @@ export function ArticleDetailPage({ slug, fallbackSpace }: { slug: string; fallb
                 <p className="font-bold">{article.authorName}</p>
                 <p className="text-[13px] text-[var(--color-text-muted)]">{article.authorSpecialty}</p>
                 {article.authorProfileId && (
-                  <Link to="/annuaire/$id" params={{ id: article.authorProfileId }} className="mt-2 inline-flex text-[13px] font-semibold text-[var(--brand-primary)]">
+                  <Link to="/pro/$id" params={{ id: article.authorProfileId }} className="mt-2 inline-flex text-[13px] font-semibold text-[var(--brand-primary)]">
                     Voir le profil
                   </Link>
                 )}

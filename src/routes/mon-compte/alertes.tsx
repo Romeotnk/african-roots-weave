@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Bell, Plus, Trash2 } from "lucide-react";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import { Switch } from "@/components/ui/switch";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { marketplaceAlerts } from "@/data/marketplaceAlerts";
+import { useMySavedSearches, useSavedSearchActions } from "@/hooks/useSavedSearchesApi";
 import type { MarketplaceAlert } from "@/types";
 
 export const Route = createFileRoute("/mon-compte/alertes")({
@@ -12,34 +13,65 @@ export const Route = createFileRoute("/mon-compte/alertes")({
   component: AlertsPage,
 });
 
+type BackendSavedSearch = {
+  id?: string;
+  name?: string;
+  summary?: string | null;
+  isActive?: boolean;
+  createdAt?: string;
+};
+
+function toMarketplaceAlert(search: BackendSavedSearch): MarketplaceAlert | null {
+  if (!search.id || !search.name) return null;
+  return {
+    id: search.id,
+    name: search.name,
+    summary: search.summary ?? "Recherche marketplace sauvegardée.",
+    active: search.isActive ?? true,
+    createdAt: search.createdAt ? search.createdAt.slice(0, 10) : new Date().toISOString().slice(0, 10),
+  };
+}
+
 function AlertsPage() {
-  const [alerts, setAlerts] = useState<MarketplaceAlert[]>(marketplaceAlerts);
+  const savedSearchesQuery = useMySavedSearches();
+  const { create, update, remove } = useSavedSearchActions();
   const [actionMessage, setActionMessage] = useState("");
 
+  const apiAlerts = useMemo(
+    () => ((savedSearchesQuery.data ?? []) as BackendSavedSearch[]).map(toMarketplaceAlert).filter((item): item is MarketplaceAlert => Boolean(item)),
+    [savedSearchesQuery.data],
+  );
+  const isRealData = savedSearchesQuery.isSuccess;
+  const alerts = isRealData ? apiAlerts : marketplaceAlerts;
+
   const toggleAlert = (alert: MarketplaceAlert, active: boolean) => {
-    setAlerts((current) =>
-      current.map((item) =>
-        item.id === alert.id ? { ...item, active } : item,
-      ),
+    if (!isRealData) {
+      setActionMessage(`Alerte ${active ? "activée" : "desactivée"} : ${alert.name}.`);
+      return;
+    }
+    update.mutate(
+      { id: alert.id, isActive: active },
+      { onSuccess: () => setActionMessage(`Alerte ${active ? "activée" : "desactivée"} : ${alert.name}.`) },
     );
-    setActionMessage(`Alerte ${active ? "activée" : "desactivée"} : ${alert.name}.`);
   };
 
   const deleteAlert = (alert: MarketplaceAlert) => {
-    setAlerts((current) => current.filter((item) => item.id !== alert.id));
-    setActionMessage(`Alerte supprimée : ${alert.name}.`);
+    if (!isRealData) {
+      setActionMessage(`Alerte supprimée : ${alert.name}.`);
+      return;
+    }
+    remove.mutate(alert.id, { onSuccess: () => setActionMessage(`Alerte supprimée : ${alert.name}.`) });
   };
 
   const addAlert = () => {
-    const nextAlert: MarketplaceAlert = {
-      id: `alert-${Date.now()}`,
-      name: "Recherche marketplace sauvegardée",
-      summary: "Produits vérifiés, prix sous 20 000 FCFA, livraison locale.",
-      active: true,
-      createdAt: new Date().toISOString().slice(0, 10),
-    };
-    setAlerts((current) => [nextAlert, ...current]);
-    setActionMessage("Alerte créée. Ajustez-la depuis vos filtres marketplace.");
+    if (!isRealData) {
+      setActionMessage("Alerte créée. Ajustez-la depuis vos filtres marketplace.");
+      return;
+    }
+    create.mutate(
+      { name: "Recherche marketplace sauvegardée", summary: "Produits vérifiés, prix sous 20 000 FCFA, livraison locale." },
+      { onSuccess: () => setActionMessage("Alerte créée. Ajustez-la depuis vos filtres marketplace.") },
+    );
   };
 
   return (

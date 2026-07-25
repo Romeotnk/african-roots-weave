@@ -17,7 +17,16 @@ export const listQuestions = asyncHandler(async (req, res) => {
     isHidden: false,
   };
   const [questions, total] = await prisma.$transaction([
-    prisma.question.findMany({ where, skip, take: limit, orderBy: { createdAt: "desc" } }),
+    prisma.question.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: {
+        author: { select: { id: true, firstName: true, lastName: true, reputationScore: true, avatarUrl: true } },
+        _count: { select: { answers: true } },
+      },
+    }),
     prisma.question.count({ where }),
   ]);
   res.json(apiResponse(true, questions, "Questions retrieved", paginationMeta(page, limit, total)));
@@ -41,11 +50,20 @@ export const getQuestion = asyncHandler(async (req, res) => {
     where: { id: req.params.id },
     data: { viewCount: { increment: 1 } },
     include: {
-      answers: { orderBy: [{ isAccepted: "desc" }, { voteCount: "desc" }] },
-      author: { select: { id: true, firstName: true, lastName: true } },
+      answers: {
+        where: { isHidden: false },
+        orderBy: [{ isAccepted: "desc" }, { voteCount: "desc" }],
+        include: { author: { select: { id: true, firstName: true, lastName: true, reputationScore: true, avatarUrl: true } } },
+      },
+      author: { select: { id: true, firstName: true, lastName: true, reputationScore: true, avatarUrl: true } },
     },
   });
-  res.json(apiResponse(true, question, "Question retrieved"));
+  const comments = await prisma.forumComment.findMany({
+    where: { targetId: question.id, targetType: "QUESTION", isHidden: false },
+    include: { author: { select: { id: true, firstName: true, lastName: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+  res.json(apiResponse(true, { ...question, comments }, "Question retrieved"));
 });
 
 export const createQuestion = asyncHandler(async (req, res) => {

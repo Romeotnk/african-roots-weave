@@ -31,7 +31,7 @@ export type VotePayload = {
 
 export type ReportPayload = {
   targetId: string;
-  targetType: "QUESTION" | "ANSWER" | "COMMENT";
+  targetType: "QUESTION" | "ANSWER" | "COMMENT" | "PROFILE";
   reason?: string;
   details?: string;
 };
@@ -47,6 +47,12 @@ const toQuery = (params: Record<string, string | number | undefined>) => {
 export async function listQuestions(params: ForumQuestionQuery = {}) {
   const query = toQuery(params);
   const response = await apiRequest<unknown[]>(`/forum/questions${query ? `?${query}` : ""}`);
+  return { questions: response.data ?? [], pagination: response.pagination };
+}
+
+export async function listMyQuestions(params: ForumQuestionQuery = {}) {
+  const query = toQuery(params);
+  const response = await apiRequest<unknown[]>(`/forum/questions/mine${query ? `?${query}` : ""}`);
   return { questions: response.data ?? [], pagination: response.pagination };
 }
 

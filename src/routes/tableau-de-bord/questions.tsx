@@ -5,6 +5,8 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import type { AppRole } from "@/lib/auth/AuthContext";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import { questions } from "@/data/questions";
+import { useMyForumQuestions } from "@/hooks/useForumApi";
+import { toQuestion, type BackendQuestion } from "@/lib/forumMappers";
 import { PROFESSIONAL_ACCOUNT_ROLES } from "@/lib/auth/roles";
 
 export const Route = createFileRoute("/tableau-de-bord/questions")({
@@ -19,9 +21,19 @@ export const Route = createFileRoute("/tableau-de-bord/questions")({
 type QuestionFilter = "all" | "open" | "resolved" | "followed";
 
 export function QuestionsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { allowedRoles?: AppRole[] } = {}) {
-  const [items, setItems] = useState(questions);
+  const myQuestionsQuery = useMyForumQuestions();
+  const apiQuestions = useMemo(
+    () => ((myQuestionsQuery.data?.questions ?? []) as BackendQuestion[]).map(toQuestion).filter((item): item is NonNullable<typeof item> => Boolean(item)),
+    [myQuestionsQuery.data],
+  );
+  const isRealData = apiQuestions.length > 0;
   const [filter, setFilter] = useState<QuestionFilter>("all");
   const [message, setMessage] = useState("");
+  const [followedIds, setFollowedIds] = useState<string[]>([]);
+  const items = (isRealData ? apiQuestions : questions).map((question) => ({
+    ...question,
+    followed: followedIds.includes(question.id) || Boolean(question.followed),
+  }));
 
   const filtered = useMemo(
     () =>
@@ -35,13 +47,8 @@ export function QuestionsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { a
   );
 
   const toggleFollow = (id: string) => {
-    setItems((current) => current.map((question) => (question.id === id ? { ...question, followed: !question.followed } : question)));
+    setFollowedIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
     setMessage("Suivi de la question mis à jour.");
-  };
-
-  const markResolved = (id: string) => {
-    setItems((current) => current.map((question) => (question.id === id ? { ...question, resolved: true } : question)));
-    setMessage("Question marquée comme résolue.");
   };
 
   return (
@@ -123,14 +130,11 @@ export function QuestionsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { a
                   <button type="button" onClick={() => toggleFollow(question.id)} className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
                     <Star size={15} /> {question.followed ? "Suivie" : "Suivre"}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => markResolved(question.id)}
-                    disabled={question.resolved}
-                    className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <CheckCircle2 size={15} /> Résoudre
-                  </button>
+                  {!question.resolved && (
+                    <span className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-surface-alt)] px-4 text-[12px] text-[var(--color-text-muted)]">
+                      <CheckCircle2 size={15} /> Se résout en acceptant une réponse
+                    </span>
+                  )}
                 </div>
               </div>
             </article>

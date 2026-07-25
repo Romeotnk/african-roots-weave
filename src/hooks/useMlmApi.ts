@@ -3,8 +3,10 @@ import {
   getAffiliateCapturePage,
   getAffiliateLink,
   getMlmEarnings,
+  getMlmLeaderboard,
   getMlmStats,
   getMlmTree,
+  getMyCommissions,
   trackAffiliateClick,
 } from "@/lib/api/mlm";
 
@@ -32,6 +34,24 @@ export function useMlmEarnings() {
   return useQuery({
     queryKey: mlmKeys.earnings,
     queryFn: getMlmEarnings,
+    enabled: hasAccessToken(),
+    retry: false,
+  });
+}
+
+export function useMyCommissions() {
+  return useQuery({
+    queryKey: ["mlm", "commissions", "mine"] as const,
+    queryFn: getMyCommissions,
+    enabled: hasAccessToken(),
+    retry: false,
+  });
+}
+
+export function useMlmLeaderboard() {
+  return useQuery({
+    queryKey: ["mlm", "leaderboard"] as const,
+    queryFn: getMlmLeaderboard,
     enabled: hasAccessToken(),
     retry: false,
   });

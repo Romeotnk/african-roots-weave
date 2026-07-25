@@ -302,6 +302,7 @@ function WalletPage() {
 
       <WalletActionDialog
         dialog={dialog}
+        availableBalance={displayedSummary.available}
         pin={pin}
         setPin={setPin}
         walletForm={walletForm}
@@ -317,6 +318,7 @@ function WalletPage() {
 
 function WalletActionDialog({
   dialog,
+  availableBalance,
   pin,
   setPin,
   walletForm,
@@ -326,6 +328,7 @@ function WalletActionDialog({
   isPending,
 }: {
   dialog: WalletDialog;
+  availableBalance: number;
   pin: string;
   setPin: (value: string) => void;
   walletForm: { amount: string; method: string; destination: string; receiver: string };
@@ -374,7 +377,7 @@ function WalletActionDialog({
           )}
           {dialog === "withdraw" && (
             <>
-              <p className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">Solde disponible : {walletSummary.available.toLocaleString("fr-FR")} FCFA</p>
+              <p className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">Solde disponible : {availableBalance.toLocaleString("fr-FR")} FCFA</p>
               <input
                 type="number"
                 min="1"

@@ -3,9 +3,10 @@ import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
 
-// Only "site." and "cms." keys are ever exposed here — commission rates and other
-// internal SiteConfig keys must never leak through this unauthenticated endpoint.
-const publicPrefixes = ["site.", "cms."];
+// Only "site.", "cms." and "maintenance." keys are ever exposed here — commission
+// rates and other internal SiteConfig keys must never leak through this
+// unauthenticated endpoint.
+const publicPrefixes = ["site.", "cms.", "maintenance."];
 
 export const getPublicSiteConfig = asyncHandler(async (_req, res) => {
   const rows = await prisma.siteConfig.findMany({

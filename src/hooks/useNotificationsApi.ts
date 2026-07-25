@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  getNotificationsWithFallback,
+  listNotifications,
   markAllNotificationsRead,
   markNotificationRead,
 } from "@/lib/api/notifications";
@@ -14,9 +14,10 @@ export function useNotifications() {
   const hasToken = typeof window !== "undefined" && Boolean(authTokenStore.get());
   return useQuery({
     queryKey: notificationKeys.all,
-    queryFn: getNotificationsWithFallback,
+    queryFn: listNotifications,
     enabled: hasToken,
     staleTime: 60_000,
+    retry: false,
   });
 }
 

@@ -1,9 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Archive, Eye, GraduationCap, PlayCircle, Plus, Search, Upload } from "lucide-react";
+import { Eye, GraduationCap, PlayCircle, Plus, Search, Upload } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import { trainings } from "@/data/trainings";
+import { useCreateFormation, useMyFormations, useUpdateFormation } from "@/hooks/useEventsFormationsApi";
+import { toTrainingCourses } from "@/lib/mappers/formation";
+import type { TrainingCourse } from "@/types";
 
 export const Route = createFileRoute("/tableau-de-bord/formations")({
   head: () => ({ meta: [{ title: "Mes formations - IWOSAN" }] }),
@@ -14,14 +17,13 @@ export const Route = createFileRoute("/tableau-de-bord/formations")({
   ),
 });
 
-type CourseStatus = "published" | "draft" | "archived";
-type CourseLevel = (typeof trainings)[number]["level"];
-type LocalCourse = (typeof trainings)[number] & { status: CourseStatus; progress: number };
+type CourseStatus = "published" | "draft";
+type LocalCourse = TrainingCourse & { status: CourseStatus };
 
 type CourseForm = {
   title: string;
   category: string;
-  level: CourseLevel;
+  level: TrainingCourse["level"];
   duration: string;
   price: string;
 };
@@ -37,17 +39,26 @@ const emptyCourseForm: CourseForm = {
 const statusLabels: Record<CourseStatus, string> = {
   published: "Publiée",
   draft: "Brouillon",
-  archived: "Archivée",
 };
 
 function TrainingsDashboard() {
-  const [courses, setCourses] = useState<LocalCourse[]>(
-    trainings.map((course, index) => ({
+  const myFormationsQuery = useMyFormations();
+  const createFormation = useCreateFormation();
+  const updateFormation = useUpdateFormation();
+
+  const apiCourses: LocalCourse[] = useMemo(() => {
+    const raw = (myFormationsQuery.data?.formations ?? []) as { isPublished?: boolean }[];
+    return toTrainingCourses(raw).map((course, index) => ({
       ...course,
-      status: index === 1 ? "draft" : "published",
-      progress: index === 2 ? 65 : 100,
-    })),
-  );
+      status: raw[index]?.isPublished ? "published" : "draft",
+    }));
+  }, [myFormationsQuery.data]);
+
+  const isRealData = myFormationsQuery.isSuccess;
+  const courses: LocalCourse[] = isRealData
+    ? apiCourses
+    : trainings.map((course, index) => ({ ...course, status: index === 1 ? "draft" : "published" }));
+
   const [filter, setFilter] = useState<CourseStatus | "all">("all");
   const [query, setQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -68,15 +79,17 @@ function TrainingsDashboard() {
   }, [courses, filter, query]);
 
   const updateStatus = (id: string, status: CourseStatus) => {
-    setCourses((current) => current.map((course) => (course.id === id ? { ...course, status } : course)));
-    setMessage(status === "published" ? "Formation publiée." : status === "archived" ? "Formation archivée." : "Formation repassée en brouillon.");
-  };
-
-  const duplicateCourse = (id: string) => {
-    const source = courses.find((course) => course.id === id);
-    if (!source) return;
-    setCourses((current) => [{ ...source, id: `local-${Date.now()}`, title: `${source.title} - copie`, status: "draft", progress: 20 }, ...current]);
-    setMessage("Copie créée en brouillon.");
+    if (!isRealData) {
+      setMessage(status === "published" ? "Formation publiée." : "Formation repassée en brouillon.");
+      return;
+    }
+    updateFormation.mutate(
+      { id, payload: { isPublished: status === "published" } },
+      {
+        onSuccess: () => setMessage(status === "published" ? "Formation publiée." : "Formation repassée en brouillon."),
+        onError: (error) => setMessage(error instanceof Error ? error.message : "Action impossible."),
+      },
+    );
   };
 
   const createCourse = (event: FormEvent<HTMLFormElement>) => {
@@ -94,36 +107,29 @@ function TrainingsDashboard() {
       return;
     }
 
-    const id = `local-${Date.now()}`;
-    setCourses((current) => [
+    createFormation.mutate(
       {
-        id,
-        slug: title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || id,
         title,
-        instructor: "Votre espace professionnel",
-        instructorAvatar: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=120&q=80",
-        instructorBio: "Formation ajoutée depuis le tableau de bord professionnel.",
-        duration: form.duration.trim() || "2h",
-        level: form.level,
-        format: "video",
+        type: "DOCUMENT",
+        fileUrl: "",
         category: form.category.trim() || "Général",
+        level: form.level,
+        duration: form.duration.trim() || "2h",
         price,
         currency: "XOF",
-        rating: 0,
-        students: 0,
-        image: "https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=1200&q=80",
         prerequisites: ["À compléter avant publication"],
         learnings: ["Objectifs pédagogiques à renseigner"],
-        modules: [{ title: "Module 1", lessons: [{ id: `${id}-lesson`, title: "Introduction", duration: "10 min", type: "video" }] }],
-        reviews: [],
-        status: "draft",
-        progress: 25,
+        isPublished: false,
       },
-      ...current,
-    ]);
-    setForm(emptyCourseForm);
-    setShowForm(false);
-    setMessage("Formation créée en brouillon. Complétez les modules avant publication.");
+      {
+        onSuccess: () => {
+          setForm(emptyCourseForm);
+          setShowForm(false);
+          setMessage("Formation créée en brouillon. Complétez les modules avant publication.");
+        },
+        onError: (error) => setMessage(error instanceof Error ? error.message : "Impossible de créer la formation."),
+      },
+    );
   };
 
   return (
@@ -150,7 +156,7 @@ function TrainingsDashboard() {
         <div className="grid gap-4 md:grid-cols-3">
           <StatCard label="Formations" value={courses.length} icon={GraduationCap} />
           <StatCard label="Publiées" value={courses.filter((course) => course.status === "published").length} icon={Upload} />
-          <StatCard label="Apprenants" value={courses.reduce((sum, course) => sum + course.students, 0)} icon={PlayCircle} />
+          <StatCard label="Téléchargements" value={courses.reduce((sum, course) => sum + course.students, 0)} icon={PlayCircle} />
         </div>
 
         {showForm && (
@@ -158,13 +164,13 @@ function TrainingsDashboard() {
             <div className="grid gap-4 md:grid-cols-5">
               <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="Titre de la formation" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px] md:col-span-2" />
               <input value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} placeholder="Catégorie" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
-              <select value={form.level} onChange={(event) => setForm((current) => ({ ...current, level: event.target.value as CourseLevel }))} className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]">
+              <select value={form.level} onChange={(event) => setForm((current) => ({ ...current, level: event.target.value as TrainingCourse["level"] }))} className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]">
                 <option value="Debutant">Débutant</option>
                 <option value="Intermediaire">Intermédiaire</option>
                 <option value="Avance">Avancé</option>
               </select>
-              <button type="submit" className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-gold)] px-5 text-[13px] font-bold text-[var(--color-text-primary)]">
-                Créer
+              <button type="submit" disabled={createFormation.isPending} className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-gold)] px-5 text-[13px] font-bold text-[var(--color-text-primary)] disabled:opacity-50">
+                {createFormation.isPending ? "Creation..." : "Créer"}
               </button>
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -180,11 +186,10 @@ function TrainingsDashboard() {
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Rechercher une formation..." className="h-10 w-full rounded-full border border-[var(--brand-border)] bg-white pl-10 pr-4 text-[13px]" />
           </label>
           <div className="flex flex-wrap gap-2">
-            {([[
-              "all", "Toutes"],
+            {([
+              ["all", "Toutes"],
               ["published", "Publiées"],
               ["draft", "Brouillons"],
-              ["archived", "Archivées"],
             ] as const).map(([value, label]) => (
               <button
                 key={value}
@@ -225,15 +230,6 @@ function TrainingsDashboard() {
                     </p>
                   </div>
 
-                  <div className="mt-4">
-                    <div className="flex justify-between text-[12px] font-semibold text-[var(--color-text-muted)]">
-                      <span>Complétude</span><span>{course.progress}%</span>
-                    </div>
-                    <div className="mt-2 h-2 rounded-full bg-[var(--brand-surface-alt)]">
-                      <div className="h-2 rounded-full bg-[var(--brand-primary)]" style={{ width: `${course.progress}%` }} />
-                    </div>
-                  </div>
-
                   <div className="mt-5 flex flex-wrap gap-2">
                     <Link to="/formations/$id" params={{ id: course.id }} className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
                       <Eye size={15} /> Aperçu
@@ -241,14 +237,13 @@ function TrainingsDashboard() {
                     <Link to="/formations/$id/apprendre" params={{ id: course.id }} className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
                       <PlayCircle size={15} /> Apprendre
                     </Link>
-                    <button type="button" onClick={() => updateStatus(course.id, course.status === "published" ? "draft" : "published")} className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white">
+                    <button
+                      type="button"
+                      onClick={() => updateStatus(course.id, course.status === "published" ? "draft" : "published")}
+                      disabled={updateFormation.isPending}
+                      className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-50"
+                    >
                       <Upload size={15} /> {course.status === "published" ? "Dépublier" : "Publier"}
-                    </button>
-                    <button type="button" onClick={() => duplicateCourse(course.id)} className="inline-flex h-10 items-center rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
-                      Dupliquer
-                    </button>
-                    <button type="button" onClick={() => updateStatus(course.id, "archived")} disabled={course.status === "archived"} className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50">
-                      <Archive size={15} /> Archiver
                     </button>
                   </div>
                 </div>

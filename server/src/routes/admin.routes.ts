@@ -2,6 +2,8 @@ import { Role } from "@prisma/client";
 import { Router } from "express";
 import {
   approveArticle,
+  approveEvent,
+  approveFormation,
   approveProduct,
   auditLog,
   banUser,
@@ -22,11 +24,15 @@ import {
   maintenance,
   newsletterSubscribers,
   pendingArticles,
+  pendingEvents,
+  pendingFormations,
   pendingProducts,
   pendingProfessionals,
   portraitOfWeek,
   promoteUser,
   rejectArticle,
+  rejectEvent,
+  rejectFormation,
   rejectProduct,
   replyTicket,
   sendNewsletter,
@@ -95,6 +101,12 @@ adminRouter.put("/products/:id/reject", checkRole(Role.SUPER_ADMIN, Role.ADMIN),
 adminRouter.get("/articles/pending", pendingArticles);
 adminRouter.put("/articles/:id/approve", checkRole(Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR), approveArticle);
 adminRouter.put("/articles/:id/reject", checkRole(Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR), rejectArticle);
+adminRouter.get("/events/pending", checkRole(Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR), pendingEvents);
+adminRouter.put("/events/:id/approve", checkRole(Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR), approveEvent);
+adminRouter.put("/events/:id/reject", checkRole(Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR), rejectEvent);
+adminRouter.get("/formations/pending", checkRole(Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR), pendingFormations);
+adminRouter.put("/formations/:id/approve", checkRole(Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR), approveFormation);
+adminRouter.put("/formations/:id/reject", checkRole(Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR), rejectFormation);
 
 // Professionals.
 adminRouter.get("/professionals/pending", pendingProfessionals);

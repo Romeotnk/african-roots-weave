@@ -10,8 +10,11 @@ import {
   listFormations,
   listMyEvents,
   listMyFormations,
+  listMyRegistrations,
   registerEvent,
   unregisterEvent,
+  updateEvent,
+  updateFormation,
 } from "../controllers/eventFormation.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { requireEmailVerified, roleMiddleware } from "../middlewares/role.middleware.js";
@@ -22,6 +25,7 @@ export const formationRouter = Router();
 // Events.
 eventRouter.get("/", listEvents);
 eventRouter.get("/mine", authMiddleware, listMyEvents);
+eventRouter.get("/registrations/mine", authMiddleware, listMyRegistrations);
 eventRouter.get("/:id", getEvent);
 eventRouter.post(
   "/",
@@ -30,6 +34,7 @@ eventRouter.post(
   roleMiddleware([Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR, Role.PROFESSIONAL]),
   createEvent,
 );
+eventRouter.put("/:id", authMiddleware, requireEmailVerified, updateEvent);
 eventRouter.post("/:id/register", authMiddleware, requireEmailVerified, registerEvent);
 eventRouter.delete("/:id/register", authMiddleware, requireEmailVerified, unregisterEvent);
 
@@ -41,7 +46,14 @@ formationRouter.post(
   "/",
   authMiddleware,
   requireEmailVerified,
-  roleMiddleware([Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR]),
+  roleMiddleware([Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR, Role.PROFESSIONAL, Role.RESEARCHER]),
   createFormation,
+);
+formationRouter.put(
+  "/:id",
+  authMiddleware,
+  requireEmailVerified,
+  roleMiddleware([Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR, Role.PROFESSIONAL, Role.RESEARCHER]),
+  updateFormation,
 );
 formationRouter.post("/:id/download", downloadFormation);

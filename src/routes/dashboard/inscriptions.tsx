@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalendarDays, Download, XCircle } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { RouteRedirect } from "@/components/RouteRedirect";
 import { events } from "@/data/events";
+import { useMyRegistrations, useUnregisterEvent } from "@/hooks/useEventsFormationsApi";
+import { toEventItem, type BackendEvent } from "@/lib/eventMappers";
 
 export const Route = createFileRoute("/dashboard/inscriptions")({
   head: () => ({ meta: [{ title: "Mes inscriptions - IWOSAN" }] }),
@@ -11,20 +13,40 @@ export const Route = createFileRoute("/dashboard/inscriptions")({
 
 type Registration = (typeof events)[number] & { localStatus: "confirmed" | "pending" | "cancelled" };
 
+type BackendRegistration = { eventId?: string; event?: BackendEvent };
+
 export function Registrations() {
-  const [registrations, setRegistrations] = useState<Registration[]>(
-    events.slice(0, 3).map((event) => ({
-      ...event,
-      localStatus: event.status === "cancelled" ? "cancelled" : event.status === "pending" ? "pending" : "confirmed",
-    })),
-  );
+  const registrationsQuery = useMyRegistrations();
+  const unregister = useUnregisterEvent();
+  const [cancelledIds, setCancelledIds] = useState<string[]>([]);
   const [actionMessage, setActionMessage] = useState("");
 
+  const apiRegistrations = useMemo(
+    () =>
+      ((registrationsQuery.data ?? []) as BackendRegistration[])
+        .map((registration) => (registration.event ? toEventItem(registration.event) : null))
+        .filter((item): item is NonNullable<typeof item> => Boolean(item))
+        .map((event): Registration => ({ ...event, localStatus: cancelledIds.includes(event.id) ? "cancelled" : "confirmed" })),
+    [registrationsQuery.data, cancelledIds],
+  );
+
+  const fallbackRegistrations: Registration[] = events.slice(0, 3).map((event) => ({
+    ...event,
+    localStatus: event.status === "cancelled" ? "cancelled" : event.status === "pending" ? "pending" : "confirmed",
+  }));
+
+  const registrations = registrationsQuery.isSuccess ? apiRegistrations : fallbackRegistrations;
+
   const cancelRegistration = (id: string) => {
-    setRegistrations((current) =>
-      current.map((event) => (event.id === id ? { ...event, localStatus: "cancelled" } : event)),
-    );
-    setActionMessage("Inscription annulée. Une confirmation sera visible dans vos notifications.");
+    unregister.mutate(id, {
+      onSuccess: () => {
+        setCancelledIds((current) => [...current, id]);
+        setActionMessage("Inscription annulée. Une confirmation sera visible dans vos notifications.");
+      },
+      onError: (error) => {
+        setActionMessage(error instanceof Error ? error.message : "Impossible d'annuler cette inscription.");
+      },
+    });
   };
 
   const downloadTicket = (title: string) => {

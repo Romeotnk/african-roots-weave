@@ -310,6 +310,68 @@ export const rejectArticle = asyncHandler(async (req, res) => {
   res.json(apiResponse(true, article, "Article rejected"));
 });
 
+export const pendingEvents = asyncHandler(async (_req, res) => {
+  res.json(
+    apiResponse(
+      true,
+      await prisma.event.findMany({
+        where: { isPublished: false },
+        orderBy: { createdAt: "desc" },
+        include: { createdBy: { select: { id: true, firstName: true, lastName: true, role: true } } },
+      }),
+      "Pending events retrieved",
+    ),
+  );
+});
+
+export const approveEvent = asyncHandler(async (req, res) => {
+  const event = await prisma.event.update({ where: { id: req.params.id }, data: { isPublished: true } });
+  await writeAuditLog(req, { action: "EVENT_APPROVED", targetId: event.id, targetType: "Event" });
+  res.json(apiResponse(true, event, "Event approved"));
+});
+
+export const rejectEvent = asyncHandler(async (req, res) => {
+  const event = await prisma.event.update({ where: { id: req.params.id }, data: { isPublished: false } });
+  await writeAuditLog(req, {
+    action: "EVENT_REJECTED",
+    targetId: event.id,
+    targetType: "Event",
+    metadata: { reason: req.body.reason },
+  });
+  res.json(apiResponse(true, event, "Event rejected"));
+});
+
+export const pendingFormations = asyncHandler(async (_req, res) => {
+  res.json(
+    apiResponse(
+      true,
+      await prisma.formation.findMany({
+        where: { isPublished: false },
+        orderBy: { createdAt: "desc" },
+        include: { createdBy: { select: { id: true, firstName: true, lastName: true, role: true } } },
+      }),
+      "Pending formations retrieved",
+    ),
+  );
+});
+
+export const approveFormation = asyncHandler(async (req, res) => {
+  const formation = await prisma.formation.update({ where: { id: req.params.id }, data: { isPublished: true } });
+  await writeAuditLog(req, { action: "FORMATION_APPROVED", targetId: formation.id, targetType: "Formation" });
+  res.json(apiResponse(true, formation, "Formation approved"));
+});
+
+export const rejectFormation = asyncHandler(async (req, res) => {
+  const formation = await prisma.formation.update({ where: { id: req.params.id }, data: { isPublished: false } });
+  await writeAuditLog(req, {
+    action: "FORMATION_REJECTED",
+    targetId: formation.id,
+    targetType: "Formation",
+    metadata: { reason: req.body.reason },
+  });
+  res.json(apiResponse(true, formation, "Formation rejected"));
+});
+
 export const pendingProfessionals = asyncHandler(async (_req, res) => {
   const profiles = await prisma.professionalProfile.findMany({
     where: { isVerified: false },

@@ -1,11 +1,6 @@
 import { apiRequest } from "./client";
 
-export type ArticleSpace =
-  | "SANTE_NATURELLE"
-  | "PHARMACOPEE"
-  | "RITES_CULTURES"
-  | "RECHERCHE"
-  | "ACTUALITES";
+export type ArticleSpace = "SANTE_QUOTIDIEN" | "RITES_CULTURES" | "RECETTES_SANTE" | "PHARMACOPEE";
 
 export type ArticleQuery = {
   page?: number;
