@@ -1,7 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { RecipeListPage } from "@/components/editorial/RecipeListPage";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+// Canonical recipes list lives at /recettes-sante — this route only exists
+// to preserve any previously indexed/bookmarked /recettes links.
 export const Route = createFileRoute("/recettes")({
-  head: () => ({ meta: [{ title: "Recettes - IWOSAN" }] }),
-  component: RecipeListPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/recettes-sante" });
+  },
 });

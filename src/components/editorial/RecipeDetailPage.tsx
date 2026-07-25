@@ -20,7 +20,7 @@ export function RecipeDetailPage({ slug }: { slug: string }) {
       <section className="relative min-h-[420px] bg-[var(--brand-primary-dark)] text-white">
         <img src={recipe.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
         <div className="relative container-iwosan py-14">
-          <Link to="/recettes" className="text-[13px] font-semibold text-[var(--brand-gold)]">Retour aux recettes</Link>
+          <Link to="/recettes-sante" className="text-[13px] font-semibold text-[var(--brand-gold)]">Retour aux recettes</Link>
           <h1 className="mt-5 max-w-4xl text-[36px] text-white md:text-[54px]">{recipe.title}</h1>
           <p className="mt-4 max-w-2xl text-white/80">{recipe.excerpt}</p>
           <div className="mt-5 flex flex-wrap gap-3 text-[13px] text-white/80">

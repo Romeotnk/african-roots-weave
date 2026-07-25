@@ -34,6 +34,7 @@ import {
   rejectEvent,
   rejectFormation,
   rejectProduct,
+  rejectProfessional,
   replyTicket,
   sendNewsletter,
   updateAd,
@@ -114,6 +115,11 @@ adminRouter.put(
   "/professionals/:id/verify",
   checkRole(Role.SUPER_ADMIN, Role.ADMIN),
   verifyProfessional,
+);
+adminRouter.put(
+  "/professionals/:id/reject",
+  checkRole(Role.SUPER_ADMIN, Role.ADMIN),
+  rejectProfessional,
 );
 adminRouter.put(
   "/professionals/:id/portrait-of-week",

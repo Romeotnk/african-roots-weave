@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
-import { useAdminDashboard, usePendingArticles, usePendingEvents, usePendingFormations, usePendingProducts } from "@/hooks/useAdminApi";
+import { useAdminDashboard, usePendingArticles, usePendingEvents, usePendingFormations, usePendingProducts, usePendingProfessionals } from "@/hooks/useAdminApi";
 
 export function AdminDashboard() {
   const dashboardQuery = useAdminDashboard();
@@ -8,12 +8,14 @@ export function AdminDashboard() {
   const pendingArticlesQuery = usePendingArticles();
   const pendingEventsQuery = usePendingEvents();
   const pendingFormationsQuery = usePendingFormations();
+  const pendingProfessionalsQuery = usePendingProfessionals();
 
   const stats = dashboardQuery.data?.data;
   const pendingProductsCount = pendingProductsQuery.data?.data?.length ?? 0;
   const pendingArticlesCount = pendingArticlesQuery.data?.data?.length ?? 0;
   const pendingEventsCount = pendingEventsQuery.data?.data?.length ?? 0;
   const pendingFormationsCount = pendingFormationsQuery.data?.data?.length ?? 0;
+  const pendingProfessionalsCount = pendingProfessionalsQuery.data?.data?.length ?? 0;
 
   const kpis = stats
     ? [
@@ -32,6 +34,7 @@ export function AdminDashboard() {
     { label: "Articles à modérer", to: "/admin/contenus", count: pendingArticlesCount },
     { label: "Événements à modérer", to: "/admin/contenus", count: pendingEventsCount },
     { label: "Formations à modérer", to: "/admin/contenus", count: pendingFormationsCount },
+    { label: "Profils professionnels à vérifier", to: "/admin/utilisateurs/kyc", count: pendingProfessionalsCount },
     { label: "Tickets ouverts", to: "/admin/communication/tickets", count: stats?.openTickets ?? 0 },
   ].filter((action) => action.count > 0);
 

@@ -65,7 +65,7 @@ function KycPage() {
   const [country, setCountry] = useState("BJ");
   const [documentNumber, setDocumentNumber] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
-  const [files, setFiles] = useState({ front: "", back: "", selfie: "" });
+  const [files, setFiles] = useState<{ front: File | null; back: File | null; selfie: File | null }>({ front: null, back: null, selfie: null });
   const [accepted, setAccepted] = useState(false);
   const [message, setMessage] = useState("");
   const submitKyc = useSubmitKycMutation();
@@ -98,7 +98,11 @@ function KycPage() {
         country,
         documentNumber,
         expiresAt,
-        files,
+        files: {
+          front: files.front!,
+          back: files.back ?? undefined,
+          selfie: files.selfie!,
+        },
       });
       setStatus(backendStatusToKycStatus(response.data?.kycStatus));
       setMessage("Dossier KYC soumis. Vous recevrez une notification apres vérification.");
@@ -108,8 +112,8 @@ function KycPage() {
     }
   };
 
-  const updateFile = (key: keyof typeof files, fileName: string) => {
-    setFiles((current) => ({ ...current, [key]: fileName }));
+  const updateFile = (key: keyof typeof files, file: File | null) => {
+    setFiles((current) => ({ ...current, [key]: file }));
     setMessage("");
   };
 
@@ -188,11 +192,11 @@ function KycPage() {
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-3">
-                  <UploadBox label="Recto du document" fileName={files.front} onFile={(fileName) => updateFile("front", fileName)} onClear={() => updateFile("front", "")} />
+                  <UploadBox label="Recto du document" file={files.front} onFile={(file) => updateFile("front", file)} onClear={() => updateFile("front", null)} />
                   {docType === "CNI" && (
-                    <UploadBox label="Verso du document" fileName={files.back} onFile={(fileName) => updateFile("back", fileName)} onClear={() => updateFile("back", "")} />
+                    <UploadBox label="Verso du document" file={files.back} onFile={(file) => updateFile("back", file)} onClear={() => updateFile("back", null)} />
                   )}
-                  <UploadBox label="Selfie avec document" fileName={files.selfie} onFile={(fileName) => updateFile("selfie", fileName)} onClear={() => updateFile("selfie", "")} />
+                  <UploadBox label="Selfie avec document" file={files.selfie} onFile={(file) => updateFile("selfie", file)} onClear={() => updateFile("selfie", null)} />
                 </div>
 
                 <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-4">
@@ -225,23 +229,23 @@ function KycPage() {
   );
 }
 
-function UploadBox({ label, fileName, onFile, onClear }: { label: string; fileName: string; onFile: (fileName: string) => void; onClear: () => void }) {
+function UploadBox({ label, file, onFile, onClear }: { label: string; file: File | null; onFile: (file: File | null) => void; onClear: () => void }) {
   return (
     <div className="relative">
       <label className="flex min-h-[150px] cursor-pointer flex-col items-center justify-center rounded-[12px] border-2 border-dashed border-[var(--brand-border)] bg-[var(--brand-surface-alt)] p-4 text-center">
         <Upload className="text-[var(--brand-primary)]" size={28} />
         <span className="mt-2 text-[13px] font-semibold">{label}</span>
         <span className="mt-1 max-w-full truncate text-[11px] text-[var(--color-text-muted)]">
-          {fileName || "Photo ou PDF"}
+          {file?.name || "Photo ou PDF"}
         </span>
         <input
           type="file"
           accept="image/*,.pdf"
           className="sr-only"
-          onChange={(event) => onFile(event.target.files?.[0]?.name ?? "")}
+          onChange={(event) => onFile(event.target.files?.[0] ?? null)}
         />
       </label>
-      {fileName && (
+      {file && (
         <button type="button" onClick={onClear} aria-label={`Retirer ${label}`} className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-white text-red-600 shadow">
           <X size={14} />
         </button>

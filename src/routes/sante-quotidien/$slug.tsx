@@ -1,7 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ArticleDetailPage } from "@/components/editorial/ArticleDetailPage";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+// Canonical article detail lives at /sante-au-quotidien/$slug — this route
+// only exists to preserve any previously indexed/bookmarked links.
 export const Route = createFileRoute("/sante-quotidien/$slug")({
-  head: () => ({ meta: [{ title: "Article sante - IWOSAN" }] }),
-  component: () => <ArticleDetailPage slug={Route.useParams().slug} fallbackSpace="Sante au quotidien" />,
+  beforeLoad: ({ params }) => {
+    throw redirect({ to: "/sante-au-quotidien/$slug", params: { slug: params.slug } });
+  },
 });

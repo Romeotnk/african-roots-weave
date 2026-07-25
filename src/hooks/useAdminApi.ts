@@ -46,6 +46,7 @@ import {
   rejectEvent,
   rejectFormation,
   rejectProduct,
+  rejectProfessional,
   replyAdminTicket,
   resolveAdminDispute,
   resolveAdminReport,
@@ -233,6 +234,10 @@ export function useAdminModerationActions() {
       onSuccess: refreshModeration,
     }),
     verifyProfessional: useMutation({ mutationFn: verifyProfessional, onSuccess: refreshModeration }),
+    rejectProfessional: useMutation({
+      mutationFn: ({ id, reason }: { id: string; reason: string }) => rejectProfessional(id, reason),
+      onSuccess: refreshModeration,
+    }),
   };
 }
 

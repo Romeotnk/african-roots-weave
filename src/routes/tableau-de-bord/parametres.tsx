@@ -116,7 +116,7 @@ export function SettingsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { al
             </div>
             <div className="mt-5 divide-y divide-[var(--brand-border-light)]">
               <ToggleRow label="Profil public dans l'annuaire" checked={form.profilePublic} onClick={() => toggle("profilePublic")} />
-              <ToggleRow label="Double authentification" checked={form.twoFactor} onClick={() => toggle("twoFactor")} />
+              <ToggleRow label="Double authentification" checked={form.twoFactor} onClick={() => toggle("twoFactor")} disabled comingSoon />
             </div>
           </section>
         </div>
@@ -144,14 +144,34 @@ export function SettingsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { al
   );
 }
 
-function ToggleRow({ label, checked, onClick }: { label: string; checked: boolean; onClick: () => void }) {
+function ToggleRow({
+  label,
+  checked,
+  onClick,
+  disabled,
+  comingSoon,
+}: {
+  label: string;
+  checked: boolean;
+  onClick: () => void;
+  disabled?: boolean;
+  comingSoon?: boolean;
+}) {
   return (
     <div className="flex items-center justify-between gap-4 py-4">
-      <p className="text-[14px] font-semibold">{label}</p>
+      <p className="flex items-center gap-2 text-[14px] font-semibold">
+        {label}
+        {comingSoon && (
+          <span className="rounded-full bg-[var(--brand-surface-alt)] px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--color-text-muted)]">
+            Bientôt disponible
+          </span>
+        )}
+      </p>
       <button
         type="button"
         onClick={onClick}
-        className={`relative h-7 w-12 rounded-full transition ${checked ? "bg-[var(--brand-primary)]" : "bg-[var(--brand-border)]"}`}
+        disabled={disabled}
+        className={`relative h-7 w-12 rounded-full transition ${checked ? "bg-[var(--brand-primary)]" : "bg-[var(--brand-border)]"} ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
         aria-pressed={checked}
       >
         <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${checked ? "left-6" : "left-1"}`} />

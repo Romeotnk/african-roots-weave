@@ -11,6 +11,7 @@ interface AuthCtx {
   session: Session | null;
   roles: AppRole[];
   loading: boolean;
+  authSyncError: string | null;
   signOut: () => Promise<void>;
   hasRole: (r: AppRole) => boolean;
   refreshRoles: () => Promise<void>;
@@ -61,21 +62,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authSyncError, setAuthSyncError] = useState<string | null>(null);
 
-  const syncBackendFromSupabaseSession = async (supabaseSession: Session | null) => {
+  const syncBackendFromSupabaseSession = async (supabaseSession: Session | null, attempt = 1): Promise<boolean> => {
     const token = supabaseSession?.access_token;
     if (!token) return false;
 
     try {
       const response = await loginWithSupabaseAccessToken(token);
       if (response.data?.user) {
+        setAuthSyncError(null);
         setSession(null);
         setUser(toSupabaseLikeUser(response.data.user));
         setRoles(rolesFromBackendUser(response.data.user));
         return true;
       }
     } catch (error) {
-      console.warn("Synchronisation OAuth Supabase vers backend indisponible.", error);
+      if (attempt < 2) {
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        return syncBackendFromSupabaseSession(supabaseSession, attempt + 1);
+      }
+      console.warn("Synchronisation OAuth Supabase vers backend impossible.", error);
+      setAuthSyncError("La connexion n'a pas pu être synchronisée avec votre compte. Merci de réessayer.");
     }
 
     return false;
@@ -107,13 +115,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const synced = await syncBackendFromSupabaseSession(supabaseSession);
     if (synced) return true;
 
-    setSession(supabaseSession);
-    setUser(supabaseSession.user);
-    await loadRoles(supabaseSession.user.id);
-    return true;
+    // The backend sync failed: don't fall back to a Supabase-only session.
+    // It has no backend access token, so every apiRequest call would
+    // silently 401 while the UI still showed the user as logged in.
+    setSession(null);
+    setUser(null);
+    setRoles([]);
+    return false;
   };
 
   useEffect(() => {
+    // Safety net: if a Supabase network call stalls without ever resolving
+    // or rejecting (no timeout of its own), loading would stay true forever
+    // and every ProtectedRoute page would show an infinite spinner. Force it
+    // to settle after a few seconds so the app falls back to "logged out"
+    // instead of hanging.
+    const loadingSafetyTimeout = window.setTimeout(() => setLoading(false), 10000);
+
     const loadBackendUser = () => {
       const backendUser = backendAuthUserStore.get();
       const token = authTokenStore.get();
@@ -137,6 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.addEventListener("iwosan.auth.changed", loadBackendUser);
       window.addEventListener("storage", loadBackendUser);
       return () => {
+        window.clearTimeout(loadingSafetyTimeout);
         window.removeEventListener("iwosan.auth.changed", loadBackendUser);
         window.removeEventListener("storage", loadBackendUser);
       };
@@ -146,6 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.addEventListener("iwosan.auth.changed", loadBackendUser);
       window.addEventListener("storage", loadBackendUser);
       return () => {
+        window.clearTimeout(loadingSafetyTimeout);
         window.removeEventListener("iwosan.auth.changed", loadBackendUser);
         window.removeEventListener("storage", loadBackendUser);
       };
@@ -190,10 +210,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
 
-    return () => sub?.subscription.unsubscribe();
+    return () => {
+      window.clearTimeout(loadingSafetyTimeout);
+      sub?.subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
+    setAuthSyncError(null);
     await backendLogout();
     if (!isSupabaseConfigured) {
       setRoles([]);
@@ -217,6 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     roles,
     loading,
+    authSyncError,
     signOut,
     hasRole: (r) => roles.includes(r),
     refreshRoles: () => loadRoles(user?.id),

@@ -94,6 +94,8 @@ export const rejectFormation = (id: string, reason: string) =>
 export const getPendingProfessionals = () => apiRequest<unknown[]>("/admin/professionals/pending");
 export const verifyProfessional = (id: string) =>
   apiRequest<unknown>(`/admin/professionals/${id}/verify`, { method: "PUT" });
+export const rejectProfessional = (id: string, reason: string) =>
+  apiRequest<unknown>(`/admin/professionals/${id}/reject`, { method: "PUT", body: { reason } });
 
 export const getAdminBanners = () => apiRequest<unknown[]>("/admin/banners");
 export const createAdminBanner = (body: Record<string, unknown>) =>

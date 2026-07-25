@@ -121,21 +121,38 @@ export const authTokenStore = {
   },
 };
 
-const refreshAccessToken = async () => {
-  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
-    method: "POST",
-    credentials: "include",
-  });
+let refreshInFlight: Promise<string | null> | null = null;
 
-  if (!response.ok) {
-    authTokenStore.set(null);
-    return null;
-  }
+// Concurrent 401s (several requests in flight when the access token expires)
+// must share one /auth/refresh call. The refresh token is rotated server-side
+// on each use, so firing it once per request would let the first response
+// rotate the cookie out from under the others, logging the user out even
+// though their session was still valid.
+const refreshAccessToken = (): Promise<string | null> => {
+  if (refreshInFlight) return refreshInFlight;
 
-  const payload = await parseApiEnvelope<{ accessToken: string }>(response);
-  const token = payload.data?.accessToken ?? null;
-  authTokenStore.set(token);
-  return token;
+  refreshInFlight = (async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        authTokenStore.set(null);
+        return null;
+      }
+
+      const payload = await parseApiEnvelope<{ accessToken: string }>(response);
+      const token = payload.data?.accessToken ?? null;
+      authTokenStore.set(token);
+      return token;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+
+  return refreshInFlight;
 };
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<ApiEnvelope<T>> {

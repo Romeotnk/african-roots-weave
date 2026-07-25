@@ -48,10 +48,6 @@ export const submitKycValidator = [
   body("country").isString().isLength({ min: 2, max: 80 }).trim().escape(),
   body("documentNumber").isString().isLength({ min: 2, max: 80 }).trim().escape(),
   body("expiresAt").optional({ nullable: true, checkFalsy: true }).isISO8601(),
-  body("files").optional().isObject(),
-  body("files.front").optional().isString().isLength({ max: 255 }).trim().escape(),
-  body("files.back").optional().isString().isLength({ max: 255 }).trim().escape(),
-  body("files.selfie").optional().isString().isLength({ max: 255 }).trim().escape(),
 ];
 
 export const changePasswordValidator = [

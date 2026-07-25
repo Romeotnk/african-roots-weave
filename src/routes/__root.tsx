@@ -27,9 +27,9 @@ function NotFoundComponent() {
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold">Page introuvable</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Cette page n'existe pas ou a �t� d�plac�e.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Cette page n'existe pas ou a été déplacée.</p>
         <div className="mt-6">
-          <Link to="/" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">Retour � l'accueil</Link>
+          <Link to="/" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">Retour à l'accueil</Link>
         </div>
       </div>
     </div>
@@ -49,7 +49,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <h1 className="text-xl font-semibold">Cette page n'a pas pu charger</h1>
         <p className="mt-2 text-sm text-muted-foreground">Une erreur est survenue.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button onClick={() => { router.invalidate(); reset(); }} className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">R�essayer</button>
+          <button onClick={() => { router.invalidate(); reset(); }} className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">Réessayer</button>
           <a href="/" className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent">Accueil</a>
         </div>
         {showDetails && <pre className="mt-5 max-h-56 overflow-auto rounded-md bg-slate-950 p-3 text-left text-xs text-slate-100">{error.stack || error.message}</pre>}
@@ -63,19 +63,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "IWOSAN - Le savoir m�dical africain, document� et vivant" },
-      { name: "description", content: "Plateforme panafricaine �ditoriale, scientifique et communautaire d�di�e � la m�decine traditionnelle, aux plantes m�dicinales et aux cultures de gu�rison africaines." },
+      { title: "IWOSAN - Le savoir médical africain, documenté et vivant" },
+      { name: "description", content: "Plateforme panafricaine éditoriale, scientifique et communautaire dédiée à la médecine traditionnelle, aux plantes médicinales et aux cultures de guérison africaines." },
       { name: "author", content: "Iwosan" },
-      { property: "og:title", content: "IWOSAN - Le savoir m�dical africain, document� et vivant" },
-      { property: "og:description", content: "Plateforme panafricaine �ditoriale, scientifique et communautaire d�di�e � la m�decine traditionnelle, aux plantes m�dicinales et aux cultures de gu�rison africaines." },
+      { property: "og:title", content: "IWOSAN - Le savoir médical africain, documenté et vivant" },
+      { property: "og:description", content: "Plateforme panafricaine éditoriale, scientifique et communautaire dédiée à la médecine traditionnelle, aux plantes médicinales et aux cultures de guérison africaines." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "IWOSAN - Le savoir m�dical africain, document� et vivant" },
-      { name: "twitter:description", content: "Plateforme panafricaine �ditoriale, scientifique et communautaire d�di�e � la m�decine traditionnelle, aux plantes m�dicinales et aux cultures de gu�rison africaines." },
+      { name: "twitter:title", content: "IWOSAN - Le savoir médical africain, documenté et vivant" },
+      { name: "twitter:description", content: "Plateforme panafricaine éditoriale, scientifique et communautaire dédiée à la médecine traditionnelle, aux plantes médicinales et aux cultures de guérison africaines." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1819c790-5fdc-422e-96c4-3a4825934d70/id-preview-2ec67662--5c6b0925-718f-4d9a-a7ce-388131a1aaf2.lovable.app-1780928460304.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1819c790-5fdc-422e-96c4-3a4825934d70/id-preview-2ec67662--5c6b0925-718f-4d9a-a7ce-388131a1aaf2.lovable.app-1780928460304.png" },
     ],
     links: [
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@0,400;0,500&display=swap" },

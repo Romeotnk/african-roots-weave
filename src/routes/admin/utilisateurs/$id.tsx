@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
-import { useAdminKycActions, useAdminUser, useAdminUserActions } from "@/hooks/useAdminApi";
+import { useAdminKycActions, useAdminKycDocuments, useAdminUser, useAdminUserActions } from "@/hooks/useAdminApi";
 
 export const Route = createFileRoute("/admin/utilisateurs/$id")({
   head: () => ({ meta: [{ title: "Fiche utilisateur admin - IWOSAN" }] }),
@@ -25,6 +25,7 @@ function AdminUserDetail() {
   const userQuery = useAdminUser(id);
   const { ban, unban, updateRole } = useAdminUserActions();
   const { approve: approveKyc, reject: rejectKyc } = useAdminKycActions();
+  const kycDocsQuery = useAdminKycDocuments(id, userQuery.data?.data?.kycStatus !== "PENDING" && Boolean(userQuery.data?.data));
   const [banOpen, setBanOpen] = useState(false);
   const [roleDraft, setRoleDraft] = useState("");
   const [notice, setNotice] = useState("");
@@ -154,6 +155,49 @@ function AdminUserDetail() {
               </div>
             </div>
           </AdminCard>
+
+          {user.kycStatus !== "PENDING" && (
+            <AdminCard>
+              <h2 className="mb-4 text-[18px] font-bold text-white">Documents KYC</h2>
+              {kycDocsQuery.isLoading && <p className="text-[13px] text-slate-400">Chargement des documents...</p>}
+              {kycDocsQuery.isError && <p className="text-[13px] text-red-300">Impossible de charger les documents.</p>}
+              {(() => {
+                const record = kycDocsQuery.data?.data as
+                  | { kycDocuments?: { docType?: string; documentNumber?: string; expiresAt?: string; files?: { front?: string; back?: string; selfie?: string } } | null }
+                  | undefined;
+                const docs = record?.kycDocuments;
+                if (!kycDocsQuery.isLoading && !docs) {
+                  return <p className="text-[13px] text-slate-400">Aucun document disponible.</p>;
+                }
+                if (!docs) return null;
+                const links: Array<[string, string | undefined]> = [
+                  ["Recto", docs.files?.front],
+                  ["Verso", docs.files?.back],
+                  ["Selfie", docs.files?.selfie],
+                ];
+                return (
+                  <div className="space-y-3 text-[13px]">
+                    <InfoRow label="Type de document" value={docs.docType ?? "—"} />
+                    <InfoRow label="Numéro" value={docs.documentNumber ?? "—"} />
+                    <InfoRow label="Expire le" value={docs.expiresAt ? new Date(docs.expiresAt).toLocaleDateString("fr-FR") : "—"} />
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      {links.map(([label, url]) => url ? (
+                        <a
+                          key={label}
+                          href={url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-lg bg-white/10 px-3 py-2 font-semibold text-emerald-300 hover:text-emerald-200"
+                        >
+                          Voir : {label}
+                        </a>
+                      ) : null)}
+                    </div>
+                  </div>
+                );
+              })()}
+            </AdminCard>
+          )}
         </div>
       </div>
 

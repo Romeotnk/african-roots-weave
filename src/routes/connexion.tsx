@@ -13,7 +13,7 @@ export const Route = createFileRoute("/connexion")({
 
 function Connexion() {
   const navigate = useNavigate();
-  const { user, loading, roles } = useAuth();
+  const { user, loading, roles, authSyncError } = useAuth();
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -104,8 +104,8 @@ function Connexion() {
                 Mot de passe oublié ?
               </Link>
             </div>
-            {error && (
-              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">{error}</p>
+            {(error || authSyncError) && (
+              <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">{error || authSyncError}</p>
             )}
             <button disabled={isSubmitting} className="w-full h-12 rounded-full bg-[var(--brand-primary)] text-white font-semibold hover:bg-[var(--brand-primary-dark)] disabled:opacity-70 transition">
               {isSubmitting ? "Connexion..." : "Se connecter"}

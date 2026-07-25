@@ -19,15 +19,39 @@ export const globalRateLimit = rateLimit({
   },
 });
 
-export const authRateLimit = rateLimit({
+const authRateLimitMessage = {
+  success: false,
+  data: null,
+  message: "Too many authentication attempts, please try again later",
+};
+
+// Separate limiter instances (not just separate limit values) so each has its
+// own store: without this, a burst of failed logins for an IP also exhausts
+// that same IP's budget on unrelated flows like password reset, locking a
+// legitimate user out of the one path meant to recover their account.
+export const loginRateLimit = rateLimit({
   skip: skipWhenDisabled,
   windowMs: 15 * 60 * 1000,
   limit: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  message: {
-    success: false,
-    data: null,
-    message: "Too many authentication attempts, please try again later",
-  },
+  message: authRateLimitMessage,
+});
+
+export const registerRateLimit = rateLimit({
+  skip: skipWhenDisabled,
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: authRateLimitMessage,
+});
+
+export const passwordResetRateLimit = rateLimit({
+  skip: skipWhenDisabled,
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: authRateLimitMessage,
 });

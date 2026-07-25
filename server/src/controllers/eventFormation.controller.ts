@@ -48,6 +48,7 @@ export const createEvent = asyncHandler(async (req, res) => {
       endDate: new Date(req.body.endDate),
       createdById: req.user.id,
       isPublished: canPublishProgramming(req.user.role) && Boolean(req.body.isPublished),
+      rejectedAt: null,
     },
   });
   res.status(201).json(apiResponse(true, event, "Event created"));
@@ -75,6 +76,7 @@ export const updateEvent = asyncHandler(async (req, res) => {
       endDate: endDate ? new Date(endDate) : undefined,
       isPublished:
         isPublished === undefined ? undefined : canPublishProgramming(req.user.role) ? isPublished : false,
+      rejectedAt: isPublished === undefined ? undefined : null,
     },
   });
   res.json(apiResponse(true, event, "Event updated"));
@@ -203,6 +205,7 @@ export const createFormation = asyncHandler(async (req, res) => {
   const rest = { ...req.body };
   delete rest.modules;
   delete rest.createdById;
+  delete rest.rejectedAt;
   const formation = await prisma.formation.create({
     data: {
       ...rest,
@@ -231,6 +234,7 @@ export const updateFormation = asyncHandler(async (req, res) => {
   delete rest.modules;
   delete rest.createdById;
   delete rest.isPublished;
+  delete rest.rejectedAt;
   const isPublished: boolean | undefined =
     req.body.isPublished === undefined ? undefined : canPublishProgramming(req.user.role) ? Boolean(req.body.isPublished) : false;
 
@@ -243,6 +247,7 @@ export const updateFormation = asyncHandler(async (req, res) => {
       data: {
         ...rest,
         isPublished,
+        rejectedAt: isPublished === undefined ? undefined : null,
         modules: modules ? { create: buildModulesCreateInput(modules) } : undefined,
       },
       include: { modules: { include: { lessons: true } } },

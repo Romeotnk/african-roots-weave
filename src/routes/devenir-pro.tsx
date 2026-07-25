@@ -1,9 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Camera, CheckCircle2, FileUp, MapPin, Plus, Stethoscope, Upload } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CountrySelect } from "@/components/shared/CountrySelect";
 import { Switch } from "@/components/ui/switch";
+import {
+  useMyProfessionalProfile,
+  useUploadMyProfilePhotos,
+  useUploadMyVerificationDocs,
+  useUpsertMyProfessionalProfile,
+} from "@/hooks/useProfessionalApi";
 
 export const Route = createFileRoute("/devenir-pro")({
   head: () => ({ meta: [{ title: "Devenir professionnel - IWOSAN" }] }),
@@ -28,17 +34,46 @@ const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dima
 const slots = ["Matin", "Apres-midi", "Soir"];
 
 function BecomePro() {
+  const profileQuery = useMyProfessionalProfile();
+  const upsertProfile = useUpsertMyProfessionalProfile();
+  const uploadPhotos = useUploadMyProfilePhotos();
+  const uploadDocs = useUploadMyVerificationDocs();
+
   const [country, setCountry] = useState("BJ");
+  const [mainSpecialty, setMainSpecialty] = useState(specialties[0]);
   const [online, setOnline] = useState(true);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [consultationPrice, setConsultationPrice] = useState("");
   const [selectedSlots, setSelectedSlots] = useState<string[]>(["Lundi-Matin", "Mercredi-Apres-midi"]);
   const [treated, setTreated] = useState(["Postpartum", "Digestion"]);
   const [treatedInput, setTreatedInput] = useState("");
-  const [submitted, setSubmitted] = useState(false);
   const [profileName, setProfileName] = useState("");
   const [bio, setBio] = useState("");
+  const [initiationPath, setInitiationPath] = useState("");
+  const [successRate, setSuccessRate] = useState("");
   const [city, setCity] = useState("");
-  const [documents, setDocuments] = useState<string[]>([]);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [documentFiles, setDocumentFiles] = useState<File[]>([]);
   const [formMessage, setFormMessage] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  const existingProfile = profileQuery.data?.data;
+
+  useEffect(() => {
+    if (!existingProfile) return;
+    setProfileName(existingProfile.displayName);
+    setBio(existingProfile.biography);
+    setInitiationPath(existingProfile.initiationPath ?? "");
+    setSuccessRate(existingProfile.therapeuticSuccessRate != null ? String(existingProfile.therapeuticSuccessRate) : "");
+    setCity(existingProfile.location);
+    setTreated(existingProfile.specialty);
+    setOnline(existingProfile.serviceBookingEnabled);
+    const schedule = existingProfile.availabilitySchedule as { slots?: string[]; videoUrl?: string; consultationPrice?: string } | null;
+    if (schedule?.slots) setSelectedSlots(schedule.slots);
+    if (schedule?.videoUrl) setVideoUrl(schedule.videoUrl);
+    if (schedule?.consultationPrice) setConsultationPrice(schedule.consultationPrice);
+  }, [existingProfile]);
 
   const completeness = useMemo(() => {
     const checks = [
@@ -47,11 +82,10 @@ function BecomePro() {
       city.trim().length >= 2,
       selectedSlots.length > 0,
       treated.length > 0,
-      documents.length > 0,
-      online !== undefined,
+      documentFiles.length > 0 || Boolean(existingProfile?.verificationDocs),
     ];
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
-  }, [bio, city, documents.length, online, profileName, selectedSlots.length, treated.length]);
+  }, [bio, city, documentFiles.length, existingProfile, profileName, selectedSlots.length, treated.length]);
 
   const toggleSlot = (value: string) => {
     setSelectedSlots((current) =>
@@ -67,7 +101,7 @@ function BecomePro() {
     setFormMessage("");
   };
 
-  const submitProfile = () => {
+  const submitProfile = async () => {
     if (profileName.trim().length < 3) {
       setFormMessage("Renseignez le nom de pratique.");
       return;
@@ -84,18 +118,41 @@ function BecomePro() {
       setFormMessage("Ajoutez au moins un creneau de disponibilite.");
       return;
     }
-    if (treated.length === 0) {
+    const allSpecialties = Array.from(new Set([mainSpecialty, ...treated])).slice(0, 8);
+    if (allSpecialties.length === 0) {
       setFormMessage("Ajoutez au moins une specialite traitee.");
       return;
     }
-    if (documents.length === 0) {
+    if (!existingProfile && documentFiles.length === 0) {
       setFormMessage("Ajoutez au moins un document ou certificat pour la moderation.");
       return;
     }
 
-    setSubmitted(true);
-    setFormMessage("Profil soumis en moderation. L'equipe verifiera les documents avant publication.");
+    try {
+      await upsertProfile.mutateAsync({
+        displayName: profileName.trim(),
+        specialty: allSpecialties,
+        biography: bio.trim(),
+        initiationPath: initiationPath.trim() || undefined,
+        therapeuticSuccessRate: successRate ? Number(successRate) : undefined,
+        location: city.trim(),
+        serviceBookingEnabled: online,
+        availabilitySchedule: { slots: selectedSlots, videoUrl: online ? videoUrl.trim() : "", consultationPrice: consultationPrice.trim() },
+      });
+
+      const photoFiles = [avatarFile, ...galleryFiles].filter((file): file is File => Boolean(file));
+      if (photoFiles.length > 0) await uploadPhotos.mutateAsync(photoFiles);
+      if (documentFiles.length > 0) await uploadDocs.mutateAsync(documentFiles);
+
+      setSubmitted(true);
+      setFormMessage("Profil soumis en moderation. L'equipe verifiera les documents avant publication.");
+    } catch (error) {
+      setSubmitted(false);
+      setFormMessage(error instanceof Error ? error.message : "Une erreur est survenue lors de l'envoi.");
+    }
   };
+
+  const isSaving = upsertProfile.isPending || uploadPhotos.isPending || uploadDocs.isPending;
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">
@@ -121,22 +178,22 @@ function BecomePro() {
             <h2 className="flex items-center gap-2 text-[20px] font-bold"><Stethoscope size={20} /> Informations identitaires</h2>
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               <input required value={profileName} onChange={(event) => { setProfileName(event.target.value); setFormMessage(""); }} placeholder="Nom de pratique / nom d'exercice" className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
-              <select className="h-11 rounded-lg border border-[var(--brand-border)] bg-white px-4">
+              <select value={mainSpecialty} onChange={(event) => setMainSpecialty(event.target.value)} className="h-11 rounded-lg border border-[var(--brand-border)] bg-white px-4">
                 {specialties.map((item) => <option key={item}>{item}</option>)}
               </select>
-              <input placeholder="Specialites secondaires (max 5)" className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
-              <input placeholder="Langues pratiquees" className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
             </div>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <label className="flex min-h-[130px] cursor-pointer flex-col items-center justify-center rounded-[12px] border-2 border-dashed border-[var(--brand-border)] bg-[var(--brand-surface-alt)]">
                 <Camera size={26} className="text-[var(--brand-primary)]" />
                 <span className="mt-2 text-[13px] font-semibold">Photo de profil</span>
-                <input type="file" accept="image/*" className="sr-only" />
+                <span className="mt-1 max-w-full truncate px-3 text-[11px] text-[var(--color-text-muted)]">{avatarFile?.name ?? "Aucun fichier"}</span>
+                <input type="file" accept="image/*" className="sr-only" onChange={(event) => setAvatarFile(event.target.files?.[0] ?? null)} />
               </label>
               <label className="flex min-h-[130px] cursor-pointer flex-col items-center justify-center rounded-[12px] border-2 border-dashed border-[var(--brand-border)] bg-[var(--brand-surface-alt)]">
                 <Upload size={26} className="text-[var(--brand-primary)]" />
                 <span className="mt-2 text-[13px] font-semibold">Galerie 5 a 10 photos</span>
-                <input type="file" multiple accept="image/*" className="sr-only" />
+                <span className="mt-1 max-w-full truncate px-3 text-[11px] text-[var(--color-text-muted)]">{galleryFiles.length ? `${galleryFiles.length} fichier(s)` : "Aucun fichier"}</span>
+                <input type="file" multiple accept="image/*" className="sr-only" onChange={(event) => setGalleryFiles(Array.from(event.target.files ?? []).slice(0, 10))} />
               </label>
             </div>
           </div>
@@ -145,7 +202,7 @@ function BecomePro() {
             <h2 className="text-[20px] font-bold">Recit professionnel</h2>
             <div className="mt-5 space-y-3">
               <textarea required minLength={300} value={bio} onChange={(event) => { setBio(event.target.value); setFormMessage(""); }} rows={6} placeholder="Histoire / biographie narrative, minimum 300 caracteres" className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
-              <textarea rows={4} placeholder="Formation et initiation : comment, ou, avec qui" className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
+              <textarea value={initiationPath} onChange={(event) => setInitiationPath(event.target.value)} rows={4} placeholder="Formation et initiation : comment, ou, avec qui" className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
               <div className="flex gap-2">
                 <input value={treatedInput} onChange={(event) => setTreatedInput(event.target.value)} placeholder="Specialite traitee" className="h-10 flex-1 rounded-lg border border-[var(--brand-border)] px-3" />
                 <button type="button" aria-label="Ajouter une specialite" onClick={addTreated} className="h-10 rounded-lg bg-[var(--brand-primary)] px-4 text-white"><Plus size={16} /></button>
@@ -153,11 +210,7 @@ function BecomePro() {
               <div className="flex flex-wrap gap-2">
                 {treated.map((item) => <button type="button" key={item} onClick={() => setTreated((current) => current.filter((value) => value !== item))} className="rounded-full bg-[var(--brand-primary-subtle)] px-3 py-1 text-[12px] font-semibold text-[var(--brand-primary)]">{item} x</button>)}
               </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <input type="number" min="0" max="100" placeholder="Taux de reussite auto-declare (%)" className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
-                <input type="number" min="0" placeholder="Annees d'experience" className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
-              </div>
-              <textarea rows={3} placeholder="Explications obligatoires du taux annonce" className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
+              <input type="number" min="0" max="100" value={successRate} onChange={(event) => setSuccessRate(event.target.value)} placeholder="Taux de reussite auto-declare (%)" className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4 md:w-auto" />
             </div>
           </div>
 
@@ -166,12 +219,6 @@ function BecomePro() {
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               <CountrySelect value={country} onChange={setCountry} className="h-11 w-full rounded-lg border border-[var(--brand-border)] bg-white px-4" />
               <input value={city} onChange={(event) => { setCity(event.target.value); setFormMessage(""); }} placeholder="Ville" className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
-              <input placeholder="Adresse du cabinet" className="h-11 rounded-lg border border-[var(--brand-border)] px-4 md:col-span-2" />
-            </div>
-            <div className="mt-4 rounded-[12px] border border-[var(--brand-border)] bg-[linear-gradient(135deg,#dff1e7,#f7efd4)] p-5">
-              <div className="grid h-[190px] place-items-center rounded-lg bg-white/30 text-[13px] font-semibold text-[var(--brand-primary)]">
-                Carte du cabinet
-              </div>
             </div>
             <div className="mt-5 overflow-x-auto">
               <div className="grid min-w-[620px] grid-cols-[120px_repeat(3,1fr)] gap-2 text-[13px]">
@@ -196,8 +243,8 @@ function BecomePro() {
               <label className="flex flex-1 items-center justify-between rounded-lg border border-[var(--brand-border)] px-4 py-3 text-[13px] font-semibold">
                 Consultations en ligne <Switch checked={online} onCheckedChange={setOnline} />
               </label>
-              {online && <input placeholder="Lien visioconference" className="h-11 flex-1 rounded-lg border border-[var(--brand-border)] px-4" />}
-              <input type="number" placeholder="Prix consultation" className="h-11 flex-1 rounded-lg border border-[var(--brand-border)] px-4" />
+              {online && <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="Lien visioconference" className="h-11 flex-1 rounded-lg border border-[var(--brand-border)] px-4" />}
+              <input type="number" value={consultationPrice} onChange={(event) => setConsultationPrice(event.target.value)} placeholder="Prix consultation" className="h-11 flex-1 rounded-lg border border-[var(--brand-border)] px-4" />
             </div>
           </div>
 
@@ -206,13 +253,15 @@ function BecomePro() {
             <label className="mt-5 flex min-h-[130px] cursor-pointer flex-col items-center justify-center rounded-[12px] border-2 border-dashed border-[var(--brand-border)] bg-[var(--brand-surface-alt)]">
               <FileUp size={28} className="text-[var(--brand-primary)]" />
               <span className="mt-2 text-[13px] font-semibold">Documents envoyes a l'administration pour validation</span>
-              <span className="mt-1 max-w-full px-4 text-center text-[11px] text-[var(--color-text-muted)]">{documents.length ? `${documents.length} fichier(s) selectionne(s)` : "Aucun fichier selectionne"}</span>
-              <input type="file" multiple className="sr-only" onChange={(event) => { setDocuments(Array.from(event.target.files ?? []).map((file) => file.name)); setFormMessage(""); }} />
+              <span className="mt-1 max-w-full px-4 text-center text-[11px] text-[var(--color-text-muted)]">{documentFiles.length ? `${documentFiles.length} fichier(s) selectionne(s)` : "Aucun fichier selectionne"}</span>
+              <input type="file" multiple className="sr-only" onChange={(event) => { setDocumentFiles(Array.from(event.target.files ?? []).slice(0, 5)); setFormMessage(""); }} />
             </label>
           </div>
 
           {formMessage && <p className={`rounded-lg border p-3 text-[13px] ${submitted ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-700"}`}>{formMessage}</p>}
-          <button type="submit" className="h-12 rounded-full bg-[var(--brand-primary)] px-7 font-semibold text-white">Soumettre mon profil</button>
+          <button type="submit" disabled={isSaving} className="h-12 rounded-full bg-[var(--brand-primary)] px-7 font-semibold text-white disabled:opacity-60">
+            {isSaving ? "Envoi..." : "Soumettre mon profil"}
+          </button>
         </form>
 
         <aside className="h-fit space-y-4">
@@ -223,6 +272,14 @@ function BecomePro() {
             </div>
             <p className="mt-2 text-[13px] font-semibold text-[var(--brand-primary)]">{completeness}% pret</p>
           </div>
+          {existingProfile && (
+            <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5 text-[13px]">
+              <p className="font-bold">Statut</p>
+              <p className={`mt-2 inline-flex rounded-full px-3 py-1 text-[12px] font-bold ${existingProfile.isVerified ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                {existingProfile.isVerified ? "Profil vérifié" : "En attente de vérification"}
+              </p>
+            </div>
+          )}
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5 text-[13px] text-[var(--color-text-secondary)]">
             <CheckCircle2 className="mb-3 text-[var(--brand-primary)]" /> Les certifications restent privees et servent a la validation du badge verifie.
           </div>

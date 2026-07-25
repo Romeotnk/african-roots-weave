@@ -113,7 +113,7 @@ function BlogPage() {
                   Preparez vos articles, suivez la moderation et gerez vos publications.
                 </p>
               </div>
-              <Link to="/sante-quotidien" className="btn-secondary h-11 px-5 text-[14px]">
+              <Link to="/sante-au-quotidien" className="btn-secondary h-11 px-5 text-[14px]">
                 <Eye size={17} /> Voir le blog public
               </Link>
             </div>

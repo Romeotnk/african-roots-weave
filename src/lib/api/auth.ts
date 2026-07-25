@@ -122,17 +122,26 @@ export type SubmitKycPayload = {
   country: string;
   documentNumber: string;
   expiresAt?: string;
-  files?: {
-    front?: string;
-    back?: string;
-    selfie?: string;
+  files: {
+    front: File;
+    back?: File;
+    selfie: File;
   };
 };
 
 export const submitKyc = async (payload: SubmitKycPayload) => {
+  const body = new FormData();
+  body.append("docType", payload.docType);
+  body.append("country", payload.country);
+  body.append("documentNumber", payload.documentNumber);
+  if (payload.expiresAt) body.append("expiresAt", payload.expiresAt);
+  body.append("front", payload.files.front);
+  if (payload.files.back) body.append("back", payload.files.back);
+  body.append("selfie", payload.files.selfie);
+
   const response = await apiRequest<AuthUser>("/auth/kyc", {
     method: "POST",
-    body: payload,
+    body,
   });
   if (response.data) {
     backendAuthUserStore.set(response.data);

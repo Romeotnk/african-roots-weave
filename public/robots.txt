@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /mon-compte
+Disallow: /tableau-de-bord
+Disallow: /dashboard
+Disallow: /messages
+Disallow: /connexion
+Disallow: /inscription
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /mot-de-passe-oublie
+Disallow: /mes-commandes
+Disallow: /checkout
+Disallow: /panier
+
+Sitemap: https://iwosan.africa/sitemap.xml

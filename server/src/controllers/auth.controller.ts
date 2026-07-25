@@ -3,6 +3,7 @@ import { prisma } from "../config/db.js";
 import { env } from "../config/env.js";
 import { redisSet } from "../config/redis.js";
 import { sendPasswordResetEmail, sendVerificationEmail } from "../services/email.service.js";
+import { uploadBufferToCloudinary } from "../services/cloudinary.service.js";
 import { verifyTurnstile } from "../services/turnstile.service.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiResponse } from "../utils/apiResponse.js";
@@ -52,9 +53,7 @@ export const register = asyncHandler(async (req, res) => {
     turnstileToken,
   } = req.body;
 
-  const turnstileOk = turnstileToken
-    ? await verifyTurnstile(turnstileToken, req.ip)
-    : true;
+  const turnstileOk = await verifyTurnstile(turnstileToken, req.ip);
 
   if (!turnstileOk) {
     throw new ApiError(400, "Turnstile verification failed");
@@ -519,18 +518,43 @@ export const updateMe = asyncHandler(async (req, res) => {
   res.json(apiResponse(true, user, "Profile updated"));
 });
 
+const ALLOWED_KYC_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
+
 export const submitKyc = asyncHandler(async (req, res) => {
   if (!req.user) {
     throw new ApiError(401, "Authentication required");
   }
 
-  const { docType, country, documentNumber, expiresAt, files } = req.body;
+  const { docType, country, documentNumber, expiresAt } = req.body;
+  const uploadedFiles = (req.files ?? {}) as Record<string, Express.Multer.File[] | undefined>;
+  const front = uploadedFiles.front?.[0];
+  const back = uploadedFiles.back?.[0];
+  const selfie = uploadedFiles.selfie?.[0];
+
+  if (!front || !selfie) {
+    throw new ApiError(400, "Le recto du document et le selfie sont requis");
+  }
+  if (docType === "CNI" && !back) {
+    throw new ApiError(400, "Le verso est requis pour une CNI");
+  }
+  for (const file of [front, back, selfie].filter((value): value is Express.Multer.File => Boolean(value))) {
+    if (!ALLOWED_KYC_MIME_TYPES.has(file.mimetype)) {
+      throw new ApiError(400, "Format de fichier non supporte (image ou PDF uniquement)");
+    }
+  }
+
+  const [frontUrl, backUrl, selfieUrl] = await Promise.all([
+    uploadBufferToCloudinary(front.buffer, "iwosan/kyc", "auto"),
+    back ? uploadBufferToCloudinary(back.buffer, "iwosan/kyc", "auto") : Promise.resolve(undefined),
+    uploadBufferToCloudinary(selfie.buffer, "iwosan/kyc", "auto"),
+  ]);
+
   const kycDocuments: Prisma.InputJsonObject = {
     docType,
     country,
     documentNumber,
     expiresAt: expiresAt || null,
-    files: files ?? {},
+    files: { front: frontUrl, back: backUrl ?? null, selfie: selfieUrl },
     submittedAt: new Date().toISOString(),
   };
 

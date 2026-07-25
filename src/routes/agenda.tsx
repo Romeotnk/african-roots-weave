@@ -9,7 +9,7 @@ import { toEventItem, type BackendEvent } from "@/lib/eventMappers";
 import type { EventItem } from "@/types";
 
 export const Route = createFileRoute("/agenda")({
-  head: () => ({ meta: [{ title: "Agenda & �v�nements - IWOSAN" }] }),
+  head: () => ({ meta: [{ title: "Agenda & Événements - IWOSAN" }] }),
   component: Agenda,
 });
 
@@ -59,7 +59,7 @@ function Agenda() {
 
   return (
     <>
-      <HeroSection image="https://images.unsplash.com/photo-1511578314322-379afb476865?w=1920&q=80" badge="Agenda" title="Agenda & �v�nements" subtitle="Vue par d�faut en liste, avec calendrier lat�ral optionnel." size="md" />
+      <HeroSection image="https://images.unsplash.com/photo-1511578314322-379afb476865?w=1920&q=80" badge="Agenda" title="Agenda & Événements" subtitle="Vue par défaut en liste, avec calendrier latéral optionnel." size="md" />
       <section className="container-iwosan py-10">
         <div className="mb-6 flex items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2">{filters.map((item) => <button key={item} onClick={() => setFilter(item)} className={`rounded-full px-4 py-2 text-[13px] font-semibold ${filter === item ? "bg-[var(--brand-primary)] text-white" : "border border-[var(--brand-border)] bg-white"}`}>{item === "Tous" ? "Tous" : item.toLowerCase()}</button>)}</div>
@@ -70,7 +70,7 @@ function Agenda() {
           <div className="space-y-7">
             <div className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-6">
               <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--brand-terracotta)]">DATE ACTUELLE</p>
-              <h2 className="mt-2 text-[28px]">{now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} � {now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</h2>
+              <h2 className="mt-2 text-[28px]">{now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} à {now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</h2>
             </div>
             {grouped.map(([monthLabel, items]) => (
               <section key={monthLabel}>
@@ -102,7 +102,7 @@ function Agenda() {
             </div>
             <div className="mt-4 rounded-2xl bg-[var(--brand-surface-alt)] p-4 text-[13px]">
               <p className="font-semibold">{selectedDay ? selectedDay.toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) : "Cliquez un jour"}</p>
-              {selectedDayEvents.map((event) => <p key={event.id} className="mt-2">� {event.title}</p>)}
+              {selectedDayEvents.map((event) => <p key={event.id} className="mt-2">• {event.title}</p>)}
             </div>
           </aside>
         </div>
@@ -112,7 +112,7 @@ function Agenda() {
         <div className={`absolute inset-0 bg-black/60 transition-opacity ${panelOpen ? "opacity-100" : "opacity-0"}`} onClick={() => setPanelOpen(false)} />
         <aside className={`absolute right-0 top-0 h-full w-[300px] bg-white p-5 shadow-2xl transition-transform ${panelOpen ? "translate-x-0" : "translate-x-full"}`}>
           <div className="mb-4 flex items-center justify-between"><h2 className="font-bold">Calendrier</h2><button onClick={() => setPanelOpen(false)}><X size={18} /></button></div>
-          <p className="mb-4 text-[13px] text-[var(--color-text-muted)]">{now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} � {now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</p>
+          <p className="mb-4 text-[13px] text-[var(--color-text-muted)]">{now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} à {now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</p>
           <div className="space-y-3">{filteredEvents.slice(0, 6).map((event) => <EventCard key={event.id} event={event} actionLabel="S'inscrire" />)}</div>
         </aside>
       </div>

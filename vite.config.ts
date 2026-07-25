@@ -16,7 +16,16 @@ const readServerPublicEnv = () => {
     const index = trimmed.indexOf("=");
     const key = trimmed.slice(0, index).trim();
     const value = trimmed.slice(index + 1).trim().replace(/^["']|["']$/g, "");
-    if (["SUPABASE_URL", "VITE_SUPABASE_URL", "SUPABASE_PUBLISHABLE_KEY", "VITE_SUPABASE_PUBLISHABLE_KEY"].includes(key)) {
+    if (
+      [
+        "SUPABASE_URL",
+        "VITE_SUPABASE_URL",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "VITE_SUPABASE_PUBLISHABLE_KEY",
+        "TURNSTILE_SITE_KEY",
+        "VITE_TURNSTILE_SITE_KEY",
+      ].includes(key)
+    ) {
       acc[key] = value;
     }
     return acc;
@@ -26,11 +35,13 @@ const readServerPublicEnv = () => {
 const serverPublicEnv = readServerPublicEnv();
 const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? serverPublicEnv.VITE_SUPABASE_URL ?? serverPublicEnv.SUPABASE_URL;
 const supabasePublishableKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? serverPublicEnv.VITE_SUPABASE_PUBLISHABLE_KEY ?? serverPublicEnv.SUPABASE_PUBLISHABLE_KEY;
+const turnstileSiteKey = process.env.VITE_TURNSTILE_SITE_KEY ?? process.env.TURNSTILE_SITE_KEY ?? serverPublicEnv.VITE_TURNSTILE_SITE_KEY ?? serverPublicEnv.TURNSTILE_SITE_KEY;
 
 export default defineConfig({
   define: {
     "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(supabaseUrl ?? ""),
     "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(supabasePublishableKey ?? ""),
+    "import.meta.env.VITE_TURNSTILE_SITE_KEY": JSON.stringify(turnstileSiteKey ?? ""),
   },
   server: {
     host: "127.0.0.1",

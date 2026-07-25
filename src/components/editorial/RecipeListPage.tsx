@@ -117,7 +117,7 @@ export function RecipeListPage() {
                       </div>
                       <h3 className="text-[18px] font-bold">{recipe.title}</h3>
                       <p className="mt-2 line-clamp-2 text-[14px] text-[var(--color-text-secondary)]">{recipe.excerpt}</p>
-                      <Link to="/recettes/$slug" params={{ slug: recipe.slug }} className="mt-4 inline-flex text-[13px] font-semibold text-[var(--brand-primary)]">
+                      <Link to="/recettes-sante/$slug" params={{ slug: recipe.slug }} className="mt-4 inline-flex text-[13px] font-semibold text-[var(--brand-primary)]">
                         Voir la recette
                       </Link>
                     </div>

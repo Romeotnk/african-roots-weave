@@ -2,9 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { ArrowRight, BriefcaseBusiness, CheckCircle2, Eye, EyeOff, ShieldCheck, Sparkles, User } from "lucide-react";
 import { CountrySelect } from "@/components/shared/CountrySelect";
+import { TurnstileWidget } from "@/components/shared/TurnstileWidget";
 import { register } from "@/lib/api/auth";
 import { getPasswordValidationError } from "@/lib/auth/password";
 import { signInWithSocialProvider } from "@/lib/auth/social";
+
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined;
 
 export const Route = createFileRoute("/inscription")({
   head: () => ({ meta: [{ title: "Inscription - IWOSAN" }] }),
@@ -54,6 +57,8 @@ function Inscription() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSocialSubmitting, setIsSocialSubmitting] = useState<"google" | "facebook" | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   const selectedType = accountTypes.find((item) => item.id === accountType) ?? accountTypes[0];
 
@@ -78,6 +83,11 @@ function Inscription() {
       return;
     }
 
+    if (TURNSTILE_SITE_KEY && !turnstileToken) {
+      setError("Merci de valider la vérification anti-robot.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const response = await register({
@@ -88,6 +98,7 @@ function Inscription() {
         country,
         role: accountType === "professional" ? "PROFESSIONAL" : "USER",
         language: "fr",
+        turnstileToken: turnstileToken ?? undefined,
       });
       setMessage(
         accountType === "professional"
@@ -98,6 +109,8 @@ function Inscription() {
       setError(apiError instanceof Error ? apiError.message : "Inscription impossible pour le moment.");
     } finally {
       setIsSubmitting(false);
+      setTurnstileToken(null);
+      setTurnstileResetKey((current) => current + 1);
     }
   };
 
@@ -220,12 +233,33 @@ function Inscription() {
                 <span>J'accepte les CGU et la politique de confidentialité</span>
               </label>
 
-              {error && <p className="rounded-[8px] border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">{error}</p>}
-              {message && <p className="rounded-[8px] border border-emerald-200 bg-emerald-50 px-3 py-2 text-[13px] text-emerald-700">{message}</p>}
+              {TURNSTILE_SITE_KEY && (
+                <TurnstileWidget
+                  key={turnstileResetKey}
+                  siteKey={TURNSTILE_SITE_KEY}
+                  onVerify={setTurnstileToken}
+                  onExpire={() => setTurnstileToken(null)}
+                />
+              )}
 
-              <button type="submit" disabled={isSubmitting} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] font-semibold text-white hover:bg-[var(--brand-primary-dark)] disabled:cursor-not-allowed disabled:opacity-70">
-                {isSubmitting ? "Inscription..." : "Créer mon compte"} <ArrowRight size={17} />
-              </button>
+              {error && <p className="rounded-[8px] border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">{error}</p>}
+              {message && (
+                <div className="space-y-3 rounded-[8px] border border-emerald-200 bg-emerald-50 px-3 py-3">
+                  <p className="text-[13px] text-emerald-700">{message}</p>
+                  <Link
+                    to="/connexion"
+                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white hover:bg-[var(--brand-primary-dark)]"
+                  >
+                    Se connecter maintenant <ArrowRight size={15} />
+                  </Link>
+                </div>
+              )}
+
+              {!message && (
+                <button type="submit" disabled={isSubmitting || Boolean(TURNSTILE_SITE_KEY) && !turnstileToken} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] font-semibold text-white hover:bg-[var(--brand-primary-dark)] disabled:cursor-not-allowed disabled:opacity-70">
+                  {isSubmitting ? "Inscription..." : "Créer mon compte"} <ArrowRight size={17} />
+                </button>
+              )}
             </form>
 
             <div className="my-6 flex items-center gap-3 text-[12px] text-[var(--color-text-muted)]">

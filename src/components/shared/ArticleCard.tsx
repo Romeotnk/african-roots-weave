@@ -6,7 +6,7 @@ import { Badge } from "./Badge";
 export function articlePath(article: Article) {
   if (article.space === "Pharmacopee") return "/pharmacopee/$slug" as const;
   if (article.space === "Rites & Cultures") return "/rites-cultures/$slug" as const;
-  if (article.space === "Recettes sante") return "/recettes/$slug" as const;
+  if (article.space === "Recettes sante") return "/recettes-sante/$slug" as const;
   return "/sante-au-quotidien/$slug" as const;
 }
 

@@ -1,7 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ForumListPage } from "@/components/forum/ForumListPage";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+// Canonical forum lives at /forum (its sub-routes /forum/$id and
+// /forum/nouvelle-question already depend on this prefix) — this route only
+// exists to preserve any previously indexed/bookmarked /discutons-en links.
 export const Route = createFileRoute("/discutons-en")({
-  head: () => ({ meta: [{ title: "Discutons-en - Forum IWOSAN" }] }),
-  component: ForumListPage,
+  beforeLoad: () => {
+    throw redirect({ to: "/forum" });
+  },
 });

@@ -1,7 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { RecipeDetailPage } from "@/components/editorial/RecipeDetailPage";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+// Canonical recipe detail lives at /recettes-sante/$slug — this route only
+// exists to preserve any previously indexed/bookmarked /recettes/:slug links.
 export const Route = createFileRoute("/recettes/$slug")({
-  head: () => ({ meta: [{ title: "Recette - IWOSAN" }] }),
-  component: () => <RecipeDetailPage slug={Route.useParams().slug} />,
+  beforeLoad: ({ params }) => {
+    throw redirect({ to: "/recettes-sante/$slug", params: { slug: params.slug } });
+  },
 });

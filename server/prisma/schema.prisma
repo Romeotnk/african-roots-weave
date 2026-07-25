@@ -355,6 +355,7 @@ model Article {
   isPublished Boolean      @default(false)
   isApproved  Boolean      @default(false)
   publishedAt DateTime?
+  rejectedAt  DateTime?
   views       Int          @default(0)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
@@ -480,6 +481,7 @@ model Event {
   coverImage   String?
   createdById  String
   isPublished  Boolean   @default(false)
+  rejectedAt   DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -525,6 +527,7 @@ model Formation {
   instructorBio  String?           @db.Text
   createdById    String
   isPublished    Boolean           @default(false)
+  rejectedAt     DateTime?
   downloadCount  Int               @default(0)
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt

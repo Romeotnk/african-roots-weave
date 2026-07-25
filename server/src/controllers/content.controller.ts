@@ -116,6 +116,7 @@ export const updateArticle = asyncHandler(async (req, res) => {
       tags: req.body.tags,
       recipeData: req.body.recipeData,
       isApproved: canPublishContent(req.user.role) ? req.body.isApproved : false,
+      rejectedAt: null,
     },
   });
   res.json(apiResponse(true, article, "Article updated"));

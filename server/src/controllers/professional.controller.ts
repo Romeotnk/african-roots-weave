@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../config/db.js";
+import { uploadBufferToCloudinary } from "../services/cloudinary.service.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
@@ -102,4 +103,114 @@ export const listReceivedReviews = asyncHandler(async (req, res) => {
   });
 
   res.json(apiResponse(true, reviews, "Received reviews retrieved"));
+});
+
+export const getMyProfile = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+
+  const profile = await prisma.professionalProfile.findUnique({ where: { userId: req.user.id } });
+  res.json(apiResponse(true, profile, "Professional profile retrieved"));
+});
+
+export const upsertMyProfile = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+
+  const {
+    displayName,
+    specialty,
+    biography,
+    initiationPath,
+    therapeuticSuccessRate,
+    innovations,
+    communityImpact,
+    philosophy,
+    location,
+    availabilitySchedule,
+    serviceBookingEnabled,
+    socialLinks,
+  } = req.body as {
+    displayName: string;
+    specialty?: string[];
+    biography: string;
+    initiationPath?: string;
+    therapeuticSuccessRate?: number;
+    innovations?: string;
+    communityImpact?: string;
+    philosophy?: string;
+    location: string;
+    availabilitySchedule?: Prisma.InputJsonValue;
+    serviceBookingEnabled?: boolean;
+    socialLinks?: Prisma.InputJsonValue;
+  };
+
+  const data: Prisma.ProfessionalProfileUncheckedCreateInput = {
+    userId: req.user.id,
+    displayName,
+    specialty: specialty ?? [],
+    biography,
+    initiationPath: initiationPath || null,
+    therapeuticSuccessRate: therapeuticSuccessRate ?? null,
+    innovations: innovations || null,
+    communityImpact: communityImpact || null,
+    philosophy: philosophy || null,
+    location,
+    availabilitySchedule: availabilitySchedule ?? Prisma.JsonNull,
+    serviceBookingEnabled: Boolean(serviceBookingEnabled),
+    socialLinks: socialLinks ?? Prisma.JsonNull,
+  };
+
+  const profile = await prisma.professionalProfile.upsert({
+    where: { userId: req.user.id },
+    create: data,
+    update: data,
+  });
+
+  res.json(apiResponse(true, profile, "Professional profile saved"));
+});
+
+export const uploadMyProfilePhotos = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+
+  const profile = await prisma.professionalProfile.findUnique({ where: { userId: req.user.id }, select: { photos: true } });
+  if (!profile) throw new ApiError(404, "Créez votre profil avant d'ajouter des photos");
+
+  const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+  if (files.length === 0) throw new ApiError(400, "Aucun fichier fourni");
+
+  const urls = await Promise.all(
+    files.map((file) => uploadBufferToCloudinary(file.buffer, "iwosan/professionals", "image")),
+  );
+
+  const updated = await prisma.professionalProfile.update({
+    where: { userId: req.user.id },
+    data: { photos: [...profile.photos, ...urls] },
+  });
+
+  res.json(apiResponse(true, updated, "Photos ajoutées"));
+});
+
+export const uploadMyVerificationDocs = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+
+  const profile = await prisma.professionalProfile.findUnique({
+    where: { userId: req.user.id },
+    select: { verificationDocs: true },
+  });
+  if (!profile) throw new ApiError(404, "Créez votre profil avant d'ajouter des documents");
+
+  const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+  if (files.length === 0) throw new ApiError(400, "Aucun fichier fourni");
+
+  const urls = await Promise.all(
+    files.map((file) => uploadBufferToCloudinary(file.buffer, "iwosan/professional-docs", "auto")),
+  );
+
+  const existing = Array.isArray(profile.verificationDocs) ? (profile.verificationDocs as string[]) : [];
+
+  const updated = await prisma.professionalProfile.update({
+    where: { userId: req.user.id },
+    data: { verificationDocs: [...existing, ...urls] },
+  });
+
+  res.json(apiResponse(true, updated, "Documents ajoutés"));
 });

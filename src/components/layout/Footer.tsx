@@ -25,9 +25,9 @@ const defaultFooterNav = [
 const defaultFooterEspaces = [
   { to: "/pharmacopee", label: "Pharmacopée vivante" },
   { to: "/rites-cultures", label: "Rites & Cultures" },
-  { to: "/sante-quotidien", label: "Santé au quotidien" },
+  { to: "/sante-au-quotidien", label: "Santé au quotidien" },
   { to: "/recettes-sante", label: "Recettes santé" },
-  { to: "/discutons-en", label: "Discutons-en" },
+  { to: "/forum", label: "Discutons-en" },
 ];
 
 const colTitle = "text-white text-[11px] font-semibold uppercase tracking-[0.1em] mb-5";

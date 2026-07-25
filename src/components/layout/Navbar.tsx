@@ -26,7 +26,7 @@ const mainLinks = [
   { to: "/sante-au-quotidien", label: "Santé au quotidien" },
   { to: "/rites-cultures", label: "Rites & Cultures" },
   { to: "/recettes-sante", label: "Recettes santé" },
-  { to: "/discutons-en", label: "Discutons-en" },
+  { to: "/forum", label: "Discutons-en" },
   { to: "/agenda", label: "Agenda" },
   { to: "/formations", label: "Formations" },
   { to: "/contact", label: "Contact" },
@@ -53,7 +53,7 @@ const groupedMobileLinks = [
   {
     label: "COMMUNAUTÉ",
     items: [
-      { to: "/discutons-en", label: "Discutons-en" },
+      { to: "/forum", label: "Discutons-en" },
       { to: "/agenda", label: "Agenda" },
       { to: "/formations", label: "Formations" },
     ],

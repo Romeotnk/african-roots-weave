@@ -36,6 +36,7 @@ import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VerifyEmailTokenRouteImport } from './routes/verify-email/$token'
 import { Route as TableauDeBordReseauRouteImport } from './routes/tableau-de-bord/reseau'
 import { Route as TableauDeBordQuestionsRouteImport } from './routes/tableau-de-bord/questions'
 import { Route as TableauDeBordProfilProRouteImport } from './routes/tableau-de-bord/profil-pro'
@@ -239,6 +240,11 @@ const SlugRoute = SlugRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyEmailTokenRoute = VerifyEmailTokenRouteImport.update({
+  id: '/verify-email/$token',
+  path: '/verify-email/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TableauDeBordReseauRoute = TableauDeBordReseauRouteImport.update({
@@ -674,6 +680,7 @@ export interface FileRoutesByFullPath {
   '/tableau-de-bord/profil-pro': typeof TableauDeBordProfilProRoute
   '/tableau-de-bord/questions': typeof TableauDeBordQuestionsRoute
   '/tableau-de-bord/reseau': typeof TableauDeBordReseauRoute
+  '/verify-email/$token': typeof VerifyEmailTokenRoute
   '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
   '/admin/communaute/forum': typeof AdminCommunauteForumRoute
   '/admin/communaute/signalements': typeof AdminCommunauteSignalementsRoute
@@ -772,6 +779,7 @@ export interface FileRoutesByTo {
   '/tableau-de-bord/profil-pro': typeof TableauDeBordProfilProRoute
   '/tableau-de-bord/questions': typeof TableauDeBordQuestionsRoute
   '/tableau-de-bord/reseau': typeof TableauDeBordReseauRoute
+  '/verify-email/$token': typeof VerifyEmailTokenRoute
   '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
   '/admin/communaute/forum': typeof AdminCommunauteForumRoute
   '/admin/communaute/signalements': typeof AdminCommunauteSignalementsRoute
@@ -871,6 +879,7 @@ export interface FileRoutesById {
   '/tableau-de-bord/profil-pro': typeof TableauDeBordProfilProRoute
   '/tableau-de-bord/questions': typeof TableauDeBordQuestionsRoute
   '/tableau-de-bord/reseau': typeof TableauDeBordReseauRoute
+  '/verify-email/$token': typeof VerifyEmailTokenRoute
   '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
   '/admin/communaute/forum': typeof AdminCommunauteForumRoute
   '/admin/communaute/signalements': typeof AdminCommunauteSignalementsRoute
@@ -971,6 +980,7 @@ export interface FileRouteTypes {
     | '/tableau-de-bord/profil-pro'
     | '/tableau-de-bord/questions'
     | '/tableau-de-bord/reseau'
+    | '/verify-email/$token'
     | '/admin/communaute/avis'
     | '/admin/communaute/forum'
     | '/admin/communaute/signalements'
@@ -1069,6 +1079,7 @@ export interface FileRouteTypes {
     | '/tableau-de-bord/profil-pro'
     | '/tableau-de-bord/questions'
     | '/tableau-de-bord/reseau'
+    | '/verify-email/$token'
     | '/admin/communaute/avis'
     | '/admin/communaute/forum'
     | '/admin/communaute/signalements'
@@ -1167,6 +1178,7 @@ export interface FileRouteTypes {
     | '/tableau-de-bord/profil-pro'
     | '/tableau-de-bord/questions'
     | '/tableau-de-bord/reseau'
+    | '/verify-email/$token'
     | '/admin/communaute/avis'
     | '/admin/communaute/forum'
     | '/admin/communaute/signalements'
@@ -1218,6 +1230,7 @@ export interface RootRouteChildren {
   TableauDeBordRoute: typeof TableauDeBordRouteWithChildren
   ProIdRoute: typeof ProIdRoute
   ProfilUsernameRoute: typeof ProfilUsernameRoute
+  VerifyEmailTokenRoute: typeof VerifyEmailTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1409,6 +1422,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-email/$token': {
+      id: '/verify-email/$token'
+      path: '/verify-email/$token'
+      fullPath: '/verify-email/$token'
+      preLoaderRoute: typeof VerifyEmailTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tableau-de-bord/reseau': {
@@ -2273,6 +2293,7 @@ const rootRouteChildren: RootRouteChildren = {
   TableauDeBordRoute: TableauDeBordRouteWithChildren,
   ProIdRoute: ProIdRoute,
   ProfilUsernameRoute: ProfilUsernameRoute,
+  VerifyEmailTokenRoute: VerifyEmailTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
