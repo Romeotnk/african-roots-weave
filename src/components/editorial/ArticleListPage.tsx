@@ -1,9 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { ArticleCard, articlePath } from "@/components/shared/ArticleCard";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
+import { SimplePager } from "@/components/shared/SimplePager";
 import { articles } from "@/data/articles";
 import { useArticles } from "@/hooks/useContentApi";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -83,10 +84,17 @@ export function toArticle(article: BackendArticle, fallbackSpace: string): Artic
 
 export function ArticleListPage({ space, title, badge, subtitle, image, warning }: ArticleListPageProps) {
   const apiSpace = spaceToApi[space];
-  const articlesQuery = useArticles(apiSpace ? { space: apiSpace } : {});
+  const [page, setPage] = useState(1);
+  const articlesQuery = useArticles(apiSpace ? { space: apiSpace, page } : { page });
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Toutes");
   const debouncedSearch = useDebounce(search, 300);
+  const isUnfiltered = category === "Toutes" && !debouncedSearch;
+  const pagination = articlesQuery.data?.pagination;
+
+  useEffect(() => {
+    setPage(1);
+  }, [category, debouncedSearch]);
 
   const apiArticles = useMemo(
     () => ((articlesQuery.data?.articles ?? []) as BackendArticle[]).map((article) => toArticle(article, space)).filter(Boolean) as Article[],
@@ -153,6 +161,10 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
                 <ArticleCard key={article.id} article={article} />
               ))}
             </div>
+
+            {isUnfiltered && pagination && (
+              <SimplePager page={pagination.page} totalPages={pagination.totalPages} onChange={setPage} />
+            )}
 
             {filteredArticles.length === 0 && (
               <div className="rounded-[12px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">

@@ -124,8 +124,9 @@ function NewQuestion() {
           {formError && <p className="rounded-[12px] bg-red-50 p-4 text-[13px] font-semibold text-red-700">{formError}</p>}
 
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <label className="mb-2 block text-[13px] font-bold">Titre</label>
+            <label htmlFor="question-title" className="mb-2 block text-[13px] font-bold">Titre</label>
             <input
+              id="question-title"
               value={title}
               onChange={(event) => {
                 setTitle(event.target.value);
@@ -161,7 +162,7 @@ function NewQuestion() {
           </div>
 
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <label className="mb-2 block text-[13px] font-bold">Corps de la question</label>
+            <label htmlFor="question-body" className="mb-2 block text-[13px] font-bold">Corps de la question</label>
             <div className="mb-3 flex flex-wrap gap-2">
               {[
                 { icon: Bold, label: "Gras" },
@@ -183,6 +184,7 @@ function NewQuestion() {
               ))}
             </div>
             <textarea
+              id="question-body"
               value={body}
               onChange={(event) => {
                 setBody(event.target.value);
@@ -203,8 +205,9 @@ function NewQuestion() {
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-[13px] font-bold">Catégorie</label>
+                <label htmlFor="question-category" className="mb-2 block text-[13px] font-bold">Catégorie</label>
                 <select
+                  id="question-category"
                   value={category}
                   onChange={(event) => setCategory(event.target.value)}
                   className="h-12 w-full rounded-lg border border-[var(--brand-border)] bg-white px-4"
@@ -223,9 +226,10 @@ function NewQuestion() {
               </div>
 
               <div>
-                <label className="mb-2 block text-[13px] font-bold">Tags</label>
+                <label htmlFor="question-tags" className="mb-2 block text-[13px] font-bold">Tags</label>
                 <div className="flex gap-2">
                   <input
+                    id="question-tags"
                     value={draftTag}
                     onChange={(event) => setDraftTag(event.target.value)}
                     onKeyDown={(event) => {

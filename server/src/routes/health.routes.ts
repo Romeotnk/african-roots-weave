@@ -15,11 +15,12 @@ export const healthRouter = Router();
  * Possible errors:
  * - 503 when the database cannot be reached.
  */
-healthRouter.get("/", async (_req, res, next) => {
+healthRouter.get("/", async (_req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
     res.json(apiResponse(true, { database: "up" }, "Service healthy"));
   } catch (error) {
-    next(error);
+    console.error("Health check failed: database unreachable.", error);
+    res.status(503).json(apiResponse(false, { database: "down" }, "Service unavailable"));
   }
 });

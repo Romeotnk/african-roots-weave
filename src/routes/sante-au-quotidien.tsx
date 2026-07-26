@@ -2,7 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ArticleListPage } from "@/components/editorial/ArticleListPage";
 
 export const Route = createFileRoute("/sante-au-quotidien")({
-  head: () => ({ meta: [{ title: "Sante au quotidien - IWOSAN" }] }),
+  head: () => ({
+    meta: [
+      { title: "Sante au quotidien - IWOSAN" },
+      { name: "description", content: "Conseils et articles de santé au quotidien issus de la médecine traditionnelle africaine, rédigés par des praticiens vérifiés." },
+    ],
+  }),
   component: () => (
     <ArticleListPage
       space="Sante au quotidien"

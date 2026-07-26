@@ -14,6 +14,11 @@ export const confirmOrderDelivery = (orderId: string) =>
     method: "POST",
   });
 
+export const markOrderShipped = (orderId: string) =>
+  apiRequest<unknown>(`/orders/${orderId}/ship`, {
+    method: "POST",
+  });
+
 export const openOrderDispute = (orderId: string, reason: string) =>
   apiRequest<unknown>(`/orders/${orderId}/dispute`, {
     method: "POST",

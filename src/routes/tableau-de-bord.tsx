@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Bell,
@@ -22,7 +21,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { apiRequest, authTokenStore } from "@/lib/api/client";
+import { useMeQuery } from "@/hooks/useAuthApi";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { PROFESSIONAL_ACCOUNT_ROLES } from "@/lib/auth/roles";
 
@@ -102,34 +101,10 @@ const messages = [
   ["Issa K.", "L'ebook est-il telechargeable plusieurs fois ?", "hier"],
 ];
 
-type AccountProfile = {
-  id: string;
-  email: string;
-  role: string;
-  firstName: string;
-  lastName: string;
-  language: string;
-  kycStatus: string;
-  isActive: boolean;
-  isBanned: boolean;
-  lastLoginAt?: string;
-  createdAt?: string;
-};
-
 function Dashboard() {
   const { user, signOut, roles } = useAuth();
   const navigate = useNavigate();
-  const hasBackendAuth = Boolean(authTokenStore.get());
-
-  const { data: profile } = useQuery<AccountProfile | null>({
-    queryKey: ["auth", "me"],
-    queryFn: async () => {
-      const response = await apiRequest<AccountProfile>("/auth/me");
-      return response.data;
-    },
-    enabled: hasBackendAuth,
-    retry: false,
-  });
+  const { data: profile } = useMeQuery();
 
   const fallbackName = (user?.user_metadata?.first_name as string) || user?.email?.split("@")[0] || "Invite";
   const displayName = profile ? `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim() || fallbackName : fallbackName;

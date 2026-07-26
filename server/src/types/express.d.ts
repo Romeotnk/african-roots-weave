@@ -13,7 +13,6 @@ declare global {
         kycStatus: string;
         isEmailVerified: boolean;
       };
-      language?: string;
     }
   }
 }

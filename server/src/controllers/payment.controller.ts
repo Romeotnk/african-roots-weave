@@ -20,17 +20,21 @@ export const initiatePayment = asyncHandler(async (req, res) => {
 
   if (req.body.method === "wallet") {
     const paid = await prisma.$transaction(async (tx) => {
+      // Conditional update instead of read-then-write: the WHERE clause is
+      // evaluated atomically by Postgres as part of the UPDATE, so two
+      // concurrent debits can't both pass a stale balance check and push
+      // the wallet negative.
+      const decremented = await tx.user.updateMany({
+        where: { id: req.user!.id, walletBalance: { gte: order.totalAmount } },
+        data: { walletBalance: { decrement: order.totalAmount } },
+      });
+      if (decremented.count === 0) throw new ApiError(400, "Insufficient wallet balance");
+
       const buyer = await tx.user.findUnique({
         where: { id: req.user!.id },
         select: { walletBalance: true },
       });
-      if (!buyer || buyer.walletBalance.lt(order.totalAmount))
-        throw new ApiError(400, "Insufficient wallet balance");
-
-      await tx.user.update({
-        where: { id: req.user!.id },
-        data: { walletBalance: { decrement: order.totalAmount } },
-      });
+      const balanceAfter = buyer?.walletBalance ?? new Prisma.Decimal(0);
       await tx.walletTransaction.create({
         data: {
           userId: req.user!.id,
@@ -38,8 +42,8 @@ export const initiatePayment = asyncHandler(async (req, res) => {
           type: "PAYMENT",
           reference: `order:${order.id}:wallet`,
           description: "Wallet order payment",
-          balanceBefore: buyer.walletBalance,
-          balanceAfter: buyer.walletBalance.minus(order.totalAmount),
+          balanceBefore: balanceAfter.plus(order.totalAmount),
+          balanceAfter,
         },
       });
       return tx.order.update({
@@ -192,22 +196,28 @@ export const walletTransfer = asyncHandler(async (req, res) => {
     : { id: req.body.receiverId };
 
   const result = await prisma.$transaction(async (tx) => {
-    const sender = await tx.user.findUnique({
-      where: { id: req.user!.id },
-      select: { walletBalance: true },
-    });
     const receiver = await tx.user.findUnique({
       where: receiverWhere,
       select: { id: true, walletBalance: true },
     });
-    if (!sender || sender.walletBalance.lt(amount))
-      throw new ApiError(400, "Insufficient wallet balance");
     if (!receiver) throw new ApiError(404, "Receiver not found");
+    if (receiver.id === req.user!.id) throw new ApiError(400, "Cannot transfer to yourself");
 
-    await tx.user.update({
-      where: { id: req.user!.id },
+    // Conditional update instead of read-then-write, same reasoning as the
+    // wallet payment path above — prevents a negative balance from two
+    // concurrent transfers/payments both passing a stale balance check.
+    const decremented = await tx.user.updateMany({
+      where: { id: req.user!.id, walletBalance: { gte: amount } },
       data: { walletBalance: { decrement: amount } },
     });
+    if (decremented.count === 0) throw new ApiError(400, "Insufficient wallet balance");
+
+    const sender = await tx.user.findUnique({
+      where: { id: req.user!.id },
+      select: { walletBalance: true },
+    });
+    const senderBalanceAfter = sender?.walletBalance ?? new Prisma.Decimal(0);
+
     await tx.user.update({
       where: { id: receiver.id },
       data: { walletBalance: { increment: amount } },
@@ -221,8 +231,8 @@ export const walletTransfer = asyncHandler(async (req, res) => {
           amount: amount.neg(),
           type: "TRANSFER",
           reference: `${reference}_out`,
-          balanceBefore: sender.walletBalance,
-          balanceAfter: sender.walletBalance.minus(amount),
+          balanceBefore: senderBalanceAfter.plus(amount),
+          balanceAfter: senderBalanceAfter,
         },
         {
           userId: receiver.id,

@@ -3,7 +3,7 @@ import { cloudinary } from "../config/cloudinary.js";
 export const uploadBufferToCloudinary = async (
   buffer: Buffer,
   folder: string,
-  resourceType: "image" | "video" | "raw" | "auto" = "auto",
+  resourceType: "image" | "video" | "raw" | "auto",
 ) =>
   new Promise<string>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(

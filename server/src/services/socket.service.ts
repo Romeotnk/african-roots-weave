@@ -1,7 +1,7 @@
 import type { Server as HttpServer } from "node:http";
 import { Server, type Socket } from "socket.io";
 import { prisma } from "../config/db.js";
-import { env } from "../config/env.js";
+import { allowedOrigins } from "../config/corsOrigins.js";
 import { redisDel, redisSet } from "../config/redis.js";
 import { verifyAccessToken } from "../utils/tokens.js";
 
@@ -23,7 +23,7 @@ type AuthenticatedSocket = Socket & { data: { userId: string } };
 export const initSocket = (server: HttpServer) => {
   io = new Server(server, {
     cors: {
-      origin: env.clientUrl,
+      origin: allowedOrigins,
       credentials: true,
     },
   });

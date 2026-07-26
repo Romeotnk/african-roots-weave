@@ -1,12 +1,12 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Camera, Eye, EyeOff, KeyRound, Save, User } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import type { AppRole } from "@/lib/auth/AuthContext";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
-import { apiRequest } from "@/lib/api/client";
-import { changePassword, updateMe, type AuthUser } from "@/lib/api/auth";
+import { changePassword, updateMe } from "@/lib/api/auth";
+import { useMeQuery } from "@/hooks/useAuthApi";
 import { getPasswordValidationError } from "@/lib/auth/password";
 import { PROFESSIONAL_ACCOUNT_ROLES } from "@/lib/auth/roles";
 
@@ -50,14 +50,7 @@ export function ProfilePage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { all
     confirmPassword: "",
   });
 
-  const profileQuery = useQuery({
-    queryKey: ["auth", "me"],
-    queryFn: async () => {
-      const response = await apiRequest<AuthUser>("/auth/me");
-      return response.data;
-    },
-    retry: false,
-  });
+  const profileQuery = useMeQuery();
 
   useEffect(() => {
     if (!profileQuery.data) return;

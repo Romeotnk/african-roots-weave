@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
@@ -43,6 +43,10 @@ function QuestionDetail() {
     return data ? toQuestion(data) : null;
   }, [questionQuery.data]);
   const question = apiQuestion ?? questions.find((item) => item.id === id) ?? questions[0];
+
+  useEffect(() => {
+    if (question?.title) document.title = `${question.title} - IWOSAN`;
+  }, [question?.title]);
   const isRealQuestion = Boolean(apiQuestion);
   const isAuthor = isRealQuestion && Boolean(user) && question.authorId === user?.id;
 

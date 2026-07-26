@@ -1,10 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Bell, Globe2, LockKeyhole, Save, Settings } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import type { AppRole } from "@/lib/auth/AuthContext";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import { PROFESSIONAL_ACCOUNT_ROLES } from "@/lib/auth/roles";
+import { useMeQuery, meQueryKey } from "@/hooks/useAuthApi";
+import { updateMe } from "@/lib/api/auth";
 
 export const Route = createFileRoute("/tableau-de-bord/parametres")({
   head: () => ({ meta: [{ title: "Paramètres - IWOSAN" }] }),
@@ -15,37 +18,30 @@ export const Route = createFileRoute("/tableau-de-bord/parametres")({
   ),
 });
 
-type SettingsForm = {
-  language: "fr" | "en" | "ar";
-  timezone: string;
-  emailNotifications: boolean;
-  orderNotifications: boolean;
-  forumNotifications: boolean;
-  marketingEmails: boolean;
-  profilePublic: boolean;
-  twoFactor: boolean;
-};
-
 export function SettingsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { allowedRoles?: AppRole[] } = {}) {
-  const [form, setForm] = useState<SettingsForm>({
-    language: "fr",
-    timezone: "Africa/Abidjan",
-    emailNotifications: true,
-    orderNotifications: true,
-    forumNotifications: true,
-    marketingEmails: false,
-    profilePublic: true,
-    twoFactor: false,
-  });
+  const queryClient = useQueryClient();
+  const meQuery = useMeQuery();
+  const [language, setLanguage] = useState<"fr" | "en" | "ar">("fr");
   const [message, setMessage] = useState("");
 
-  const toggle = (key: keyof SettingsForm) => {
-    setForm((current) => ({ ...current, [key]: !current[key] }));
-    setMessage("");
-  };
+  useEffect(() => {
+    if (meQuery.data?.language) setLanguage(meQuery.data.language as "fr" | "en" | "ar");
+  }, [meQuery.data?.language]);
+
+  const updateLanguage = useMutation({
+    mutationFn: (nextLanguage: "fr" | "en" | "ar") => updateMe({ language: nextLanguage }),
+    onSuccess: async () => {
+      setMessage("Langue mise à jour.");
+      await queryClient.invalidateQueries({ queryKey: meQueryKey });
+    },
+    onError: (error) => {
+      setMessage(error instanceof Error ? error.message : "Mise à jour impossible.");
+    },
+  });
 
   const saveSettings = () => {
-    setMessage("Paramètres enregistrés.");
+    setMessage("");
+    updateLanguage.mutate(language);
   };
 
   return (
@@ -66,31 +62,19 @@ export function SettingsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { al
           <section className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
             <div className="flex items-center gap-3">
               <Globe2 size={20} className="text-[var(--brand-primary)]" />
-              <h2 className="text-[20px] font-bold">Région et langue</h2>
+              <h2 className="text-[20px] font-bold">Langue</h2>
             </div>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               <label className="grid gap-2 text-[13px] font-semibold text-[var(--color-text-secondary)]">
-                Langue
+                Langue de l'interface
                 <select
-                  value={form.language}
-                  onChange={(event) => setForm((current) => ({ ...current, language: event.target.value as SettingsForm["language"] }))}
+                  value={language}
+                  onChange={(event) => setLanguage(event.target.value as "fr" | "en" | "ar")}
                   className="h-11 rounded-[8px] border border-[var(--brand-border-light)] bg-white px-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
                 >
                   <option value="fr">Français</option>
                   <option value="en">English</option>
                   <option value="ar">Arabe</option>
-                </select>
-              </label>
-              <label className="grid gap-2 text-[13px] font-semibold text-[var(--color-text-secondary)]">
-                Fuseau horaire
-                <select
-                  value={form.timezone}
-                  onChange={(event) => setForm((current) => ({ ...current, timezone: event.target.value }))}
-                  className="h-11 rounded-[8px] border border-[var(--brand-border-light)] bg-white px-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
-                >
-                  <option value="Africa/Abidjan">Afrique de l'Ouest</option>
-                  <option value="Africa/Dakar">Dakar</option>
-                  <option value="Europe/Paris">Paris</option>
                 </select>
               </label>
             </div>
@@ -102,10 +86,10 @@ export function SettingsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { al
               <h2 className="text-[20px] font-bold">Notifications</h2>
             </div>
             <div className="mt-5 divide-y divide-[var(--brand-border-light)]">
-              <ToggleRow label="Recevoir les emails importants" checked={form.emailNotifications} onClick={() => toggle("emailNotifications")} />
-              <ToggleRow label="Alertes commandes et livraisons" checked={form.orderNotifications} onClick={() => toggle("orderNotifications")} />
-              <ToggleRow label="Reponses forum et mentions" checked={form.forumNotifications} onClick={() => toggle("forumNotifications")} />
-              <ToggleRow label="Conseils, offres et newsletter" checked={form.marketingEmails} onClick={() => toggle("marketingEmails")} />
+              <ToggleRow label="Recevoir les emails importants" checked disabled comingSoon />
+              <ToggleRow label="Alertes commandes et livraisons" checked disabled comingSoon />
+              <ToggleRow label="Reponses forum et mentions" checked disabled comingSoon />
+              <ToggleRow label="Conseils, offres et newsletter" checked={false} disabled comingSoon />
             </div>
           </section>
 
@@ -115,8 +99,8 @@ export function SettingsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { al
               <h2 className="text-[20px] font-bold">Confidentialité et sécurité</h2>
             </div>
             <div className="mt-5 divide-y divide-[var(--brand-border-light)]">
-              <ToggleRow label="Profil public dans l'annuaire" checked={form.profilePublic} onClick={() => toggle("profilePublic")} />
-              <ToggleRow label="Double authentification" checked={form.twoFactor} onClick={() => toggle("twoFactor")} disabled comingSoon />
+              <ToggleRow label="Profil public dans l'annuaire" checked disabled comingSoon />
+              <ToggleRow label="Double authentification" checked={false} disabled comingSoon />
             </div>
           </section>
         </div>
@@ -125,18 +109,16 @@ export function SettingsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { al
           <Settings size={22} className="text-[var(--brand-primary)]" />
           <h2 className="mt-3 text-[20px] font-bold">Résumé</h2>
           <div className="mt-4 space-y-3 text-[13px] text-[var(--color-text-secondary)]">
-            <p><strong>Langue :</strong> {form.language.toUpperCase()}</p>
-            <p><strong>Fuseau :</strong> {form.timezone}</p>
-            <p><strong>Notifications :</strong> {form.emailNotifications ? "Activées" : "Limitées"}</p>
-            <p><strong>Profil public :</strong> {form.profilePublic ? "Oui" : "Non"}</p>
+            <p><strong>Langue :</strong> {language.toUpperCase()}</p>
           </div>
           {message && <p className="mt-4 rounded-[8px] bg-emerald-50 p-3 text-[13px] font-semibold text-emerald-800">{message}</p>}
           <button
             type="button"
             onClick={saveSettings}
-            className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white"
+            disabled={updateLanguage.isPending}
+            className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white disabled:opacity-60"
           >
-            <Save size={17} /> Enregistrer
+            <Save size={17} /> {updateLanguage.isPending ? "Enregistrement..." : "Enregistrer"}
           </button>
         </aside>
       </section>
@@ -147,13 +129,11 @@ export function SettingsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { al
 function ToggleRow({
   label,
   checked,
-  onClick,
   disabled,
   comingSoon,
 }: {
   label: string;
   checked: boolean;
-  onClick: () => void;
   disabled?: boolean;
   comingSoon?: boolean;
 }) {
@@ -169,7 +149,6 @@ function ToggleRow({
       </p>
       <button
         type="button"
-        onClick={onClick}
         disabled={disabled}
         className={`relative h-7 w-12 rounded-full transition ${checked ? "bg-[var(--brand-primary)]" : "bg-[var(--brand-border)]"} ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
         aria-pressed={checked}

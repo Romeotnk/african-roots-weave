@@ -83,7 +83,6 @@ adminRouter.get("/users", listUsers);
 adminRouter.get("/users/:id", getUser);
 adminRouter.post("/users/:id/promote", checkRole(Role.SUPER_ADMIN, Role.ADMIN), promoteUser);
 adminRouter.put("/users/:id/ban", checkRole(Role.SUPER_ADMIN, Role.ADMIN, Role.MODERATOR), banUser);
-adminRouter.post("/users/:id/ban", checkRole(Role.SUPER_ADMIN, Role.ADMIN, Role.MODERATOR), banUser);
 adminRouter.post("/users/:id/unban", checkRole(Role.SUPER_ADMIN, Role.ADMIN), unbanUser);
 adminRouter.put("/users/:id/role", checkRole(Role.SUPER_ADMIN, Role.ADMIN), updateRole);
 adminRouter.get(

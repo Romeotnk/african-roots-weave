@@ -14,7 +14,6 @@ import { forumRouter } from "./routes/forum.routes.js";
 import { eventRouter, formationRouter } from "./routes/eventFormation.routes.js";
 import { newsletterRouter, notificationRouter } from "./routes/notification.routes.js";
 import { errorHandler, notFoundHandler } from "./middlewares/error.middleware.js";
-import { i18nMiddleware } from "./middlewares/i18n.middleware.js";
 import { orderRouter } from "./routes/order.routes.js";
 import { mlmRouter } from "./routes/mlm.routes.js";
 import { messageRouter } from "./routes/message.routes.js";
@@ -30,40 +29,11 @@ import { globalRateLimit } from "./middlewares/rateLimit.middleware.js";
 import { sanitizeMiddleware } from "./middlewares/security.middleware.js";
 import { frontendMiddleware } from "./middlewares/frontend.middleware.js";
 import { apiResponse } from "./utils/apiResponse.js";
+import { allowedOrigins, isSameHostOrigin } from "./config/corsOrigins.js";
 
 export const app = express();
 
 app.set("trust proxy", 1);
-
-const normalizeOrigin = (value?: string) => {
-  if (!value) return null;
-
-  try {
-    return new URL(value).origin;
-  } catch {
-    return value.replace(/\/+$/, "");
-  }
-};
-
-const allowedOrigins = [
-  process.env.CLIENT_URL,
-  "http://localhost:8080",
-  "http://127.0.0.1:8080",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "http://localhost:3001",
-  "http://127.0.0.1:3001",
-]
-  .map(normalizeOrigin)
-  .filter(Boolean) as string[];
-
-const isSameHostOrigin = (origin: string, host?: string) => {
-  try {
-    return new URL(origin).host === host;
-  } catch {
-    return false;
-  }
-};
 
 app.use(
   helmet({
@@ -78,7 +48,6 @@ app.use(
         imgSrc: ["'self'", "data:", "https:"],
         objectSrc: ["'none'"],
         scriptSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrcAttr: ["'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       },
     },
@@ -101,7 +70,6 @@ app.use(cookieParser());
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
-app.use(i18nMiddleware);
 app.use(sanitizeMiddleware);
 app.use(globalRateLimit);
 

@@ -1,0 +1,17 @@
+{
+  "name": "IWOSAN",
+  "short_name": "Iwosan",
+  "description": "Plateforme panafricaine éditoriale, scientifique et communautaire dédiée à la médecine traditionnelle africaine.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f4ee",
+  "theme_color": "#1F4038",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

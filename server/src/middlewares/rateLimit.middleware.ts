@@ -55,3 +55,19 @@ export const passwordResetRateLimit = rateLimit({
   legacyHeaders: false,
   message: authRateLimitMessage,
 });
+
+// Payment, wallet and KYC endpoints move money or submit identity documents —
+// worth a tighter, dedicated budget instead of relying on the generic global
+// rate limit that covers every other read-mostly endpoint in the API.
+export const sensitiveActionRateLimit = rateLimit({
+  skip: skipWhenDisabled,
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    data: null,
+    message: "Too many requests on a sensitive action, please try again later",
+  },
+});

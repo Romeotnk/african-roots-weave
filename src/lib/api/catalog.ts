@@ -13,6 +13,7 @@ type BackendProduct = {
   price: string | number;
   images: string[];
   sellerId?: string;
+  stock?: number;
   auctionEnabled?: boolean;
   seller?: {
     id: string;
@@ -117,6 +118,7 @@ export const toProduct = (product: BackendProduct): Product => ({
   rating: product.seller?.professionalProfile?.averageRating ?? 0,
   reviewCount: product.seller?.professionalProfile?.totalReviews ?? 0,
   auction: product.auctionEnabled,
+  stock: product.type === "DIGITAL" ? undefined : product.stock,
 });
 
 export const toProfessional = (professional: BackendProfessional): Professional => ({
@@ -151,6 +153,7 @@ export const getProducts = async (params: URLSearchParams) => {
     };
   } catch (error) {
     if (!isDev) throw error;
+    console.warn("[dev] /products unreachable, falling back to sample data.", error);
     return { products: fallbackProducts, pagination: undefined };
   }
 };
@@ -166,6 +169,7 @@ export const getProfessionals = async (params: URLSearchParams) => {
     };
   } catch (error) {
     if (!isDev) throw error;
+    console.warn("[dev] /professionals unreachable, falling back to sample data.", error);
     return { professionals: fallbackProfessionals, pagination: undefined };
   }
 };
@@ -176,6 +180,7 @@ export const getProfessionalById = async (id: string) => {
     return response.data ? toProfessional(response.data) : null;
   } catch (error) {
     if (!isDev) throw error;
+    console.warn(`[dev] /professionals/${id} unreachable, falling back to sample data.`, error);
     return fallbackProfessionals.find((professional) => professional.id === id) ?? null;
   }
 };
@@ -186,6 +191,7 @@ export const getProductBySlug = async (slug: string) => {
     return response.data ? toProduct(response.data) : null;
   } catch (error) {
     if (!isDev) throw error;
+    console.warn(`[dev] /products/${slug} unreachable, falling back to sample data.`, error);
     return fallbackProducts.find((product) => product.id === slug) ?? null;
   }
 };

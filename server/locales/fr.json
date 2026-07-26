@@ -1,6 +1,0 @@
-{
-  "common.success": "Operation reussie",
-  "auth.loginSuccess": "Connexion reussie",
-  "auth.required": "Authentification requise",
-  "errors.forbidden": "Acces refuse"
-}

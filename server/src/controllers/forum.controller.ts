@@ -214,14 +214,21 @@ export const vote = asyncHandler(async (req, res) => {
 
 export const report = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
-  const reportItem = await prisma.report.create({ data: { ...req.body, reporterId: req.user.id } });
-  const count = await prisma.report.count({
-    where: { targetId: req.body.targetId, targetType: req.body.targetType },
+  const targetId = String(req.body.targetId ?? "");
+  const targetType = String(req.body.targetType ?? "");
+  const reason = String(req.body.reason ?? "");
+  if (!targetId || !targetType || !reason) throw new ApiError(422, "targetId, targetType and reason are required");
+
+  const reportItem = await prisma.report.create({
+    data: { targetId, targetType, reason, reporterId: req.user.id },
   });
-  if (count >= 3 && req.body.targetType === "QUESTION")
-    await prisma.question.update({ where: { id: req.body.targetId }, data: { isHidden: true } });
-  if (count >= 3 && req.body.targetType === "ANSWER")
-    await prisma.answer.update({ where: { id: req.body.targetId }, data: { isHidden: true } });
+  const count = await prisma.report.count({
+    where: { targetId, targetType },
+  });
+  if (count >= 3 && targetType === "QUESTION")
+    await prisma.question.update({ where: { id: targetId }, data: { isHidden: true } });
+  if (count >= 3 && targetType === "ANSWER")
+    await prisma.answer.update({ where: { id: targetId }, data: { isHidden: true } });
   res.status(201).json(apiResponse(true, reportItem, "Report submitted"));
 });
 

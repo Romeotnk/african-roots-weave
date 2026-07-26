@@ -85,6 +85,7 @@ export interface Product {
   rating: number;
   reviewCount: number;
   auction?: boolean;
+  stock?: number;
   location?: string;
   country?: string;
   verified?: boolean;

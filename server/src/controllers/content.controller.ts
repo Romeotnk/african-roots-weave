@@ -4,6 +4,7 @@ import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
+import { sanitizeRichText } from "../utils/sanitizeRichText.js";
 import { makeSlug } from "../utils/slug.js";
 
 const adminOnlySpaces: ArticleSpace[] = ["PHARMACOPEE", "RITES_CULTURES"];
@@ -83,7 +84,7 @@ export const createArticle = asyncHandler(async (req, res) => {
       space,
       title: req.body.title,
       slug: `${makeSlug(req.body.title)}-${Date.now().toString(36)}`,
-      content: req.body.content,
+      content: sanitizeRichText(req.body.content ?? ""),
       coverImage: req.body.coverImage,
       category: req.body.category,
       tags: req.body.tags ?? [],
@@ -110,7 +111,7 @@ export const updateArticle = asyncHandler(async (req, res) => {
     where: { id: req.params.id },
     data: {
       title: req.body.title,
-      content: req.body.content,
+      content: req.body.content !== undefined ? sanitizeRichText(req.body.content) : undefined,
       coverImage: req.body.coverImage,
       category: req.body.category,
       tags: req.body.tags,

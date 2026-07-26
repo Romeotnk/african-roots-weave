@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, MessageSquare, PackageCheck, Star } from "lucide-react";
 import { useMemo, useState } from "react";
 import { orders } from "@/data/orders";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useConfirmOrderDelivery, useMyOrders } from "@/hooks/useOrdersApi";
 import { useCreateReview } from "@/hooks/useReviewsApi";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -9,7 +10,11 @@ import type { Order, OrderStatus } from "@/types";
 
 export const Route = createFileRoute("/mes-commandes")({
   head: () => ({ meta: [{ title: "Mes commandes - IWOSAN" }] }),
-  component: OrdersPage,
+  component: () => (
+    <ProtectedRoute requireAnyRole={["user", "researcher", "professional", "admin", "super_admin"]}>
+      <OrdersPage />
+    </ProtectedRoute>
+  ),
 });
 
 const timeline: { id: OrderStatus; label: string }[] = [

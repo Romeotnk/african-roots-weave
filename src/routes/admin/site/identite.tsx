@@ -16,6 +16,9 @@ const defaults = {
   "site.primaryColor": "#1A5C2A",
   "site.secondaryColor": "#D4AF37",
   "site.customCss": "",
+  "maintenance.enabled": "false",
+  "maintenance.message": "Le site est actuellement en maintenance. Merci de revenir bientôt.",
+  "maintenance.returnAt": "",
 };
 
 function AdminIdentite() {
@@ -102,6 +105,27 @@ function AdminIdentite() {
               placeholder="/* CSS personnalisé réservé aux admins techniques */"
               className="mt-1 min-h-32 w-full rounded-lg border border-red-400/40 bg-red-500/10 p-3 text-[13px] text-white outline-none"
             />
+          </label>
+        </AdminCard>
+
+        <AdminCard>
+          <h2 className="mb-4 text-[18px] font-bold text-white">Mode maintenance</h2>
+          <label className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-3 text-[13px] text-slate-300">
+            Activer le mode maintenance (site public)
+            <input
+              type="checkbox"
+              checked={form["maintenance.enabled"] === "true"}
+              onChange={(event) => setForm((current) => ({ ...current, "maintenance.enabled": String(event.target.checked) }))}
+              className="h-5 w-5 accent-emerald-400"
+            />
+          </label>
+          <label className="mt-4 block text-[13px] text-slate-300">
+            Message affiché aux visiteurs
+            <textarea {...field("maintenance.message")} className="mt-1 min-h-20 w-full rounded-lg border border-white/10 bg-white/5 p-3 text-[13px] text-white outline-none" />
+          </label>
+          <label className="mt-4 block text-[13px] text-slate-300">
+            Retour estimé (texte libre)
+            <input {...field("maintenance.returnAt")} placeholder="Ex : dans quelques heures" className="mt-1 h-10 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none" />
           </label>
         </AdminCard>
       </div>

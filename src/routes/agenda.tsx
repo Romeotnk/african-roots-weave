@@ -29,10 +29,10 @@ function sameDay(a: Date, b: Date) {
 function Agenda() {
   const eventsQuery = useEvents();
   const [filter, setFilter] = useState("Tous");
-  const [month, setMonth] = useState(new Date("2026-07-01T12:00:00"));
+  const [month, setMonth] = useState(() => new Date());
   const [panelOpen, setPanelOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
-  const [now, setNow] = useState(new Date("2026-07-19T14:32:00"));
+  const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);

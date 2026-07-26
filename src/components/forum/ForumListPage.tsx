@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Filter, Plus, RotateCcw } from "lucide-react";
 import { QuestionCard } from "@/components/shared/QuestionCard";
 import { SearchBar } from "@/components/shared/SearchBar";
+import { SimplePager } from "@/components/shared/SimplePager";
 import { forumCategories, questions } from "@/data/questions";
 import { useForumQuestions } from "@/hooks/useForumApi";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -33,7 +34,9 @@ export function ForumListPage() {
   const debouncedSearch = useDebounce(search, 300);
   const { user } = useAuth();
 
-  const questionsQuery = useForumQuestions(selectedCategory ? { category: selectedCategory } : {});
+  const [page, setPage] = useState(1);
+  const questionsQuery = useForumQuestions(selectedCategory ? { category: selectedCategory, page } : { page });
+  const pagination = questionsQuery.data?.pagination;
   const apiQuestions = useMemo(
     () => ((questionsQuery.data?.questions ?? []) as BackendQuestion[]).map(toQuestion).filter((item): item is NonNullable<typeof item> => Boolean(item)),
     [questionsQuery.data],
@@ -66,6 +69,10 @@ export function ForumListPage() {
   }, [activeTab, allQuestions, debouncedSearch, selectedCategory, selectedTag, sortBy, user]);
 
   const hasFilters = Boolean(debouncedSearch || selectedCategory || selectedTag || activeTab !== "all" || sortBy !== "featured");
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedCategory]);
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">
@@ -109,6 +116,9 @@ export function ForumListPage() {
             </div>
             <div className="space-y-4">{filteredQuestions.map((question) => <QuestionCard key={question.id} question={question} />)}</div>
             {filteredQuestions.length === 0 && <div className="rounded-[20px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center"><p className="font-bold">Aucune question trouvée</p></div>}
+            {!hasFilters && pagination && (
+              <SimplePager page={pagination.page} totalPages={pagination.totalPages} onChange={setPage} />
+            )}
           </div>
         </div>
       </section>

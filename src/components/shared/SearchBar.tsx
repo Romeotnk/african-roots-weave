@@ -33,6 +33,7 @@ export function SearchBar({
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
         placeholder={placeholder}
+        aria-label={placeholder}
         className="flex-1 h-full bg-transparent text-[15px] outline-none placeholder:text-[var(--color-text-muted)]"
       />
       {showFilters && (

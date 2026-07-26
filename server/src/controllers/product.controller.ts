@@ -110,13 +110,15 @@ export const listMyProducts = asyncHandler(async (req, res) => {
 });
 
 export const getProductBySlug = asyncHandler(async (req, res) => {
-  const product = await prisma.product.update({
-    where: { slug: req.params.slug },
-    data: { viewCount: { increment: 1 } },
+  const product = await prisma.product.findFirst({
+    where: { slug: req.params.slug, isActive: true, isApproved: true },
     select: productSelect,
   });
+  if (!product) throw new ApiError(404, "Product not found");
 
-  res.json(apiResponse(true, product, "Product retrieved"));
+  await prisma.product.update({ where: { id: product.id }, data: { viewCount: { increment: 1 } } });
+
+  res.json(apiResponse(true, { ...product, viewCount: product.viewCount + 1 }, "Product retrieved"));
 });
 
 export const createProduct = asyncHandler(async (req, res) => {

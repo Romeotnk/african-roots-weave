@@ -2,7 +2,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Menu, X, Leaf, Sun, Moon, LogOut, LogIn, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useLanguage } from "@/i18n/LanguageContext";
 import { useTheme, type ThemeMode } from "@/components/ThemeProvider";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { getAccountHomePath, isProfessionalAccount } from "@/lib/auth/roles";
@@ -94,7 +93,6 @@ function ThemeSwitch() {
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { lang, setLang } = useLanguage();
   const { user, signOut, roles } = useAuth();
   const navigate = useNavigate();
   const isProAccount = isProfessionalAccount(roles);
@@ -142,10 +140,6 @@ export function Navbar() {
             </div>
           </Link>
           <div className="hidden items-center gap-3 md:flex">
-            <div className="rounded-full border border-white/20 px-0.5 py-0.5 text-[11px] font-semibold">
-              <button onClick={() => setLang("fr")} className={cn("rounded-full px-2 py-1", lang === "fr" && "bg-white text-[var(--brand-primary-dark)]")}>FR</button>
-              <button onClick={() => setLang("en")} className={cn("rounded-full px-2 py-1", lang === "en" && "bg-white text-[var(--brand-primary-dark)]")}>EN</button>
-            </div>
             <ThemeSwitch />
             {user ? (
               <>
@@ -235,10 +229,6 @@ export function Navbar() {
               )}
             </div>
             <div className="mt-8 space-y-3 border-t border-white/10 pt-5">
-              <div className="flex items-center gap-2 text-[12px]">
-                <button onClick={() => setLang("fr")} className={cn("rounded-full border border-white/15 px-3 py-2", lang === "fr" && "bg-white text-[var(--brand-primary-dark)]")}>FR</button>
-                <button onClick={() => setLang("en")} className={cn("rounded-full border border-white/15 px-3 py-2", lang === "en" && "bg-white text-[var(--brand-primary-dark)]")}>EN</button>
-              </div>
               {user ? (
                 <>
                   <Link to={accountHomePath} className="block w-full rounded-full border border-white/15 px-4 py-3 text-center font-semibold" onClick={() => setOpen(false)}>{accountHomeLabel}</Link>

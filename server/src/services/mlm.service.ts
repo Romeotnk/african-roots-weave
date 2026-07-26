@@ -56,15 +56,14 @@ export const calculateOrderCommissions = async (orderId: string) =>
             sourceOrderId: order.id,
             amount,
             type,
+            // APPROVED here means "calculated", not "paid": the wallet isn't
+            // credited until payoutOrderCommissions runs at delivery
+            // confirmation, so escrow actually holds the funds until then.
             status: "APPROVED",
           },
         }),
       );
 
-      await tx.user.update({
-        where: { id: parent.userId },
-        data: { walletBalance: { increment: amount } },
-      });
       await tx.mLMNode.update({
         where: { id: parent.id },
         data: { totalEarnings: { increment: amount } },
@@ -73,8 +72,8 @@ export const calculateOrderCommissions = async (orderId: string) =>
         data: {
           userId: parent.userId,
           type: "COMMISSION_EARNED",
-          title: "Commission gagnee",
-          message: `Vous avez gagne une commission niveau ${level + 1}.`,
+          title: "Commission calculee",
+          message: `Une commission niveau ${level + 1} a ete calculee, elle sera versee a la confirmation de livraison.`,
           link: "/dashboard/mlm",
         },
       });
@@ -83,6 +82,59 @@ export const calculateOrderCommissions = async (orderId: string) =>
     }
 
     return created;
+  });
+
+/**
+ * Credits the MLM downline commissions for an order to their recipients'
+ * wallets and marks them PAID. Called only once the order's escrow has
+ * actually been released (buyer confirmed delivery) — calculateOrderCommissions
+ * only calculates and approves them at payment time, it never credits a
+ * wallet, so funds stay in escrow until the transaction is truly complete.
+ */
+export const payoutOrderCommissions = async (orderId: string) =>
+  prisma.$transaction(async (tx) => {
+    const commissions = await tx.commission.findMany({
+      where: { sourceOrderId: orderId, status: "APPROVED", type: { not: CommissionType.DIRECT } },
+    });
+
+    for (const commission of commissions) {
+      const recipient = await tx.user.findUnique({
+        where: { id: commission.userId },
+        select: { walletBalance: true },
+      });
+      const before = recipient?.walletBalance ?? new Prisma.Decimal(0);
+
+      await tx.user.update({
+        where: { id: commission.userId },
+        data: { walletBalance: { increment: commission.amount } },
+      });
+      await tx.walletTransaction.create({
+        data: {
+          userId: commission.userId,
+          amount: commission.amount,
+          type: "COMMISSION",
+          reference: `order:${orderId}:commission:${commission.id}`,
+          description: "Commission MLM versee apres confirmation de livraison",
+          balanceBefore: before,
+          balanceAfter: before.plus(commission.amount),
+        },
+      });
+      await tx.commission.update({
+        where: { id: commission.id },
+        data: { status: "PAID", paidAt: new Date() },
+      });
+      await tx.notification.create({
+        data: {
+          userId: commission.userId,
+          type: "COMMISSION_EARNED",
+          title: "Commission versee",
+          message: "Une commission a ete versee sur votre portefeuille.",
+          link: "/dashboard/mlm",
+        },
+      });
+    }
+
+    return commissions;
   });
 
 export const buildDownline = async (nodeId: string, depth = 3): Promise<unknown> => {

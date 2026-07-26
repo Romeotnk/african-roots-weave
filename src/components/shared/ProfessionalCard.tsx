@@ -8,7 +8,7 @@ export function ProfessionalCard({ pro }: { pro: Professional }) {
   return (
     <article className="overflow-hidden rounded-[20px] border border-[var(--brand-border-light)] bg-white shadow-iwosan-sm transition hover:-translate-y-1 hover:border-[var(--brand-primary)] hover:shadow-iwosan-lg">
       <div className="relative h-[120px] overflow-hidden">
-        <img src={pro.cover} alt="" className="h-full w-full object-cover" />
+        <img src={pro.cover} alt="" loading="lazy" decoding="async" width={400} height={120} className="h-full w-full object-cover" />
         {pro.verified && <span className="absolute right-3 top-3 rounded-full bg-[var(--brand-gold)] px-3 py-1 text-[11px] font-bold text-white">Vérifié</span>}
       </div>
       <div className="px-4 pb-5 text-center">

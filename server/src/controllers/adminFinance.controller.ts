@@ -9,16 +9,20 @@ import { getPagination, paginationMeta } from "../utils/pagination.js";
 type TxClient = Prisma.TransactionClient;
 
 // Reverses whatever payouts already happened for an order (MLM commissions credited
-// at payment time, seller escrow release at delivery time), then credits the buyer's
-// wallet for the full amount. There is no payment gateway integration yet, so refunds
-// settle as wallet balance movements rather than a real money transfer.
+// at delivery confirmation, seller escrow release at delivery time), then credits the
+// buyer's wallet for the full amount. There is no payment gateway integration yet, so
+// refunds settle as wallet balance movements rather than a real money transfer.
 const reverseOrderPayout = async (tx: TxClient, order: Prisma.OrderGetPayload<Record<string, never>>) => {
   const commissions = await tx.commission.findMany({
     where: { sourceOrderId: order.id, status: { in: ["APPROVED", "PAID"] } },
   });
 
   for (const commission of commissions) {
-    if (commission.type !== "DIRECT") {
+    // Only PAID commissions were ever actually credited to a wallet
+    // (payoutOrderCommissions runs at delivery confirmation, not at
+    // approval time) — an APPROVED-but-unpaid commission has no wallet
+    // movement to reverse, just cancel it.
+    if (commission.type !== "DIRECT" && commission.status === "PAID") {
       const recipient = await tx.user.findUnique({
         where: { id: commission.userId },
         select: { walletBalance: true },

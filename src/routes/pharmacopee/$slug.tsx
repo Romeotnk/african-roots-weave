@@ -23,6 +23,10 @@ function PlantMonograph() {
   const [feedbackSent, setFeedbackSent] = useState(false);
 
   useEffect(() => {
+    if (plant?.scientificName) document.title = `${plant.scientificName} - IWOSAN`;
+  }, [plant?.scientificName]);
+
+  useEffect(() => {
     setActiveImage(gallery[0]);
   }, [gallery]);
 

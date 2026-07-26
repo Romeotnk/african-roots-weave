@@ -1,6 +1,7 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   forgotPassword,
+  getMe,
   login,
   logout,
   register,
@@ -10,6 +11,18 @@ import {
   type RegisterPayload,
   type SubmitKycPayload,
 } from "@/lib/api/auth";
+import { authTokenStore } from "@/lib/api/client";
+
+export const meQueryKey = ["auth", "me"] as const;
+
+export function useMeQuery() {
+  return useQuery({
+    queryKey: meQueryKey,
+    queryFn: async () => (await getMe()).data,
+    enabled: typeof window !== "undefined" && Boolean(authTokenStore.get()),
+    retry: false,
+  });
+}
 
 export function useLoginMutation() {
   return useMutation({

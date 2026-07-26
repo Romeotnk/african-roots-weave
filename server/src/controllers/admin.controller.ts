@@ -6,6 +6,7 @@ import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
+import { sanitizeRichText } from "../utils/sanitizeRichText.js";
 
 const adminAssignableRoles: Role[] = [Role.MODERATOR, Role.EDITOR, Role.RESEARCHER];
 
@@ -113,9 +114,17 @@ export const listUsers = asyncHandler(async (req, res) => {
 });
 
 export const getUser = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  // EDITOR is an editorial role with no need to see ban reasons or wallet
+  // balances — only the roles that actually act on moderation/finance see them.
+  const canViewSensitive: boolean = ([Role.SUPER_ADMIN, Role.ADMIN, Role.MODERATOR] as Role[]).includes(req.user.role);
   const user = await prisma.user.findUnique({
     where: { id: req.params.id },
-    omit: { passwordHash: true, kycDocuments: true },
+    omit: {
+      passwordHash: true,
+      kycDocuments: true,
+      ...(canViewSensitive ? {} : { banReason: true, walletBalance: true }),
+    },
     include: { professionalProfile: true, subscription: true, mlmNode: true },
   });
   res.json(apiResponse(true, user, "User retrieved"));
@@ -149,6 +158,9 @@ export const updateRole = asyncHandler(async (req, res) => {
 
   if (!Object.values(Role).includes(nextRole)) {
     throw new ApiError(400, "Invalid role");
+  }
+  if (nextSubRole !== undefined && !Object.values(AdminSubRole).includes(nextSubRole)) {
+    throw new ApiError(400, "Invalid sub-role");
   }
 
   if (req.user.role !== Role.SUPER_ADMIN && !adminAssignableRoles.includes(nextRole)) {
@@ -238,17 +250,14 @@ export const kycReject = asyncHandler(async (req, res) => {
   res.json(apiResponse(true, user, "KYC rejected"));
 });
 
-export const pendingProducts = asyncHandler(async (_req, res) => {
-  res.json(
-    apiResponse(
-      true,
-      await prisma.product.findMany({
-        where: { isApproved: false, isActive: true },
-        orderBy: { createdAt: "desc" },
-      }),
-      "Pending products retrieved",
-    ),
-  );
+export const pendingProducts = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPagination(req.query);
+  const where = { isApproved: false, isActive: true };
+  const [products, total] = await prisma.$transaction([
+    prisma.product.findMany({ where, orderBy: { createdAt: "desc" }, skip, take: limit }),
+    prisma.product.count({ where }),
+  ]);
+  res.json(apiResponse(true, products, "Pending products retrieved", paginationMeta(page, limit, total)));
 });
 
 export const approveProduct = asyncHandler(async (req, res) => {
@@ -274,17 +283,14 @@ export const rejectProduct = asyncHandler(async (req, res) => {
   res.json(apiResponse(true, product, "Product rejected"));
 });
 
-export const pendingArticles = asyncHandler(async (_req, res) => {
-  res.json(
-    apiResponse(
-      true,
-      await prisma.article.findMany({
-        where: { isApproved: false, rejectedAt: null },
-        orderBy: { createdAt: "desc" },
-      }),
-      "Pending articles retrieved",
-    ),
-  );
+export const pendingArticles = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPagination(req.query);
+  const where = { isApproved: false, rejectedAt: null };
+  const [articles, total] = await prisma.$transaction([
+    prisma.article.findMany({ where, orderBy: { createdAt: "desc" }, skip, take: limit }),
+    prisma.article.count({ where }),
+  ]);
+  res.json(apiResponse(true, articles, "Pending articles retrieved", paginationMeta(page, limit, total)));
 });
 
 export const approveArticle = asyncHandler(async (req, res) => {
@@ -310,18 +316,20 @@ export const rejectArticle = asyncHandler(async (req, res) => {
   res.json(apiResponse(true, article, "Article rejected"));
 });
 
-export const pendingEvents = asyncHandler(async (_req, res) => {
-  res.json(
-    apiResponse(
-      true,
-      await prisma.event.findMany({
-        where: { isPublished: false, rejectedAt: null },
-        orderBy: { createdAt: "desc" },
-        include: { createdBy: { select: { id: true, firstName: true, lastName: true, role: true } } },
-      }),
-      "Pending events retrieved",
-    ),
-  );
+export const pendingEvents = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPagination(req.query);
+  const where = { isPublished: false, rejectedAt: null };
+  const [events, total] = await prisma.$transaction([
+    prisma.event.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      include: { createdBy: { select: { id: true, firstName: true, lastName: true, role: true } } },
+    }),
+    prisma.event.count({ where }),
+  ]);
+  res.json(apiResponse(true, events, "Pending events retrieved", paginationMeta(page, limit, total)));
 });
 
 export const approveEvent = asyncHandler(async (req, res) => {
@@ -341,18 +349,20 @@ export const rejectEvent = asyncHandler(async (req, res) => {
   res.json(apiResponse(true, event, "Event rejected"));
 });
 
-export const pendingFormations = asyncHandler(async (_req, res) => {
-  res.json(
-    apiResponse(
-      true,
-      await prisma.formation.findMany({
-        where: { isPublished: false, rejectedAt: null },
-        orderBy: { createdAt: "desc" },
-        include: { createdBy: { select: { id: true, firstName: true, lastName: true, role: true } } },
-      }),
-      "Pending formations retrieved",
-    ),
-  );
+export const pendingFormations = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPagination(req.query);
+  const where = { isPublished: false, rejectedAt: null };
+  const [formations, total] = await prisma.$transaction([
+    prisma.formation.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      include: { createdBy: { select: { id: true, firstName: true, lastName: true, role: true } } },
+    }),
+    prisma.formation.count({ where }),
+  ]);
+  res.json(apiResponse(true, formations, "Pending formations retrieved", paginationMeta(page, limit, total)));
 });
 
 export const approveFormation = asyncHandler(async (req, res) => {
@@ -409,24 +419,47 @@ export const portraitOfWeek = asyncHandler(async (req, res) => {
       portraitEndDate: new Date(req.body.endDate),
     },
   });
+  await writeAuditLog(req, { action: "PORTRAIT_OF_WEEK_SET", targetId: profile.id, targetType: "ProfessionalProfile" });
   res.json(apiResponse(true, profile, "Portrait of week configured"));
 });
 
-export const listSubscriptions = asyncHandler(async (_req, res) => {
-  res.json(
-    apiResponse(
-      true,
-      await prisma.subscription.findMany({ include: { user: { omit: { passwordHash: true } } } }),
-      "Subscriptions retrieved",
-    ),
-  );
+export const listSubscriptions = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPagination(req.query);
+  const [subscriptions, total] = await prisma.$transaction([
+    prisma.subscription.findMany({
+      include: { user: { omit: { passwordHash: true } } },
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.subscription.count(),
+  ]);
+  res.json(apiResponse(true, subscriptions, "Subscriptions retrieved", paginationMeta(page, limit, total)));
 });
 
 export const updateSubscription = asyncHandler(async (req, res) => {
+  const { plan, price, endDate, isActive, maxListings, maxDownloads, autoRenew } = req.body as {
+    plan?: string;
+    price?: number | string;
+    endDate?: string;
+    isActive?: boolean;
+    maxListings?: number;
+    maxDownloads?: number;
+    autoRenew?: boolean;
+  };
   const subscription = await prisma.subscription.update({
     where: { id: req.params.id },
-    data: req.body,
+    data: {
+      plan: plan as never,
+      price: price !== undefined ? String(price) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+      isActive,
+      maxListings,
+      maxDownloads,
+      autoRenew,
+    },
   });
+  await writeAuditLog(req, { action: "SUBSCRIPTION_UPDATED", targetId: subscription.id, targetType: "Subscription" });
   res.json(apiResponse(true, subscription, "Subscription updated"));
 });
 
@@ -461,16 +494,23 @@ export const crudList = (model: "adSpace" | "homeBanner" | "siteConfig") =>
     ),
   );
 
+const adFields = (body: Record<string, unknown>) => ({
+  name: body.name as string | undefined,
+  position: body.position as string | undefined,
+  code: body.code as string | undefined,
+  isActive: body.isActive as boolean | undefined,
+});
+
 export const createAd = asyncHandler(async (req, res) =>
   res
     .status(201)
-    .json(apiResponse(true, await prisma.adSpace.create({ data: req.body }), "Ad created")),
+    .json(apiResponse(true, await prisma.adSpace.create({ data: adFields(req.body) as never }), "Ad created")),
 );
 export const updateAd = asyncHandler(async (req, res) =>
   res.json(
     apiResponse(
       true,
-      await prisma.adSpace.update({ where: { id: req.params.id }, data: req.body }),
+      await prisma.adSpace.update({ where: { id: req.params.id }, data: adFields(req.body) }),
       "Ad updated",
     ),
   ),
@@ -480,16 +520,24 @@ export const deleteAd = asyncHandler(async (req, res) => {
   res.json(apiResponse(true, null, "Ad deleted"));
 });
 
+const bannerFields = (body: Record<string, unknown>) => ({
+  imageUrl: body.imageUrl as string | undefined,
+  title: body.title as string | undefined,
+  link: body.link as string | undefined,
+  order: body.order as number | undefined,
+  isActive: body.isActive as boolean | undefined,
+});
+
 export const createBanner = asyncHandler(async (req, res) =>
   res
     .status(201)
-    .json(apiResponse(true, await prisma.homeBanner.create({ data: req.body }), "Banner created")),
+    .json(apiResponse(true, await prisma.homeBanner.create({ data: bannerFields(req.body) as never }), "Banner created")),
 );
 export const updateBanner = asyncHandler(async (req, res) =>
   res.json(
     apiResponse(
       true,
-      await prisma.homeBanner.update({ where: { id: req.params.id }, data: req.body }),
+      await prisma.homeBanner.update({ where: { id: req.params.id }, data: bannerFields(req.body) }),
       "Banner updated",
     ),
   ),
@@ -509,30 +557,38 @@ export const updateConfig = asyncHandler(async (req, res) => {
       }),
     ),
   );
+  await writeAuditLog(req, { action: "SITE_CONFIG_UPDATED", metadata: { keys: Object.keys(req.body) } });
   res.json(apiResponse(true, entries, "Config updated"));
 });
 
 export const maintenance = asyncHandler(async (req, res) => {
-  const config = await prisma.siteConfig.upsert({
-    where: { key: "maintenance.enabled" },
-    update: { value: String(Boolean(req.body.enabled)), updatedById: req.user!.id },
-    create: {
-      key: "maintenance.enabled",
-      value: String(Boolean(req.body.enabled)),
-      updatedById: req.user!.id,
-    },
-  });
-  res.json(apiResponse(true, config, "Maintenance mode updated"));
-});
-
-export const listTickets = asyncHandler(async (_req, res) => {
-  res.json(
-    apiResponse(
-      true,
-      await prisma.ticket.findMany({ include: { messages: true }, orderBy: { createdAt: "desc" } }),
-      "Tickets retrieved",
+  const entries = await Promise.all(
+    [
+      ["maintenance.enabled", String(Boolean(req.body.enabled))],
+      ...(req.body.message ? [["maintenance.message", String(req.body.message)]] : []),
+      ...(req.body.returnAt ? [["maintenance.returnAt", String(req.body.returnAt)]] : []),
+    ].map(([key, value]) =>
+      prisma.siteConfig.upsert({
+        where: { key },
+        update: { value, updatedById: req.user!.id },
+        create: { key, value, updatedById: req.user!.id },
+      }),
     ),
   );
+  await writeAuditLog(req, {
+    action: "MAINTENANCE_MODE_UPDATED",
+    metadata: { enabled: Boolean(req.body.enabled) },
+  });
+  res.json(apiResponse(true, entries, "Maintenance mode updated"));
+});
+
+export const listTickets = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPagination(req.query);
+  const [tickets, total] = await prisma.$transaction([
+    prisma.ticket.findMany({ include: { messages: true }, orderBy: { createdAt: "desc" }, skip, take: limit }),
+    prisma.ticket.count(),
+  ]);
+  res.json(apiResponse(true, tickets, "Tickets retrieved", paginationMeta(page, limit, total)));
 });
 
 export const updateTicketStatus = asyncHandler(async (req, res) => {
@@ -551,21 +607,25 @@ export const replyTicket = asyncHandler(async (req, res) => {
 });
 
 export const sendNewsletter = asyncHandler(async (req, res) => {
+  const html = sanitizeRichText(String(req.body.html ?? ""));
   const subscribers = await prisma.newsletterSubscriber.findMany({ where: { isActive: true } });
   await Promise.all(
     subscribers.map((subscriber) =>
-      sendEmail({ to: subscriber.email, subject: req.body.subject, html: req.body.html }),
+      sendEmail({ to: subscriber.email, subject: req.body.subject, html }),
     ),
   );
+  await writeAuditLog(req, {
+    action: "NEWSLETTER_SENT",
+    metadata: { subject: req.body.subject, recipientCount: subscribers.length },
+  });
   res.json(apiResponse(true, { sent: subscribers.length }, "Newsletter sent"));
 });
 
-export const newsletterSubscribers = asyncHandler(async (_req, res) => {
-  res.json(
-    apiResponse(
-      true,
-      await prisma.newsletterSubscriber.findMany({ orderBy: { subscribedAt: "desc" } }),
-      "Subscribers retrieved",
-    ),
-  );
+export const newsletterSubscribers = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPagination(req.query);
+  const [subscribers, total] = await prisma.$transaction([
+    prisma.newsletterSubscriber.findMany({ orderBy: { subscribedAt: "desc" }, skip, take: limit }),
+    prisma.newsletterSubscriber.count(),
+  ]);
+  res.json(apiResponse(true, subscribers, "Subscribers retrieved", paginationMeta(page, limit, total)));
 });

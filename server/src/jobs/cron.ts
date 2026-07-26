@@ -1,15 +1,19 @@
 import cron from "node-cron";
 import { prisma } from "../config/db.js";
 import { createNotification } from "../services/notification.service.js";
+import { getCommissionRates } from "../utils/commissionConfig.js";
+import { withDistributedLock } from "../utils/distributedLock.js";
 
 /**
  * Wraps a cron task body so a single failure (transient DB error, bad data)
  * logs and moves on instead of producing an unhandled rejection that could
- * take down the whole process.
+ * take down the whole process. Also takes a Redis lock (when Redis is
+ * configured) so a multi-instance deployment runs each tick exactly once
+ * instead of once per instance.
  */
-const runJob = (name: string, task: () => Promise<void>) => async () => {
+const runJob = (name: string, task: () => Promise<void>, lockTtlMs = 4 * 60 * 1000) => async () => {
   try {
-    await task();
+    await withDistributedLock(name, lockTtlMs, task);
   } catch (error) {
     console.error(`[cron:${name}] job failed:`, error);
   }
@@ -30,24 +34,55 @@ export const startCronJobs = () => {
 
       const results = await Promise.allSettled(
         auctions.map(async (product) => {
-          await prisma.product.update({ where: { id: product.id }, data: { auctionEnabled: false } });
           const winner = product.bids[0];
-          if (winner) {
-            await createNotification({
-              userId: winner.bidderId,
-              type: "AUCTION_WON",
-              title: "Enchere remportee",
-              message: `Vous avez remporte ${product.title}.`,
-              link: `/products/${product.slug}`,
-            });
-            await createNotification({
-              userId: product.sellerId,
-              type: "AUCTION_CLOSED",
-              title: "Enchere cloturee",
-              message: `Votre enchere ${product.title} est terminee.`,
-              link: `/products/${product.slug}`,
-            });
+
+          if (!winner) {
+            await prisma.product.update({ where: { id: product.id }, data: { auctionEnabled: false } });
+            return;
           }
+
+          const order = await prisma.$transaction(async (tx) => {
+            await tx.product.update({ where: { id: product.id }, data: { auctionEnabled: false } });
+            const rates = await getCommissionRates(tx);
+            const commissionRate = product.commissionRate ?? rates.global;
+            const commissionAmount = winner.amount.mul(commissionRate);
+            const created = await tx.order.create({
+              data: {
+                buyerId: winner.bidderId,
+                sellerId: product.sellerId,
+                productId: product.id,
+                quantity: 1,
+                unitPrice: winner.amount,
+                totalAmount: winner.amount,
+                commissionAmount,
+              },
+            });
+            await tx.notification.create({
+              data: {
+                userId: product.sellerId,
+                type: "ORDER_CREATED",
+                title: "Nouvelle commande",
+                message: "Une nouvelle commande a ete creee suite a une enchere remportee.",
+                link: `/orders/${created.id}`,
+              },
+            });
+            return created;
+          });
+
+          await createNotification({
+            userId: winner.bidderId,
+            type: "AUCTION_WON",
+            title: "Enchere remportee",
+            message: `Vous avez remporte ${product.title}. Finalisez le paiement pour recevoir votre commande.`,
+            link: `/orders/${order.id}`,
+          });
+          await createNotification({
+            userId: product.sellerId,
+            type: "AUCTION_CLOSED",
+            title: "Enchere cloturee",
+            message: `Votre enchere ${product.title} est terminee.`,
+            link: `/products/${product.slug}`,
+          });
         }),
       );
 
@@ -66,11 +101,8 @@ export const startCronJobs = () => {
         where: { isActive: true, endDate: { lt: new Date() }, autoRenew: false },
         data: { plan: "FREE", isActive: false, maxListings: 5, maxDownloads: 10 },
       });
-
-      await prisma.commission.updateMany({
-        where: { status: "APPROVED" },
-        data: { status: "PAID", paidAt: new Date() },
-      });
+      // Commissions are paid out at delivery confirmation (payoutOrderCommissions),
+      // not on a timer — escrow must actually be released first.
     }),
   );
 
@@ -102,6 +134,20 @@ export const startCronJobs = () => {
           },
         });
       }
+    }),
+  );
+
+  // Temporary bans already lift lazily at next login (auth.middleware.ts,
+  // auth.controller.ts) — this is just a proactive sweep so a banned user's
+  // account doesn't visibly stay "Banni" in the admin panel long after their
+  // ban expired, if they simply haven't logged back in.
+  cron.schedule(
+    "*/15 * * * *",
+    runJob("lift-expired-bans", async () => {
+      await prisma.user.updateMany({
+        where: { isBanned: true, banExpiresAt: { lte: new Date() } },
+        data: { isBanned: false, banReason: null, banExpiresAt: null },
+      });
     }),
   );
 };

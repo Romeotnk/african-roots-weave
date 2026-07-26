@@ -1,6 +1,0 @@
-{
-  "common.success": "Operation successful",
-  "auth.loginSuccess": "Login successful",
-  "auth.required": "Authentication required",
-  "errors.forbidden": "Forbidden"
-}

@@ -13,6 +13,10 @@ export type AuthUser = {
   country?: string;
   language: string;
   kycStatus: string;
+  isActive?: boolean;
+  isBanned?: boolean;
+  lastLoginAt?: string;
+  createdAt?: string;
 };
 
 const BACKEND_USER_STORAGE_KEY = "iwosan.user";
@@ -103,6 +107,8 @@ export const resetPassword = async (token: string, password: string) =>
     method: "POST",
     body: { password },
   });
+
+export const getMe = async () => apiRequest<AuthUser>("/auth/me");
 
 export type UpdateMePayload = Partial<Pick<AuthUser, "firstName" | "lastName" | "country" | "language" | "avatarUrl">>;
 

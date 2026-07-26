@@ -73,3 +73,27 @@ export const validateEnv = () => {
     );
   }
 };
+
+// These aren't in requiredInProduction because payment/email/media aren't
+// hard requirements to boot the app (this deployment intentionally runs
+// without real payment integration configured yet) — but silently missing
+// them causes confusing failures deep in a request instead of one clear
+// message at startup.
+const optionalProviderGroups: Record<string, string[]> = {
+  Cloudinary: ["CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET"],
+  Moneroo: ["MONEROO_API_KEY", "MONEROO_SECRET_KEY", "MONEROO_WEBHOOK_SECRET"],
+  SMTP: ["SMTP_HOST", "SMTP_USER", "SMTP_PASS"],
+};
+
+export const warnMissingOptionalProviders = () => {
+  for (const [provider, keys] of Object.entries(optionalProviderGroups)) {
+    const missing = keys.filter((key) => !process.env[key]);
+    if (missing.length > 0 && missing.length < keys.length) {
+      // Partially configured is worse than not configured at all — it looks
+      // ready but will fail unpredictably depending on which call is made.
+      console.warn(`[env] ${provider} is partially configured — missing: ${missing.join(", ")}.`);
+    } else if (missing.length === keys.length && !isTrustedDevEnvironment()) {
+      console.warn(`[env] ${provider} is not configured (${keys.join(", ")} unset) — related features will fail at request time.`);
+    }
+  }
+};

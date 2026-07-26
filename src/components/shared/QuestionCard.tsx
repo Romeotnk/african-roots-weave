@@ -83,6 +83,10 @@ export function QuestionCard({ question }: { question: Question }) {
             <img
               src={question.authorAvatar ?? "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=120&q=80"}
               alt=""
+              loading="lazy"
+              decoding="async"
+              width={24}
+              height={24}
               className="h-6 w-6 rounded-full object-cover"
             />
             <span>par {question.authorName}</span>

@@ -28,13 +28,26 @@ export function useMessagesSocket(options: UseMessagesSocketOptions = {}) {
   const optionsRef = useRef(options);
   const [connected, setConnected] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
+  // Re-render when auth state changes (e.g. this component mounted before
+  // AuthContext finished hydrating) so the socket connects/reconnects once a
+  // token becomes available instead of staying disconnected forever.
+  const [token, setToken] = useState(() => authTokenStore.get());
 
   useEffect(() => {
     optionsRef.current = options;
   }, [options]);
 
   useEffect(() => {
-    const token = authTokenStore.get();
+    const onAuthChanged = () => setToken(authTokenStore.get());
+    window.addEventListener("iwosan.auth.changed", onAuthChanged);
+    window.addEventListener("storage", onAuthChanged);
+    return () => {
+      window.removeEventListener("iwosan.auth.changed", onAuthChanged);
+      window.removeEventListener("storage", onAuthChanged);
+    };
+  }, []);
+
+  useEffect(() => {
     const socketUrl = getSocketUrl();
     if (!token || !socketUrl) return;
 
@@ -70,7 +83,7 @@ export function useMessagesSocket(options: UseMessagesSocketOptions = {}) {
       setConnected(false);
       setAuthenticated(false);
     };
-  }, []);
+  }, [token]);
 
   const sendMessage = useCallback((receiverId: string, content: string) => {
     const socket = socketRef.current;

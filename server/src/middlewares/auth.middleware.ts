@@ -61,7 +61,6 @@ export const authMiddleware: RequestHandler = async (req, _res, next) => {
       kycStatus: user.kycStatus,
       isEmailVerified: user.isEmailVerified,
     };
-    req.language = user.language;
     next();
   } catch (error) {
     next(error instanceof ApiError ? error : new ApiError(401, "Invalid or expired token"));

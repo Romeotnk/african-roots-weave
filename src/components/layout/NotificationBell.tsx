@@ -15,6 +15,12 @@ const icons: Record<NotificationType, typeof Bell> = {
   forum: Users,
 };
 
+// item.href comes from the backend Notification.link field — free text, not
+// validated against the frontend's route list. Only follow it if it's an
+// internal path: a single leading slash, no scheme (blocks "javascript:...")
+// and no protocol-relative "//host" trick.
+const isSafeInternalPath = (href: string) => /^\/(?!\/)/.test(href);
+
 export function NotificationBell({ compact = false }: { compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -77,10 +83,11 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
             {notifications.slice(0, 4).map((item) => {
               const Icon = icons[item.type];
               const unread = !readIds.has(item.id);
+              const target = isSafeInternalPath(item.href) ? item.href : "/";
               return (
                 <Link
                   key={item.id}
-                  to={item.href as any}
+                  to={target as any}
                   onClick={() => {
                     setReadIds((value) => new Set(value).add(item.id));
                     markRead.mutate(item.id);

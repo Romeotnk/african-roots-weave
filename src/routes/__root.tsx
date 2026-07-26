@@ -15,9 +15,7 @@ import { reportClientError } from "../lib/error-reporting";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { LanguageProvider } from "@/i18n/LanguageContext";
 import { AuthProvider } from "@/lib/auth/AuthContext";
-import "@/i18n/jsxPatch";
 import { siteConfig } from "@/data/siteConfig";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
@@ -72,11 +70,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "IWOSAN - Le savoir médical africain, documenté et vivant" },
       { name: "twitter:description", content: "Plateforme panafricaine éditoriale, scientifique et communautaire dédiée à la médecine traditionnelle, aux plantes médicinales et aux cultures de guérison africaines." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1819c790-5fdc-422e-96c4-3a4825934d70/id-preview-2ec67662--5c6b0925-718f-4d9a-a7ce-388131a1aaf2.lovable.app-1780928460304.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1819c790-5fdc-422e-96c4-3a4825934d70/id-preview-2ec67662--5c6b0925-718f-4d9a-a7ce-388131a1aaf2.lovable.app-1780928460304.png" },
+      { property: "og:image", content: "/favicon.svg" },
+      { name: "twitter:image", content: "/favicon.svg" },
     ],
     links: [
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@0,400;0,500&display=swap" },
@@ -116,27 +115,27 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <LanguageProvider>
-            <div className="flex min-h-screen flex-col">
-              {!showMaintenance && !isMinimal && !isDashboard && <Navbar />}
-              <main className="flex-1">{showMaintenance ? <MaintenancePage /> : <Outlet />}</main>
-              {!showMaintenance && !isMinimal && !isDashboard && <Footer />}
-            </div>
-          </LanguageProvider>
+          <div className="flex min-h-screen flex-col">
+            {!showMaintenance && !isMinimal && !isDashboard && <Navbar />}
+            <main className="flex-1">{showMaintenance ? <MaintenancePage config={siteConfigQuery.data?.data} /> : <Outlet />}</main>
+            {!showMaintenance && !isMinimal && !isDashboard && <Footer />}
+          </div>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
 }
 
-function MaintenancePage() {
+function MaintenancePage({ config }: { config?: Record<string, string> | null }) {
+  const message = config?.["maintenance.message"] || siteConfig.maintenanceMessage;
+  const returnAt = config?.["maintenance.returnAt"] || siteConfig.maintenanceReturnAt;
   return (
     <div className="grid min-h-screen place-items-center bg-[var(--brand-primary-dark)] px-4 text-white">
       <div className="max-w-xl text-center">
         <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-[16px] bg-white/10"><span className="text-[28px] font-black">I</span></div>
         <h1 className="text-[34px] md:text-[48px]">Maintenance en cours</h1>
-        <p className="mt-4 text-white/75">{siteConfig.maintenanceMessage}</p>
-        <p className="mt-5 rounded-full bg-white/10 px-4 py-2 text-[13px] font-semibold">Retour estime : {siteConfig.maintenanceReturnAt}</p>
+        <p className="mt-4 text-white/75">{message}</p>
+        <p className="mt-5 rounded-full bg-white/10 px-4 py-2 text-[13px] font-semibold">Retour estime : {returnAt}</p>
       </div>
     </div>
   );

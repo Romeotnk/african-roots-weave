@@ -14,7 +14,12 @@ import {
   verifyEmail,
 } from "../controllers/auth.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
-import { loginRateLimit, passwordResetRateLimit, registerRateLimit } from "../middlewares/rateLimit.middleware.js";
+import {
+  loginRateLimit,
+  passwordResetRateLimit,
+  registerRateLimit,
+  sensitiveActionRateLimit,
+} from "../middlewares/rateLimit.middleware.js";
 import { upload } from "../middlewares/upload.middleware.js";
 import { validateRequest } from "../middlewares/validation.middleware.js";
 import {
@@ -41,6 +46,7 @@ authRouter.patch("/me", authMiddleware, updateMeValidator, validateRequest, upda
 authRouter.post(
   "/kyc",
   authMiddleware,
+  sensitiveActionRateLimit,
   upload.fields([
     { name: "front", maxCount: 1 },
     { name: "back", maxCount: 1 },

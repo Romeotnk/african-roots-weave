@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { initiatePayment, monerooWebhook } from "../controllers/payment.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
+import { sensitiveActionRateLimit } from "../middlewares/rateLimit.middleware.js";
 import { validateRequest } from "../middlewares/validation.middleware.js";
 import { initiatePaymentValidator } from "../validators/payment.validators.js";
 
@@ -11,6 +12,7 @@ export const webhookRouter = Router();
 paymentRouter.post(
   "/initiate",
   authMiddleware,
+  sensitiveActionRateLimit,
   initiatePaymentValidator,
   validateRequest,
   initiatePayment,

@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChefHat, Clock, Coffee, Leaf, Soup } from "lucide-react";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
+import { SimplePager } from "@/components/shared/SimplePager";
 import { recipes } from "@/data/recipes";
 import { useArticles } from "@/hooks/useContentApi";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -39,10 +40,17 @@ export function toRecipe(article: BackendArticle): Recipe | null {
 }
 
 export function RecipeListPage() {
-  const articlesQuery = useArticles({ space: "RECETTES_SANTE" });
+  const [page, setPage] = useState(1);
+  const articlesQuery = useArticles({ space: "RECETTES_SANTE", page });
   const [search, setSearch] = useState("");
   const [type, setType] = useState("Toutes");
   const debouncedSearch = useDebounce(search, 300);
+  const isUnfiltered = type === "Toutes" && !debouncedSearch;
+  const pagination = articlesQuery.data?.pagination;
+
+  useEffect(() => {
+    setPage(1);
+  }, [type, debouncedSearch]);
 
   const apiRecipes = useMemo(
     () => ((articlesQuery.data?.articles ?? []) as BackendArticle[]).map(toRecipe).filter((item): item is Recipe => Boolean(item)),
@@ -108,7 +116,7 @@ export function RecipeListPage() {
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {filteredRecipes.map((recipe) => (
                   <article key={recipe.id} className="overflow-hidden rounded-[12px] border border-[var(--brand-border-light)] bg-white">
-                    <img src={recipe.image} alt={recipe.title} className="h-48 w-full object-cover" />
+                    <img src={recipe.image} alt={recipe.title} loading="lazy" decoding="async" className="h-48 w-full object-cover" />
                     <div className="p-5">
                       <div className="mb-3 flex flex-wrap items-center gap-2 text-[12px]">
                         <span className="rounded-full bg-[var(--brand-primary-subtle)] px-3 py-1 font-semibold text-[var(--brand-primary)]">{recipe.type}</span>
@@ -124,6 +132,9 @@ export function RecipeListPage() {
                   </article>
                 ))}
               </div>
+              {isUnfiltered && pagination && (
+                <SimplePager page={pagination.page} totalPages={pagination.totalPages} onChange={setPage} />
+              )}
             </div>
             <aside className="h-fit rounded-[12px] bg-[var(--brand-primary)] p-6 text-white">
               <h3 className="mb-2 text-[18px] font-bold">Besoin d'aide ?</h3>

@@ -25,7 +25,7 @@ redisClient?.on("error", (error) => {
 });
 
 export const connectRedis = async () => {
-  if (!redisClient || redisClient.status === "ready" || redisUnavailable) {
+  if (!redisClient || redisClient.status === "ready") {
     return;
   }
 
@@ -36,6 +36,7 @@ export const connectRedis = async () => {
         setTimeout(() => reject(new Error("Redis connection timed out")), 3000);
       }),
     ]);
+    redisUnavailable = false;
   } catch (error) {
     redisUnavailable = true;
     console.warn(
@@ -44,6 +45,19 @@ export const connectRedis = async () => {
     );
   }
 };
+
+// retryStrategy gives up after a couple of attempts and ioredis then stops
+// reconnecting on its own — without this, a single network hiccup would
+// disable the JWT blacklist and every other Redis-backed feature for the
+// rest of the process's life. Periodically try to reconnect instead.
+if (redisClient) {
+  setInterval(() => {
+    if (!redisUnavailable || redisClient.status === "ready" || redisClient.status === "connecting") return;
+    connectRedis().catch(() => {
+      // still unavailable — connectRedis() already logged and reset the flag, next interval retries
+    });
+  }, 60_000).unref();
+}
 
 export const redisGet = async (key: string) => {
   if (!redisClient || redisUnavailable) {
