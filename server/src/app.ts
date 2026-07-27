@@ -47,7 +47,12 @@ app.use(
         frameAncestors: ["'self'"],
         imgSrc: ["'self'", "data:", "https:"],
         objectSrc: ["'none'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
+        // Only the theme-flash-prevention inline script in __root.tsx is
+        // allowed to run inline, by exact content hash — if that script's
+        // content ever changes, this hash must be regenerated
+        // (`printf '%s' '<script content>' | openssl dgst -sha256 -binary | openssl base64`)
+        // or the page will silently stop applying the saved theme on load.
+        scriptSrc: ["'self'", "'sha256-q7ZySqaw8UDlcrox6HQ+Ga52atnhu+TK+beXP+vQiRE='"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       },
     },

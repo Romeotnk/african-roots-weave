@@ -84,6 +84,10 @@ export const register = asyncHandler(async (req, res) => {
   const passwordHash = await hashPassword(password);
   const requestedRole = role === Role.PROFESSIONAL ? Role.PROFESSIONAL : Role.USER;
 
+  // Prisma's default interactive-transaction timeout (5s) is too tight for
+  // this pooled Supabase connection, which regularly takes 6-13s round-trip
+  // under load — without extra headroom this transaction gets killed
+  // (P2028) before user.create/mLMNode.create can finish.
   const user = await prisma.$transaction(async (tx) => {
     const created = await tx.user.create({
       data: {
@@ -126,7 +130,7 @@ export const register = asyncHandler(async (req, res) => {
     });
 
     return created;
-  });
+  }, { timeout: 20000, maxWait: 10000 });
 
   const verificationUrl = await createEmailVerification(user.id);
   let emailSent = false;
@@ -261,6 +265,8 @@ const getSupabaseUser = async (accessToken: string) => {
   });
 
   if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    console.warn(`[supabaseAuth] Supabase rejected the access token: ${response.status} ${body}`);
     throw new ApiError(401, "Invalid Supabase session");
   }
 
@@ -378,7 +384,7 @@ export const supabaseAuth = asyncHandler(async (req, res) => {
     });
 
     return created;
-  });
+  }, { timeout: 20000, maxWait: 10000 });
 
   if (user.isBanned && user.banExpiresAt && user.banExpiresAt <= new Date()) {
     await prisma.user.update({

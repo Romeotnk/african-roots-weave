@@ -4,6 +4,7 @@ import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
+import { sanitizeRichText } from "../utils/sanitizeRichText.js";
 
 const moderatorRoles: Role[] = [Role.SUPER_ADMIN, Role.ADMIN, Role.MODERATOR];
 
@@ -72,7 +73,7 @@ export const createQuestion = asyncHandler(async (req, res) => {
     data: {
       authorId: req.user.id,
       title: req.body.title,
-      content: req.body.content,
+      content: sanitizeRichText(req.body.content ?? ""),
       category: req.body.category,
       tags: req.body.tags ?? [],
       attachments: req.body.attachments ?? [],
@@ -90,7 +91,15 @@ export const updateQuestion = asyncHandler(async (req, res) => {
   if (!q) throw new ApiError(404, "Question not found");
   if (q.authorId !== req.user.id && !moderatorRoles.includes(req.user.role))
     throw new ApiError(403, "Forbidden");
-  const question = await prisma.question.update({ where: { id: req.params.id }, data: req.body });
+  const question = await prisma.question.update({
+    where: { id: req.params.id },
+    data: {
+      title: req.body.title,
+      content: req.body.content !== undefined ? sanitizeRichText(req.body.content) : undefined,
+      category: req.body.category,
+      tags: req.body.tags,
+    },
+  });
   res.json(apiResponse(true, question, "Question updated"));
 });
 
@@ -100,7 +109,7 @@ export const createAnswer = asyncHandler(async (req, res) => {
     data: {
       questionId: req.params.id,
       authorId: req.user.id,
-      content: req.body.content,
+      content: sanitizeRichText(req.body.content ?? ""),
       attachments: req.body.attachments ?? [],
     },
   });
@@ -118,7 +127,7 @@ export const updateAnswer = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Forbidden");
   const answer = await prisma.answer.update({
     where: { id: req.params.id },
-    data: { content: req.body.content },
+    data: { content: sanitizeRichText(req.body.content ?? "") },
   });
   res.json(apiResponse(true, answer, "Answer updated"));
 });

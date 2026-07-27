@@ -480,6 +480,7 @@ export const updateCommissionConfig = asyncHandler(async (req, res) => {
       }),
     ),
   );
+  await writeAuditLog(req, { action: "COMMISSION_CONFIG_UPDATED", metadata: { keys: Object.keys(req.body) } });
   res.json(apiResponse(true, entries, "Commission config updated"));
 });
 

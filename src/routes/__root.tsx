@@ -105,6 +105,22 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppShell />
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
+
+// useSiteConfig() uses useQuery internally, so it has to be called by a
+// descendant of QueryClientProvider — calling it directly in RootComponent
+// (a sibling of the provider it renders, not a child of it) throws "No
+// QueryClient set" on every single render.
+function AppShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isMinimal = ["/connexion", "/inscription", "/mot-de-passe-oublie", "/reset-password"].includes(pathname) || pathname.startsWith("/reset-password/");
   const isDashboard = pathname.startsWith("/tableau-de-bord");
@@ -112,17 +128,11 @@ function RootComponent() {
   const maintenanceEnabled = siteConfigQuery.data?.data?.["maintenance.enabled"] === "true";
   const showMaintenance = maintenanceEnabled && !pathname.startsWith("/admin");
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <div className="flex min-h-screen flex-col">
-            {!showMaintenance && !isMinimal && !isDashboard && <Navbar />}
-            <main className="flex-1">{showMaintenance ? <MaintenancePage config={siteConfigQuery.data?.data} /> : <Outlet />}</main>
-            {!showMaintenance && !isMinimal && !isDashboard && <Footer />}
-          </div>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <div className="flex min-h-screen flex-col">
+      {!showMaintenance && !isMinimal && !isDashboard && <Navbar />}
+      <main className="flex-1">{showMaintenance ? <MaintenancePage config={siteConfigQuery.data?.data} /> : <Outlet />}</main>
+      {!showMaintenance && !isMinimal && !isDashboard && <Footer />}
+    </div>
   );
 }
 
