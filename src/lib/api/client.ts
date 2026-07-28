@@ -121,6 +121,27 @@ export const authTokenStore = {
   },
 };
 
+// The refresh flow's double-submit CSRF token can't be read back from
+// document.cookie: in production the API is on a different origin than the
+// frontend (that's exactly why the refresh cookie needs sameSite:"none"),
+// and cookies are never readable across origins via JS regardless of Path.
+// So it travels as a normal field in the login/refresh JSON response instead
+// and is cached here, mirroring how the access token itself is handled.
+let csrfToken = typeof window !== "undefined" ? window.localStorage.getItem("iwosan.csrfToken") : null;
+
+export const csrfTokenStore = {
+  get: () => csrfToken,
+  set: (token: string | null) => {
+    csrfToken = token;
+    if (typeof window === "undefined") return;
+    if (token) {
+      window.localStorage.setItem("iwosan.csrfToken", token);
+    } else {
+      window.localStorage.removeItem("iwosan.csrfToken");
+    }
+  },
+};
+
 let refreshInFlight: Promise<string | null> | null = null;
 
 // Concurrent 401s (several requests in flight when the access token expires)
@@ -136,16 +157,19 @@ const refreshAccessToken = (): Promise<string | null> => {
       const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
         method: "POST",
         credentials: "include",
+        headers: csrfToken ? { "x-csrf-token": csrfToken } : undefined,
       });
 
       if (!response.ok) {
         authTokenStore.set(null);
+        csrfTokenStore.set(null);
         return null;
       }
 
-      const payload = await parseApiEnvelope<{ accessToken: string }>(response);
+      const payload = await parseApiEnvelope<{ accessToken: string; csrfToken?: string }>(response);
       const token = payload.data?.accessToken ?? null;
       authTokenStore.set(token);
+      if (payload.data?.csrfToken) csrfTokenStore.set(payload.data.csrfToken);
       return token;
     } finally {
       refreshInFlight = null;

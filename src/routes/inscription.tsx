@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { ArrowRight, BriefcaseBusiness, CheckCircle2, Eye, EyeOff, ShieldCheck, Sparkles, User } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { CountrySelect } from "@/components/shared/CountrySelect";
 import { TurnstileWidget } from "@/components/shared/TurnstileWidget";
+import { useLanguage } from "@/components/LanguageProvider";
 import { register } from "@/lib/api/auth";
 import { getPasswordValidationError } from "@/lib/auth/password";
 import { signInWithSocialProvider } from "@/lib/auth/social";
@@ -16,33 +18,46 @@ export const Route = createFileRoute("/inscription")({
 
 type AccountType = "user" | "professional";
 
-const accountTypes: Array<{
+function useAccountTypes(t: (key: string) => string): Array<{
   id: AccountType;
   label: string;
   badge: string;
   desc: string;
   details: string[];
   Icon: typeof User;
-}> = [
-  {
-    id: "user",
-    label: "Utilisateur",
-    badge: "Compte personnel",
-    desc: "Découvrir, apprendre, poser des questions et contacter les vendeurs.",
-    details: ["Marketplace et messagerie", "Forum et messages", "Support"],
-    Icon: User,
-  },
-  {
-    id: "professional",
-    label: "Professionnel",
-    badge: "Compte pro vérifiable",
-    desc: "Vendre, publier, former, organiser des événements et recevoir des demandes.",
-    details: ["Boutique et coupons", "Profil annuaire", "Formations, blog et événements"],
-    Icon: BriefcaseBusiness,
-  },
-];
+}> {
+  return [
+    {
+      id: "user",
+      label: t("auth.register.userType.label"),
+      badge: t("auth.register.userType.badge"),
+      desc: t("auth.register.userType.description"),
+      details: [
+        t("auth.register.userType.detail1"),
+        t("auth.register.userType.detail2"),
+        t("auth.register.userType.detail3"),
+      ],
+      Icon: User,
+    },
+    {
+      id: "professional",
+      label: t("auth.register.professionalType.label"),
+      badge: t("auth.register.professionalType.badge"),
+      desc: t("auth.register.professionalType.description"),
+      details: [
+        t("auth.register.professionalType.detail1"),
+        t("auth.register.professionalType.detail2"),
+        t("auth.register.professionalType.detail3"),
+      ],
+      Icon: BriefcaseBusiness,
+    },
+  ];
+}
 
 function Inscription() {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+  const accountTypes = useAccountTypes(t);
   const [accountType, setAccountType] = useState<AccountType>("user");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -74,17 +89,17 @@ function Inscription() {
     }
 
     if (password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas.");
+      setError(t("auth.register.passwordMismatch"));
       return;
     }
 
     if (!acceptedTerms) {
-      setError("Vous devez accepter les CGU et la politique de confidentialité.");
+      setError(t("auth.register.termsRequired"));
       return;
     }
 
     if (TURNSTILE_SITE_KEY && !turnstileToken) {
-      setError("Merci de valider la vérification anti-robot.");
+      setError(t("auth.register.captchaRequired"));
       return;
     }
 
@@ -97,16 +112,16 @@ function Inscription() {
         lastName,
         country,
         role: accountType === "professional" ? "PROFESSIONAL" : "USER",
-        language: "fr",
+        language,
         turnstileToken: turnstileToken ?? undefined,
       });
       setMessage(
         accountType === "professional"
-          ? "Compte professionnel créé. Vous pourrez compléter votre profil pro après connexion."
-          : response.message || "Compte créé. Vérifiez votre email pour activer votre compte.",
+          ? t("auth.register.proSuccess")
+          : response.message || t("auth.register.genericSuccess"),
       );
     } catch (apiError) {
-      setError(apiError instanceof Error ? apiError.message : "Inscription impossible pour le moment.");
+      setError(apiError instanceof Error ? apiError.message : t("auth.register.genericError"));
     } finally {
       setIsSubmitting(false);
       setTurnstileToken(null);
@@ -122,7 +137,7 @@ function Inscription() {
     try {
       await signInWithSocialProvider(provider, accountType);
     } catch (socialError) {
-      setError(socialError instanceof Error ? socialError.message : "La connexion sociale n'a pas pu être lancée.");
+      setError(socialError instanceof Error ? socialError.message : t("auth.register.socialError"));
       setIsSocialSubmitting(null);
     }
   };
@@ -141,11 +156,11 @@ function Inscription() {
           <section className="overflow-hidden rounded-[8px] border border-[var(--brand-border-light)] bg-white">
             <div className="bg-[var(--brand-primary)] p-6 text-white md:p-8">
               <p className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.12em]">
-                <ShieldCheck size={14} /> Inscription sécurisée
+                <ShieldCheck size={14} /> {t("auth.register.heroBadge")}
               </p>
-              <h1 className="mt-5 text-[34px] leading-tight md:text-[46px]">Choisissez votre espace IWOSAN</h1>
+              <h1 className="mt-5 text-[34px] leading-tight md:text-[46px]">{t("auth.register.heroTitle")}</h1>
               <p className="mt-4 max-w-xl text-[15px] leading-7 text-white/85">
-                Un compte simple pour explorer. Un compte professionnel pour vendre, publier et gérer une activité vérifiée.
+                {t("auth.register.heroSubtitle")}
               </p>
             </div>
 
@@ -194,7 +209,7 @@ function Inscription() {
             <div className="flex flex-col gap-2 border-b border-[var(--brand-border-light)] pb-5 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">{selectedType.badge}</p>
-                <h2 className="mt-1 text-[26px] font-extrabold">Créer un compte {selectedType.label.toLowerCase()}</h2>
+                <h2 className="mt-1 text-[26px] font-extrabold">{t("auth.register.title", { type: selectedType.label.toLowerCase() })}</h2>
               </div>
               <span className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-surface-alt)] px-4 text-[13px] font-bold text-[var(--color-text-secondary)]">
                 <selectedType.Icon size={16} /> {selectedType.label}
@@ -203,34 +218,34 @@ function Inscription() {
 
             <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
               <div className="grid gap-3 sm:grid-cols-2">
-                <input placeholder="Prénom" value={firstName} onChange={(event) => setFirstName(event.target.value)} required className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 outline-none focus:border-[var(--brand-primary)]" />
-                <input placeholder="Nom" value={lastName} onChange={(event) => setLastName(event.target.value)} required className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 outline-none focus:border-[var(--brand-primary)]" />
+                <input placeholder={t("auth.register.firstNamePlaceholder")} value={firstName} onChange={(event) => setFirstName(event.target.value)} required className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 outline-none focus:border-[var(--brand-primary)]" />
+                <input placeholder={t("auth.register.lastNamePlaceholder")} value={lastName} onChange={(event) => setLastName(event.target.value)} required className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 outline-none focus:border-[var(--brand-primary)]" />
               </div>
-              <input type="email" placeholder="Email" value={email} onChange={(event) => setEmail(event.target.value)} required className="h-11 w-full rounded-[8px] border border-[var(--brand-border)] px-4 outline-none focus:border-[var(--brand-primary)]" />
+              <input type="email" placeholder={t("auth.register.emailPlaceholder")} value={email} onChange={(event) => setEmail(event.target.value)} required className="h-11 w-full rounded-[8px] border border-[var(--brand-border)] px-4 outline-none focus:border-[var(--brand-primary)]" />
               <CountrySelect value={country} onChange={setCountry} required className="h-11 w-full rounded-[8px] border border-[var(--brand-border)] bg-white px-4 outline-none" />
 
               {accountType === "professional" && (
                 <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-4 text-[13px] leading-6 text-[var(--color-text-secondary)]">
-                  Après connexion, vous pourrez compléter votre profil professionnel tout de suite ou plus tard. L'interface pro apparaîtra uniquement pour ce type de compte.
+                  {t("auth.register.proNotice")}
                 </div>
               )}
 
               <div className="relative">
-                <input type={showPassword ? "text" : "password"} placeholder="Mot de passe" value={password} onChange={(event) => setPassword(event.target.value)} required className="h-11 w-full rounded-[8px] border border-[var(--brand-border)] px-4 pr-11 outline-none focus:border-[var(--brand-primary)]" />
-                <button type="button" onClick={() => setShowPassword((current) => !current)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}>
+                <input type={showPassword ? "text" : "password"} placeholder={t("auth.register.passwordPlaceholder")} value={password} onChange={(event) => setPassword(event.target.value)} required className="h-11 w-full rounded-[8px] border border-[var(--brand-border)] px-4 pr-11 outline-none focus:border-[var(--brand-primary)]" />
+                <button type="button" onClick={() => setShowPassword((current) => !current)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}>
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
               <div className="relative">
-                <input type={showConfirmPassword ? "text" : "password"} placeholder="Confirmer le mot de passe" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required className="h-11 w-full rounded-[8px] border border-[var(--brand-border)] px-4 pr-11 outline-none focus:border-[var(--brand-primary)]" />
-                <button type="button" onClick={() => setShowConfirmPassword((current) => !current)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" aria-label={showConfirmPassword ? "Masquer la confirmation" : "Afficher la confirmation"}>
+                <input type={showConfirmPassword ? "text" : "password"} placeholder={t("auth.register.confirmPasswordPlaceholder")} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required className="h-11 w-full rounded-[8px] border border-[var(--brand-border)] px-4 pr-11 outline-none focus:border-[var(--brand-primary)]" />
+                <button type="button" onClick={() => setShowConfirmPassword((current) => !current)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" aria-label={showConfirmPassword ? t("auth.register.hideConfirm") : t("auth.register.showConfirm")}>
                   {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
 
               <label className="flex items-start gap-2 text-[13px] text-[var(--color-text-secondary)]">
                 <input type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} className="mt-1 accent-[var(--brand-primary)]" />
-                <span>J'accepte les CGU et la politique de confidentialité</span>
+                <span>{t("auth.register.termsLabel")}</span>
               </label>
 
               {TURNSTILE_SITE_KEY && (
@@ -250,36 +265,36 @@ function Inscription() {
                     to="/connexion"
                     className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white hover:bg-[var(--brand-primary-dark)]"
                   >
-                    Se connecter maintenant <ArrowRight size={15} />
+                    {t("auth.register.loginNow")} <ArrowRight size={15} />
                   </Link>
                 </div>
               )}
 
               {!message && (
                 <button type="submit" disabled={isSubmitting || Boolean(TURNSTILE_SITE_KEY) && !turnstileToken} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] font-semibold text-white hover:bg-[var(--brand-primary-dark)] disabled:cursor-not-allowed disabled:opacity-70">
-                  {isSubmitting ? "Inscription..." : "Créer mon compte"} <ArrowRight size={17} />
+                  {isSubmitting ? t("auth.register.submitting") : t("auth.register.submit")} <ArrowRight size={17} />
                 </button>
               )}
             </form>
 
             <div className="my-6 flex items-center gap-3 text-[12px] text-[var(--color-text-muted)]">
-              <div className="h-px flex-1 bg-[var(--brand-border-light)]" /> ou continuer avec <div className="h-px flex-1 bg-[var(--brand-border-light)]" />
+              <div className="h-px flex-1 bg-[var(--brand-border-light)]" /> {t("auth.orContinueWith")} <div className="h-px flex-1 bg-[var(--brand-border-light)]" />
             </div>
             {accountType === "professional" && (
               <p className="mb-3 rounded-[8px] border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] px-3 py-2 text-[12px] leading-5 text-[var(--color-text-secondary)]">
-                Avec Google ou Facebook, vous serez d'abord connecté puis redirigé vers l'activation professionnelle.
+                {t("auth.register.socialProNotice")}
               </p>
             )}
             <div className="grid grid-cols-2 gap-3">
               <button type="button" onClick={() => handleSocialSignIn("google")} disabled={isSocialSubmitting !== null} className="h-11 rounded-[8px] border border-[var(--brand-border)] text-[14px] font-semibold hover:bg-[var(--brand-surface-alt)] disabled:opacity-70">
-                {isSocialSubmitting === "google" ? "Ouverture..." : "Google"}
+                {isSocialSubmitting === "google" ? t("auth.opening") : "Google"}
               </button>
               <button type="button" onClick={() => handleSocialSignIn("facebook")} disabled={isSocialSubmitting !== null} className="h-11 rounded-[8px] bg-[#1877F2] text-[14px] font-semibold text-white disabled:opacity-70">
-                {isSocialSubmitting === "facebook" ? "Ouverture..." : "Facebook"}
+                {isSocialSubmitting === "facebook" ? t("auth.opening") : "Facebook"}
               </button>
             </div>
             <p className="mt-6 text-center text-[14px] text-[var(--color-text-muted)]">
-              Déjà inscrit ? <Link to="/connexion" className="font-semibold text-[var(--brand-primary)]">Se connecter</Link>
+              {t("auth.register.alreadyRegistered")} <Link to="/connexion" className="font-semibold text-[var(--brand-primary)]">{t("auth.register.login")}</Link>
             </p>
           </section>
         </div>

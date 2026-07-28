@@ -23,7 +23,8 @@ export function useSavedSearchActions() {
   const refresh = () => queryClient.invalidateQueries({ queryKey: savedSearchKeys.all });
   return {
     create: useMutation({
-      mutationFn: ({ name, summary }: { name: string; summary?: string }) => createSavedSearch(name, summary),
+      mutationFn: ({ name, summary, criteria }: { name: string; summary?: string; criteria?: unknown }) =>
+        createSavedSearch(name, summary, criteria),
       onSuccess: refresh,
     }),
     update: useMutation({

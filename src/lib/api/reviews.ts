@@ -1,6 +1,6 @@
 import { apiRequest } from "./client";
 
-export type ReviewTargetType = "PRODUCT" | "PROFESSIONAL" | "FORMATION";
+export type ReviewTargetType = "PRODUCT" | "PROFESSIONAL" | "FORMATION" | "BUYER";
 
 export const createReview = (targetId: string, targetType: ReviewTargetType, rating: number, comment?: string) =>
   apiRequest<unknown>("/reviews", {

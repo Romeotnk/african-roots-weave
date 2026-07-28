@@ -2,10 +2,14 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Bell,
   Calendar,
+  CalendarClock,
   FileText,
   GraduationCap,
   LayoutDashboard,
+  Layers,
   Leaf,
+  LifeBuoy,
+  Link2,
   LogOut,
   MessageSquare,
   Package,
@@ -41,8 +45,11 @@ const groups = [
     items: [
       { icon: ShoppingBag, label: "Mes produits", to: "/tableau-de-bord/mes-produits" },
       { icon: Package, label: "Commandes", to: "/tableau-de-bord/commandes" },
+      { icon: CalendarClock, label: "Réservations", to: "/tableau-de-bord/reservations" },
+      { icon: FileText, label: "Devis", to: "/tableau-de-bord/devis" },
       { icon: Wallet, label: "Revenus", to: "/tableau-de-bord/commissions" },
       { icon: Tag, label: "Coupons", to: "/tableau-de-bord/coupons" },
+      { icon: Layers, label: "Mon abonnement", to: "/tableau-de-bord/abonnement" },
     ],
   },
   {
@@ -59,13 +66,14 @@ const groups = [
       { icon: MessageSquare, label: "Mes questions", to: "/tableau-de-bord/questions" },
       { icon: GraduationCap, label: "Mes formations", to: "/tableau-de-bord/formations" },
       { icon: Calendar, label: "Mes evenements", to: "/tableau-de-bord/evenements" },
+      { icon: LifeBuoy, label: "Support utilisateurs", to: "/tableau-de-bord/support" },
     ],
   },
   {
     title: "Reseau",
     items: [
       { icon: Users, label: "Mon reseau", to: "/tableau-de-bord/reseau" },
-      { icon: Users, label: "Affiliations", to: "/tableau-de-bord/reseau" },
+      { icon: Link2, label: "Affiliations", to: "/tableau-de-bord/affiliation" },
       { icon: Wallet, label: "Commissions", to: "/tableau-de-bord/commissions" },
     ],
   },

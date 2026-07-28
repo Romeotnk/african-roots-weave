@@ -2,10 +2,12 @@ import { AdminSubRole, Role } from "@prisma/client";
 import { prisma } from "../config/db.js";
 import { sendEmail } from "../services/email.service.js";
 import { writeAuditLog } from "../services/audit.service.js";
+import { invalidateRolePermissionsCache } from "../services/permissions.service.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
+import { PERMISSION_CATALOG, PERMISSION_KEYS } from "../utils/permissions.js";
 import { sanitizeRichText } from "../utils/sanitizeRichText.js";
 
 const adminAssignableRoles: Role[] = [Role.MODERATOR, Role.EDITOR, Role.RESEARCHER];
@@ -196,6 +198,54 @@ export const unbanUser = asyncHandler(async (req, res) => {
   });
   await writeAuditLog(req, { action: "USER_UNBANNED", targetId: user.id, targetType: "User" });
   res.json(apiResponse(true, user, "User unbanned"));
+});
+
+export const listPermissions = asyncHandler(async (_req, res) => {
+  const rows = await prisma.rolePermission.findMany();
+  const byRole: Partial<Record<Role, string[]>> = {};
+  for (const row of rows) {
+    byRole[row.role] = [...(byRole[row.role] ?? []), row.permission];
+  }
+  res.json(apiResponse(true, { catalog: PERMISSION_CATALOG, rolePermissions: byRole }, "Permissions retrieved"));
+});
+
+export const updateRolePermissions = asyncHandler(async (req, res) => {
+  const role = req.params.role as Role;
+  if (!Object.values(Role).includes(role)) throw new ApiError(400, "Invalid role");
+  const permissions = Array.isArray(req.body.permissions)
+    ? (req.body.permissions as unknown[]).filter((value): value is string => PERMISSION_KEYS.includes(String(value)))
+    : [];
+
+  await prisma.$transaction([
+    prisma.rolePermission.deleteMany({ where: { role } }),
+    prisma.rolePermission.createMany({ data: permissions.map((permission) => ({ role, permission })) }),
+  ]);
+  invalidateRolePermissionsCache();
+
+  await writeAuditLog(req, { action: "ROLE_PERMISSIONS_UPDATED", targetId: role, targetType: "RolePermission", metadata: { permissions } });
+  res.json(apiResponse(true, { role, permissions }, "Role permissions updated"));
+});
+
+export const updateUserPermissionOverrides = asyncHandler(async (req, res) => {
+  const grant = Array.isArray(req.body.grant)
+    ? (req.body.grant as unknown[]).filter((value): value is string => PERMISSION_KEYS.includes(String(value)))
+    : [];
+  const revoke = Array.isArray(req.body.revoke)
+    ? (req.body.revoke as unknown[]).filter((value): value is string => PERMISSION_KEYS.includes(String(value)))
+    : [];
+
+  const user = await prisma.user.update({
+    where: { id: req.params.id },
+    data: { permissionOverrides: { grant, revoke } },
+    select: { id: true, permissionOverrides: true },
+  });
+  await writeAuditLog(req, {
+    action: "USER_PERMISSION_OVERRIDES_UPDATED",
+    targetId: user.id,
+    targetType: "User",
+    metadata: { grant, revoke },
+  });
+  res.json(apiResponse(true, user, "User permission overrides updated"));
 });
 
 export const auditLog = asyncHandler(async (req, res) => {
@@ -410,6 +460,26 @@ export const rejectProfessional = asyncHandler(async (req, res) => {
   res.json(apiResponse(true, null, "Professional application rejected"));
 });
 
+export const updateProfessionalCommissionRate = asyncHandler(async (req, res) => {
+  const raw = req.body.defaultCommissionRate;
+  const rate = raw === null || raw === "" || raw === undefined ? null : Number(raw) / 100;
+  if (rate !== null && (!Number.isFinite(rate) || rate < 0 || rate > 1)) {
+    throw new ApiError(400, "defaultCommissionRate must be a percentage between 0 and 100");
+  }
+
+  const profile = await prisma.professionalProfile.update({
+    where: { id: req.params.id },
+    data: { defaultCommissionRate: rate },
+  });
+  await writeAuditLog(req, {
+    action: "PROFESSIONAL_COMMISSION_RATE_UPDATED",
+    targetId: profile.id,
+    targetType: "ProfessionalProfile",
+    metadata: { defaultCommissionRate: rate },
+  });
+  res.json(apiResponse(true, profile, "Commission rate updated"));
+});
+
 export const portraitOfWeek = asyncHandler(async (req, res) => {
   const profile = await prisma.professionalProfile.update({
     where: { id: req.params.id },
@@ -546,6 +616,43 @@ export const updateBanner = asyncHandler(async (req, res) =>
 export const deleteBanner = asyncHandler(async (req, res) => {
   await prisma.homeBanner.delete({ where: { id: req.params.id } });
   res.json(apiResponse(true, null, "Banner deleted"));
+});
+
+export const listPages = asyncHandler(async (_req, res) => {
+  const pages = await prisma.page.findMany({ orderBy: { title: "asc" } });
+  res.json(apiResponse(true, pages, "Pages retrieved"));
+});
+
+const pageFields = (body: Record<string, unknown>) => ({
+  slug: body.slug as string | undefined,
+  title: body.title as string | undefined,
+  contentHtml: body.contentHtml as string | undefined,
+  metaTitle: body.metaTitle as string | undefined,
+  metaDescription: body.metaDescription as string | undefined,
+  isPublished: body.isPublished as boolean | undefined,
+});
+
+export const createPage = asyncHandler(async (req, res) => {
+  const page = await prisma.page.create({
+    data: { ...pageFields(req.body), updatedById: req.user!.id } as never,
+  });
+  await writeAuditLog(req, { action: "PAGE_CREATED", targetId: page.id, targetType: "Page" });
+  res.status(201).json(apiResponse(true, page, "Page created"));
+});
+
+export const updatePage = asyncHandler(async (req, res) => {
+  const page = await prisma.page.update({
+    where: { id: req.params.id },
+    data: { ...pageFields(req.body), updatedById: req.user!.id },
+  });
+  await writeAuditLog(req, { action: "PAGE_UPDATED", targetId: page.id, targetType: "Page" });
+  res.json(apiResponse(true, page, "Page updated"));
+});
+
+export const deletePage = asyncHandler(async (req, res) => {
+  await prisma.page.delete({ where: { id: req.params.id } });
+  await writeAuditLog(req, { action: "PAGE_DELETED", targetId: req.params.id, targetType: "Page" });
+  res.json(apiResponse(true, null, "Page deleted"));
 });
 
 export const updateConfig = asyncHandler(async (req, res) => {

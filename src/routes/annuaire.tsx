@@ -1,8 +1,10 @@
 ﻿import { createFileRoute } from "@tanstack/react-router";
+import { Grid2X2, Map as MapIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { ProfessionalCard } from "@/components/shared/ProfessionalCard";
+import { LeafletMap, type MapMarker } from "@/components/shared/LeafletMap";
 import { professionals as fallbackProfessionals } from "@/data/professionals";
 import type { Professional } from "@/types";
 import { getProfessionals } from "@/lib/api/catalog";
@@ -29,6 +31,7 @@ function Annuaire() {
   const [country, setCountry] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
 
   const query = useMemo(() => {
     const params = new URLSearchParams();
@@ -73,6 +76,22 @@ function Annuaire() {
       });
     },
     [country, items, search, specialty, verifiedOnly],
+  );
+
+  const mapMarkers = useMemo<MapMarker[]>(
+    () =>
+      filteredItems
+        .filter((professional): professional is Professional & { latitude: number; longitude: number } =>
+          typeof professional.latitude === "number" && typeof professional.longitude === "number",
+        )
+        .map((professional) => ({
+          id: professional.id,
+          lat: professional.latitude,
+          lng: professional.longitude,
+          label: professional.name,
+          href: `/pro/${professional.id}`,
+        })),
+    [filteredItems],
   );
 
   const hasActiveFilters = Boolean(search || specialty || country || verifiedOnly);
@@ -177,18 +196,44 @@ function Annuaire() {
               </span>
               {hasActiveFilters && !isLoading ? " correspondent à vos filtres" : " disponibles"}
             </p>
+            <div className="flex gap-1 rounded-full border border-[var(--brand-border)] bg-white p-1">
+              <button
+                type="button"
+                onClick={() => setViewMode("grid")}
+                className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold ${viewMode === "grid" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-secondary)]"}`}
+              >
+                <Grid2X2 size={14} /> Liste
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("map")}
+                className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold ${viewMode === "map" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-secondary)]"}`}
+              >
+                <MapIcon size={14} /> Carte
+              </button>
+            </div>
           </div>
           {error && (
             <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] text-amber-800">
               {error}
             </p>
           )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredItems.map((professional) => (
-              <ProfessionalCard key={professional.id} pro={professional} />
-            ))}
-          </div>
-          {!isLoading && filteredItems.length === 0 && (
+          {viewMode === "map" ? (
+            mapMarkers.length > 0 ? (
+              <LeafletMap markers={mapMarkers} heightClassName="h-[520px]" />
+            ) : (
+              <div className="rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center text-[13px] text-[var(--color-text-muted)]">
+                Aucun praticien affiché ne possède de localisation exacte pour l'instant.
+              </div>
+            )
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {filteredItems.map((professional) => (
+                <ProfessionalCard key={professional.id} pro={professional} />
+              ))}
+            </div>
+          )}
+          {viewMode === "grid" && !isLoading && filteredItems.length === 0 && (
             <div className="mt-6 rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
               <p className="font-bold">Aucun praticien trouvé</p>
               <button

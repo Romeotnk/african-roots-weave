@@ -7,7 +7,14 @@ import { uploadBufferToCloudinary } from "../services/cloudinary.service.js";
 import { verifyTurnstile } from "../services/turnstile.service.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiResponse } from "../utils/apiResponse.js";
-import { clearRefreshCookie, setRefreshCookie } from "../utils/cookies.js";
+import {
+  CSRF_COOKIE_NAME,
+  CSRF_HEADER_NAME,
+  clearCsrfCookie,
+  clearRefreshCookie,
+  setCsrfCookie,
+  setRefreshCookie,
+} from "../utils/cookies.js";
 import { ApiError } from "../utils/errors.js";
 import { generateReferralCode, hashToken, randomToken } from "../utils/random.js";
 import {
@@ -208,14 +215,22 @@ export const login = asyncHandler(async (req, res) => {
     throw new ApiError(403, user.banReason ?? "Account unavailable");
   }
 
+  if (!user.isEmailVerified) {
+    throw new ApiError(
+      403,
+      "Veuillez vérifier votre adresse email avant de vous connecter. Utilisez le lien 'Renvoyer l'email de vérification' si nécessaire.",
+    );
+  }
+
   await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
 
   const accessToken = createAccessTokenForUser(user);
   const refreshToken = await createRefreshTokenForUser(user.id);
   setRefreshCookie(res, refreshToken);
+  const csrfToken = setCsrfCookie(res);
 
   const { passwordHash: _passwordHash, ...safeUser } = user;
-  res.json(apiResponse(true, { accessToken, user: safeUser }, "Login successful"));
+  res.json(apiResponse(true, { accessToken, user: safeUser, csrfToken }, "Login successful"));
 });
 
 
@@ -402,9 +417,10 @@ export const supabaseAuth = asyncHandler(async (req, res) => {
   const accessToken = createAccessTokenForUser(user);
   const refreshToken = await createRefreshTokenForUser(user.id);
   setRefreshCookie(res, refreshToken);
+  const csrfToken = setCsrfCookie(res);
 
   const { isActive: _isActive, isBanned: _isBanned, banReason: _banReason, banExpiresAt: _banExpiresAt, ...safeUser } = user;
-  res.json(apiResponse(true, { accessToken, user: safeUser }, "Login successful"));
+  res.json(apiResponse(true, { accessToken, user: safeUser, csrfToken }, "Login successful"));
 });
 
 /**
@@ -421,20 +437,32 @@ export const refresh = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Refresh token required");
   }
 
+  // Double-submit CSRF check: the refresh cookie alone can be replayed by a
+  // cross-site request (it's sameSite:"none" in production for cross-origin
+  // use), so also require a header that echoes a second, non-httpOnly
+  // cookie a cross-site attacker can trigger sending but never read.
+  const csrfCookie = req.cookies[CSRF_COOKIE_NAME];
+  const csrfHeader = req.headers[CSRF_HEADER_NAME];
+  if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
+    throw new ApiError(403, "Invalid CSRF token");
+  }
+
   const payload = verifyRefreshToken(refreshToken);
   const [tokenId, rawToken] = String(payload.tokenId).split(".");
   const rotation = await rotateRefreshToken(payload.sub, tokenId, rawToken);
 
   if (!rotation) {
     clearRefreshCookie(res);
+    clearCsrfCookie(res);
     throw new ApiError(401, "Invalid refresh token");
   }
 
   setRefreshCookie(res, rotation.refreshToken);
+  const csrfToken = setCsrfCookie(res);
   res.json(
     apiResponse(
       true,
-      { accessToken: rotation.accessToken, user: rotation.user },
+      { accessToken: rotation.accessToken, user: rotation.user, csrfToken },
       "Token refreshed",
     ),
   );
@@ -634,6 +662,7 @@ export const changePassword = asyncHandler(async (req, res) => {
   ]);
 
   clearRefreshCookie(res);
+  clearCsrfCookie(res);
   res.json(apiResponse(true, null, "Password changed successfully"));
 });
 
@@ -660,6 +689,7 @@ export const logout = asyncHandler(async (req, res) => {
   }
 
   clearRefreshCookie(res);
+  clearCsrfCookie(res);
   res.json(apiResponse(true, null, "Logged out"));
 });
 
@@ -693,6 +723,32 @@ export const verifyEmail = asyncHandler(async (req, res) => {
   ]);
 
   res.json(apiResponse(true, null, "Email verified"));
+});
+
+/**
+ * POST /api/auth/resend-verification
+ *
+ * Re-sends the verification email when the account exists and isn't
+ * verified yet. Always responds with the same generic message so this
+ * endpoint can't be used to enumerate registered emails.
+ */
+export const resendVerificationEmail = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, email: true, isEmailVerified: true },
+  });
+
+  if (user && !user.isEmailVerified) {
+    try {
+      const verificationUrl = await createEmailVerification(user.id);
+      await sendVerificationEmail(user.email, verificationUrl);
+    } catch (error) {
+      console.error("Verification email resend failed:", error);
+    }
+  }
+
+  res.json(apiResponse(true, null, "If the email exists and isn't verified yet, a new link has been sent"));
 });
 
 /**

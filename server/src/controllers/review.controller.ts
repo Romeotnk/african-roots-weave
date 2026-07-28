@@ -33,7 +33,23 @@ const resolveTargetOwner = async (targetType: ReviewTarget, targetId: string): P
     if (!formation) throw new ApiError(404, "Formation not found");
     return formation.createdById;
   }
+  if (targetType === "BUYER") {
+    const buyer = await prisma.user.findUnique({ where: { id: targetId }, select: { id: true } });
+    if (!buyer) throw new ApiError(404, "Buyer not found");
+    return buyer.id;
+  }
   return null;
+};
+
+// A seller may only rate a buyer they actually completed a sale with —
+// otherwise BUYER reviews would be an open "rate anyone" tool with no
+// relationship to vouch for it.
+const hasDeliveredOrderWith = async (sellerId: string, buyerId: string) => {
+  const order = await prisma.order.findFirst({
+    where: { sellerId, buyerId, status: "DELIVERED" },
+    select: { id: true },
+  });
+  return Boolean(order);
 };
 
 export const createReview = asyncHandler(async (req, res) => {
@@ -49,6 +65,10 @@ export const createReview = asyncHandler(async (req, res) => {
   const ownerId = await resolveTargetOwner(targetType, targetId);
   if (ownerId && ownerId === req.user.id) {
     throw new ApiError(400, "You cannot review your own listing or profile");
+  }
+
+  if (targetType === "BUYER" && !(await hasDeliveredOrderWith(req.user.id, targetId))) {
+    throw new ApiError(403, "You can only rate a buyer after a delivered order with them");
   }
 
   const review = await prisma.review.upsert({

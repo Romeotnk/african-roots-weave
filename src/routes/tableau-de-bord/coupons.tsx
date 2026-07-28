@@ -1,19 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-import { Copy, Percent, Plus, Search, Tag, Trash2 } from "lucide-react";
+import { Copy, Loader2, Percent, Plus, Search, Tag } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
-
-type Coupon = {
-  id: string;
-  code: string;
-  discount: number;
-  usageLimit: number;
-  used: number;
-  expiresAt: string;
-  active: boolean;
-};
+import { useCoupons, useCreateCoupon, useUpdateCoupon } from "@/hooks/useCouponsApi";
 
 type CouponForm = {
   code: string;
@@ -22,12 +13,6 @@ type CouponForm = {
   expiresAt: string;
 };
 
-const initialCoupons: Coupon[] = [
-  { id: "c-1", code: "BIENVENUE10", discount: 10, usageLimit: 100, used: 24, expiresAt: "31/08/2026", active: true },
-  { id: "c-2", code: "THERAPIE15", discount: 15, usageLimit: 40, used: 9, expiresAt: "15/09/2026", active: true },
-  { id: "c-3", code: "ETE2026", discount: 20, usageLimit: 20, used: 20, expiresAt: "30/07/2026", active: false },
-];
-
 const emptyForm: CouponForm = {
   code: "",
   discount: "",
@@ -35,8 +20,14 @@ const emptyForm: CouponForm = {
   expiresAt: "",
 };
 
+const formatDate = (value: string | null) => (value ? new Date(value).toLocaleDateString("fr-FR") : "Sans expiration");
+
 function CouponsPage() {
-  const [coupons, setCoupons] = useState(initialCoupons);
+  const { data, isLoading, isError } = useCoupons();
+  const createCoupon = useCreateCoupon();
+  const updateCoupon = useUpdateCoupon();
+  const coupons = data?.coupons ?? [];
+
   const [form, setForm] = useState(emptyForm);
   const [query, setQuery] = useState("");
   const [message, setMessage] = useState("");
@@ -47,10 +38,10 @@ function CouponsPage() {
     return coupons.filter((coupon) => coupon.code.toLowerCase().includes(normalizedQuery));
   }, [coupons, query]);
 
-  const activeCount = coupons.filter((coupon) => coupon.active).length;
-  const totalUses = coupons.reduce((sum, coupon) => sum + coupon.used, 0);
+  const activeCount = coupons.filter((coupon) => coupon.isActive).length;
+  const totalUses = coupons.reduce((sum, coupon) => sum + coupon.usedCount, 0);
 
-  const createCoupon = (event: FormEvent<HTMLFormElement>) => {
+  const handleCreate = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setMessage("");
     setError("");
@@ -59,50 +50,47 @@ function CouponsPage() {
     const discount = Number(form.discount);
     const usageLimit = Number(form.usageLimit);
 
-    if (code.length < 4) {
-      setError("Le code doit contenir au moins 4 caracteres.");
+    if (code.length < 3) {
+      setError("Le code doit contenir au moins 3 caracteres.");
       return;
     }
-
-    if (coupons.some((coupon) => coupon.code === code)) {
-      setError("Ce code existe deja.");
-      return;
-    }
-
     if (!Number.isFinite(discount) || discount <= 0 || discount > 80) {
       setError("La remise doit etre comprise entre 1 et 80%.");
       return;
     }
-
-    if (!Number.isFinite(usageLimit) || usageLimit <= 0) {
+    if (form.usageLimit && (!Number.isFinite(usageLimit) || usageLimit <= 0)) {
       setError("Le nombre d'utilisations doit etre superieur a zero.");
       return;
     }
 
-    if (!form.expiresAt) {
-      setError("Ajoutez une date d'expiration.");
-      return;
-    }
-
-    const expiresAt = new Date(form.expiresAt).toLocaleDateString("fr-FR");
-    setCoupons((current) => [
-      { id: `c-${Date.now()}`, code, discount, usageLimit, used: 0, expiresAt, active: true },
-      ...current,
-    ]);
-    setForm(emptyForm);
-    setMessage("Coupon cree avec succes.");
+    createCoupon.mutate(
+      {
+        code,
+        discount,
+        isPercentage: true,
+        maxUses: form.usageLimit ? usageLimit : undefined,
+        expiresAt: form.expiresAt ? new Date(form.expiresAt).toISOString() : undefined,
+      },
+      {
+        onSuccess: () => {
+          setForm(emptyForm);
+          setMessage("Coupon cree avec succes.");
+        },
+        onError: (mutationError) => setError(mutationError instanceof Error ? mutationError.message : "Impossible de creer ce coupon."),
+      },
+    );
   };
 
-  const toggleCoupon = (id: string) => {
-    setCoupons((current) => current.map((coupon) => (coupon.id === id ? { ...coupon, active: !coupon.active } : coupon)));
-    setMessage("Statut du coupon mis a jour.");
+  const toggleCoupon = (id: string, isActive: boolean) => {
+    setMessage("");
     setError("");
-  };
-
-  const deleteCoupon = (id: string) => {
-    setCoupons((current) => current.filter((coupon) => coupon.id !== id));
-    setMessage("Coupon supprime.");
-    setError("");
+    updateCoupon.mutate(
+      { id, payload: { isActive: !isActive } },
+      {
+        onSuccess: () => setMessage("Statut du coupon mis a jour."),
+        onError: (mutationError) => setError(mutationError instanceof Error ? mutationError.message : "Impossible de mettre a jour ce coupon."),
+      },
+    );
   };
 
   const copyCode = async (code: string) => {
@@ -140,7 +128,7 @@ function CouponsPage() {
           </div>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-[360px_1fr]">
-            <form onSubmit={createCoupon} className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
+            <form onSubmit={handleCreate} className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
               <h2 className="text-[18px] font-bold">Nouveau coupon</h2>
               <Field label="Code">
                 <input
@@ -159,7 +147,7 @@ function CouponsPage() {
                   className="mt-2 h-11 w-full rounded-[8px] border border-[var(--brand-border-light)] px-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
                 />
               </Field>
-              <Field label="Nombre d'utilisations">
+              <Field label="Nombre d'utilisations (optionnel)">
                 <input
                   value={form.usageLimit}
                   onChange={(event) => setForm((current) => ({ ...current, usageLimit: event.target.value }))}
@@ -168,7 +156,7 @@ function CouponsPage() {
                   className="mt-2 h-11 w-full rounded-[8px] border border-[var(--brand-border-light)] px-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
                 />
               </Field>
-              <Field label="Expiration">
+              <Field label="Expiration (optionnel)">
                 <input
                   type="date"
                   value={form.expiresAt}
@@ -176,7 +164,7 @@ function CouponsPage() {
                   className="mt-2 h-11 w-full rounded-[8px] border border-[var(--brand-border-light)] px-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
                 />
               </Field>
-              <button type="submit" className="btn-primary mt-5 h-11 w-full text-[14px]">
+              <button type="submit" disabled={createCoupon.isPending} className="btn-primary mt-5 h-11 w-full text-[14px]">
                 <Plus size={17} /> Creer le coupon
               </button>
               {message && <p className="mt-4 rounded-[8px] bg-emerald-50 px-4 py-3 text-[13px] font-semibold text-emerald-700">{message}</p>}
@@ -195,7 +183,15 @@ function CouponsPage() {
               </label>
 
               <div className="mt-5 space-y-3">
-                {filteredCoupons.length === 0 ? (
+                {isLoading ? (
+                  <div className="flex items-center justify-center rounded-[8px] border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-10">
+                    <Loader2 className="animate-spin text-[var(--brand-primary)]" size={28} />
+                  </div>
+                ) : isError ? (
+                  <div className="rounded-[8px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
+                    Impossible de charger vos coupons pour le moment.
+                  </div>
+                ) : filteredCoupons.length === 0 ? (
                   <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-8 text-center">
                     <Tag className="mx-auto text-[var(--brand-primary)]" size={34} />
                     <h2 className="mt-4 text-[20px] font-bold">Aucun coupon trouve</h2>
@@ -208,23 +204,26 @@ function CouponsPage() {
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
                             <h2 className="text-[17px] font-extrabold tracking-[0.08em] text-[var(--color-text-primary)]">{coupon.code}</h2>
-                            <span className={`rounded-full px-3 py-1 text-[12px] font-bold ${coupon.active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
-                              {coupon.active ? "Actif" : "Inactif"}
+                            <span className={`rounded-full px-3 py-1 text-[12px] font-bold ${coupon.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
+                              {coupon.isActive ? "Actif" : "Inactif"}
                             </span>
                           </div>
                           <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">
-                            {coupon.discount}% - {coupon.used}/{coupon.usageLimit} utilisations - expire le {coupon.expiresAt}
+                            {coupon.discount}% - {coupon.usedCount}
+                            {coupon.maxUses ? `/${coupon.maxUses}` : ""} utilisations - expire le {formatDate(coupon.expiresAt)}
                           </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <button type="button" onClick={() => copyCode(coupon.code)} className="btn-secondary h-10 px-4 text-[13px]">
                             <Copy size={16} /> Copier
                           </button>
-                          <button type="button" onClick={() => toggleCoupon(coupon.id)} className="btn-secondary h-10 px-4 text-[13px]">
-                            {coupon.active ? "Desactiver" : "Activer"}
-                          </button>
-                          <button type="button" onClick={() => deleteCoupon(coupon.id)} className="inline-flex h-10 items-center gap-2 rounded-full bg-red-50 px-4 text-[13px] font-semibold text-red-700 hover:bg-red-100">
-                            <Trash2 size={16} /> Supprimer
+                          <button
+                            type="button"
+                            onClick={() => toggleCoupon(coupon.id, coupon.isActive)}
+                            disabled={updateCoupon.isPending}
+                            className="btn-secondary h-10 px-4 text-[13px]"
+                          >
+                            {coupon.isActive ? "Desactiver" : "Activer"}
                           </button>
                         </div>
                       </div>

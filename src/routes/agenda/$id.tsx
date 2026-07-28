@@ -51,6 +51,9 @@ function EventDetail() {
               <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/70">Accès rapide</p>
               <p className="mt-2 text-[20px] font-bold">Réserver votre place</p>
               <div className="mt-4 space-y-3">
+                {event.online && event.meetingUrl && (
+                  <a href={event.meetingUrl} target="_blank" rel="noreferrer" className="block rounded-full bg-[var(--brand-gold)] px-4 py-3 text-center font-semibold text-white">Rejoindre la visioconférence</a>
+                )}
                 <a href={`https://wa.me/22900000000?text=${encodeURIComponent(`Bonjour, je souhaite réserver une place pour ${event.title}`)}`} target="_blank" rel="noreferrer" className="block rounded-full bg-[#25D366] px-4 py-3 text-center font-semibold text-white">WhatsApp</a>
                 <Link to="/agenda" className="block rounded-full border border-white/20 px-4 py-3 text-center font-semibold text-white">Voir les autres événements</Link>
               </div>

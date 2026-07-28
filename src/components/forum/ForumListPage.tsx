@@ -4,11 +4,13 @@ import { Filter, Plus, RotateCcw } from "lucide-react";
 import { QuestionCard } from "@/components/shared/QuestionCard";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { SimplePager } from "@/components/shared/SimplePager";
-import { forumCategories, questions } from "@/data/questions";
-import { useForumQuestions } from "@/hooks/useForumApi";
+import { questions } from "@/data/questions";
+import { useForumCategories, useForumQuestions } from "@/hooks/useForumApi";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useDebounce } from "@/hooks/useDebounce";
 import { toQuestion, type BackendQuestion } from "@/lib/forumMappers";
+
+const severityOptions = ["Léger", "Modéré", "Sévère"];
 
 const tabs = [
   { id: "all", label: "Toutes" },
@@ -30,12 +32,19 @@ export function ForumListPage() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedTag, setSelectedTag] = useState("");
+  const [selectedSeverity, setSelectedSeverity] = useState("");
   const [sortBy, setSortBy] = useState("featured");
   const debouncedSearch = useDebounce(search, 300);
   const { user } = useAuth();
+  const categoriesQuery = useForumCategories();
+  const categories = categoriesQuery.data ?? [];
 
   const [page, setPage] = useState(1);
-  const questionsQuery = useForumQuestions(selectedCategory ? { category: selectedCategory, page } : { page });
+  const questionsQuery = useForumQuestions({
+    ...(selectedCategory ? { category: selectedCategory } : {}),
+    ...(selectedSeverity ? { customFields: { severite: selectedSeverity } } : {}),
+    page,
+  });
   const pagination = questionsQuery.data?.pagination;
   const apiQuestions = useMemo(
     () => ((questionsQuery.data?.questions ?? []) as BackendQuestion[]).map(toQuestion).filter((item): item is NonNullable<typeof item> => Boolean(item)),
@@ -68,11 +77,11 @@ export function ForumListPage() {
     });
   }, [activeTab, allQuestions, debouncedSearch, selectedCategory, selectedTag, sortBy, user]);
 
-  const hasFilters = Boolean(debouncedSearch || selectedCategory || selectedTag || activeTab !== "all" || sortBy !== "featured");
+  const hasFilters = Boolean(debouncedSearch || selectedCategory || selectedTag || selectedSeverity || activeTab !== "all" || sortBy !== "featured");
 
   useEffect(() => {
     setPage(1);
-  }, [selectedCategory]);
+  }, [selectedCategory, selectedSeverity]);
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">
@@ -97,13 +106,41 @@ export function ForumListPage() {
               <div className="space-y-4">
                 <div>
                   <label className="mb-2 block text-[12px] font-bold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Catégories</label>
-                  <div className="space-y-2">{forumCategories.map((category) => <button key={category.name} onClick={() => setSelectedCategory((current) => (current === category.name ? "" : category.name))} className={`w-full rounded-xl px-3 py-2 text-left text-[13px] font-semibold ${selectedCategory === category.name ? "bg-[var(--brand-primary)] text-white" : "bg-[var(--brand-surface-alt)]"}`}>{category.name}</button>)}</div>
+                  <div className="space-y-1">
+                    {categories.map((category) => (
+                      <div key={category.id}>
+                        <button
+                          onClick={() => setSelectedCategory((current) => (current === category.name ? "" : category.name))}
+                          className={`w-full rounded-xl px-3 py-2 text-left text-[13px] font-semibold ${selectedCategory === category.name ? "bg-[var(--brand-primary)] text-white" : "bg-[var(--brand-surface-alt)]"}`}
+                        >
+                          {category.name}
+                        </button>
+                        {category.children && category.children.length > 0 && (
+                          <div className="ml-3 mt-1 space-y-1 border-l border-[var(--brand-border-light)] pl-3">
+                            {category.children.map((child) => (
+                              <button
+                                key={child.id}
+                                onClick={() => setSelectedCategory((current) => (current === child.name ? "" : child.name))}
+                                className={`w-full rounded-lg px-3 py-1.5 text-left text-[12px] font-semibold ${selectedCategory === child.name ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-secondary)] hover:bg-[var(--brand-surface-alt)]"}`}
+                              >
+                                {child.name}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-2 block text-[12px] font-bold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Sévérité</label>
+                  <div className="flex flex-wrap gap-2">{severityOptions.map((severity) => <button key={severity} onClick={() => setSelectedSeverity((current) => (current === severity ? "" : severity))} className={`rounded-full px-2.5 py-1 text-[12px] font-semibold ${selectedSeverity === severity ? "bg-[var(--brand-primary)] text-white" : "bg-[var(--brand-surface-alt)] text-[var(--color-text-secondary)]"}`}>{severity}</button>)}</div>
                 </div>
                 <div>
                   <label className="mb-2 block text-[12px] font-bold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Tags</label>
                   <div className="flex flex-wrap gap-2">{allTags.map((tag) => <button key={tag} onClick={() => setSelectedTag((current) => (current === tag ? "" : tag))} className={`rounded-full px-2.5 py-1 text-[12px] font-semibold ${selectedTag === tag ? "bg-[var(--brand-primary)] text-white" : "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]"}`}>#{tag}</button>)}</div>
                 </div>
-                {hasFilters && <button onClick={() => { setActiveTab("all"); setSearch(""); setSelectedCategory(""); setSelectedTag(""); setSortBy("featured"); }} className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[13px] font-semibold"><RotateCcw size={15} /> Effacer les filtres</button>}
+                {hasFilters && <button onClick={() => { setActiveTab("all"); setSearch(""); setSelectedCategory(""); setSelectedTag(""); setSelectedSeverity(""); setSortBy("featured"); }} className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[13px] font-semibold"><RotateCcw size={15} /> Effacer les filtres</button>}
               </div>
             </div>
           </aside>

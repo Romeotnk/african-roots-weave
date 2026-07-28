@@ -3,16 +3,30 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
+  Bookmark,
   Check,
   Eye,
   Flag,
   MessageCircle,
+  Pencil,
   Star,
 } from "lucide-react";
 import { questions } from "@/data/questions";
-import { useAcceptForumAnswer, useCreateForumAnswer, useForumQuestion, useForumReport, useForumVote } from "@/hooks/useForumApi";
+import {
+  useAcceptForumAnswer,
+  useCreateForumAnswer,
+  useCreateForumComment,
+  useForumQuestion,
+  useForumReport,
+  useForumVote,
+  useMyFavorites,
+  useToggleFavorite,
+  useUpdateForumComment,
+} from "@/hooks/useForumApi";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { toQuestion, type BackendQuestion } from "@/lib/forumMappers";
+import { toComments, toQuestion, type BackendQuestion } from "@/lib/forumMappers";
+
+const moderatorRoles = ["admin", "super_admin", "moderator"];
 
 export const Route = createFileRoute("/forum/$id")({
   head: () => ({ meta: [{ title: "Question forum - IWOSAN" }] }),
@@ -37,32 +51,63 @@ function QuestionDetail() {
   const answerMutation = useCreateForumAnswer();
   const acceptMutation = useAcceptForumAnswer();
   const reportMutation = useForumReport();
+  const commentMutation = useCreateForumComment();
+  const updateCommentMutation = useUpdateForumComment();
+  const favoritesQuery = useMyFavorites();
+  const toggleFavoriteMutation = useToggleFavorite();
 
   const apiQuestion = useMemo(() => {
     const data = questionQuery.data as (BackendQuestion & { authorId?: string }) | undefined;
     return data ? toQuestion(data) : null;
   }, [questionQuery.data]);
   const question = apiQuestion ?? questions.find((item) => item.id === id) ?? questions[0];
+  const comments = useMemo(
+    () => toComments((questionQuery.data as BackendQuestion | undefined)?.comments),
+    [questionQuery.data],
+  );
 
   useEffect(() => {
     if (question?.title) document.title = `${question.title} - IWOSAN`;
   }, [question?.title]);
   const isRealQuestion = Boolean(apiQuestion);
   const isAuthor = isRealQuestion && Boolean(user) && question.authorId === user?.id;
+  const isModerator = Boolean(user) && moderatorRoles.includes(user?.role ?? "");
+  const isFavorited = ((favoritesQuery.data ?? []) as { id: string }[]).some((item) => item.id === id);
 
   const sortedAnswers = useMemo(
     () => [...(question.answerItems ?? [])].sort((a, b) => Number(b.accepted) - Number(a.accepted) || b.votes - a.votes),
     [question.answerItems],
   );
-  const [followed, setFollowed] = useState(Boolean(question.followed));
   const [reported, setReported] = useState(false);
   const [reportedAnswerIds, setReportedAnswerIds] = useState<string[]>([]);
   const [answer, setAnswer] = useState("");
   const [answerSubmitted, setAnswerSubmitted] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [commentError, setCommentError] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentText, setEditingCommentText] = useState("");
 
   const voteQuestion = (value: 1 | -1) => {
     if (!isRealQuestion) return;
     voteMutation.mutate({ targetId: id, targetType: "QUESTION", value });
+  };
+
+  const voteComment = (commentId: string, value: 1 | -1) => {
+    if (!isRealQuestion) return;
+    voteMutation.mutate({ targetId: commentId, targetType: "COMMENT", value });
+  };
+
+  const startEditComment = (commentId: string, currentContent: string) => {
+    setEditingCommentId(commentId);
+    setEditingCommentText(currentContent);
+  };
+
+  const submitEditComment = () => {
+    if (!editingCommentId || editingCommentText.trim().length < 3) return;
+    updateCommentMutation.mutate(
+      { id: editingCommentId, content: editingCommentText.trim() },
+      { onSuccess: () => setEditingCommentId(null) },
+    );
   };
 
   const voteAnswer = (answerId: string, value: 1 | -1) => {
@@ -78,6 +123,19 @@ function QuestionDetail() {
   const reportAnswer = (answerId: string) => {
     setReportedAnswerIds((current) => (current.includes(answerId) ? current : [...current, answerId]));
     if (isRealQuestion) reportMutation.mutate({ targetId: answerId, targetType: "ANSWER" });
+  };
+
+  const submitComment = () => {
+    setCommentError("");
+    if (!isRealQuestion) return;
+    if (commentText.trim().length < 3) {
+      setCommentError("Le commentaire doit contenir au moins 3 caractères.");
+      return;
+    }
+    commentMutation.mutate(
+      { targetId: id, targetType: "QUESTION", content: commentText.trim() },
+      { onSuccess: () => setCommentText("") },
+    );
   };
 
   const submitAnswer = () => {
@@ -170,6 +228,95 @@ function QuestionDetail() {
                 </span>
               ))}
             </div>
+
+            {isRealQuestion && (
+              <div className="mt-6 border-t border-[var(--brand-border-light)] pt-5">
+                <h3 className="flex items-center gap-2 text-[15px] font-bold">
+                  <MessageCircle size={16} /> {comments.length} commentaire{comments.length > 1 ? "s" : ""}
+                </h3>
+                <div className="mt-3 space-y-3">
+                  {comments.map((comment) => {
+                    const canEditComment = Boolean(user) && (comment.authorId === user?.id || isModerator);
+                    return (
+                      <div key={comment.id} className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 text-[12px] text-[var(--color-text-muted)]">
+                            <strong className="text-[var(--color-text-primary)]">{comment.authorName}</strong>
+                            <span>{formatDate(comment.date)}</span>
+                          </div>
+                          {canEditComment && editingCommentId !== comment.id && (
+                            <button
+                              type="button"
+                              onClick={() => startEditComment(comment.id, comment.content)}
+                              className="inline-flex items-center gap-1 text-[12px] font-semibold text-[var(--brand-primary)]"
+                            >
+                              <Pencil size={12} /> Modifier
+                            </button>
+                          )}
+                        </div>
+                        {editingCommentId === comment.id ? (
+                          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                            <input
+                              value={editingCommentText}
+                              onChange={(event) => setEditingCommentText(event.target.value)}
+                              className="h-9 flex-1 rounded-lg border border-[var(--brand-border)] px-3 text-[13px]"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={submitEditComment}
+                                disabled={updateCommentMutation.isPending}
+                                className="h-9 rounded-full bg-[var(--brand-primary)] px-3 text-[12px] font-semibold text-white disabled:opacity-50"
+                              >
+                                Enregistrer
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingCommentId(null)}
+                                className="h-9 rounded-full border border-[var(--brand-border)] px-3 text-[12px] font-semibold"
+                              >
+                                Annuler
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="mt-1 text-[var(--color-text-secondary)]">{comment.content}</p>
+                        )}
+                        <div className="mt-2 flex items-center gap-2">
+                          <button type="button" onClick={() => voteComment(comment.id, 1)} aria-label="Voter pour ce commentaire" className="flex h-6 w-6 items-center justify-center rounded-full border border-[var(--brand-border)]">
+                            <ArrowUp size={12} />
+                          </button>
+                          <span className="text-[12px] font-semibold text-[var(--color-text-muted)]">{comment.votes}</span>
+                          <button type="button" onClick={() => voteComment(comment.id, -1)} aria-label="Voter contre ce commentaire" className="flex h-6 w-6 items-center justify-center rounded-full border border-[var(--brand-border)]">
+                            <ArrowDown size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                  <input
+                    value={commentText}
+                    onChange={(event) => {
+                      setCommentText(event.target.value);
+                      setCommentError("");
+                    }}
+                    placeholder="Ajouter un commentaire..."
+                    className="h-10 flex-1 rounded-lg border border-[var(--brand-border)] px-3 text-[13px]"
+                  />
+                  <button
+                    type="button"
+                    onClick={submitComment}
+                    disabled={commentMutation.isPending}
+                    className="h-10 shrink-0 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-50"
+                  >
+                    Commenter
+                  </button>
+                </div>
+                {commentError && <p className="mt-2 text-[12px] font-semibold text-red-700">{commentError}</p>}
+              </div>
+            )}
           </article>
 
           <section className="space-y-4">
@@ -264,12 +411,14 @@ function QuestionDetail() {
         <aside className="h-fit space-y-3 rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
           <button
             type="button"
-            onClick={() => setFollowed((current) => !current)}
-            className={`h-11 w-full rounded-full text-[13px] font-semibold ${
-              followed ? "bg-[var(--brand-primary)] text-white" : "border border-[var(--brand-border)]"
+            disabled={!isRealQuestion || toggleFavoriteMutation.isPending}
+            onClick={() => toggleFavoriteMutation.mutate({ targetId: id })}
+            className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-full text-[13px] font-semibold disabled:opacity-50 ${
+              isFavorited ? "bg-[var(--brand-primary)] text-white" : "border border-[var(--brand-border)]"
             }`}
           >
-            {followed ? "Question suivie" : "Suivre"}
+            <Bookmark size={15} className={isFavorited ? "fill-current" : undefined} />
+            {isFavorited ? "Dans mes favoris" : "Ajouter aux favoris"}
           </button>
           <button
             type="button"

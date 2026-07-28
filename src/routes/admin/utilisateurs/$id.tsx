@@ -1,8 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
-import { useAdminKycActions, useAdminKycDocuments, useAdminUser, useAdminUserActions } from "@/hooks/useAdminApi";
+import {
+  useAdminKycActions,
+  useAdminKycDocuments,
+  useAdminPermissions,
+  useAdminUser,
+  useAdminUserActions,
+  useUpdateUserPermissionOverrides,
+} from "@/hooks/useAdminApi";
+import type { AdminUser } from "@/lib/api/admin";
 
 export const Route = createFileRoute("/admin/utilisateurs/$id")({
   head: () => ({ meta: [{ title: "Fiche utilisateur admin - IWOSAN" }] }),
@@ -23,7 +31,8 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 function AdminUserDetail() {
   const { id } = Route.useParams();
   const userQuery = useAdminUser(id);
-  const { ban, unban, updateRole } = useAdminUserActions();
+  const { ban, unban, updateRole, updateCommissionRate } = useAdminUserActions();
+  const [commissionRateDraft, setCommissionRateDraft] = useState("");
   const { approve: approveKyc, reject: rejectKyc } = useAdminKycActions();
   const kycDocsQuery = useAdminKycDocuments(id, userQuery.data?.data?.kycStatus !== "PENDING" && Boolean(userQuery.data?.data));
   const [banOpen, setBanOpen] = useState(false);
@@ -31,6 +40,11 @@ function AdminUserDetail() {
   const [notice, setNotice] = useState("");
 
   const user = userQuery.data?.data;
+
+  useEffect(() => {
+    const rate = user?.professionalProfile?.defaultCommissionRate;
+    setCommissionRateDraft(rate != null ? String(Math.round(rate * 100)) : "");
+  }, [user?.professionalProfile?.defaultCommissionRate]);
 
   if (userQuery.isLoading) {
     return (
@@ -92,6 +106,37 @@ function AdminUserDetail() {
                 Appliquer
               </button>
             </div>
+
+            {user.professionalProfile && (
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  placeholder="Taux commission négocié (%)"
+                  value={commissionRateDraft}
+                  onChange={(event) => setCommissionRateDraft(event.target.value)}
+                  className="h-10 flex-1 rounded-lg border border-white/10 bg-[#1a1a2e] px-3 text-[13px] text-white"
+                />
+                <button
+                  type="button"
+                  disabled={updateCommissionRate.isPending}
+                  onClick={() =>
+                    updateCommissionRate.mutate(
+                      {
+                        profileId: user.professionalProfile!.id,
+                        userId: user.id,
+                        defaultCommissionRate: commissionRateDraft.trim() === "" ? null : Number(commissionRateDraft),
+                      },
+                      { onSuccess: () => setNotice("Taux de commission négocié mis à jour.") },
+                    )
+                  }
+                  className="rounded-lg bg-emerald-400 px-4 text-[13px] font-bold text-[#111827] disabled:opacity-50"
+                >
+                  Enregistrer
+                </button>
+              </div>
+            )}
 
             {user.isBanned ? (
               <button
@@ -198,6 +243,8 @@ function AdminUserDetail() {
               })()}
             </AdminCard>
           )}
+
+          <UserPermissionsPanel user={user} />
         </div>
       </div>
 
@@ -217,5 +264,84 @@ function AdminUserDetail() {
         }}
       />
     </AdminLayout>
+  );
+}
+
+function UserPermissionsPanel({ user }: { user: AdminUser }) {
+  const permissionsQuery = useAdminPermissions();
+  const updateOverrides = useUpdateUserPermissionOverrides();
+  const [effective, setEffective] = useState<Set<string>>(new Set());
+  const [notice, setNotice] = useState("");
+
+  const catalog = permissionsQuery.data?.data?.catalog ?? [];
+  const roleDefaults = useMemo(
+    () => new Set(permissionsQuery.data?.data?.rolePermissions?.[user.role] ?? []),
+    [permissionsQuery.data, user.role],
+  );
+
+  useEffect(() => {
+    const overrides = user.permissionOverrides;
+    const next = new Set(roleDefaults);
+    overrides?.grant?.forEach((permission) => next.add(permission));
+    overrides?.revoke?.forEach((permission) => next.delete(permission));
+    setEffective(next);
+  }, [roleDefaults, user.permissionOverrides]);
+
+  if (user.role === "SUPER_ADMIN") {
+    return (
+      <AdminCard>
+        <h2 className="mb-2 text-[18px] font-bold text-white">Permissions individuelles</h2>
+        <p className="text-[13px] text-slate-400">Le rôle Super admin a toujours accès à toutes les permissions.</p>
+      </AdminCard>
+    );
+  }
+
+  const toggle = (permission: string) => {
+    setEffective((current) => {
+      const next = new Set(current);
+      if (next.has(permission)) next.delete(permission);
+      else next.add(permission);
+      return next;
+    });
+  };
+
+  const save = () => {
+    const grant = catalog.filter((entry) => effective.has(entry.key) && !roleDefaults.has(entry.key)).map((entry) => entry.key);
+    const revoke = catalog.filter((entry) => !effective.has(entry.key) && roleDefaults.has(entry.key)).map((entry) => entry.key);
+    updateOverrides.mutate(
+      { id: user.id, grant, revoke },
+      { onSuccess: () => setNotice("Permissions individuelles mises à jour.") },
+    );
+  };
+
+  return (
+    <AdminCard>
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h2 className="text-[18px] font-bold text-white">Permissions individuelles</h2>
+          <p className="mt-1 text-[12px] text-slate-500">
+            Cases pré-cochées = accordées par le rôle « {user.role} ». Décochez ou cochez pour composer un accès personnalisé.
+          </p>
+        </div>
+        <button
+          type="button"
+          disabled={updateOverrides.isPending || permissionsQuery.isLoading}
+          onClick={save}
+          className="rounded-lg bg-emerald-400 px-4 py-2 text-[13px] font-bold text-[#111827] disabled:opacity-50"
+        >
+          {updateOverrides.isPending ? "Enregistrement..." : "Enregistrer"}
+        </button>
+      </div>
+      {notice && <p className="mb-3 text-[12px] font-semibold text-emerald-300">{notice}</p>}
+      {permissionsQuery.isLoading && <p className="text-[13px] text-slate-400">Chargement...</p>}
+      <div className="grid gap-2 md:grid-cols-2">
+        {catalog.map((entry) => (
+          <label key={entry.key} className="flex items-center gap-2 text-[13px] text-slate-300">
+            <input type="checkbox" checked={effective.has(entry.key)} onChange={() => toggle(entry.key)} className="h-4 w-4 accent-emerald-400" />
+            {entry.label}
+          </label>
+        ))}
+      </div>
+    </AdminCard>
   );
 }

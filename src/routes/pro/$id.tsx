@@ -6,6 +6,7 @@ import { useFormations } from "@/hooks/useEventsFormationsApi";
 import { RatingStars } from "@/components/shared/RatingStars";
 import { PractitionerAvatar } from "@/components/shared/PractitionerAvatar";
 import { ProductCard } from "@/components/shared/ProductCard";
+import { BookingWidget } from "@/components/shared/BookingWidget";
 
 export const Route = createFileRoute("/pro/$id")({
   head: () => ({ meta: [{ title: "Vitrine professionnelle - IWOSAN" }] }),
@@ -27,7 +28,7 @@ function ProfessionalShowcase() {
   const professionalQuery = useProfessional(id);
   const productsQuery = useProducts(useMemo(() => new URLSearchParams({ sellerId: id }), [id]));
   const formationsQuery = useFormations(useMemo(() => ({ createdById: id }), [id]));
-  const [tab, setTab] = useState<"about" | "location" | "products" | "training">("about");
+  const [tab, setTab] = useState<"about" | "location" | "products" | "training" | "booking">("about");
 
   // "Réserver ce produit" lands here with a prefilled message — the
   // conversation must open automatically, not require an extra click.
@@ -122,6 +123,7 @@ function ProfessionalShowcase() {
                 ["location", "Localisation"],
                 ["products", `Ses produits & services (${products.length})`],
                 ["training", `Ses formations (${formations.length})`],
+                ...(pro.serviceBookingEnabled ? [["booking", "Réserver"]] : []),
               ].map(([key, label]) => (
                 <button key={key} onClick={() => setTab(key as typeof tab)} className={`rounded-full px-4 py-2 text-[13px] font-semibold ${tab === key ? "bg-[var(--brand-primary)] text-white" : "bg-white border border-[var(--brand-border)]"}`}>{label}</button>
               ))}
@@ -195,6 +197,10 @@ function ProfessionalShowcase() {
                   <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">Aucune formation publiée pour le moment.</p>
                 )}
               </section>
+            )}
+
+            {tab === "booking" && pro.serviceBookingEnabled && (
+              <BookingWidget professionalId={id} professionalName={pro.name} />
             )}
           </div>
 

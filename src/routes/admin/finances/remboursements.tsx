@@ -50,11 +50,11 @@ function AdminRemboursements() {
         <div className="overflow-x-auto rounded-[12px] border border-white/10">
           <table className="w-full min-w-[880px] text-left text-[13px]">
             <thead className="bg-white/10 text-slate-300">
-              <tr>{["Commande", "Acheteur", "Vendeur", "Montant", "Motif", "Statut", "Actions"].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
+              <tr>{["Commande", "Acheteur", "Vendeur", "Montant", "Motif", "Accusé vendeur", "Statut", "Actions"].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
             </thead>
             <tbody>
               {orders.length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-6 text-center text-slate-400">Aucune demande dans cette file.</td></tr>
+                <tr><td colSpan={8} className="px-4 py-6 text-center text-slate-400">Aucune demande dans cette file.</td></tr>
               )}
               {orders.map((order) => (
                 <tr key={order.id} className="border-t border-white/10">
@@ -63,6 +63,13 @@ function AdminRemboursements() {
                   <td className="px-4 py-3 text-slate-200">{order.seller.firstName} {order.seller.lastName}</td>
                   <td className="px-4 py-3 text-slate-200">{Number(order.totalAmount).toLocaleString("fr-FR")} FCFA</td>
                   <td className="max-w-[220px] truncate px-4 py-3 text-slate-400">{order.disputeReason ?? "—"}</td>
+                  <td className="max-w-[200px] px-4 py-3 text-slate-400" title={order.sellerRefundNote ?? undefined}>
+                    {order.sellerAcknowledgedAt ? (
+                      <span className="text-emerald-300">✓ {new Date(order.sellerAcknowledgedAt).toLocaleDateString("fr-FR")}</span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <span className="rounded-full bg-white/10 px-2 py-1 text-[11px] font-bold text-slate-300">
                       {order.refundStatus ? statusLabel[order.refundStatus] : "—"}

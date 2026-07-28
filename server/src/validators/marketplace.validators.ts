@@ -24,6 +24,7 @@ export const createProductValidator = [
   body("commissionRate").optional().isFloat({ min: 0, max: 1 }),
   body("downloadLimit").optional().isInt({ min: 1 }),
   body("fileUrl").optional().isURL(),
+  body("isQuoteOnly").optional().isBoolean(),
 ];
 
 export const updateProductValidator = [
@@ -41,6 +42,7 @@ export const updateProductValidator = [
   body("commissionRate").optional().isFloat({ min: 0, max: 1 }),
   body("downloadLimit").optional().isInt({ min: 1 }),
   body("fileUrl").optional().isURL(),
+  body("isQuoteOnly").optional().isBoolean(),
 ];
 
 export const idParamValidator = [param("id").isString().notEmpty()];

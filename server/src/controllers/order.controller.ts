@@ -1,10 +1,11 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import { prisma } from "../config/db.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
-import { getCommissionRates } from "../utils/commissionConfig.js";
+import { getCommissionRates, resolveProductCommissionRate } from "../utils/commissionConfig.js";
 import { payoutOrderCommissions } from "../services/mlm.service.js";
+import { createNotification } from "../services/notification.service.js";
 
 export const listMyOrders = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
@@ -46,9 +47,11 @@ export const createOrder = asyncHandler(async (req, res) => {
         price: true,
         stock: true,
         type: true,
+        category: true,
         isActive: true,
         isApproved: true,
         commissionRate: true,
+        seller: { select: { professionalProfile: { select: { defaultCommissionRate: true } } } },
       },
     });
 
@@ -70,8 +73,19 @@ export const createOrder = asyncHandler(async (req, res) => {
 
     const totalAmount = product.price.mul(quantity);
     const rates = await getCommissionRates(tx);
-    const commissionRate = product.commissionRate ?? rates.global;
+    const commissionRate = resolveProductCommissionRate(rates, product, product.seller.professionalProfile?.defaultCommissionRate);
     const commissionAmount = totalAmount.mul(commissionRate);
+
+    // An affiliate link only counts if it belongs to neither party in this
+    // sale — otherwise a seller (or the buyer themselves) could self-credit.
+    let affiliateLinkId: string | undefined;
+    const affiliateCode = typeof req.body.affiliateCode === "string" ? req.body.affiliateCode.trim() : "";
+    if (affiliateCode) {
+      const affiliateLink = await tx.affiliateLink.findUnique({ where: { code: affiliateCode }, select: { id: true, userId: true } });
+      if (affiliateLink && affiliateLink.userId !== req.user!.id && affiliateLink.userId !== product.sellerId) {
+        affiliateLinkId = affiliateLink.id;
+      }
+    }
 
     const created = await tx.order.create({
       data: {
@@ -82,6 +96,7 @@ export const createOrder = asyncHandler(async (req, res) => {
         unitPrice: product.price,
         totalAmount,
         commissionAmount,
+        affiliateLinkId,
       },
     });
 
@@ -202,4 +217,43 @@ export const requestRefund = asyncHandler(async (req, res) => {
   });
 
   res.json(apiResponse(true, updated, "Refund requested"));
+});
+
+// Lets the seller acknowledge a refund/dispute request without granting them
+// any approval power — final decision (fund movement) stays admin-only via
+// adminFinance.controller.ts's approveRefund/resolveDispute.
+export const acknowledgeRefund = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+
+  const order = await prisma.order.findUnique({ where: { id: req.params.id } });
+  if (!order) throw new ApiError(404, "Order not found");
+  if (order.sellerId !== req.user.id) throw new ApiError(403, "Forbidden");
+  if (!order.refundStatus && order.status !== "DISPUTED")
+    throw new ApiError(400, "Aucun remboursement ou litige en cours sur cette commande");
+
+  const updated = await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      sellerAcknowledgedAt: new Date(),
+      sellerRefundNote: typeof req.body.note === "string" ? req.body.note.slice(0, 1000) : undefined,
+    },
+  });
+
+  const admins = await prisma.user.findMany({
+    where: { role: { in: [Role.ADMIN, Role.SUPER_ADMIN] } },
+    select: { id: true },
+  });
+  await Promise.allSettled(
+    admins.map((admin) =>
+      createNotification({
+        userId: admin.id,
+        type: "SYSTEM",
+        title: "Vendeur : accusé de réception",
+        message: `Le vendeur a pris connaissance de la demande de remboursement pour la commande ${order.id}.`,
+        link: "/admin/finances/remboursements",
+      }),
+    ),
+  );
+
+  res.json(apiResponse(true, updated, "Refund acknowledged"));
 });

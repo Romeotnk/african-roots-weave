@@ -193,6 +193,7 @@ function DepositListing() {
         type: productTypeEnum[type],
         stock: type === "physical" ? Number(quantity) || 0 : undefined,
         fileUrl: type === "digital" ? digitalUrl : undefined,
+        isQuoteOnly: quoteRequest,
       });
 
       if (created && mediaFiles.length > 0) {

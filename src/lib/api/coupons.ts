@@ -9,6 +9,24 @@ export type CouponPayload = {
   sellerId?: string;
 };
 
+export type UpdateCouponPayload = {
+  isActive?: boolean;
+  discount?: number;
+  maxUses?: number;
+  expiresAt?: string;
+};
+
+export type Coupon = {
+  id: string;
+  code: string;
+  discount: number;
+  isPercentage: boolean;
+  maxUses: number | null;
+  usedCount: number;
+  expiresAt: string | null;
+  isActive: boolean;
+};
+
 export type CouponQuery = {
   page?: number;
   limit?: number;
@@ -32,13 +50,21 @@ export async function validateCoupon(code: string) {
 
 export async function listCoupons(params: CouponQuery = {}) {
   const query = toQuery(params);
-  const response = await apiRequest<unknown[]>(`/coupons${query ? `?${query}` : ""}`);
+  const response = await apiRequest<Coupon[]>(`/coupons${query ? `?${query}` : ""}`);
   return { coupons: response.data ?? [], pagination: response.pagination };
 }
 
 export async function createCoupon(payload: CouponPayload) {
-  const response = await apiRequest<unknown>("/coupons", {
+  const response = await apiRequest<Coupon>("/coupons", {
     method: "POST",
+    body: payload,
+  });
+  return response.data;
+}
+
+export async function updateCoupon(id: string, payload: UpdateCouponPayload) {
+  const response = await apiRequest<Coupon>(`/coupons/${id}`, {
+    method: "PUT",
     body: payload,
   });
   return response.data;

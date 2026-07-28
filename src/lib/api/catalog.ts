@@ -15,6 +15,17 @@ type BackendProduct = {
   sellerId?: string;
   stock?: number;
   auctionEnabled?: boolean;
+  isActive?: boolean;
+  isApproved?: boolean;
+  isFeatured?: boolean;
+  featuredUntil?: string | null;
+  isUrgent?: boolean;
+  urgentUntil?: string | null;
+  isQuoteOnly?: boolean;
+  viewCount?: number;
+  expiresAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
   seller?: {
     id: string;
     firstName: string;
@@ -26,6 +37,8 @@ type BackendProduct = {
       totalReviews: number;
       location: string;
       isVerified: boolean;
+      latitude?: number | null;
+      longitude?: number | null;
     } | null;
   };
 };
@@ -43,11 +56,30 @@ export type ProductPayload = {
   commissionRate?: number;
   downloadLimit?: number;
   fileUrl?: string;
+  isQuoteOnly?: boolean;
 };
 
 export type UpdateProductPayload = Partial<ProductPayload> & {
   isActive?: boolean;
   isApproved?: boolean;
+};
+
+export type MyProduct = {
+  id: string;
+  title: string;
+  category: string;
+  type: "physical" | "service" | "digital";
+  price: number;
+  stock: number;
+  viewCount: number;
+  isActive: boolean;
+  isApproved: boolean;
+  expiresAt: string | null;
+  updatedAt: string;
+  isFeatured: boolean;
+  featuredUntil: string | null;
+  isUrgent: boolean;
+  urgentUntil: string | null;
 };
 
 type BackendProfessional = {
@@ -62,6 +94,7 @@ type BackendProfessional = {
   isVerified: boolean;
   averageRating: number;
   totalReviews: number;
+  serviceBookingEnabled?: boolean;
   socialLinks?: {
     whatsapp?: string;
     facebook?: string;
@@ -119,6 +152,18 @@ export const toProduct = (product: BackendProduct): Product => ({
   reviewCount: product.seller?.professionalProfile?.totalReviews ?? 0,
   auction: product.auctionEnabled,
   stock: product.type === "DIGITAL" ? undefined : product.stock,
+  location: product.seller?.professionalProfile?.location,
+  country: product.seller?.country,
+  verified: product.seller?.professionalProfile?.isVerified,
+  urgent: product.isUrgent,
+  featured: product.isFeatured,
+  quoteOnly: product.isQuoteOnly,
+  createdAt: product.createdAt,
+  coordinates:
+    typeof product.seller?.professionalProfile?.latitude === "number" &&
+    typeof product.seller?.professionalProfile?.longitude === "number"
+      ? { lat: product.seller.professionalProfile.latitude, lng: product.seller.professionalProfile.longitude }
+      : undefined,
 });
 
 export const toProfessional = (professional: BackendProfessional): Professional => ({
@@ -140,6 +185,7 @@ export const toProfessional = (professional: BackendProfessional): Professional 
   socialLinks: professional.socialLinks ?? undefined,
   latitude: professional.latitude ?? undefined,
   longitude: professional.longitude ?? undefined,
+  serviceBookingEnabled: professional.serviceBookingEnabled ?? false,
 });
 
 export const getProducts = async (params: URLSearchParams) => {
@@ -183,6 +229,45 @@ export const getProfessionalById = async (id: string) => {
     console.warn(`[dev] /professionals/${id} unreachable, falling back to sample data.`, error);
     return fallbackProfessionals.find((professional) => professional.id === id) ?? null;
   }
+};
+
+export const toMyProduct = (product: BackendProduct): MyProduct => ({
+  id: product.id,
+  title: product.title,
+  category: product.category.replaceAll("_", " "),
+  type: productTypeMap[product.type],
+  price: Number(product.price),
+  stock: product.stock ?? 0,
+  viewCount: product.viewCount ?? 0,
+  isActive: product.isActive ?? true,
+  isApproved: product.isApproved ?? false,
+  expiresAt: product.expiresAt ?? null,
+  updatedAt: product.updatedAt ?? new Date().toISOString(),
+  isFeatured: product.isFeatured ?? false,
+  featuredUntil: product.featuredUntil ?? null,
+  isUrgent: product.isUrgent ?? false,
+  urgentUntil: product.urgentUntil ?? null,
+});
+
+export const getMyProducts = async () => {
+  const response = await apiRequest<unknown>("/products/mine");
+  const items = asList(response.data) as BackendProduct[];
+  return items.map(toMyProduct);
+};
+
+export const renewProduct = async (id: string) => {
+  const response = await apiRequest<BackendProduct>(`/products/${id}/renew`, { method: "POST" });
+  return response.data ? toMyProduct(response.data) : null;
+};
+
+export const boostProduct = async (id: string) => {
+  const response = await apiRequest<BackendProduct>(`/products/${id}/boost`, { method: "POST" });
+  return response.data ? toMyProduct(response.data) : null;
+};
+
+export const markProductUrgent = async (id: string) => {
+  const response = await apiRequest<BackendProduct>(`/products/${id}/urgent`, { method: "POST" });
+  return response.data ? toMyProduct(response.data) : null;
 };
 
 export const getProductBySlug = async (slug: string) => {

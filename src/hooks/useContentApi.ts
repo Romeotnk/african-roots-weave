@@ -3,15 +3,20 @@ import {
   createArticle,
   createMonograph,
   deleteArticle,
+  deleteMonograph,
   getArticle,
   getMonograph,
+  getMyArticles,
+  listAllMonographsForAdmin,
   listArticles,
+  listArticlesForAdmin,
   listMonographs,
   publishArticle,
   updateArticle,
   updateMonograph,
   type ArticlePayload,
   type ArticleQuery,
+  type ArticleSpace,
   type MonographPayload,
 } from "@/lib/api/content";
 
@@ -20,9 +25,21 @@ const isBrowser = typeof window !== "undefined";
 export const contentKeys = {
   articles: (params: ArticleQuery = {}) => ["content", "articles", params] as const,
   article: (slug: string) => ["content", "article", slug] as const,
+  myArticles: ["content", "articles", "mine"] as const,
   monographs: ["content", "monographs"] as const,
   monograph: (id: string) => ["content", "monograph", id] as const,
+  monographsAdmin: ["content", "monographs", "admin"] as const,
+  articlesAdmin: (space?: ArticleSpace) => ["content", "articles", "admin", space ?? "all"] as const,
 };
+
+export function useMyArticles() {
+  return useQuery({
+    queryKey: contentKeys.myArticles,
+    queryFn: getMyArticles,
+    enabled: isBrowser,
+    retry: false,
+  });
+}
 
 export function useArticles(params: ArticleQuery = {}) {
   return useQuery({
@@ -38,6 +55,15 @@ export function useArticle(slug: string) {
     queryKey: contentKeys.article(slug),
     queryFn: () => getArticle(slug),
     enabled: Boolean(slug),
+    retry: false,
+  });
+}
+
+export function useArticlesForAdmin(space?: ArticleSpace) {
+  return useQuery({
+    queryKey: contentKeys.articlesAdmin(space),
+    queryFn: () => listArticlesForAdmin(space),
+    enabled: isBrowser,
     retry: false,
   });
 }
@@ -93,18 +119,40 @@ export function useMonograph(id: string, enabled = true) {
   });
 }
 
+export function useAdminMonographs() {
+  return useQuery({
+    queryKey: contentKeys.monographsAdmin,
+    queryFn: listAllMonographsForAdmin,
+    enabled: isBrowser,
+    retry: false,
+  });
+}
+
+const invalidateMonographs = (queryClient: ReturnType<typeof useQueryClient>) => {
+  queryClient.invalidateQueries({ queryKey: contentKeys.monographs });
+  queryClient.invalidateQueries({ queryKey: contentKeys.monographsAdmin });
+};
+
 export function useCreateMonograph() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createMonograph,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: contentKeys.monographs }),
+    onSuccess: () => invalidateMonographs(queryClient),
   });
 }
 
 export function useUpdateMonograph() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: MonographPayload }) => updateMonograph(id, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: contentKeys.monographs }),
+    mutationFn: ({ id, payload }: { id: string; payload: Partial<MonographPayload> }) => updateMonograph(id, payload),
+    onSuccess: () => invalidateMonographs(queryClient),
+  });
+}
+
+export function useDeleteMonograph() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteMonograph,
+    onSuccess: () => invalidateMonographs(queryClient),
   });
 }

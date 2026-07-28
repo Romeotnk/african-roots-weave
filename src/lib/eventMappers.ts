@@ -10,6 +10,7 @@ export type BackendEvent = {
   endDate?: string;
   location?: string | null;
   isOnline?: boolean;
+  meetingUrl?: string | null;
   description?: string;
   coverImage?: string | null;
   maxAttendees?: number | null;
@@ -27,6 +28,7 @@ export function toEventItem(event: BackendEvent): EventItem | null {
     endDate: event.endDate,
     location: event.isOnline ? "En ligne" : (event.location ?? "Lieu à confirmer"),
     online: Boolean(event.isOnline),
+    meetingUrl: event.meetingUrl ?? undefined,
     description: event.description ?? "Détails à venir.",
     image: event.coverImage ?? fallbackEventImage,
     capacity: event.maxAttendees ?? undefined,

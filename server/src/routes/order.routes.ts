@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  acknowledgeRefund,
   confirmDelivery,
   createOrder,
   disputeOrder,
@@ -25,3 +26,4 @@ orderRouter.post("/:id/ship", idParamValidator, validateRequest, markShipped);
 orderRouter.post("/:id/confirm-delivery", idParamValidator, validateRequest, confirmDelivery);
 orderRouter.post("/:id/dispute", reasonValidator, validateRequest, disputeOrder);
 orderRouter.post("/:id/refund-request", reasonValidator, validateRequest, requestRefund);
+orderRouter.post("/:id/refund-ack", idParamValidator, validateRequest, acknowledgeRefund);

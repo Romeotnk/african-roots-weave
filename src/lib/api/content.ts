@@ -21,7 +21,53 @@ export type ArticlePayload = {
   isPublished?: boolean;
 };
 
-export type MonographPayload = Record<string, unknown>;
+export type MonographPayload = {
+  scientificName: string;
+  vernacularNames: string[];
+  family?: string;
+  origin?: string;
+  region?: string;
+  therapeuticCategory?: string;
+  indications: string[];
+  summary?: string;
+  medicinalProperties: { property: string; use: string; evidence: string }[];
+  preparations: string[];
+  precautions: string[];
+  references: string[];
+  botanicalDescription: string;
+  activeCompounds: string;
+  therapeuticIndications: string;
+  dosage: string;
+  contraindications: string;
+  clinicalStudies?: string;
+  drugInteractions?: string;
+  preparationMethods: string;
+  illustration?: string;
+  fieldPhotos: string[];
+  isPublished?: boolean;
+};
+
+export type MonographSummary = {
+  id: string;
+  slug: string | null;
+  scientificName: string;
+  therapeuticCategory: string | null;
+  isPublished: boolean;
+  createdAt: string;
+};
+
+export type MyArticle = {
+  id: string;
+  title: string;
+  space: ArticleSpace;
+  category: string | null;
+  content: string;
+  isPublished: boolean;
+  isApproved: boolean;
+  rejectedAt: string | null;
+  views: number;
+  updatedAt: string;
+};
 
 const toQuery = (params: Record<string, string | number | undefined>) => {
   const query = new URLSearchParams();
@@ -51,6 +97,17 @@ export async function listArticles(params: ArticleQuery = {}) {
   } catch {
     return { articles: [], pagination: undefined };
   }
+}
+
+export async function listArticlesForAdmin(space?: ArticleSpace) {
+  const query = space ? `?space=${space}` : "";
+  const response = await apiRequest<unknown>(`/articles/admin/all${query}`);
+  return asList(response.data) as MyArticle[];
+}
+
+export async function getMyArticles() {
+  const response = await apiRequest<unknown>("/articles/mine");
+  return asList(response.data) as MyArticle[];
 }
 
 export async function getArticle(slug: string) {
@@ -95,6 +152,11 @@ export async function listMonographs() {
   }
 }
 
+export async function listAllMonographsForAdmin() {
+  const response = await apiRequest<unknown>("/monographs/admin/all");
+  return asList(response.data) as MonographSummary[];
+}
+
 export async function getMonograph(id: string) {
   const response = await apiRequest<unknown>(`/monographs/${id}`);
   return response.data;
@@ -108,10 +170,15 @@ export async function createMonograph(payload: MonographPayload) {
   return response.data;
 }
 
-export async function updateMonograph(id: string, payload: MonographPayload) {
+export async function updateMonograph(id: string, payload: Partial<MonographPayload>) {
   const response = await apiRequest<unknown>(`/monographs/${id}`, {
     method: "PUT",
     body: payload,
   });
+  return response.data;
+}
+
+export async function deleteMonograph(id: string) {
+  const response = await apiRequest<null>(`/monographs/${id}`, { method: "DELETE" });
   return response.data;
 }

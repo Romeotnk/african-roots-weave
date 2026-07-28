@@ -3,7 +3,6 @@ import { useMemo, useState } from "react";
 import { MessageCircle, Send } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
-import { supportTickets } from "@/data/help";
 import { useMyTickets, useReplyTicket } from "@/hooks/useTicketsApi";
 import { useAuth } from "@/lib/auth/AuthContext";
 import type { SupportTicket, SupportTicketStatus } from "@/types";
@@ -74,8 +73,7 @@ function TicketsPage() {
     return raw.map((ticket) => toSupportTicket(ticket, user?.id));
   }, [ticketsQuery.data, user?.id]);
 
-  const isRealData = ticketsQuery.isSuccess;
-  const tickets = isRealData ? apiTickets : supportTickets;
+  const tickets = apiTickets;
 
   const [activeId, setActiveId] = useState("");
   const [draft, setDraft] = useState("");
@@ -94,12 +92,6 @@ function TicketsPage() {
     const content = draft.trim();
     if (content.length < 3) {
       setActionMessage("Votre reponse doit contenir au moins 3 caracteres.");
-      return;
-    }
-
-    if (!isRealData) {
-      setDraft("");
-      setActionMessage("Reponse envoyee au support. Le ticket repasse en cours de traitement.");
       return;
     }
 
@@ -148,6 +140,14 @@ function TicketsPage() {
           </p>
         )}
 
+        {ticketsQuery.isLoading && <p className="mt-6 text-[13px] text-[var(--color-text-muted)]">Chargement de vos tickets...</p>}
+        {ticketsQuery.isError && (
+          <p className="mt-6 rounded-[8px] border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700">
+            Impossible de charger vos tickets. Réessayez dans un instant.
+          </p>
+        )}
+
+        {!ticketsQuery.isLoading && !ticketsQuery.isError && (
         <div className="mt-8 grid gap-6 lg:grid-cols-[360px_1fr]">
           <aside className="space-y-3">
             {filteredTickets.length === 0 && (
@@ -237,6 +237,7 @@ function TicketsPage() {
             )}
           </section>
         </div>
+        )}
       </section>
     </main>
   );

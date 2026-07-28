@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { confirmOrderDelivery, createOrder, listMyOrders, markOrderShipped, openOrderDispute, requestOrderRefund } from "@/lib/api/orders";
+import {
+  acknowledgeOrderRefund,
+  confirmOrderDelivery,
+  createOrder,
+  listMyOrders,
+  markOrderShipped,
+  openOrderDispute,
+  requestOrderRefund,
+} from "@/lib/api/orders";
 
 export function useMyOrders(scope: "all" | "buyer" | "seller" = "all") {
   return useQuery({
@@ -33,13 +41,25 @@ export function useMarkOrderShipped() {
 }
 
 export function useOpenOrderDispute() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ orderId, reason }: { orderId: string; reason: string }) => openOrderDispute(orderId, reason),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["orders", "mine"] }),
   });
 }
 
 export function useRequestOrderRefund() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ orderId, reason }: { orderId: string; reason: string }) => requestOrderRefund(orderId, reason),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["orders", "mine"] }),
+  });
+}
+
+export function useAcknowledgeOrderRefund() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ orderId, note }: { orderId: string; note?: string }) => acknowledgeOrderRefund(orderId, note),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["orders", "mine"] }),
   });
 }

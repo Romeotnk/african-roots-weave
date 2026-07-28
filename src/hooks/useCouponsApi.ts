@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createCoupon, listCoupons, validateCoupon, type CouponPayload, type CouponQuery } from "@/lib/api/coupons";
+import {
+  createCoupon,
+  listCoupons,
+  updateCoupon,
+  validateCoupon,
+  type CouponPayload,
+  type CouponQuery,
+  type UpdateCouponPayload,
+} from "@/lib/api/coupons";
 
 const hasAccessToken = () =>
   typeof window !== "undefined" && Boolean(window.localStorage.getItem("iwosan.accessToken"));
@@ -27,6 +35,14 @@ export function useCreateCoupon() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: CouponPayload) => createCoupon(payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["coupons"] }),
+  });
+}
+
+export function useUpdateCoupon() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateCouponPayload }) => updateCoupon(id, payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["coupons"] }),
   });
 }

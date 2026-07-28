@@ -1,13 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  boostProduct,
   createProduct,
   deleteProduct,
+  getMyProducts,
   getProductBySlug,
   getProducts,
   getProfessionalById,
   getProfessionals,
   listProductBids,
+  markProductUrgent,
   placeProductBid,
+  renewProduct,
   updateProduct,
   uploadProductImages,
   type ProductPayload,
@@ -22,6 +26,7 @@ export const catalogKeys = {
   productBids: (id: string) => ["products", "bids", id] as const,
   professionals: (query: string) => ["professionals", query] as const,
   professional: (id: string) => ["professionals", "detail", id] as const,
+  myProducts: ["products", "mine"] as const,
 };
 
 export function useProducts(params: URLSearchParams) {
@@ -80,6 +85,38 @@ export function useDeleteProduct() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteProduct,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["products"] }),
+  });
+}
+
+export function useMyProducts() {
+  return useQuery({
+    queryKey: catalogKeys.myProducts,
+    queryFn: getMyProducts,
+    enabled: isBrowser,
+  });
+}
+
+export function useRenewProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: renewProduct,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["products"] }),
+  });
+}
+
+export function useBoostProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: boostProduct,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["products"] }),
+  });
+}
+
+export function useMarkProductUrgent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: markProductUrgent,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["products"] }),
   });
 }

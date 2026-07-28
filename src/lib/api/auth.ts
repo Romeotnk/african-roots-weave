@@ -1,4 +1,4 @@
-import { apiRequest, authTokenStore } from "./client";
+import { apiRequest, authTokenStore, csrfTokenStore } from "./client";
 
 export type AuthUser = {
   id: string;
@@ -57,7 +57,7 @@ export type RegisterPayload = {
 };
 
 export const login = async (email: string, password: string) => {
-  const response = await apiRequest<{ accessToken: string; user: AuthUser }>("/auth/login", {
+  const response = await apiRequest<{ accessToken: string; user: AuthUser; csrfToken?: string }>("/auth/login", {
     method: "POST",
     body: { email, password },
   });
@@ -65,6 +65,7 @@ export const login = async (email: string, password: string) => {
   if (response.data?.accessToken) {
     authTokenStore.set(response.data.accessToken);
     backendAuthUserStore.set(response.data.user);
+    csrfTokenStore.set(response.data.csrfToken ?? null);
   }
 
   return response;
@@ -78,7 +79,7 @@ export const register = async (payload: RegisterPayload) =>
 
 
 export const loginWithSupabaseAccessToken = async (accessToken: string) => {
-  const response = await apiRequest<{ accessToken: string; user: AuthUser }>("/auth/supabase", {
+  const response = await apiRequest<{ accessToken: string; user: AuthUser; csrfToken?: string }>("/auth/supabase", {
     method: "POST",
     body: { accessToken },
     skipAuthRetry: true,
@@ -87,6 +88,7 @@ export const loginWithSupabaseAccessToken = async (accessToken: string) => {
   if (response.data?.accessToken) {
     authTokenStore.set(response.data.accessToken);
     backendAuthUserStore.set(response.data.user);
+    csrfTokenStore.set(response.data.csrfToken ?? null);
   }
 
   return response;
@@ -98,6 +100,12 @@ export const verifyEmail = async (token: string) =>
 
 export const forgotPassword = async (email: string) =>
   apiRequest<null>("/auth/forgot-password", {
+    method: "POST",
+    body: { email },
+  });
+
+export const resendVerificationEmail = async (email: string) =>
+  apiRequest<null>("/auth/resend-verification", {
     method: "POST",
     body: { email },
   });
@@ -167,5 +175,6 @@ export const logout = async () => {
   } finally {
     authTokenStore.set(null);
     backendAuthUserStore.set(null);
+    csrfTokenStore.set(null);
   }
 };

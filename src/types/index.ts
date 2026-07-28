@@ -25,6 +25,7 @@ export interface Professional {
   consultationPrice?: number;
   online?: boolean;
   availability?: Record<string, string[]>;
+  serviceBookingEnabled?: boolean;
   socialLinks?: ProfessionalSocialLinks;
   latitude?: number;
   longitude?: number;
@@ -90,6 +91,8 @@ export interface Product {
   country?: string;
   verified?: boolean;
   urgent?: boolean;
+  featured?: boolean;
+  quoteOnly?: boolean;
   shareCount?: number;
   createdAt?: string;
   popularity?: number;
@@ -197,6 +200,7 @@ export interface EventItem {
   location: string;
   address?: string;
   online: boolean;
+  meetingUrl?: string;
   description: string;
   image: string;
   program?: { title: string; detail: string }[];
@@ -337,9 +341,11 @@ export interface ForumAttachment {
 
 export interface ForumComment {
   id: string;
+  authorId?: string;
   authorName: string;
   content: string;
   date: string;
+  votes: number;
 }
 
 export interface ForumAnswer {

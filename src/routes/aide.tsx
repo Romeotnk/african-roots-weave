@@ -1,10 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
-import { HelpCircle, Paperclip, Send } from "lucide-react";
+import { Clock, HelpCircle, Paperclip, Send, Ticket as TicketIcon } from "lucide-react";
+import type { BackendArticle } from "@/components/editorial/ArticleListPage";
+import { toRecipe } from "@/components/editorial/RecipeListPage";
 import { faqCategories } from "@/data/help";
+import { useArticles } from "@/hooks/useContentApi";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useCreateTicket } from "@/hooks/useTicketsApi";
+import { useCreateTicket, useMyTickets } from "@/hooks/useTicketsApi";
 import { useAuth } from "@/lib/auth/AuthContext";
+
+const ticketStatusLabels: Record<string, string> = { OPEN: "Ouvert", IN_PROGRESS: "En cours", RESOLVED: "Résolu", CLOSED: "Fermé" };
+type MyTicketSummary = { id: string; subject: string; status: string; createdAt: string };
 
 export const Route = createFileRoute("/aide")({
   head: () => ({ meta: [{ title: "Centre d'aide - IWOSAN" }] }),
@@ -14,6 +20,8 @@ export const Route = createFileRoute("/aide")({
 function HelpCenter() {
   const { user } = useAuth();
   const createTicket = useCreateTicket();
+  const recipesQuery = useArticles({ space: "RECETTES_SANTE", page: 1, limit: 4 });
+  const myTicketsQuery = useMyTickets();
   const [query, setQuery] = useState("");
   const [ticketOpen, setTicketOpen] = useState(false);
   const [subject, setSubject] = useState("");
@@ -23,6 +31,15 @@ function HelpCenter() {
   const [formMessage, setFormMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const debouncedQuery = useDebounce(query, 300);
+
+  const knowledgeBaseRecipes = useMemo(
+    () =>
+      ((recipesQuery.data?.articles ?? []) as BackendArticle[])
+        .map(toRecipe)
+        .filter((item): item is NonNullable<ReturnType<typeof toRecipe>> => Boolean(item)),
+    [recipesQuery.data],
+  );
+  const myTickets = ((myTicketsQuery.data?.data ?? []) as MyTicketSummary[]).slice(0, 3);
 
   const filteredFaq = useMemo(() => {
     const normalized = debouncedQuery.trim().toLowerCase();
@@ -90,6 +107,34 @@ function HelpCenter() {
 
       <section className="container-iwosan grid gap-8 py-10 lg:grid-cols-[1fr_340px]">
         <div className="space-y-5">
+          {knowledgeBaseRecipes.length > 0 && (
+            <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-[20px] font-bold">Base de connaissances — Recettes santé</h2>
+                <Link to="/recettes-sante" className="text-[13px] font-semibold text-[var(--brand-primary)]">
+                  Voir toutes les recettes
+                </Link>
+              </div>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {knowledgeBaseRecipes.map((recipe) => (
+                  <Link
+                    key={recipe.id}
+                    to="/recettes-sante/$slug"
+                    params={{ slug: recipe.slug }}
+                    className="rounded-lg border border-[var(--brand-border-light)] p-4 transition hover:border-[var(--brand-primary)]"
+                  >
+                    <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                      <span className="rounded-full bg-[var(--brand-primary-subtle)] px-2 py-0.5 font-semibold text-[var(--brand-primary)]">{recipe.type}</span>
+                      <span className="inline-flex items-center gap-1 text-[var(--color-text-muted)]"><Clock size={12} /> {recipe.prepTime}</span>
+                    </div>
+                    <p className="mt-2 text-[15px] font-bold text-[var(--color-text-primary)]">{recipe.title}</p>
+                    <p className="mt-1 line-clamp-2 text-[13px] text-[var(--color-text-muted)]">{recipe.excerpt}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
           {filteredFaq.length === 0 && (
             <div className="rounded-[12px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
               <HelpCircle className="mx-auto text-[var(--brand-primary)]" size={28} />
@@ -182,6 +227,23 @@ function HelpCenter() {
                 </p>
               )}
             </form>
+          )}
+          {user && myTickets.length > 0 && (
+            <div className="mt-5 border-t border-[var(--brand-border-light)] pt-4">
+              <h3 className="flex items-center gap-2 text-[14px] font-bold"><TicketIcon size={16} /> Mes derniers tickets</h3>
+              <div className="mt-3 space-y-2">
+                {myTickets.map((ticket) => (
+                  <Link
+                    key={ticket.id}
+                    to="/mon-compte/tickets"
+                    className="block rounded-lg border border-[var(--brand-border-light)] px-3 py-2 text-[12px] hover:border-[var(--brand-primary)]"
+                  >
+                    <p className="font-semibold text-[var(--color-text-primary)]">{ticket.subject}</p>
+                    <p className="mt-0.5 text-[var(--color-text-muted)]">{ticketStatusLabels[ticket.status] ?? ticket.status}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
           )}
           <Link to="/mon-compte/tickets" className="mt-4 inline-flex text-[13px] font-semibold text-[var(--brand-primary)]">
             Voir mes tickets

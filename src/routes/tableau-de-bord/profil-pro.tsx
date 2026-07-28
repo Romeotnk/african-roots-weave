@@ -7,6 +7,7 @@ import { professionals } from "@/data/professionals";
 import { products } from "@/data/products";
 import { events } from "@/data/events";
 import { RatingStars } from "@/components/shared/RatingStars";
+import { useMyBookings } from "@/hooks/useBookingsApi";
 
 export const Route = createFileRoute("/tableau-de-bord/profil-pro")({
   head: () => ({ meta: [{ title: "Vitrine pro - IWOSAN" }] }),
@@ -15,13 +16,15 @@ export const Route = createFileRoute("/tableau-de-bord/profil-pro")({
 
 function ProfessionalShowcasePage() {
   const pro = professionals[0];
+  const bookingsQuery = useMyBookings("professional");
+  const pendingBookingsCount = (bookingsQuery.data ?? []).filter((booking) => booking.status === "PENDING").length;
   const productCount = products.filter((product) => product.sellerId === pro.id).length;
   const upcomingCount = events.filter((event) => new Date(event.date).getTime() >= Date.now()).length;
   const stats = useMemo(() => [
     { label: "Vues", value: "12.4k", icon: Eye },
     { label: "Clients", value: "420", icon: Users },
     { label: "Services", value: `${productCount}`, icon: ShoppingBag },
-    { label: "Événements", value: `${upcomingCount}`, icon: CalendarDays },
+    { label: "ï¿½vï¿½nements", value: `${upcomingCount}`, icon: CalendarDays },
   ], [productCount, upcomingCount]);
 
   return (
@@ -42,7 +45,7 @@ function ProfessionalShowcasePage() {
                 <p className="mt-2 inline-flex items-center gap-2 text-white/75"><MapPin size={16} /> {pro.location}, {pro.country}</p>
                 <div className="mt-4 flex items-center gap-3">
                   <RatingStars rating={pro.rating} reviewCount={pro.reviewCount} size="md" />
-                  {pro.verified && <span className="inline-flex items-center gap-1 rounded-full bg-[var(--brand-gold)] px-3 py-1 text-[12px] font-bold text-white"><CheckCircle2 size={14} /> Vérifié</span>}
+                  {pro.verified && <span className="inline-flex items-center gap-1 rounded-full bg-[var(--brand-gold)] px-3 py-1 text-[12px] font-bold text-white"><CheckCircle2 size={14} /> Vï¿½rifiï¿½</span>}
                 </div>
               </div>
               <div className="rounded-[24px] border border-white/10 bg-white/10 p-5 backdrop-blur">
@@ -51,7 +54,7 @@ function ProfessionalShowcasePage() {
                   <div>
                     <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-white/75">Compte pro</p>
                     <h2 className="mt-1 text-[24px] text-white">Profil public</h2>
-                    <p className="mt-1 text-[13px] text-white/75">Administrez votre visibilité et vos réservations.</p>
+                    <p className="mt-1 text-[13px] text-white/75">Administrez votre visibilitï¿½ et vos rï¿½servations.</p>
                   </div>
                 </div>
                 <div className="mt-5 flex gap-3">
@@ -79,20 +82,20 @@ function ProfessionalShowcasePage() {
           <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_340px]">
             <div className="space-y-6">
               <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-6">
-                <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-[var(--brand-primary)]">À PROPOS</p>
-                <p className="mt-4 text-[15px] leading-8 text-[var(--color-text-secondary)]">{pro.bio} Cette vitrine est pensée pour mettre en avant votre expertise, vos services, vos produits et vos actualités dans un format premium orienté conversion et confiance.</p>
+                <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-[var(--brand-primary)]">ï¿½ PROPOS</p>
+                <p className="mt-4 text-[15px] leading-8 text-[var(--color-text-secondary)]">{pro.bio} Cette vitrine est pensï¿½e pour mettre en avant votre expertise, vos services, vos produits et vos actualitï¿½s dans un format premium orientï¿½ conversion et confiance.</p>
               </section>
 
               <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-6">
-                <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-[var(--brand-primary)]">ACTIVITÉ RÉCENTE</p>
+                <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-[var(--brand-primary)]">ACTIVITï¿½ Rï¿½CENTE</p>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   <div className="rounded-2xl bg-[var(--brand-primary-subtle)] p-4">
-                    <p className="text-[13px] font-semibold text-[var(--brand-primary)]">Produits publiés</p>
+                    <p className="text-[13px] font-semibold text-[var(--brand-primary)]">Produits publiï¿½s</p>
                     <p className="mt-1 text-[28px] font-bold">{productCount}</p>
                   </div>
                   <div className="rounded-2xl bg-[var(--brand-primary-subtle)] p-4">
                     <p className="text-[13px] font-semibold text-[var(--brand-primary)]">Demandes en attente</p>
-                    <p className="mt-1 text-[28px] font-bold">08</p>
+                    <p className="mt-1 text-[28px] font-bold">{String(pendingBookingsCount).padStart(2, "0")}</p>
                   </div>
                 </div>
               </section>
@@ -104,12 +107,12 @@ function ProfessionalShowcasePage() {
                 <h2 className="text-[20px] font-bold">Actions rapides</h2>
               </div>
               <Link to="/tableau-de-bord/profil" className="block rounded-full bg-[var(--brand-primary)] px-4 py-3 text-center font-semibold text-white">Modifier mon profil</Link>
-              <Link to="/tableau-de-bord/mes-produits" className="block rounded-full border border-[var(--brand-border)] px-4 py-3 text-center font-semibold">Gérer mes produits</Link>
+              <Link to="/tableau-de-bord/mes-produits" className="block rounded-full border border-[var(--brand-border)] px-4 py-3 text-center font-semibold">Gï¿½rer mes produits</Link>
               <Link to="/tableau-de-bord/commandes" className="block rounded-full border border-[var(--brand-border)] px-4 py-3 text-center font-semibold">Voir mes commandes</Link>
               <Link to="/tableau-de-bord/commissions" className="block rounded-full border border-[var(--brand-border)] px-4 py-3 text-center font-semibold">Commissions</Link>
               <div className="rounded-2xl bg-[var(--brand-surface-alt)] p-4">
-                <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--color-text-muted)]">RÉSUMÉ</p>
-                <p className="mt-2 text-[14px] text-[var(--color-text-secondary)]">Vous pouvez maintenant gérer votre présence publique à partir de cette page vitrine et renvoyer les visiteurs vers votre profil annuaire.</p>
+                <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--color-text-muted)]">Rï¿½SUMï¿½</p>
+                <p className="mt-2 text-[14px] text-[var(--color-text-secondary)]">Vous pouvez maintenant gï¿½rer votre prï¿½sence publique ï¿½ partir de cette page vitrine et renvoyer les visiteurs vers votre profil annuaire.</p>
               </div>
             </aside>
           </div>

@@ -19,8 +19,19 @@ import {
   getAdminConfig,
   getAdminDashboard,
   getAdminDisputes,
+  createAdminForumCategory,
+  createAdminPage,
+  deleteAdminForumCategory,
+  deleteAdminPage,
+  getAdminForumCategories,
+  getAdminPages,
+  getAdminPermissions,
   getAdminForumComments,
   getAdminForumQuestions,
+  updateAdminForumCategory,
+  updateAdminPage,
+  updateAdminRolePermissions,
+  updateAdminUserPermissionOverrides,
   getAdminKycDocuments,
   getAdminMlmOverview,
   getAdminNewsletterSubscribers,
@@ -59,6 +70,7 @@ import {
   updateAdminTicketStatus,
   updateAdminUserRole,
   updateMaintenanceMode,
+  updateProfessionalCommissionRate,
   verifyProfessional,
   type AdminUsersQuery,
 } from "@/lib/api/admin";
@@ -78,12 +90,15 @@ export const adminKeys = {
   tickets: ["admin", "tickets"] as const,
   ads: ["admin", "ads"] as const,
   banners: ["admin", "banners"] as const,
+  pages: ["admin", "pages"] as const,
   config: ["admin", "config"] as const,
   commissionConfig: ["admin", "commissions", "config"] as const,
+  permissions: ["admin", "permissions"] as const,
   newsletterSubscribers: ["admin", "newsletter", "subscribers"] as const,
   reports: (params: Record<string, unknown> = {}) => ["admin", "reports", params] as const,
   forumQuestions: (params: Record<string, unknown> = {}) => ["admin", "forum", "questions", params] as const,
   forumComments: (params: Record<string, unknown> = {}) => ["admin", "forum", "comments", params] as const,
+  forumCategories: ["admin", "forum", "categories"] as const,
   reviews: (params: Record<string, unknown> = {}) => ["admin", "reviews", params] as const,
   refunds: (params: Record<string, unknown> = {}) => ["admin", "refunds", params] as const,
   disputes: (params: Record<string, unknown> = {}) => ["admin", "disputes", params] as const,
@@ -191,6 +206,11 @@ export function useAdminUserActions() {
       mutationFn: ({ id, role, subRole }: { id: string; role: string; subRole?: string }) => updateAdminUserRole(id, role, subRole),
       onSuccess: (_data, variables) => refresh(variables.id),
     }),
+    updateCommissionRate: useMutation({
+      mutationFn: ({ profileId, userId, defaultCommissionRate }: { profileId: string; userId: string; defaultCommissionRate: number | null }) =>
+        updateProfessionalCommissionRate(profileId, defaultCommissionRate),
+      onSuccess: (_data, variables) => refresh(variables.userId),
+    }),
   };
 }
 
@@ -286,6 +306,46 @@ export function useAdminBannersActions() {
   };
 }
 
+export function useAdminPages() {
+  return useQuery({ queryKey: adminKeys.pages, queryFn: getAdminPages, enabled: adminEnabled(), retry: false });
+}
+
+export function useAdminPageActions() {
+  const queryClient = useQueryClient();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: adminKeys.pages });
+  return {
+    create: useMutation({ mutationFn: createAdminPage, onSuccess: refresh }),
+    update: useMutation({
+      mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) => updateAdminPage(id, body),
+      onSuccess: refresh,
+    }),
+    remove: useMutation({ mutationFn: deleteAdminPage, onSuccess: refresh }),
+  };
+}
+
+export function useAdminPermissions() {
+  return useQuery({ queryKey: adminKeys.permissions, queryFn: getAdminPermissions, enabled: adminEnabled(), retry: false });
+}
+
+export function useUpdateRolePermissions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ role, permissions }: { role: string; permissions: string[] }) => updateAdminRolePermissions(role, permissions),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: adminKeys.permissions }),
+  });
+}
+
+export function useUpdateUserPermissionOverrides() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, grant, revoke }: { id: string; grant: string[]; revoke: string[] }) =>
+      updateAdminUserPermissionOverrides(id, { grant, revoke }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.user(variables.id) });
+    },
+  });
+}
+
 export function useUpdateAdminConfig() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -370,6 +430,34 @@ export function useAdminForumActions() {
     }),
     hideComment: useMutation({
       mutationFn: ({ id, hidden }: { id: string; hidden: boolean }) => hideAdminComment(id, hidden),
+      onSuccess: refresh,
+    }),
+  };
+}
+
+export function useAdminForumCategories() {
+  return useQuery({
+    queryKey: adminKeys.forumCategories,
+    queryFn: getAdminForumCategories,
+    enabled: adminEnabled(),
+    retry: false,
+  });
+}
+
+export function useAdminForumCategoryActions() {
+  const queryClient = useQueryClient();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: adminKeys.forumCategories });
+  return {
+    create: useMutation({
+      mutationFn: (body: { name: string; parentId?: string; position?: number }) => createAdminForumCategory(body),
+      onSuccess: refresh,
+    }),
+    update: useMutation({
+      mutationFn: ({ id, body }: { id: string; body: { name?: string; position?: number } }) => updateAdminForumCategory(id, body),
+      onSuccess: refresh,
+    }),
+    remove: useMutation({
+      mutationFn: (id: string) => deleteAdminForumCategory(id),
       onSuccess: refresh,
     }),
   };

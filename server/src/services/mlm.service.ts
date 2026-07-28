@@ -14,6 +14,8 @@ export const calculateOrderCommissions = async (orderId: string) =>
         sellerId: true,
         totalAmount: true,
         commissionAmount: true,
+        affiliateLinkId: true,
+        affiliateLink: { select: { userId: true } },
         commissions: { select: { id: true }, take: 1 },
       },
     });
@@ -34,6 +36,23 @@ export const calculateOrderCommissions = async (orderId: string) =>
         },
       }),
     );
+
+    // Single-tier affiliate program, deliberately separate from the MLM
+    // downline walk below: the affiliate earns a share of the platform's own
+    // commission cut, not an extra charge to buyer or seller.
+    if (order.affiliateLink) {
+      created.push(
+        await tx.commission.create({
+          data: {
+            userId: order.affiliateLink.userId,
+            sourceOrderId: order.id,
+            amount: order.commissionAmount.mul(rates.affiliate),
+            type: CommissionType.AFFILIATE,
+            status: "APPROVED",
+          },
+        }),
+      );
+    }
 
     let node = await tx.mLMNode.findUnique({
       where: { userId: order.sellerId },

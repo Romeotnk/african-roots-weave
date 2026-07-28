@@ -15,6 +15,12 @@ model User {
   role            Role      @default(USER)
   adminSubRole    AdminSubRole?
   isResearcher    Boolean   @default(false)
+  // Per-user permission adjustments on top of the role's default grants (see
+  // RolePermission): { grant: string[], revoke: string[] }. Lets an admin
+  // compose a custom permission set for one person without inventing a new
+  // Role enum value for every edge case (e.g. "this one PROFESSIONAL also
+  // triages support tickets").
+  permissionOverrides Json?
   firstName       String
   lastName        String
   avatarUrl       String?
@@ -66,12 +72,19 @@ model User {
   walletTransactions      WalletTransaction[]
   notifications           Notification[]
   savedSearches           SavedSearch[]
+  favorites               Favorite[]
   sentMessages            Message[]                @relation("SentMessages")
   receivedMessages        Message[]                @relation("ReceivedMessages")
   tickets                 Ticket[]
   ticketMessages          TicketMessage[]
   siteConfigUpdates       SiteConfig[]
+  pageUpdates             Page[]
   auditLogs               AuditLog[]                @relation("AuditActor")
+  bookingsAsClient        Booking[]                 @relation("ClientBookings")
+  bookingsAsProfessional  Booking[]                 @relation("ProfessionalBookings")
+  quoteRequestsAsBuyer    QuoteRequest[]            @relation("QuoteBuyer")
+  quoteRequestsAsSeller   QuoteRequest[]            @relation("QuoteSeller")
+  affiliateLink           AffiliateLink?
 
   @@index([email])
   @@index([role])
@@ -162,6 +175,68 @@ model ProfessionalProfile {
   @@index([latitude, longitude])
 }
 
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  clientId        String
+  professionalId  String
+  productId       String?
+  serviceName     String
+  scheduledAt     DateTime
+  durationMinutes Int           @default(30)
+  status          BookingStatus @default(PENDING)
+  notes           String?       @db.Text
+  cancelReason    String?       @db.Text
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  client       User     @relation("ClientBookings", fields: [clientId], references: [id], onDelete: Cascade)
+  professional User     @relation("ProfessionalBookings", fields: [professionalId], references: [id], onDelete: Cascade)
+  product      Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
+  @@index([professionalId])
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+enum QuoteStatus {
+  PENDING
+  PROPOSED
+  ACCEPTED
+  DECLINED
+}
+
+model QuoteRequest {
+  id            String      @id @default(cuid())
+  productId     String
+  buyerId       String
+  sellerId      String
+  status        QuoteStatus @default(PENDING)
+  proposedPrice Decimal?    @db.Decimal(10, 2)
+  message       String?     @db.Text
+  responseNote  String?     @db.Text
+  orderId       String?     @unique
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  buyer   User    @relation("QuoteBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller  User    @relation("QuoteSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+  order   Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+}
+
 model Product {
   id             String      @id @default(cuid())
   sellerId       String
@@ -176,6 +251,10 @@ model Product {
   isActive       Boolean     @default(true)
   isApproved     Boolean     @default(false)
   isFeatured     Boolean     @default(false)
+  featuredUntil  DateTime?
+  isUrgent       Boolean     @default(false)
+  urgentUntil    DateTime?
+  isQuoteOnly    Boolean     @default(false)
   auctionEnabled Boolean     @default(false)
   auctionEndDate DateTime?
   currentBid     Decimal?    @db.Decimal(10, 2)
@@ -184,13 +263,16 @@ model Product {
   fileUrl        String?
   watermarked    Boolean     @default(false)
   viewCount      Int         @default(0)
+  expiresAt      DateTime?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
-  seller    User       @relation("SellerProducts", fields: [sellerId], references: [id], onDelete: Cascade)
-  orders    Order[]
-  cartItems CartItem[]
-  bids      Bid[]
+  seller        User           @relation("SellerProducts", fields: [sellerId], references: [id], onDelete: Cascade)
+  orders        Order[]
+  cartItems     CartItem[]
+  bids          Bid[]
+  bookings      Booking[]
+  quoteRequests QuoteRequest[]
 
   @@index([sellerId])
   @@index([slug])
@@ -198,6 +280,7 @@ model Product {
   @@index([type])
   @@index([isActive, isApproved])
   @@index([createdAt(sort: Desc)])
+  @@index([expiresAt])
 }
 
 model Order {
@@ -218,20 +301,26 @@ model Order {
   disputeReason        String?
   refundStatus         RefundStatus?
   refundApprovedById   String?
+  sellerRefundNote     String?
+  sellerAcknowledgedAt DateTime?
+  affiliateLinkId      String?
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
 
-  buyer          User         @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Restrict)
-  seller         User         @relation("SellerOrders", fields: [sellerId], references: [id], onDelete: Restrict)
-  product        Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
-  refundApprover User?        @relation("RefundApprover", fields: [refundApprovedById], references: [id], onDelete: SetNull)
+  buyer          User           @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Restrict)
+  seller         User           @relation("SellerOrders", fields: [sellerId], references: [id], onDelete: Restrict)
+  product        Product        @relation(fields: [productId], references: [id], onDelete: Restrict)
+  refundApprover User?          @relation("RefundApprover", fields: [refundApprovedById], references: [id], onDelete: SetNull)
+  affiliateLink  AffiliateLink? @relation(fields: [affiliateLinkId], references: [id], onDelete: SetNull)
   commissions    Commission[]
+  quoteRequest   QuoteRequest?
 
   @@index([buyerId])
   @@index([sellerId])
   @@index([productId])
   @@index([status])
   @@index([escrowStatus])
+  @@index([affiliateLinkId])
   @@index([createdAt(sort: Desc)])
 }
 
@@ -376,6 +465,8 @@ model Question {
   title            String
   content          String   @db.Text
   category         String
+  categoryId       String?
+  customFields     Json?
   tags             String[]
   isClosed         Boolean  @default(false)
   isFeatured       Boolean  @default(false)
@@ -387,15 +478,32 @@ model Question {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  author         User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  answers        Answer[] @relation("QuestionAnswers")
-  acceptedAnswer Answer?  @relation("AcceptedAnswer", fields: [acceptedAnswerId], references: [id], onDelete: SetNull)
+  author         User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  categoryRef    ForumCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  answers        Answer[]      @relation("QuestionAnswers")
+  acceptedAnswer Answer?       @relation("AcceptedAnswer", fields: [acceptedAnswerId], references: [id], onDelete: SetNull)
 
   @@index([authorId])
   @@index([category])
+  @@index([categoryId])
   @@index([isClosed])
   @@index([isFeatured])
   @@index([createdAt(sort: Desc)])
+}
+
+model ForumCategory {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  parentId  String?
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  parent    ForumCategory?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children  ForumCategory[] @relation("CategoryTree")
+  questions Question[]
+
+  @@index([parentId])
 }
 
 model Answer {
@@ -425,6 +533,7 @@ model ForumComment {
   targetId   String
   targetType String
   content    String   @db.Text
+  voteCount  Int      @default(0)
   isHidden   Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -434,6 +543,20 @@ model ForumComment {
   @@index([authorId])
   @@index([targetId, targetType])
   @@index([createdAt(sort: Desc)])
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  targetId   String
+  targetType String
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetId, targetType])
+  @@index([userId])
+  @@index([targetId, targetType])
 }
 
 model Vote {
@@ -590,6 +713,23 @@ model MLMNode {
   @@index([affiliateCode])
 }
 
+// A single-tier "share a link, earn on the sale" program — deliberately
+// separate from MLMNode's recruitment/downline tree, per the spec treating
+// affiliation and network marketing as two distinct programs.
+model AffiliateLink {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  code      String   @unique
+  clicks    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@index([code])
+}
+
 model Commission {
   id            String           @id @default(cuid())
   userId        String
@@ -743,6 +883,23 @@ model SiteConfig {
   @@index([key])
 }
 
+model Page {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  title           String
+  contentHtml     String   @db.Text
+  metaTitle       String?
+  metaDescription String?
+  isPublished     Boolean  @default(false)
+  updatedById     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  updatedBy User @relation(fields: [updatedById], references: [id], onDelete: Restrict)
+
+  @@index([isPublished])
+}
+
 model AdSpace {
   id        String   @id @default(cuid())
   name      String
@@ -810,6 +967,20 @@ enum Role {
   USER
 }
 
+// Default permission grants per role — the seed of a user's effective
+// permission set, before User.permissionOverrides is applied. Additive on
+// top of the Role enum: existing checkRole(...) call sites keep working
+// unchanged, and are migrated to checkPermission(...) incrementally.
+model RolePermission {
+  id         String   @id @default(cuid())
+  role       Role
+  permission String
+  createdAt  DateTime @default(now())
+
+  @@unique([role, permission])
+  @@index([role])
+}
+
 enum AdminSubRole {
   MODERATOR
   EDITOR
@@ -873,6 +1044,7 @@ enum ReviewTarget {
   PRODUCT
   PROFESSIONAL
   FORMATION
+  BUYER
 }
 
 enum ArticleSpace {

@@ -1,89 +1,76 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Plus } from "lucide-react";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
-import { useAdminConfig, useUpdateAdminConfig } from "@/hooks/useAdminApi";
+import { useAdminPageActions, useAdminPages } from "@/hooks/useAdminApi";
+import type { AdminPage } from "@/lib/api/admin";
 
 export const Route = createFileRoute("/admin/site/pages")({
   head: () => ({ meta: [{ title: "Admin pages - IWOSAN" }] }),
   component: AdminPages,
 });
 
-type CmsPage = {
+type PageDraft = {
   slug: string;
   title: string;
   contentHtml: string;
   metaTitle: string;
   metaDescription: string;
   isPublished: boolean;
-  updatedAt: string;
 };
 
-const emptyPage: CmsPage = {
+const emptyDraft: PageDraft = {
   slug: "",
   title: "",
   contentHtml: "",
   metaTitle: "",
   metaDescription: "",
   isPublished: false,
-  updatedAt: "",
 };
 
-const parsePages = (value: string | undefined): CmsPage[] => {
-  if (!value) return [];
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
+const toDraft = (page: AdminPage): PageDraft => ({
+  slug: page.slug,
+  title: page.title,
+  contentHtml: page.contentHtml,
+  metaTitle: page.metaTitle ?? "",
+  metaDescription: page.metaDescription ?? "",
+  isPublished: page.isPublished,
+});
 
 function AdminPages() {
-  const configQuery = useAdminConfig();
-  const updateConfig = useUpdateAdminConfig();
-  const [pages, setPages] = useState<CmsPage[]>([]);
-  const [loaded, setLoaded] = useState(false);
-  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
-  const [draft, setDraft] = useState<CmsPage>(emptyPage);
-  const [deleteTarget, setDeleteTarget] = useState<CmsPage | null>(null);
+  const pagesQuery = useAdminPages();
+  const { create, update, remove } = useAdminPageActions();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<PageDraft>(emptyDraft);
+  const [deleteTarget, setDeleteTarget] = useState<AdminPage | null>(null);
   const [notice, setNotice] = useState("");
 
-  useEffect(() => {
-    if (!configQuery.data?.data || loaded) return;
-    const byKey = Object.fromEntries(configQuery.data.data.map((row) => [row.key, row.value]));
-    setPages(parsePages(byKey["cms.pages"]));
-    setLoaded(true);
-  }, [configQuery.data, loaded]);
+  const pages = pagesQuery.data?.data ?? [];
+  const isPending = create.isPending || update.isPending;
 
-  const persist = (next: CmsPage[], message: string) => {
-    updateConfig.mutate(
-      { "cms.pages": JSON.stringify(next) },
-      {
-        onSuccess: () => {
-          setPages(next);
-          setNotice(message);
-        },
-      },
-    );
-  };
-
-  const selectPage = (page: CmsPage | null) => {
-    setSelectedSlug(page?.slug ?? null);
-    setDraft(page ?? { ...emptyPage });
+  const selectPage = (page: AdminPage | null) => {
+    setSelectedId(page?.id ?? null);
+    setDraft(page ? toDraft(page) : { ...emptyDraft });
   };
 
   const savePage = () => {
     if (!draft.slug.trim() || !draft.title.trim()) return;
-    const today = new Date().toISOString().slice(0, 10);
-    const normalized: CmsPage = { ...draft, slug: draft.slug.trim(), updatedAt: today };
-    const isNew = !pages.some((page) => page.slug === selectedSlug);
-    const next = isNew
-      ? [...pages, normalized]
-      : pages.map((page) => (page.slug === selectedSlug ? normalized : page));
-    persist(next, isNew ? "Page créée." : "Page mise à jour.");
-    setSelectedSlug(normalized.slug);
+    const body = { ...draft, slug: draft.slug.trim() };
+
+    if (selectedId) {
+      update.mutate(
+        { id: selectedId, body },
+        { onSuccess: () => setNotice("Page mise à jour.") },
+      );
+    } else {
+      create.mutate(body, {
+        onSuccess: (created) => {
+          setNotice("Page créée.");
+          if (created.data?.id) setSelectedId(created.data.id);
+        },
+      });
+    }
   };
 
   return (
@@ -103,24 +90,25 @@ function AdminPages() {
             </button>
           </div>
           <div className="space-y-1.5">
+            {pagesQuery.isLoading && <p className="text-[13px] text-slate-400">Chargement...</p>}
             {pages.map((page) => (
               <button
-                key={page.slug}
+                key={page.id}
                 type="button"
                 onClick={() => selectPage(page)}
-                className={`block w-full rounded-lg px-3 py-2 text-left text-[13px] ${selectedSlug === page.slug ? "bg-emerald-500/20 text-emerald-200" : "bg-white/5 text-slate-300 hover:bg-white/10"}`}
+                className={`block w-full rounded-lg px-3 py-2 text-left text-[13px] ${selectedId === page.id ? "bg-emerald-500/20 text-emerald-200" : "bg-white/5 text-slate-300 hover:bg-white/10"}`}
               >
                 <span className="font-semibold">{page.title || page.slug}</span>
                 <span className="ml-2 text-[11px] text-slate-500">/{page.slug}</span>
                 {!page.isPublished && <span className="ml-2 rounded-full bg-white/10 px-2 py-0.5 text-[10px]">Brouillon</span>}
               </button>
             ))}
-            {pages.length === 0 && <p className="text-[13px] text-slate-400">Aucune page pour le moment.</p>}
+            {!pagesQuery.isLoading && pages.length === 0 && <p className="text-[13px] text-slate-400">Aucune page pour le moment.</p>}
           </div>
         </AdminCard>
 
         <AdminCard>
-          <h2 className="mb-4 text-[18px] font-bold text-white">{selectedSlug ? "Modifier la page" : "Nouvelle page"}</h2>
+          <h2 className="mb-4 text-[18px] font-bold text-white">{selectedId ? "Modifier la page" : "Nouvelle page"}</h2>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <label className="block text-[13px] text-slate-300">
@@ -181,16 +169,16 @@ function AdminPages() {
           <div className="mt-5 flex gap-3">
             <button
               type="button"
-              disabled={updateConfig.isPending || !draft.slug.trim() || !draft.title.trim()}
+              disabled={isPending || !draft.slug.trim() || !draft.title.trim()}
               onClick={savePage}
               className="rounded-full bg-emerald-400 px-5 py-2 text-[13px] font-bold text-[#111827] disabled:opacity-50"
             >
-              {updateConfig.isPending ? "Enregistrement..." : "Enregistrer"}
+              {isPending ? "Enregistrement..." : "Enregistrer"}
             </button>
-            {selectedSlug && (
+            {selectedId && (
               <button
                 type="button"
-                onClick={() => setDeleteTarget(pages.find((page) => page.slug === selectedSlug) ?? null)}
+                onClick={() => setDeleteTarget(pages.find((page) => page.id === selectedId) ?? null)}
                 className="rounded-full bg-red-500/80 px-5 py-2 text-[13px] font-bold text-white"
               >
                 Supprimer
@@ -207,13 +195,16 @@ function AdminPages() {
         description="Cette action est définitive et la page ne sera plus accessible."
         danger
         confirmLabel="Supprimer"
-        pending={updateConfig.isPending}
+        pending={remove.isPending}
         onConfirm={() => {
           if (!deleteTarget) return;
-          const next = pages.filter((page) => page.slug !== deleteTarget.slug);
-          persist(next, "Page supprimée.");
-          selectPage(null);
-          setDeleteTarget(null);
+          remove.mutate(deleteTarget.id, {
+            onSuccess: () => {
+              setNotice("Page supprimée.");
+              selectPage(null);
+              setDeleteTarget(null);
+            },
+          });
         }}
       />
     </AdminLayout>

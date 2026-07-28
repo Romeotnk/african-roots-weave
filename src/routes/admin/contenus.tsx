@@ -3,6 +3,8 @@ import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { useAdminModerationActions, usePendingArticles, usePendingEvents, usePendingFormations } from "@/hooks/useAdminApi";
+import { MonographManager } from "@/components/admin/MonographManager";
+import { RitesCultureManager } from "@/components/admin/RitesCultureManager";
 
 export const Route = createFileRoute("/admin/contenus")({
   head: () => ({ meta: [{ title: "Admin contenus - IWOSAN" }] }),
@@ -13,8 +15,9 @@ type PendingArticle = { id: string; title: string; space: string; category: stri
 type PendingEvent = { id: string; title: string; type: string; startDate: string; createdBy?: { firstName: string; lastName: string } };
 type PendingFormation = { id: string; title: string; type: string; category: string; createdAt: string; createdBy?: { firstName: string; lastName: string } };
 
-type Tab = "articles" | "events" | "formations";
-type RejectTarget = { id: string; label: string; kind: Tab };
+type Tab = "articles" | "events" | "formations" | "pharmacopee" | "rites";
+type ModerationTab = "articles" | "events" | "formations";
+type RejectTarget = { id: string; label: string; kind: ModerationTab };
 
 function AdminContenus() {
   const [tab, setTab] = useState<Tab>("articles");
@@ -54,6 +57,19 @@ function AdminContenus() {
             className={`rounded-full px-4 py-1.5 text-[12px] font-bold ${tab === value ? "bg-emerald-400 text-[#111827]" : "bg-white/10 text-slate-300"}`}
           >
             {label} ({counts[value]})
+          </button>
+        ))}
+        {([
+          ["pharmacopee", "Pharmacopée"],
+          ["rites", "Rites & Cultures"],
+        ] as const).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setTab(value)}
+            className={`rounded-full px-4 py-1.5 text-[12px] font-bold ${tab === value ? "bg-emerald-400 text-[#111827]" : "bg-white/10 text-slate-300"}`}
+          >
+            {label}
           </button>
         ))}
       </div>
@@ -174,6 +190,9 @@ function AdminContenus() {
           </table>
         </div>
       )}
+
+      {tab === "pharmacopee" && <MonographManager />}
+      {tab === "rites" && <RitesCultureManager />}
 
       <ConfirmDialog
         open={Boolean(rejectTarget)}

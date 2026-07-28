@@ -8,7 +8,11 @@ import { RatingStars } from "@/components/shared/RatingStars";
 import { products as fallbackProducts } from "@/data/products";
 import type { Product } from "@/types";
 import { getProducts } from "@/lib/api/catalog";
+import { AdSlot } from "@/components/shared/AdSlot";
+import { LeafletMap, type MapMarker } from "@/components/shared/LeafletMap";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useSavedSearchActions } from "@/hooks/useSavedSearchesApi";
+import { useAuth } from "@/lib/auth/AuthContext";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -33,6 +37,18 @@ export const Route = createFileRoute("/marketplace")({
   component: Marketplace,
 });
 
+const EARTH_RADIUS_KM = 6371;
+const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
+
+const distanceKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+  const dLat = toRadians(b.lat - a.lat);
+  const dLng = toRadians(b.lng - a.lng);
+  const lat1 = toRadians(a.lat);
+  const lat2 = toRadians(b.lat);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(h));
+};
+
 function Marketplace() {
   const [items, setItems] = useState<Product[]>(fallbackProducts);
   const [search, setSearch] = useState("");
@@ -51,10 +67,15 @@ function Marketplace() {
   const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertName, setAlertName] = useState("");
+  const [alertError, setAlertError] = useState("");
+  const [alertSuccess, setAlertSuccess] = useState("");
+  const { user } = useAuth();
+  const savedSearchActions = useSavedSearchActions();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [locationMessage, setLocationMessage] = useState("");
+  const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
   const debouncedSearch = useDebounce(search, 300);
 
   const query = useMemo(() => {
@@ -137,6 +158,8 @@ function Marketplace() {
               : true;
       const matchesRating = product.rating >= minRating;
       const matchesVerified = !verifiedOnly || Boolean(product.verified);
+      const matchesDistance =
+        !userPosition || !product.coordinates || distanceKm(userPosition, product.coordinates) <= distance[0];
       return (
         matchesSearch &&
         matchesCategory &&
@@ -146,12 +169,19 @@ function Marketplace() {
         matchesCity &&
         matchesDate &&
         matchesRating &&
-        matchesVerified
+        matchesVerified &&
+        matchesDistance
       );
     });
 
     return [...filtered].sort((a, b) => {
       switch (sort) {
+        case "distance": {
+          if (!userPosition) return 0;
+          const distanceA = a.coordinates ? distanceKm(userPosition, a.coordinates) : Infinity;
+          const distanceB = b.coordinates ? distanceKm(userPosition, b.coordinates) : Infinity;
+          return distanceA - distanceB;
+        }
         case "popular":
           return (b.popularity ?? 0) - (a.popularity ?? 0);
         case "price_asc":
@@ -172,6 +202,7 @@ function Marketplace() {
     country,
     dateFilter,
     debouncedSearch,
+    distance,
     items,
     minRating,
     priceMax,
@@ -180,8 +211,23 @@ function Marketplace() {
     selectedCategories,
     selectedTypes,
     sort,
+    userPosition,
     verifiedOnly,
   ]);
+
+  const mapMarkers = useMemo<MapMarker[]>(
+    () =>
+      filteredItems
+        .filter((product): product is Product & { coordinates: { lat: number; lng: number } } => Boolean(product.coordinates))
+        .map((product) => ({
+          id: product.id,
+          lat: product.coordinates.lat,
+          lng: product.coordinates.lng,
+          label: `${product.title} — ${product.price.toLocaleString("fr-FR")} ${product.currency}`,
+          href: `/marketplace?produit=${product.id}`,
+        })),
+    [filteredItems],
+  );
 
   const activeFilterCount = [
     selectedCategories.length,
@@ -231,7 +277,11 @@ function Marketplace() {
 
     setLocationMessage("Recherche de votre position...");
     navigator.geolocation.getCurrentPosition(
-      () => setLocationMessage("Position detectee. Ajustez le rayon pour affiner les resultats proches."),
+      (position) => {
+        setUserPosition({ lat: position.coords.latitude, lng: position.coords.longitude });
+        setSort("distance");
+        setLocationMessage("Position detectee. Ajustez le rayon pour affiner les resultats proches.");
+      },
       () => setLocationMessage("Permission refusee. Vous pouvez renseigner la ville manuellement."),
       { enableHighAccuracy: true, timeout: 8000 },
     );
@@ -260,6 +310,14 @@ function Marketplace() {
     };
   }, [query]);
 
+  useEffect(() => {
+    if (items.length === 0 || typeof window === "undefined") return;
+    const sharedProductId = new URLSearchParams(window.location.search).get("produit");
+    if (!sharedProductId) return;
+    const shared = items.find((product) => product.id === sharedProductId);
+    if (shared) setSelectedProduct(shared);
+  }, [items]);
+
   return (
     <>
       <HeroSection
@@ -287,6 +345,7 @@ function Marketplace() {
                 Réinitialiser {activeFilterCount > 0 ? `(${activeFilterCount})` : ""}
               </button>
             </div>
+            <AdSlot position="marketplace_sidebar" className="mb-4" />
             <details open className="border-t border-[var(--brand-border-light)] py-4">
               <summary className="font-semibold text-[14px] cursor-pointer flex items-center justify-between">
                 Catégorie <ChevronDown size={14} />
@@ -486,6 +545,7 @@ function Marketplace() {
                   <option value="price_desc">Prix décroissant</option>
                   <option value="rating">Les mieux notés</option>
                   <option value="popular">Plus populaire</option>
+                  {userPosition && <option value="distance">Distance (proximité)</option>}
                 </select>
               </div>
             </div>
@@ -532,29 +592,19 @@ function Marketplace() {
               </div>
             ) : (
               <div className="grid xl:grid-cols-[1fr_340px] gap-6">
-                <div className="relative min-h-[560px] overflow-hidden rounded-[16px] border border-[var(--brand-border-light)] bg-[linear-gradient(135deg,#e3f3ec,#f5efd6)]">
-                  <div className="absolute inset-0 opacity-70 [background-image:linear-gradient(#fff_1px,transparent_1px),linear-gradient(90deg,#fff_1px,transparent_1px)] [background-size:44px_44px]" />
-                  <div className="absolute left-5 top-5 rounded-full bg-white/90 px-4 py-2 text-[12px] font-semibold shadow-iwosan-sm">
-                    {filteredItems.length} marqueurs synchronisés
-                  </div>
-                  <div className="absolute bottom-5 left-5 rounded-full border border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] px-4 py-2 text-[12px] font-semibold text-[var(--brand-primary)]">
-                    Rayon sélectionné : {distance[0]} km
-                  </div>
-                  {filteredItems.map((product, index) => (
-                    <button
-                      key={product.id}
-                      type="button"
-                      onClick={() => setSelectedProduct(product)}
-                      className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--brand-primary)] px-3 py-2 text-[12px] font-bold text-white shadow-iwosan-md"
-                      style={{
-                        left: `${18 + ((index * 23) % 68)}%`,
-                        top: `${22 + ((index * 17) % 58)}%`,
-                      }}
-                      title={product.title}
-                    >
-                      {Math.round(product.price / 1000)}k
-                    </button>
-                  ))}
+                <div className="relative">
+                  {mapMarkers.length > 0 ? (
+                    <LeafletMap markers={mapMarkers} heightClassName="h-[560px]" />
+                  ) : (
+                    <div className="flex h-[560px] items-center justify-center rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center text-[13px] text-[var(--color-text-muted)]">
+                      Aucune annonce affichée ne possède de localisation exacte pour l'instant.
+                    </div>
+                  )}
+                  {userPosition && (
+                    <div className="absolute bottom-5 left-5 z-[1000] rounded-full border border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] px-4 py-2 text-[12px] font-semibold text-[var(--brand-primary)] shadow-iwosan-sm">
+                      Rayon sélectionné : {distance[0]} km
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-3">
                   {filteredItems.slice(0, 5).map((product) => (
@@ -616,7 +666,16 @@ function Marketplace() {
           )}
         </DialogContent>
       </Dialog>
-      <Dialog open={alertOpen} onOpenChange={setAlertOpen}>
+      <Dialog
+        open={alertOpen}
+        onOpenChange={(open) => {
+          setAlertOpen(open);
+          if (open) {
+            setAlertError("");
+            setAlertSuccess("");
+          }
+        }}
+      >
         <DialogContent className="bg-white">
           <DialogHeader>
             <DialogTitle>Créer une alerte</DialogTitle>
@@ -637,12 +696,49 @@ function Marketplace() {
               </p>
               <p className="mt-2 text-[14px] text-[var(--color-text-secondary)]">{activeFilterSummary}</p>
             </div>
+            {alertError && <p className="rounded-lg bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-700">{alertError}</p>}
+            {alertSuccess && <p className="rounded-lg bg-emerald-50 px-4 py-3 text-[13px] font-semibold text-emerald-700">{alertSuccess}</p>}
             <button
               onClick={() => {
-                setAlertName("");
-                setAlertOpen(false);
+                setAlertError("");
+                setAlertSuccess("");
+                if (!user) {
+                  setAlertError("Connectez-vous pour enregistrer une alerte.");
+                  return;
+                }
+                if (alertName.trim().length < 3) {
+                  setAlertError("Donnez un nom à votre alerte (3 caractères minimum).");
+                  return;
+                }
+                savedSearchActions.create.mutate(
+                  {
+                    name: alertName.trim(),
+                    summary: activeFilterSummary || undefined,
+                    criteria: {
+                      search: debouncedSearch || undefined,
+                      categories: selectedCategories,
+                      types: selectedTypes,
+                      sort,
+                      priceMin: priceMin || undefined,
+                      priceMax: priceMax || undefined,
+                      country: country || undefined,
+                      city: city || undefined,
+                      minRating: minRating || undefined,
+                      verifiedOnly: verifiedOnly || undefined,
+                    },
+                  },
+                  {
+                    onSuccess: () => {
+                      setAlertSuccess("Alerte enregistrée. Retrouvez-la dans votre compte.");
+                      setAlertName("");
+                    },
+                    onError: (mutationError) =>
+                      setAlertError(mutationError instanceof Error ? mutationError.message : "Impossible de créer cette alerte."),
+                  },
+                );
               }}
-              className="h-11 w-full rounded-full bg-[var(--brand-primary)] font-semibold text-white"
+              disabled={savedSearchActions.create.isPending}
+              className="h-11 w-full rounded-full bg-[var(--brand-primary)] font-semibold text-white disabled:opacity-60"
             >
               Enregistrer l'alerte
             </button>

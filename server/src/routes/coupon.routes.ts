@@ -1,10 +1,10 @@
 import { Role } from "@prisma/client";
 import { Router } from "express";
-import { createCoupon, listCoupons, validateCoupon } from "../controllers/coupon.controller.js";
+import { createCoupon, listCoupons, updateCoupon, validateCoupon } from "../controllers/coupon.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { requireEmailVerified, roleMiddleware } from "../middlewares/role.middleware.js";
 import { validateRequest } from "../middlewares/validation.middleware.js";
-import { couponValidateValidator, couponValidator } from "../validators/marketplace.validators.js";
+import { couponValidateValidator, couponValidator, idParamValidator } from "../validators/marketplace.validators.js";
 
 export const couponRouter = Router();
 
@@ -19,4 +19,13 @@ couponRouter.post(
   couponValidator,
   validateRequest,
   createCoupon,
+);
+couponRouter.put(
+  "/:id",
+  authMiddleware,
+  requireEmailVerified,
+  roleMiddleware([Role.SUPER_ADMIN, Role.ADMIN, Role.PROFESSIONAL]),
+  idParamValidator,
+  validateRequest,
+  updateCoupon,
 );

@@ -12,6 +12,8 @@ export const listProfessionals = asyncHandler(async (req, res) => {
   const location = typeof req.query.location === "string" ? req.query.location : undefined;
   const specialty = typeof req.query.specialty === "string" ? req.query.specialty : undefined;
   const verifiedOnly = req.query.verified === "true";
+  const portraitOfWeekOnly = req.query.portraitOfWeek === "true";
+  const now = new Date();
 
   const where = {
     isVerified: verifiedOnly ? true : undefined,
@@ -25,6 +27,13 @@ export const listProfessionals = asyncHandler(async (req, res) => {
         ]
       : undefined,
     user: { isActive: true, isBanned: false },
+    ...(portraitOfWeekOnly
+      ? {
+          isPortraitOfWeek: true,
+          portraitStartDate: { lte: now },
+          portraitEndDate: { gte: now },
+        }
+      : {}),
   };
 
   const [professionals, total] = await prisma.$transaction([

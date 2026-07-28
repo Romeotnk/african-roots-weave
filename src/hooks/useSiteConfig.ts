@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getSiteConfig, getSitePage } from "@/lib/api/site";
+import { getAdsByPosition, getHomeBanners, getSiteConfig, getSitePage } from "@/lib/api/site";
 
 export function useSiteConfig() {
   return useQuery({
@@ -15,6 +15,24 @@ export function useSitePage(slug: string) {
     queryKey: ["site", "pages", slug],
     queryFn: () => getSitePage(slug),
     enabled: Boolean(slug),
+    retry: false,
+  });
+}
+
+export function useHomeBanners() {
+  return useQuery({
+    queryKey: ["site", "banners"],
+    queryFn: getHomeBanners,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+}
+
+export function useAdsByPosition(position: string) {
+  return useQuery({
+    queryKey: ["site", "ads", position],
+    queryFn: () => getAdsByPosition(position),
+    staleTime: 5 * 60 * 1000,
     retry: false,
   });
 }

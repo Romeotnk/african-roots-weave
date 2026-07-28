@@ -28,6 +28,7 @@ type EventForm = {
   capacity: string;
   price: string;
   online: boolean;
+  meetingUrl: string;
 };
 
 const emptyEventForm: EventForm = {
@@ -38,6 +39,7 @@ const emptyEventForm: EventForm = {
   capacity: "30",
   price: "0",
   online: true,
+  meetingUrl: "",
 };
 
 const statusLabels: Record<EventStatus, string> = {
@@ -134,6 +136,7 @@ function EventsDashboard() {
         endDate: endDate.toISOString(),
         location: form.online ? undefined : form.location.trim() || "Lieu à confirmer",
         isOnline: form.online,
+        meetingUrl: form.online ? form.meetingUrl.trim() || undefined : undefined,
         maxAttendees: capacity,
         isPublished: false,
       },
@@ -194,6 +197,15 @@ function EventsDashboard() {
                 En ligne
               </label>
             </div>
+            {form.online && (
+              <input
+                type="url"
+                value={form.meetingUrl}
+                onChange={(event) => setForm((current) => ({ ...current, meetingUrl: event.target.value }))}
+                placeholder="Lien de la réunion (Zoom, Meet, Jitsi...)"
+                className="mt-4 h-11 w-full rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]"
+              />
+            )}
           </form>
         )}
 

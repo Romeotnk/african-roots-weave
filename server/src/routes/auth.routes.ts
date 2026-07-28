@@ -7,6 +7,7 @@ import {
   me,
   refresh,
   register,
+  resendVerificationEmail,
   resetPassword,
   supabaseAuth,
   submitKyc,
@@ -61,6 +62,13 @@ authRouter.post("/logout", logout);
 
 // Email and password recovery.
 authRouter.post("/verify-email/:token", tokenParamValidator, validateRequest, verifyEmail);
+authRouter.post(
+  "/resend-verification",
+  passwordResetRateLimit,
+  emailValidator,
+  validateRequest,
+  resendVerificationEmail,
+);
 authRouter.post("/forgot-password", passwordResetRateLimit, emailValidator, validateRequest, forgotPassword);
 authRouter.post(
   "/reset-password/:token",

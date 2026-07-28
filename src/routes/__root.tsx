@@ -15,9 +15,14 @@ import { reportClientError } from "../lib/error-reporting";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { LanguageProvider } from "@/components/LanguageProvider";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import { siteConfig } from "@/data/siteConfig";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { getSiteConfig } from "@/lib/api/site";
+import { AFFILIATE_CODE_STORAGE_KEY, trackAffiliateClick } from "@/lib/api/affiliate";
+
+const isHexColor = (value: string | undefined): value is string => Boolean(value && /^#[0-9a-fA-F]{3,8}$/.test(value));
 
 function NotFoundComponent() {
   return (
@@ -57,31 +62,46 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "IWOSAN - Le savoir médical africain, documenté et vivant" },
-      { name: "description", content: "Plateforme panafricaine éditoriale, scientifique et communautaire dédiée à la médecine traditionnelle, aux plantes médicinales et aux cultures de guérison africaines." },
-      { name: "author", content: "Iwosan" },
-      { property: "og:title", content: "IWOSAN - Le savoir médical africain, documenté et vivant" },
-      { property: "og:description", content: "Plateforme panafricaine éditoriale, scientifique et communautaire dédiée à la médecine traditionnelle, aux plantes médicinales et aux cultures de guérison africaines." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "IWOSAN - Le savoir médical africain, documenté et vivant" },
-      { name: "twitter:description", content: "Plateforme panafricaine éditoriale, scientifique et communautaire dédiée à la médecine traditionnelle, aux plantes médicinales et aux cultures de guérison africaines." },
-      { property: "og:image", content: "/favicon.svg" },
-      { name: "twitter:image", content: "/favicon.svg" },
-    ],
-    links: [
-      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
-      { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@0,400;0,500&display=swap" },
-      { rel: "stylesheet", href: appCss },
-    ],
-  }),
+  loader: async () => {
+    try {
+      const response = await getSiteConfig();
+      return response.data ?? {};
+    } catch {
+      return {};
+    }
+  },
+  head: ({ loaderData }) => {
+    const siteName = loaderData?.["site.name"] || "IWOSAN";
+    const tagline = loaderData?.["site.tagline"] || "Le savoir médical africain, documenté et vivant";
+    const title = `${siteName} - ${tagline}`;
+    const description = "Plateforme panafricaine éditoriale, scientifique et communautaire dédiée à la médecine traditionnelle, aux plantes médicinales et aux cultures de guérison africaines.";
+    const faviconUrl = loaderData?.["site.faviconUrl"] || "/favicon.svg";
+    return {
+      meta: [
+        { charSet: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        { title },
+        { name: "description", content: description },
+        { name: "author", content: siteName },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+        { property: "og:image", content: faviconUrl },
+        { name: "twitter:image", content: faviconUrl },
+      ],
+      links: [
+        { rel: "icon", href: faviconUrl },
+        { rel: "manifest", href: "/manifest.webmanifest" },
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+        { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@0,400;0,500&display=swap" },
+        { rel: "stylesheet", href: appCss },
+      ],
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -109,7 +129,9 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <AppShell />
+          <LanguageProvider>
+            <AppShell />
+          </LanguageProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
@@ -127,8 +149,23 @@ function AppShell() {
   const siteConfigQuery = useSiteConfig();
   const maintenanceEnabled = siteConfigQuery.data?.data?.["maintenance.enabled"] === "true";
   const showMaintenance = maintenanceEnabled && !pathname.startsWith("/admin");
+  const primaryColor = siteConfigQuery.data?.data?.["site.primaryColor"];
+  const goldColor = siteConfigQuery.data?.data?.["site.secondaryColor"];
+  const customCss = siteConfigQuery.data?.data?.["site.customCss"]?.replace(/<\/style/gi, "");
+
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("aff");
+    if (!code || window.localStorage.getItem(AFFILIATE_CODE_STORAGE_KEY) === code) return;
+    window.localStorage.setItem(AFFILIATE_CODE_STORAGE_KEY, code);
+    trackAffiliateClick(code).catch(() => undefined);
+  }, [pathname]);
+
   return (
     <div className="flex min-h-screen flex-col">
+      {(isHexColor(primaryColor) || isHexColor(goldColor)) && (
+        <style>{`:root{${isHexColor(primaryColor) ? `--brand-primary:${primaryColor};--brand-primary-dark:${primaryColor};` : ""}${isHexColor(goldColor) ? `--brand-gold:${goldColor};` : ""}}`}</style>
+      )}
+      {customCss && <style>{customCss}</style>}
       {!showMaintenance && !isMinimal && !isDashboard && <Navbar />}
       <main className="flex-1">{showMaintenance ? <MaintenancePage config={siteConfigQuery.data?.data} /> : <Outlet />}</main>
       {!showMaintenance && !isMinimal && !isDashboard && <Footer />}

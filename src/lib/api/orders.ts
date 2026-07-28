@@ -1,4 +1,5 @@
 import { apiRequest } from "./client";
+import { getStoredAffiliateCode } from "./affiliate";
 
 export const listMyOrders = (scope: "all" | "buyer" | "seller" = "all") =>
   apiRequest<unknown[]>(`/orders/mine?scope=${scope === "buyer" ? "purchases" : scope === "seller" ? "sales" : "all"}`);
@@ -6,7 +7,7 @@ export const listMyOrders = (scope: "all" | "buyer" | "seller" = "all") =>
 export const createOrder = (productId: string, quantity = 1) =>
   apiRequest<unknown>("/orders", {
     method: "POST",
-    body: { productId, quantity },
+    body: { productId, quantity, affiliateCode: getStoredAffiliateCode() ?? undefined },
   });
 
 export const confirmOrderDelivery = (orderId: string) =>
@@ -29,4 +30,10 @@ export const requestOrderRefund = (orderId: string, reason: string) =>
   apiRequest<unknown>(`/orders/${orderId}/refund-request`, {
     method: "POST",
     body: { reason },
+  });
+
+export const acknowledgeOrderRefund = (orderId: string, note?: string) =>
+  apiRequest<unknown>(`/orders/${orderId}/refund-ack`, {
+    method: "POST",
+    body: { note },
   });

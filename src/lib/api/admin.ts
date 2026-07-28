@@ -30,6 +30,8 @@ export type AdminUser = {
   banExpiresAt: string | null;
   lastLoginAt: string | null;
   createdAt: string;
+  professionalProfile: { id: string; defaultCommissionRate: number | null } | null;
+  permissionOverrides: { grant?: string[]; revoke?: string[] } | null;
 };
 
 export type AdminUsersQuery = {
@@ -67,6 +69,16 @@ export const rejectAdminKyc = (id: string) =>
   apiRequest<unknown>(`/admin/users/${id}/kyc-reject`, { method: "PUT" });
 export const getAdminAuditLog = () => apiRequest<unknown[]>("/admin/audit-log");
 
+export type PermissionCatalogEntry = { key: string; label: string; group: string };
+export type RolePermissionsMap = Partial<Record<string, string[]>>;
+
+export const getAdminPermissions = () =>
+  apiRequest<{ catalog: PermissionCatalogEntry[]; rolePermissions: RolePermissionsMap }>("/admin/permissions");
+export const updateAdminRolePermissions = (role: string, permissions: string[]) =>
+  apiRequest<unknown>(`/admin/permissions/role/${role}`, { method: "PUT", body: { permissions } });
+export const updateAdminUserPermissionOverrides = (id: string, body: { grant: string[]; revoke: string[] }) =>
+  apiRequest<AdminUser>(`/admin/users/${id}/permissions`, { method: "PATCH", body });
+
 export const getPendingProducts = () => apiRequest<unknown[]>("/admin/products/pending");
 export const approveProduct = (id: string) =>
   apiRequest<unknown>(`/admin/products/${id}/approve`, { method: "PUT" });
@@ -96,6 +108,8 @@ export const verifyProfessional = (id: string) =>
   apiRequest<unknown>(`/admin/professionals/${id}/verify`, { method: "PUT" });
 export const rejectProfessional = (id: string, reason: string) =>
   apiRequest<unknown>(`/admin/professionals/${id}/reject`, { method: "PUT", body: { reason } });
+export const updateProfessionalCommissionRate = (id: string, defaultCommissionRate: number | null) =>
+  apiRequest<unknown>(`/admin/professionals/${id}/commission-rate`, { method: "PUT", body: { defaultCommissionRate } });
 
 export const getAdminBanners = () => apiRequest<unknown[]>("/admin/banners");
 export const createAdminBanner = (body: Record<string, unknown>) =>
@@ -112,6 +126,24 @@ export const updateAdminAd = (id: string, body: Record<string, unknown>) =>
   apiRequest<unknown>(`/admin/ads/${id}`, { method: "PUT", body });
 export const deleteAdminAd = (id: string) =>
   apiRequest<null>(`/admin/ads/${id}`, { method: "DELETE" });
+
+export type AdminPage = {
+  id: string;
+  slug: string;
+  title: string;
+  contentHtml: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  isPublished: boolean;
+  updatedAt: string;
+};
+
+export const getAdminPages = () => apiRequest<AdminPage[]>("/admin/pages");
+export const createAdminPage = (body: Partial<Omit<AdminPage, "id" | "updatedAt">>) =>
+  apiRequest<AdminPage>("/admin/pages", { method: "POST", body });
+export const updateAdminPage = (id: string, body: Partial<Omit<AdminPage, "id" | "updatedAt">>) =>
+  apiRequest<AdminPage>(`/admin/pages/${id}`, { method: "PUT", body });
+export const deleteAdminPage = (id: string) => apiRequest<null>(`/admin/pages/${id}`, { method: "DELETE" });
 
 export const getAdminConfig = () => apiRequest<{ key: string; value: string }[]>("/admin/config");
 export const updateAdminConfig = (body: Record<string, unknown>) =>
@@ -166,6 +198,23 @@ export const getAdminForumComments = (params: { hidden?: boolean; page?: number 
 export const hideAdminComment = (id: string, hidden: boolean) =>
   apiRequest<unknown>(`/admin/forum/comments/${id}/hide`, { method: "PUT", body: { hidden } });
 
+export type AdminForumCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  parentId: string | null;
+  position: number;
+  _count: { questions: number };
+};
+
+export const getAdminForumCategories = () => apiRequest<AdminForumCategory[]>("/admin/forum/categories");
+export const createAdminForumCategory = (body: { name: string; parentId?: string; position?: number }) =>
+  apiRequest<AdminForumCategory>("/admin/forum/categories", { method: "POST", body });
+export const updateAdminForumCategory = (id: string, body: { name?: string; position?: number }) =>
+  apiRequest<AdminForumCategory>(`/admin/forum/categories/${id}`, { method: "PUT", body });
+export const deleteAdminForumCategory = (id: string) =>
+  apiRequest<null>(`/admin/forum/categories/${id}`, { method: "DELETE" });
+
 export type AdminReview = {
   id: string;
   authorId: string;
@@ -195,6 +244,8 @@ export type AdminOrder = {
   escrowStatus: string;
   disputeReason: string | null;
   refundStatus: string | null;
+  sellerRefundNote: string | null;
+  sellerAcknowledgedAt: string | null;
   createdAt: string;
   updatedAt: string;
   product: { id: string; title: string; slug: string };

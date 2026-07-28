@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import type { AppRole } from "@/lib/auth/AuthContext";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { useLanguage } from "@/components/LanguageProvider";
 import { PROFESSIONAL_ACCOUNT_ROLES } from "@/lib/auth/roles";
 import { useMeQuery, meQueryKey } from "@/hooks/useAuthApi";
 import { updateMe } from "@/lib/api/auth";
@@ -21,16 +22,18 @@ export const Route = createFileRoute("/tableau-de-bord/parametres")({
 export function SettingsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { allowedRoles?: AppRole[] } = {}) {
   const queryClient = useQueryClient();
   const meQuery = useMeQuery();
-  const [language, setLanguage] = useState<"fr" | "en" | "ar">("fr");
+  const { setLanguage: applyLanguage } = useLanguage();
+  const [language, setLanguage] = useState<"fr" | "en">("fr");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    if (meQuery.data?.language) setLanguage(meQuery.data.language as "fr" | "en" | "ar");
+    if (meQuery.data?.language === "fr" || meQuery.data?.language === "en") setLanguage(meQuery.data.language);
   }, [meQuery.data?.language]);
 
   const updateLanguage = useMutation({
-    mutationFn: (nextLanguage: "fr" | "en" | "ar") => updateMe({ language: nextLanguage }),
-    onSuccess: async () => {
+    mutationFn: (nextLanguage: "fr" | "en") => updateMe({ language: nextLanguage }),
+    onSuccess: async (_response, nextLanguage) => {
+      applyLanguage(nextLanguage);
       setMessage("Langue mise à jour.");
       await queryClient.invalidateQueries({ queryKey: meQueryKey });
     },
@@ -69,12 +72,11 @@ export function SettingsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { al
                 Langue de l'interface
                 <select
                   value={language}
-                  onChange={(event) => setLanguage(event.target.value as "fr" | "en" | "ar")}
+                  onChange={(event) => setLanguage(event.target.value as "fr" | "en")}
                   className="h-11 rounded-[8px] border border-[var(--brand-border-light)] bg-white px-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
                 >
                   <option value="fr">Français</option>
                   <option value="en">English</option>
-                  <option value="ar">Arabe</option>
                 </select>
               </label>
             </div>

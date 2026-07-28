@@ -6,7 +6,19 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
 import { makeSlug } from "../utils/slug.js";
+import { SUBSCRIPTION_PLANS } from "../utils/subscriptionPlans.js";
 import { optimizeAndWatermarkImage } from "../utils/watermark.js";
+
+const LISTING_DURATION_DAYS = 60;
+const listingExpiryFromNow = () => new Date(Date.now() + LISTING_DURATION_DAYS * 24 * 60 * 60 * 1000);
+const notExpired = (): Prisma.ProductWhereInput => ({
+  OR: [{ expiresAt: null }, { expiresAt: { gte: new Date() } }],
+});
+
+const FEATURED_BOOST_PRICE = new Prisma.Decimal(2000);
+const FEATURED_BOOST_DAYS = 7;
+const URGENT_BADGE_PRICE = new Prisma.Decimal(1000);
+const URGENT_BADGE_DAYS = 3;
 
 const productSelect = {
   id: true,
@@ -21,11 +33,17 @@ const productSelect = {
   isActive: true,
   isApproved: true,
   isFeatured: true,
+  featuredUntil: true,
+  isUrgent: true,
+  urgentUntil: true,
+  isQuoteOnly: true,
   auctionEnabled: true,
   auctionEndDate: true,
   currentBid: true,
   viewCount: true,
+  expiresAt: true,
   createdAt: true,
+  updatedAt: true,
   seller: {
     select: {
       id: true,
@@ -39,6 +57,8 @@ const productSelect = {
           totalReviews: true,
           location: true,
           isVerified: true,
+          latitude: true,
+          longitude: true,
         },
       },
     },
@@ -56,6 +76,7 @@ export const listProducts = asyncHandler(async (req, res) => {
   const where: Prisma.ProductWhereInput = {
     isActive: true,
     isApproved: true,
+    ...notExpired(),
     category: Object.values(MedCategory).includes(req.query.category as MedCategory)
       ? (req.query.category as MedCategory)
       : undefined,
@@ -74,7 +95,7 @@ export const listProducts = asyncHandler(async (req, res) => {
         : undefined,
   };
 
-  const orderBy: Prisma.ProductOrderByWithRelationInput =
+  const secondaryOrderBy: Prisma.ProductOrderByWithRelationInput =
     sort === "price_asc"
       ? { price: "asc" }
       : sort === "price_desc"
@@ -82,6 +103,10 @@ export const listProducts = asyncHandler(async (req, res) => {
         : sort === "rating"
           ? { seller: { professionalProfile: { averageRating: "desc" } } }
           : { createdAt: "desc" };
+
+  // Boosted listings ("mise en avant") always float to the top regardless of
+  // the chosen sort — that's the entire point of the paid option.
+  const orderBy: Prisma.ProductOrderByWithRelationInput[] = [{ isFeatured: "desc" }, secondaryOrderBy];
 
   const [products, total] = await prisma.$transaction([
     prisma.product.findMany({ where, orderBy, skip, take: limit, select: productSelect }),
@@ -111,7 +136,7 @@ export const listMyProducts = asyncHandler(async (req, res) => {
 
 export const getProductBySlug = asyncHandler(async (req, res) => {
   const product = await prisma.product.findFirst({
-    where: { slug: req.params.slug, isActive: true, isApproved: true },
+    where: { slug: req.params.slug, isActive: true, isApproved: true, ...notExpired() },
     select: productSelect,
   });
   if (!product) throw new ApiError(404, "Product not found");
@@ -121,8 +146,33 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
   res.json(apiResponse(true, { ...product, viewCount: product.viewCount + 1 }, "Product retrieved"));
 });
 
+// Sellers without a Subscription row are on the implicit FREE plan.
+const getSubscriptionLimits = async (userId: string) => {
+  const subscription = await prisma.subscription.findUnique({
+    where: { userId },
+    select: { maxListings: true, maxDownloads: true },
+  });
+  return subscription ?? { maxListings: SUBSCRIPTION_PLANS.FREE.maxListings, maxDownloads: SUBSCRIPTION_PLANS.FREE.maxDownloads };
+};
+
 export const createProduct = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
+
+  const limits = await getSubscriptionLimits(req.user.id);
+  const activeListings = await prisma.product.count({
+    where: { sellerId: req.user.id, isActive: true, ...notExpired() },
+  });
+  if (activeListings >= limits.maxListings) {
+    throw new ApiError(
+      403,
+      `Limite d'annonces actives atteinte (${limits.maxListings}) pour votre forfait. Passez à un forfait supérieur pour publier davantage.`,
+    );
+  }
+
+  let downloadLimit = req.body.downloadLimit;
+  if (req.body.type === ProductType.DIGITAL && downloadLimit != null) {
+    downloadLimit = Math.min(Number(downloadLimit), limits.maxDownloads);
+  }
 
   const baseSlug = makeSlug(req.body.title);
   const slug = `${baseSlug}-${Date.now().toString(36)}`;
@@ -141,9 +191,11 @@ export const createProduct = asyncHandler(async (req, res) => {
       auctionEnabled: Boolean(req.body.auctionEnabled ?? false),
       auctionEndDate: req.body.auctionEndDate ? new Date(req.body.auctionEndDate) : undefined,
       commissionRate: req.body.commissionRate,
-      downloadLimit: req.body.downloadLimit,
+      downloadLimit,
       fileUrl: req.body.fileUrl,
+      isQuoteOnly: Boolean(req.body.isQuoteOnly ?? false),
       isApproved: canModerateProducts(req.user.role),
+      expiresAt: listingExpiryFromNow(),
     },
     select: productSelect,
   });
@@ -156,11 +208,17 @@ export const updateProduct = asyncHandler(async (req, res) => {
 
   const existing = await prisma.product.findUnique({
     where: { id: req.params.id },
-    select: { sellerId: true },
+    select: { sellerId: true, type: true },
   });
   if (!existing) throw new ApiError(404, "Product not found");
   if (existing.sellerId !== req.user.id && !canModerateProducts(req.user.role))
     throw new ApiError(403, "Forbidden");
+
+  let downloadLimit = req.body.downloadLimit;
+  if ((req.body.type ?? existing.type) === ProductType.DIGITAL && downloadLimit != null) {
+    const limits = await getSubscriptionLimits(existing.sellerId);
+    downloadLimit = Math.min(Number(downloadLimit), limits.maxDownloads);
+  }
 
   const product = await prisma.product.update({
     where: { id: req.params.id },
@@ -175,14 +233,105 @@ export const updateProduct = asyncHandler(async (req, res) => {
       auctionEnabled: req.body.auctionEnabled,
       auctionEndDate: req.body.auctionEndDate ? new Date(req.body.auctionEndDate) : undefined,
       commissionRate: req.body.commissionRate,
-      downloadLimit: req.body.downloadLimit,
+      downloadLimit,
       fileUrl: req.body.fileUrl,
+      isQuoteOnly: typeof req.body.isQuoteOnly === "boolean" ? req.body.isQuoteOnly : undefined,
       isApproved: canModerateProducts(req.user.role) ? req.body.isApproved : false,
     },
     select: productSelect,
   });
 
   res.json(apiResponse(true, product, "Product updated"));
+});
+
+export const renewProduct = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+
+  const existing = await prisma.product.findUnique({
+    where: { id: req.params.id },
+    select: { sellerId: true },
+  });
+  if (!existing) throw new ApiError(404, "Product not found");
+  if (existing.sellerId !== req.user.id && !canModerateProducts(req.user.role))
+    throw new ApiError(403, "Forbidden");
+
+  const product = await prisma.product.update({
+    where: { id: req.params.id },
+    data: { expiresAt: listingExpiryFromNow(), isActive: true },
+    select: productSelect,
+  });
+
+  res.json(apiResponse(true, product, "Listing renewed"));
+});
+
+const debitWalletForOption = async (userId: string, amount: Prisma.Decimal, reference: string, description: string) =>
+  prisma.$transaction(async (tx) => {
+    // Conditional update instead of read-then-write, same reasoning as the
+    // stock decrement above: a single atomic WHERE clause prevents two
+    // concurrent purchases from both passing a stale balance check.
+    const decremented = await tx.user.updateMany({
+      where: { id: userId, walletBalance: { gte: amount } },
+      data: { walletBalance: { decrement: amount } },
+    });
+    if (decremented.count === 0) throw new ApiError(400, "Solde du portefeuille insuffisant");
+
+    const buyer = await tx.user.findUnique({ where: { id: userId }, select: { walletBalance: true } });
+    const balanceAfter = buyer?.walletBalance ?? new Prisma.Decimal(0);
+    await tx.walletTransaction.create({
+      data: {
+        userId,
+        amount: amount.neg(),
+        type: "PAYMENT",
+        reference,
+        description,
+        balanceBefore: balanceAfter.plus(amount),
+        balanceAfter,
+      },
+    });
+  });
+
+export const boostProduct = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  const existing = await prisma.product.findUnique({ where: { id: req.params.id }, select: { sellerId: true } });
+  if (!existing) throw new ApiError(404, "Product not found");
+  if (existing.sellerId !== req.user.id) throw new ApiError(403, "Forbidden");
+
+  await debitWalletForOption(
+    req.user.id,
+    FEATURED_BOOST_PRICE,
+    `product:${req.params.id}:boost:${Date.now()}`,
+    "Mise en avant d'une annonce (7 jours)",
+  );
+
+  const product = await prisma.product.update({
+    where: { id: req.params.id },
+    data: { isFeatured: true, featuredUntil: new Date(Date.now() + FEATURED_BOOST_DAYS * 24 * 60 * 60 * 1000) },
+    select: productSelect,
+  });
+
+  res.json(apiResponse(true, product, "Listing featured"));
+});
+
+export const markProductUrgent = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  const existing = await prisma.product.findUnique({ where: { id: req.params.id }, select: { sellerId: true } });
+  if (!existing) throw new ApiError(404, "Product not found");
+  if (existing.sellerId !== req.user.id) throw new ApiError(403, "Forbidden");
+
+  await debitWalletForOption(
+    req.user.id,
+    URGENT_BADGE_PRICE,
+    `product:${req.params.id}:urgent:${Date.now()}`,
+    "Badge urgent sur une annonce (3 jours)",
+  );
+
+  const product = await prisma.product.update({
+    where: { id: req.params.id },
+    data: { isUrgent: true, urgentUntil: new Date(Date.now() + URGENT_BADGE_DAYS * 24 * 60 * 60 * 1000) },
+    select: productSelect,
+  });
+
+  res.json(apiResponse(true, product, "Listing marked urgent"));
 });
 
 export const deleteProduct = asyncHandler(async (req, res) => {

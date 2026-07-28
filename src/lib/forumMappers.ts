@@ -11,6 +11,7 @@ export type BackendUser = {
 export type BackendForumComment = {
   id?: string;
   content?: string;
+  voteCount?: number;
   createdAt?: string;
   author?: BackendUser | null;
 };
@@ -47,9 +48,11 @@ const authorName = (author?: BackendUser | null) =>
 
 const toForumComment = (comment: BackendForumComment): ForumComment => ({
   id: comment.id ?? "",
+  authorId: comment.author?.id,
   authorName: authorName(comment.author),
   content: comment.content ?? "",
   date: comment.createdAt ?? new Date().toISOString(),
+  votes: comment.voteCount ?? 0,
 });
 
 const toForumAnswer = (answer: BackendAnswer): ForumAnswer => ({

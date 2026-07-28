@@ -2,11 +2,14 @@ import { Role } from "@prisma/client";
 import { Router } from "express";
 import { listBids, placeBid } from "../controllers/bid.controller.js";
 import {
+  boostProduct,
   createProduct,
   deleteProduct,
   getProductBySlug,
   listMyProducts,
   listProducts,
+  markProductUrgent,
+  renewProduct,
   updateProduct,
   uploadProductImages,
 } from "../controllers/product.controller.js";
@@ -41,6 +44,9 @@ productRouter.post(
   createProduct,
 );
 productRouter.put("/:id", authMiddleware, requireEmailVerified, updateProductValidator, validateRequest, updateProduct);
+productRouter.post("/:id/renew", authMiddleware, requireEmailVerified, idParamValidator, validateRequest, renewProduct);
+productRouter.post("/:id/boost", authMiddleware, requireEmailVerified, idParamValidator, validateRequest, boostProduct);
+productRouter.post("/:id/urgent", authMiddleware, requireEmailVerified, idParamValidator, validateRequest, markProductUrgent);
 productRouter.delete("/:id", authMiddleware, requireEmailVerified, idParamValidator, validateRequest, deleteProduct);
 productRouter.post(
   "/:id/upload-images",

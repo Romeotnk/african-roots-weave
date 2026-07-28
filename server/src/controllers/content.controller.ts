@@ -35,6 +35,25 @@ export const listArticles = asyncHandler(async (req, res) => {
   res.json(apiResponse(true, articles, "Articles retrieved", paginationMeta(page, limit, total)));
 });
 
+// Editorial view: includes drafts and pending items, filterable by space —
+// used by the admin authoring UI, unlike the public listArticles above which
+// only ever returns published+approved rows.
+export const listArticlesForAdmin = asyncHandler(async (req, res) => {
+  const { page, limit, skip } = getPagination(req.query);
+  const where = { space: req.query.space as ArticleSpace | undefined };
+  const [articles, total] = await prisma.$transaction([
+    prisma.article.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: { author: { select: { id: true, firstName: true, lastName: true, role: true } } },
+    }),
+    prisma.article.count({ where }),
+  ]);
+  res.json(apiResponse(true, articles, "Articles retrieved", paginationMeta(page, limit, total)));
+});
+
 export const listMyArticles = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
   const { page, limit, skip } = getPagination(req.query);
@@ -152,6 +171,14 @@ export const listMonographs = asyncHandler(async (_req, res) => {
   res.json(apiResponse(true, monographs, "Monographs retrieved"));
 });
 
+// Editorial view: includes unpublished drafts, unlike the public listMonographs above.
+export const listAllMonographsForAdmin = asyncHandler(async (_req, res) => {
+  const monographs = await prisma.plantMonograph.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+  res.json(apiResponse(true, monographs, "Monographs retrieved"));
+});
+
 export const getMonograph = asyncHandler(async (req, res) => {
   const monograph = await prisma.plantMonograph.findFirst({
     where: { OR: [{ id: req.params.id }, { slug: req.params.id }] },
@@ -178,4 +205,9 @@ export const updateMonograph = asyncHandler(async (req, res) => {
     data: req.body,
   });
   res.json(apiResponse(true, monograph, "Monograph updated"));
+});
+
+export const deleteMonograph = asyncHandler(async (req, res) => {
+  await prisma.plantMonograph.delete({ where: { id: req.params.id } });
+  res.json(apiResponse(true, null, "Monograph deleted"));
 });

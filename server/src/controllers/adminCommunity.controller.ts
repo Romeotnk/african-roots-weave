@@ -4,6 +4,7 @@ import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
+import { makeSlug } from "../utils/slug.js";
 
 // Reports (signalements).
 export const listReports = asyncHandler(async (req, res) => {
@@ -142,6 +143,49 @@ export const hideComment = asyncHandler(async (req, res) => {
     targetType: "ForumComment",
   });
   res.json(apiResponse(true, comment, "Comment updated"));
+});
+
+// Forum category management (hierarchical, one level of nesting).
+export const listAdminForumCategories = asyncHandler(async (_req, res) => {
+  const categories = await prisma.forumCategory.findMany({
+    orderBy: [{ position: "asc" }, { name: "asc" }],
+    include: { _count: { select: { questions: true } } },
+  });
+  res.json(apiResponse(true, categories, "Forum categories retrieved"));
+});
+
+export const createForumCategory = asyncHandler(async (req, res) => {
+  const name = String(req.body.name ?? "").trim();
+  if (!name) throw new ApiError(400, "Category name is required");
+  const parentId = typeof req.body.parentId === "string" && req.body.parentId ? req.body.parentId : undefined;
+  const slugBase = makeSlug(name);
+  const slug = parentId ? `${parentId.slice(0, 6)}-${slugBase}` : slugBase;
+
+  const category = await prisma.forumCategory.create({
+    data: { name, slug, parentId, position: Number(req.body.position ?? 0) },
+  });
+  await writeAuditLog(req, { action: "FORUM_CATEGORY_CREATED", targetId: category.id, targetType: "ForumCategory" });
+  res.status(201).json(apiResponse(true, category, "Category created"));
+});
+
+export const updateForumCategory = asyncHandler(async (req, res) => {
+  const category = await prisma.forumCategory.update({
+    where: { id: req.params.id },
+    data: {
+      name: req.body.name,
+      position: req.body.position !== undefined ? Number(req.body.position) : undefined,
+    },
+  });
+  await writeAuditLog(req, { action: "FORUM_CATEGORY_UPDATED", targetId: category.id, targetType: "ForumCategory" });
+  res.json(apiResponse(true, category, "Category updated"));
+});
+
+export const deleteForumCategory = asyncHandler(async (req, res) => {
+  const childCount = await prisma.forumCategory.count({ where: { parentId: req.params.id } });
+  if (childCount > 0) throw new ApiError(400, "Supprimez d'abord les sous-catégories.");
+  await prisma.forumCategory.delete({ where: { id: req.params.id } });
+  await writeAuditLog(req, { action: "FORUM_CATEGORY_DELETED", targetId: req.params.id, targetType: "ForumCategory" });
+  res.json(apiResponse(true, null, "Category deleted"));
 });
 
 // Review moderation.

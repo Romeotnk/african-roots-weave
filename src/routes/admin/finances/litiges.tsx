@@ -44,6 +44,14 @@ function AdminLitiges() {
                   {order.disputeReason && (
                     <p className="mt-2 rounded-lg bg-white/5 p-3 text-[13px] text-slate-300">« {order.disputeReason} »</p>
                   )}
+                  {order.sellerAcknowledgedAt ? (
+                    <p className="mt-2 text-[12px] font-semibold text-emerald-300">
+                      ✓ Accusé de réception vendeur le {new Date(order.sellerAcknowledgedAt).toLocaleDateString("fr-FR")}
+                      {order.sellerRefundNote ? ` — « ${order.sellerRefundNote} »` : ""}
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-[12px] text-slate-500">Pas encore d'accusé de réception du vendeur.</p>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <button

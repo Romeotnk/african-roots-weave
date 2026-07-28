@@ -1,11 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createTicket, getMyTicket, listMyTickets, replyMyTicket } from "@/lib/api/tickets";
+import {
+  createTicket,
+  getMyTicket,
+  listMyTickets,
+  listStaffTickets,
+  replyMyTicket,
+  replyStaffTicket,
+  updateStaffTicketStatus,
+} from "@/lib/api/tickets";
 
 const isBrowser = typeof window !== "undefined";
+const hasAccessToken = () => isBrowser && Boolean(window.localStorage.getItem("iwosan.accessToken"));
 
 export const ticketKeys = {
   all: ["tickets", "mine"] as const,
   detail: (id: string) => ["tickets", "mine", id] as const,
+  staff: ["tickets", "staff"] as const,
 };
 
 export function useMyTickets() {
@@ -41,4 +51,28 @@ export function useReplyTicket() {
     mutationFn: ({ id, content }: { id: string; content: string }) => replyMyTicket(id, content),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ticketKeys.all }),
   });
+}
+
+export function useStaffTickets() {
+  return useQuery({
+    queryKey: ticketKeys.staff,
+    queryFn: listStaffTickets,
+    enabled: hasAccessToken(),
+    retry: false,
+  });
+}
+
+export function useStaffTicketActions() {
+  const queryClient = useQueryClient();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ticketKeys.staff });
+  return {
+    updateStatus: useMutation({
+      mutationFn: ({ id, status }: { id: string; status: string }) => updateStaffTicketStatus(id, status),
+      onSuccess: refresh,
+    }),
+    reply: useMutation({
+      mutationFn: ({ id, content }: { id: string; content: string }) => replyStaffTicket(id, content),
+      onSuccess: refresh,
+    }),
+  };
 }

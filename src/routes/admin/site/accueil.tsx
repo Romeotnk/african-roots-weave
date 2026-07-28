@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminConfig, useUpdateAdminConfig } from "@/hooks/useAdminApi";
+import { DEFAULT_HOMEPAGE_SECTIONS, HOMEPAGE_SECTION_LABELS, parseHomepageSections, type HomepageSectionConfig } from "@/lib/homepageSections";
 
 export const Route = createFileRoute("/admin/site/accueil")({
   head: () => ({ meta: [{ title: "Admin accueil - IWOSAN" }] }),
@@ -18,6 +20,7 @@ function AdminAccueil() {
   const configQuery = useAdminConfig();
   const updateConfig = useUpdateAdminConfig();
   const [form, setForm] = useState(defaults);
+  const [sections, setSections] = useState<HomepageSectionConfig[]>(DEFAULT_HOMEPAGE_SECTIONS);
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
@@ -27,7 +30,22 @@ function AdminAccueil() {
       ...current,
       ...Object.fromEntries(Object.keys(defaults).map((key) => [key, byKey[key] ?? current[key as keyof typeof defaults]])),
     }));
+    setSections(parseHomepageSections(byKey["homepage.sections"]));
   }, [configQuery.data]);
+
+  const moveSection = (index: number, direction: -1 | 1) => {
+    setSections((current) => {
+      const target = index + direction;
+      if (target < 0 || target >= current.length) return current;
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
+  const toggleSection = (index: number) => {
+    setSections((current) => current.map((section, i) => (i === index ? { ...section, enabled: !section.enabled } : section)));
+  };
 
   return (
     <AdminLayout title="Accueil" description="Référencement et bandeau d'annonce de la page d'accueil.">
@@ -76,10 +94,55 @@ function AdminAccueil() {
         </AdminCard>
       </div>
 
+      <AdminCard className="mt-6">
+        <h2 className="mb-1 text-[18px] font-bold text-white">Sections de la page d'accueil</h2>
+        <p className="mb-4 text-[13px] text-slate-400">
+          Activez, désactivez et réordonnez les sections affichées sous le carrousel. Le bandeau d'annonce, le carrousel et les statistiques restent toujours visibles.
+        </p>
+        <div className="space-y-2">
+          {sections.map((section, index) => (
+            <div
+              key={section.key}
+              className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 ${section.enabled ? "border-white/10 bg-white/5" : "border-white/5 bg-white/[0.02] opacity-60"}`}
+            >
+              <label className="flex flex-1 items-center gap-3 text-[13px] text-slate-200">
+                <input type="checkbox" checked={section.enabled} onChange={() => toggleSection(index)} className="h-4 w-4 accent-emerald-400" />
+                {HOMEPAGE_SECTION_LABELS[section.key]}
+              </label>
+              <div className="flex gap-1">
+                <button
+                  type="button"
+                  disabled={index === 0}
+                  onClick={() => moveSection(index, -1)}
+                  aria-label="Monter"
+                  className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 text-slate-300 disabled:opacity-30"
+                >
+                  <ArrowUp size={14} />
+                </button>
+                <button
+                  type="button"
+                  disabled={index === sections.length - 1}
+                  onClick={() => moveSection(index, 1)}
+                  aria-label="Descendre"
+                  className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 text-slate-300 disabled:opacity-30"
+                >
+                  <ArrowDown size={14} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </AdminCard>
+
       <button
         type="button"
         disabled={updateConfig.isPending}
-        onClick={() => updateConfig.mutate(form, { onSuccess: () => setNotice("Page d'accueil mise à jour.") })}
+        onClick={() =>
+          updateConfig.mutate(
+            { ...form, "homepage.sections": JSON.stringify(sections) },
+            { onSuccess: () => setNotice("Page d'accueil mise à jour.") },
+          )
+        }
         className="mt-6 rounded-full bg-emerald-400 px-5 py-2.5 text-[13px] font-bold text-[#111827] disabled:opacity-50"
       >
         {updateConfig.isPending ? "Enregistrement..." : "Enregistrer"}

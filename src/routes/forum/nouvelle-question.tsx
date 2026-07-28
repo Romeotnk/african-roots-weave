@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
-import { Bold, Code, Image, Italic, List, Paperclip, Send } from "lucide-react";
-import { forumCategories, questions } from "@/data/questions";
-import { useCreateForumQuestion } from "@/hooks/useForumApi";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Bold, Code, Image, Italic, List, Loader2, Paperclip, Send, X } from "lucide-react";
+import { useCreateForumQuestion, useForumCategories, useForumSearch, useUploadForumAttachments } from "@/hooks/useForumApi";
 import { useDebounce } from "@/hooks/useDebounce";
+
+type SearchResult = { id: string; title: string };
 
 export const Route = createFileRoute("/forum/nouvelle-question")({
   head: () => ({ meta: [{ title: "Nouvelle question - Forum IWOSAN" }] }),
@@ -11,13 +12,18 @@ export const Route = createFileRoute("/forum/nouvelle-question")({
 });
 
 const suggestedTags = ["pharmacopee", "grossesse", "securite", "posologie", "karite", "neem", "douleur", "nutrition"];
+const severityOptions = ["", "Léger", "Modéré", "Sévère"];
 
 function NewQuestion() {
   const navigate = useNavigate();
   const createQuestion = useCreateForumQuestion();
+  const uploadAttachments = useUploadForumAttachments();
+  const categoriesQuery = useForumCategories();
+  const categories = categoriesQuery.data ?? [];
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [category, setCategory] = useState(forumCategories[0].name);
+  const [categoryId, setCategoryId] = useState("");
+  const [severity, setSeverity] = useState("");
   const [tags, setTags] = useState<string[]>(["pharmacopee"]);
   const [draftTag, setDraftTag] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -25,17 +31,21 @@ function NewQuestion() {
   const [formError, setFormError] = useState("");
   const [editorNotice, setEditorNotice] = useState("");
   const [attachmentNotice, setAttachmentNotice] = useState("");
+  const [attachments, setAttachments] = useState<string[]>([]);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
   const debouncedTitle = useDebounce(title, 300);
 
-  const similarQuestions = useMemo(() => {
-    const normalized = debouncedTitle.trim().toLowerCase();
-    if (normalized.length < 8) return [];
-    const tokens = normalized.split(/\s+/).filter((token) => token.length > 3);
-    return questions
-      .filter((question) => tokens.some((token) => `${question.title} ${question.excerpt} ${question.tags.join(" ")}`.toLowerCase().includes(token)))
-      .slice(0, 3);
-  }, [debouncedTitle]);
+  useEffect(() => {
+    if (categoryId || categories.length === 0) return;
+    const first = categories[0];
+    setCategoryId(first.children?.[0]?.id ?? first.id);
+  }, [categories, categoryId]);
+
+  const searchQuery = useForumSearch(debouncedTitle);
+  const similarQuestions = useMemo<SearchResult[]>(() => {
+    if (debouncedTitle.trim().length < 8) return [];
+    return ((searchQuery.data ?? []) as SearchResult[]).slice(0, 3);
+  }, [searchQuery.data, debouncedTitle]);
 
   const addTag = (tag: string) => {
     const clean = tag.trim().toLowerCase();
@@ -60,7 +70,7 @@ function NewQuestion() {
   };
 
   const saveDraft = () => {
-    window.localStorage.setItem("iwosan.forumDraft", JSON.stringify({ title, body, category, tags }));
+    window.localStorage.setItem("iwosan.forumDraft", JSON.stringify({ title, body, categoryId, severity, tags }));
     setDraftSaved(true);
     setFormError("");
   };
@@ -81,11 +91,19 @@ function NewQuestion() {
 
     setFormError("");
     createQuestion.mutate(
-      { title: title.trim(), content: body.trim(), category, tags },
+      {
+        title: title.trim(),
+        content: body.trim(),
+        categoryId,
+        customFields: severity ? { severite: severity } : undefined,
+        tags,
+        attachments,
+      },
       {
         onSuccess: (created) => {
           setSubmitted(true);
           setDraftSaved(false);
+          setAttachments([]);
           window.localStorage.removeItem("iwosan.forumDraft");
           const createdId = (created as { id?: string } | null)?.id;
           if (createdId) {
@@ -208,19 +226,35 @@ function NewQuestion() {
                 <label htmlFor="question-category" className="mb-2 block text-[13px] font-bold">Catégorie</label>
                 <select
                   id="question-category"
-                  value={category}
-                  onChange={(event) => setCategory(event.target.value)}
+                  value={categoryId}
+                  onChange={(event) => setCategoryId(event.target.value)}
                   className="h-12 w-full rounded-lg border border-[var(--brand-border)] bg-white px-4"
                 >
-                  {forumCategories.map((item) => (
-                    <optgroup key={item.name} label={item.name}>
-                      <option value={item.name}>{item.name}</option>
-                      {item.children.map((child) => (
-                        <option key={child} value={child}>
-                          {child}
+                  {categories.map((item) => (
+                    <optgroup key={item.id} label={item.name}>
+                      <option value={item.id}>{item.name}</option>
+                      {(item.children ?? []).map((child) => (
+                        <option key={child.id} value={child.id}>
+                          {child.name}
                         </option>
                       ))}
                     </optgroup>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="question-severity" className="mb-2 block text-[13px] font-bold">Sévérité (facultatif)</label>
+                <select
+                  id="question-severity"
+                  value={severity}
+                  onChange={(event) => setSeverity(event.target.value)}
+                  className="h-12 w-full rounded-lg border border-[var(--brand-border)] bg-white px-4"
+                >
+                  {severityOptions.map((option) => (
+                    <option key={option || "none"} value={option}>
+                      {option || "Non précisée"}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -286,14 +320,47 @@ function NewQuestion() {
                 className="hidden"
                 multiple
                 onChange={(event) => {
-                  const count = event.target.files?.length ?? 0;
-                  if (count === 0) return;
-                  setAttachmentNotice(`${count} fichier(s) ajouté(s) à la question.`);
+                  const files = Array.from(event.target.files ?? []);
+                  event.target.value = "";
+                  if (files.length === 0) return;
+                  setAttachmentNotice("");
+                  uploadAttachments.mutate(files, {
+                    onSuccess: (urls) => {
+                      setAttachments((current) => [...current, ...urls]);
+                      setAttachmentNotice(`${urls.length} fichier(s) ajouté(s) à la question.`);
+                    },
+                    onError: (error) =>
+                      setAttachmentNotice(error instanceof Error ? error.message : "Impossible d'envoyer ces fichiers."),
+                  });
                 }}
               />
-              <button type="button" onClick={() => attachmentInputRef.current?.click()} className="h-10 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
+              <button
+                type="button"
+                onClick={() => attachmentInputRef.current?.click()}
+                disabled={uploadAttachments.isPending}
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold disabled:opacity-50"
+              >
+                {uploadAttachments.isPending && <Loader2 size={14} className="animate-spin" />}
                 Choisir des fichiers
-              </button>              {attachmentNotice && <p className="max-w-md rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">{attachmentNotice}</p>}
+              </button>
+              {attachmentNotice && <p className="max-w-md rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">{attachmentNotice}</p>}
+              {attachments.length > 0 && (
+                <ul className="w-full max-w-md space-y-1.5 text-left">
+                  {attachments.map((url) => (
+                    <li key={url} className="flex items-center justify-between gap-2 rounded-lg bg-[var(--brand-surface-alt)] px-3 py-2 text-[12px]">
+                      <a href={url} target="_blank" rel="noreferrer" className="truncate text-[var(--brand-primary)]">{url}</a>
+                      <button
+                        type="button"
+                        onClick={() => setAttachments((current) => current.filter((item) => item !== url))}
+                        className="shrink-0 text-[var(--color-text-muted)] hover:text-red-600"
+                        aria-label="Retirer ce fichier"
+                      >
+                        <X size={14} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
 

@@ -6,6 +6,7 @@ import {
   CreditCard,
   FileText,
   Home,
+  KeyRound,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -41,6 +42,7 @@ const navGroups: NavGroup[] = [
       { to: "/admin/site/pages", label: "Pages", icon: FileText },
       { to: "/admin/site/identite", label: "Identité", icon: Palette },
       { to: "/admin/site/publicites", label: "Publicités", icon: Bell },
+      { to: "/admin/roles-permissions", label: "Rôles & permissions", icon: KeyRound },
     ],
   },
   {

@@ -1,12 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-import { AlertTriangle, CheckCircle2, Clock, MessageSquare, Package, Search, Truck } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, MessageSquare, Package, Search, ShieldCheck, Star, Truck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
-import { useMarkOrderShipped, useMyOrders, useOpenOrderDispute } from "@/hooks/useOrdersApi";
+import { useAcknowledgeOrderRefund, useMarkOrderShipped, useMyOrders, useOpenOrderDispute } from "@/hooks/useOrdersApi";
+import { useCreateReview } from "@/hooks/useReviewsApi";
 
 type PrismaOrderStatus = "PENDING" | "PAID" | "SHIPPED" | "DELIVERED" | "DISPUTED" | "REFUNDED" | "CANCELLED";
+type RefundStatus = "REQUESTED" | "APPROVED" | "REJECTED" | "PROCESSED";
 
 type BackendOrder = {
   id: string;
@@ -15,8 +17,19 @@ type BackendOrder = {
   totalAmount: string | number;
   status: PrismaOrderStatus;
   createdAt: string;
+  disputeReason?: string | null;
+  refundStatus?: RefundStatus | null;
+  sellerRefundNote?: string | null;
+  sellerAcknowledgedAt?: string | null;
   product?: { id: string; title: string } | null;
   buyer?: { firstName: string; lastName: string } | null;
+};
+
+const refundStatusLabels: Record<RefundStatus, string> = {
+  REQUESTED: "Demande en attente d'examen",
+  APPROVED: "Approuvee par l'administration",
+  REJECTED: "Rejetee par l'administration",
+  PROCESSED: "Remboursement effectue",
 };
 
 const statusLabels: Record<PrismaOrderStatus, string> = {
@@ -48,6 +61,7 @@ function CommandesPage() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | PrismaOrderStatus>("all");
   const [message, setMessage] = useState("");
+  const [ratingOrderId, setRatingOrderId] = useState<string | null>(null);
 
   const orders = (ordersQuery.data?.data ?? []) as BackendOrder[];
 
@@ -192,7 +206,22 @@ function CommandesPage() {
                             <AlertTriangle size={16} /> Signaler un litige
                           </button>
                         )}
+                        {order.status === "DELIVERED" && (
+                          <button
+                            type="button"
+                            onClick={() => setRatingOrderId((current) => (current === order.id ? null : order.id))}
+                            className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold"
+                          >
+                            <Star size={16} /> Noter ce client
+                          </button>
+                        )}
                       </div>
+                      {ratingOrderId === order.id && (
+                        <BuyerRatingForm buyerId={order.buyerId} onDone={(text) => { setMessage(text); setRatingOrderId(null); }} />
+                      )}
+                      {(order.refundStatus || order.status === "DISPUTED") && (
+                        <RefundPanel order={order} onDone={setMessage} />
+                      )}
                     </article>
                   ))
                 )}
@@ -202,6 +231,117 @@ function CommandesPage() {
         </section>
       </main>
     </ProtectedRoute>
+  );
+}
+
+function BuyerRatingForm({ buyerId, onDone }: { buyerId: string; onDone: (message: string) => void }) {
+  const createReview = useCreateReview();
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [error, setError] = useState("");
+
+  const submit = () => {
+    setError("");
+    createReview.mutate(
+      { targetId: buyerId, targetType: "BUYER", rating, comment: comment.trim() || undefined },
+      {
+        onSuccess: () => onDone("Client noté, merci pour votre retour."),
+        onError: (mutationError) => setError(mutationError instanceof Error ? mutationError.message : "Impossible d'enregistrer cette note."),
+      },
+    );
+  };
+
+  return (
+    <div className="mt-4 rounded-[8px] border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-4">
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((value) => (
+          <button key={value} type="button" onClick={() => setRating(value)} aria-label={`${value} étoiles`}>
+            <Star size={20} className={value <= rating ? "fill-[var(--brand-gold)] text-[var(--brand-gold)]" : "text-[var(--brand-border)]"} />
+          </button>
+        ))}
+      </div>
+      <textarea
+        value={comment}
+        onChange={(event) => setComment(event.target.value)}
+        rows={2}
+        placeholder="Commentaire sur ce client (facultatif)"
+        className="mt-3 w-full rounded-lg border border-[var(--brand-border)] px-3 py-2 text-[13px]"
+      />
+      {error && <p className="mt-2 text-[12px] font-semibold text-red-700">{error}</p>}
+      <button
+        type="button"
+        onClick={submit}
+        disabled={createReview.isPending}
+        className="mt-3 h-9 rounded-full bg-[var(--brand-primary)] px-4 text-[12px] font-semibold text-white disabled:opacity-60"
+      >
+        {createReview.isPending ? "Envoi..." : "Envoyer la note"}
+      </button>
+    </div>
+  );
+}
+
+function RefundPanel({ order, onDone }: { order: BackendOrder; onDone: (message: string) => void }) {
+  const acknowledgeRefund = useAcknowledgeOrderRefund();
+  const [note, setNote] = useState("");
+  const [error, setError] = useState("");
+
+  const submit = () => {
+    setError("");
+    acknowledgeRefund.mutate(
+      { orderId: order.id, note: note.trim() || undefined },
+      {
+        onSuccess: () => onDone("Accusé de réception envoyé à l'équipe Iwosan."),
+        onError: (mutationError) => setError(mutationError instanceof Error ? mutationError.message : "Impossible d'envoyer l'accusé de réception."),
+      },
+    );
+  };
+
+  return (
+    <div className="mt-4 rounded-[8px] border border-amber-200 bg-amber-50 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <AlertTriangle size={16} className="text-amber-700" />
+        <p className="text-[13px] font-bold text-amber-800">
+          {order.status === "DISPUTED" ? "Litige en cours" : "Demande de remboursement"}
+        </p>
+        {order.refundStatus && (
+          <span className="rounded-full border border-amber-200 bg-white px-3 py-1 text-[12px] font-semibold text-amber-800">
+            {refundStatusLabels[order.refundStatus]}
+          </span>
+        )}
+      </div>
+      {order.disputeReason && (
+        <p className="mt-2 text-[13px] text-amber-900"><span className="font-semibold">Motif :</span> {order.disputeReason}</p>
+      )}
+      <p className="mt-2 text-[12px] text-amber-800">
+        La décision finale (approbation, rejet, versement) est traitée par l'équipe Iwosan. Vous pouvez néanmoins accuser réception et ajouter une précision utile à l'examen du dossier.
+      </p>
+
+      {order.sellerAcknowledgedAt ? (
+        <p className="mt-3 flex items-center gap-2 text-[13px] font-semibold text-emerald-700">
+          <ShieldCheck size={16} /> Accusé de réception envoyé le {new Date(order.sellerAcknowledgedAt).toLocaleDateString("fr-FR")}
+          {order.sellerRefundNote ? ` — "${order.sellerRefundNote}"` : ""}
+        </p>
+      ) : (
+        <>
+          <textarea
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            rows={2}
+            placeholder="Précision à l'attention de l'équipe Iwosan (facultatif)"
+            className="mt-3 w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-[13px]"
+          />
+          {error && <p className="mt-2 text-[12px] font-semibold text-red-700">{error}</p>}
+          <button
+            type="button"
+            onClick={submit}
+            disabled={acknowledgeRefund.isPending}
+            className="mt-3 inline-flex h-9 items-center gap-2 rounded-full bg-amber-700 px-4 text-[12px] font-semibold text-white disabled:opacity-60"
+          >
+            <ShieldCheck size={14} /> {acknowledgeRefund.isPending ? "Envoi..." : "Accuser réception"}
+          </button>
+        </>
+      )}
+    </div>
   );
 }
 

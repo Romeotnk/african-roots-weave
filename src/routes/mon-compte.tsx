@@ -4,7 +4,10 @@ import {
   BookOpen,
   BriefcaseBusiness,
   Calendar,
+  FileText,
   GraduationCap,
+  Layers,
+  Link2,
   HelpCircle,
   MessageSquare,
   Package,
@@ -23,6 +26,7 @@ import { useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { isProfessionalAccount, USER_ACCOUNT_ROLES } from "@/lib/auth/roles";
+import { useMyBookings } from "@/hooks/useBookingsApi";
 
 export const Route = createFileRoute("/mon-compte")({
   head: () => ({ meta: [{ title: "Mon compte - IWOSAN" }] }),
@@ -42,7 +46,10 @@ const personalSections = [
   { title: "Questions", desc: "Questions publiees, suivis et reponses.", to: "/mon-compte/questions", icon: MessageSquare },
   { title: "KYC", desc: "Verification d'identite et statut.", to: "/mon-compte/kyc", icon: ShieldCheck },
   { title: "Notifications", desc: "Messages, commandes et alertes.", to: "/mon-compte/notifications", icon: Bell },
+  { title: "Reservations", desc: "Rendez-vous demandes aupres des professionnels.", to: "/mon-compte/reservations", icon: Calendar },
+  { title: "Devis", desc: "Demandes de devis et propositions recues.", to: "/mon-compte/devis", icon: FileText },
   { title: "Alertes", desc: "Recherches sauvegardees marketplace.", to: "/mon-compte/alertes", icon: BookOpen },
+  { title: "Favoris", desc: "Questions du forum enregistrees.", to: "/mon-compte/favoris", icon: Sparkles },
   { title: "Tickets", desc: "Conversations avec le support.", to: "/mon-compte/tickets", icon: HelpCircle },
   { title: "Parametres", desc: "Langue, securite et preferences.", to: "/mon-compte/parametres", icon: Settings },
 ];
@@ -51,16 +58,25 @@ const proSections = [
   { title: "Tableau de bord", desc: "Vue globale de votre activite professionnelle.", to: "/tableau-de-bord", icon: BriefcaseBusiness },
   { title: "Mes produits", desc: "Catalogue, stock, publications et moderation.", to: "/tableau-de-bord/mes-produits", icon: ShoppingBag },
   { title: "Commandes", desc: "Ventes, traitements et expeditions.", to: "/tableau-de-bord/commandes", icon: Package },
+  { title: "Reservations", desc: "Demandes de rendez-vous de vos clients.", to: "/tableau-de-bord/reservations", icon: Calendar },
+  { title: "Devis", desc: "Demandes de devis a traiter.", to: "/tableau-de-bord/devis", icon: FileText },
   { title: "Coupons", desc: "Codes promotionnels et campagnes.", to: "/tableau-de-bord/coupons", icon: Tag },
+  { title: "Mon abonnement", desc: "Forfait, limites d'annonces et de telechargements.", to: "/tableau-de-bord/abonnement", icon: Layers },
   { title: "Formations", desc: "Ressources, cours et publications.", to: "/tableau-de-bord/formations", icon: GraduationCap },
   { title: "Evenements", desc: "Agenda, salons, ateliers et inscriptions.", to: "/tableau-de-bord/evenements", icon: Calendar },
   { title: "Questions", desc: "Forum, reponses et expertise communautaire.", to: "/tableau-de-bord/questions", icon: MessageSquare },
   { title: "Avis", desc: "Avis recus et reponses publiques.", to: "/tableau-de-bord/avis", icon: Star },
-  { title: "Reseau", desc: "Parrainage, reseau et commissions.", to: "/tableau-de-bord/reseau", icon: Users },
+  { title: "Support utilisateurs", desc: "Repondre aux tickets ouverts du centre d'aide.", to: "/tableau-de-bord/support", icon: HelpCircle },
+  { title: "Reseau MLM", desc: "Arbre de filleuls et commissions reseau.", to: "/tableau-de-bord/reseau", icon: Users },
+  { title: "Affiliation", desc: "Lien de parrainage et commissions par vente.", to: "/tableau-de-bord/affiliation", icon: Link2 },
 ];
 
 function AccountHome() {
   const { user, roles } = useAuth();
+  const { data: bookings } = useMyBookings("client");
+  const upcomingBookings = (bookings ?? [])
+    .filter((booking) => booking.status === "PENDING" || booking.status === "CONFIRMED")
+    .slice(0, 3);
   const [showProPrompt, setShowProPrompt] = useState(true);
   const name = (user?.user_metadata?.first_name as string | undefined) || user?.email?.split("@")[0] || "Compte";
   const isProAccount = isProfessionalAccount(roles);
@@ -101,6 +117,28 @@ function AccountHome() {
       </section>
 
       <section className="container-iwosan py-8">
+        {upcomingBookings.length > 0 && (
+          <div className="mb-8 grid gap-4 rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 shadow-iwosan-md lg:grid-cols-[1.1fr_0.9fr]">
+            <div>
+              <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Réservations</p>
+              <h2 className="mt-2 text-[24px] font-extrabold">Vos prochains rendez-vous</h2>
+              <p className="mt-2 text-[14px] leading-7 text-[var(--color-text-muted)]">Suivi de vos demandes de réservation auprès des professionnels.</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {upcomingBookings.map((booking) => (
+                <div key={booking.id} className="rounded-[18px] bg-[var(--brand-surface-alt)] p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">
+                    {booking.status === "PENDING" ? "En attente" : "Confirmée"}
+                  </p>
+                  <p className="mt-2 text-[14px] font-semibold leading-6">{booking.serviceName}</p>
+                  <p className="mt-1 text-[12px] text-[var(--color-text-muted)]">
+                    {booking.professional.professionalProfile?.displayName ?? `${booking.professional.firstName} ${booking.professional.lastName}`}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         {!isProAccount && showProPrompt && (
           <div className="mb-6 rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5 shadow-iwosan-md">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -112,7 +150,7 @@ function AccountHome() {
                   <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Compte professionnel</p>
                   <h2 className="mt-1 text-[20px] font-extrabold">Vous souhaitez vendre, publier ou proposer vos services ?</h2>
                   <p className="mt-1 text-[13px] leading-6 text-[var(--color-text-muted)]">
-                    Vous pouvez creer votre profil professionnel maintenant ou continuer avec votre compte utilisateur.
+                    Vous pouvez créer votre profil professionnel maintenant ou continuer avec votre compte utilisateur.
                   </p>
                 </div>
               </div>

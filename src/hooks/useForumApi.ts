@@ -7,12 +7,17 @@ import {
   createQuestion,
   featureQuestion,
   getQuestion,
+  listForumCategories,
+  listMyFavorites,
   listMyQuestions,
   listQuestions,
   report,
   searchQuestions,
+  toggleFavorite,
   updateAnswer,
+  updateComment,
   updateQuestion,
+  uploadForumAttachments,
   vote,
   type AnswerPayload,
   type CommentPayload,
@@ -22,10 +27,15 @@ import {
   type VotePayload,
 } from "@/lib/api/forum";
 
+const isBrowser = typeof window !== "undefined";
+const hasAccessToken = () => isBrowser && Boolean(window.localStorage.getItem("iwosan.accessToken"));
+
 export const forumKeys = {
   questions: (params: ForumQuestionQuery = {}) => ["forum", "questions", params] as const,
   question: (id: string) => ["forum", "question", id] as const,
   search: (query: string) => ["forum", "search", query] as const,
+  categories: ["forum", "categories"] as const,
+  favorites: ["forum", "favorites", "mine"] as const,
 };
 
 export function useForumQuestions(params: ForumQuestionQuery = {}) {
@@ -114,6 +124,40 @@ export function useCreateForumComment() {
   });
 }
 
+export function useUpdateForumComment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, content }: { id: string; content: string }) => updateComment(id, content),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["forum"] }),
+  });
+}
+
+export function useForumCategories() {
+  return useQuery({
+    queryKey: forumKeys.categories,
+    queryFn: listForumCategories,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+}
+
+export function useMyFavorites() {
+  return useQuery({
+    queryKey: forumKeys.favorites,
+    queryFn: listMyFavorites,
+    enabled: hasAccessToken(),
+    retry: false,
+  });
+}
+
+export function useToggleFavorite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ targetId }: { targetId: string }) => toggleFavorite(targetId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: forumKeys.favorites }),
+  });
+}
+
 export function useForumVote() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -131,15 +175,21 @@ export function useForumReport() {
 export function useFeatureForumQuestion() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: featureQuestion,
+    mutationFn: ({ id, isFeatured }: { id: string; isFeatured?: boolean }) => featureQuestion(id, isFeatured),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["forum"] }),
+  });
+}
+
+export function useUploadForumAttachments() {
+  return useMutation({
+    mutationFn: uploadForumAttachments,
   });
 }
 
 export function useCloseForumQuestion() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: closeQuestion,
+    mutationFn: ({ id, isClosed }: { id: string; isClosed?: boolean }) => closeQuestion(id, isClosed),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["forum"] }),
   });
 }

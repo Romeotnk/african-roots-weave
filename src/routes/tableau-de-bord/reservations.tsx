@@ -1,0 +1,191 @@
+import { createFileRoute } from "@tanstack/react-router";
+import type { LucideIcon } from "lucide-react";
+import { Calendar, CheckCircle2, Clock, Loader2, Search, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { useMyBookings, useUpdateBookingStatus } from "@/hooks/useBookingsApi";
+import type { Booking, BookingStatus } from "@/lib/api/bookings";
+
+const statusLabels: Record<BookingStatus, string> = {
+  PENDING: "En attente",
+  CONFIRMED: "Confirmée",
+  CANCELLED: "Annulée",
+  COMPLETED: "Terminée",
+};
+
+const statusClasses: Record<BookingStatus, string> = {
+  PENDING: "bg-amber-50 text-amber-700 border-amber-100",
+  CONFIRMED: "bg-emerald-50 text-emerald-700 border-emerald-100",
+  CANCELLED: "bg-red-50 text-red-700 border-red-100",
+  COMPLETED: "bg-slate-100 text-slate-700 border-slate-200",
+};
+
+const formatDateTime = (value: string) =>
+  new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+
+function ReservationsPage() {
+  const { data: bookings, isLoading, isError } = useMyBookings("professional");
+  const updateStatus = useUpdateBookingStatus();
+  const [statusFilter, setStatusFilter] = useState<"all" | BookingStatus>("all");
+  const [query, setQuery] = useState("");
+  const [message, setMessage] = useState("");
+
+  const list = bookings ?? [];
+
+  const filtered = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    return list.filter((booking) => {
+      const matchesStatus = statusFilter === "all" || booking.status === statusFilter;
+      const clientName = `${booking.client.firstName} ${booking.client.lastName}`.toLowerCase();
+      const matchesQuery = !normalized || clientName.includes(normalized) || booking.serviceName.toLowerCase().includes(normalized);
+      return matchesStatus && matchesQuery;
+    });
+  }, [list, statusFilter, query]);
+
+  const pendingCount = list.filter((booking) => booking.status === "PENDING").length;
+  const confirmedCount = list.filter((booking) => booking.status === "CONFIRMED").length;
+
+  const act = (booking: Booking, status: BookingStatus) => {
+    setMessage("");
+    updateStatus.mutate(
+      { id: booking.id, status },
+      {
+        onSuccess: () => setMessage(`Réservation ${statusLabels[status].toLowerCase()}.`),
+        onError: (error) => setMessage(error instanceof Error ? error.message : "Action impossible."),
+      },
+    );
+  };
+
+  return (
+    <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
+      <main className="min-h-screen bg-[var(--brand-bg)]">
+        <section className="border-b border-[var(--brand-border-light)] bg-white">
+          <div className="container-iwosan py-8">
+            <AccountBackLink />
+            <div className="mt-5">
+              <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Boutique</p>
+              <h1 className="mt-2 text-[32px] md:text-[42px]">Réservations</h1>
+              <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
+                Confirmez, annulez ou clôturez les demandes de réservation de vos services. Configurez vos disponibilités depuis "Devenir professionnel".
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="container-iwosan py-8">
+          <div className="grid gap-4 md:grid-cols-3">
+            <StatCard icon={Clock} label="En attente" value={String(pendingCount)} />
+            <StatCard icon={CheckCircle2} label="Confirmées" value={String(confirmedCount)} />
+            <StatCard icon={Calendar} label="Total" value={String(list.length)} />
+          </div>
+
+          <div className="mt-6 rounded-[8px] border border-[var(--brand-border-light)] bg-white p-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <label className="relative block min-w-0 flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" size={17} />
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Rechercher un client ou un service"
+                  className="h-11 w-full rounded-[8px] border border-[var(--brand-border-light)] bg-white pl-10 pr-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
+                />
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {(["all", "PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"] as const).map((status) => (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => setStatusFilter(status)}
+                    className={`h-10 rounded-full px-4 text-[13px] font-semibold transition ${
+                      statusFilter === status
+                        ? "bg-[var(--brand-primary)] text-white"
+                        : "bg-[var(--brand-surface-alt)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                    }`}
+                  >
+                    {status === "all" ? "Toutes" : statusLabels[status]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {message && <p className="mt-3 rounded-[8px] bg-emerald-50 px-4 py-3 text-[13px] font-semibold text-emerald-700">{message}</p>}
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {isLoading ? (
+              <div className="flex items-center justify-center rounded-[8px] border border-[var(--brand-border-light)] bg-white p-10">
+                <Loader2 className="animate-spin text-[var(--brand-primary)]" size={28} />
+              </div>
+            ) : isError ? (
+              <div className="rounded-[8px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
+                Impossible de charger vos réservations pour le moment.
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-8 text-center">
+                <Calendar className="mx-auto text-[var(--brand-primary)]" size={34} />
+                <h2 className="mt-4 text-[20px] font-bold">Aucune réservation</h2>
+                <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Les demandes de vos clients apparaîtront ici.</p>
+              </div>
+            ) : (
+              filtered.map((booking) => (
+                <article key={booking.id} className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="text-[17px] font-bold text-[var(--color-text-primary)]">{booking.serviceName}</h2>
+                        <span className={`rounded-full border px-3 py-1 text-[12px] font-bold ${statusClasses[booking.status]}`}>
+                          {statusLabels[booking.status]}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">
+                        {booking.client.firstName} {booking.client.lastName} · {formatDateTime(booking.scheduledAt)} · {booking.durationMinutes} min
+                      </p>
+                      {booking.notes && <p className="mt-2 text-[13px] text-[var(--color-text-secondary)]">{booking.notes}</p>}
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {booking.status === "PENDING" && (
+                      <>
+                        <button type="button" onClick={() => act(booking, "CONFIRMED")} disabled={updateStatus.isPending} className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-50">
+                          <CheckCircle2 size={16} /> Confirmer
+                        </button>
+                        <button type="button" onClick={() => act(booking, "CANCELLED")} disabled={updateStatus.isPending} className="inline-flex h-10 items-center gap-2 rounded-full bg-red-50 px-4 text-[13px] font-semibold text-red-700 disabled:opacity-50">
+                          <X size={16} /> Refuser
+                        </button>
+                      </>
+                    )}
+                    {booking.status === "CONFIRMED" && (
+                      <>
+                        <button type="button" onClick={() => act(booking, "COMPLETED")} disabled={updateStatus.isPending} className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-50">
+                          <CheckCircle2 size={16} /> Marquer terminée
+                        </button>
+                        <button type="button" onClick={() => act(booking, "CANCELLED")} disabled={updateStatus.isPending} className="inline-flex h-10 items-center gap-2 rounded-full bg-red-50 px-4 text-[13px] font-semibold text-red-700 disabled:opacity-50">
+                          <X size={16} /> Annuler
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </article>
+              ))
+            )}
+          </div>
+        </section>
+      </main>
+    </ProtectedRoute>
+  );
+}
+
+function StatCard({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
+  return (
+    <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
+      <Icon size={22} className="text-[var(--brand-primary)]" />
+      <p className="mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">{label}</p>
+      <p className="mt-1 text-[24px] font-extrabold text-[var(--color-text-primary)]">{value}</p>
+    </div>
+  );
+}
+
+export const Route = createFileRoute("/tableau-de-bord/reservations")({
+  head: () => ({ meta: [{ title: "Réservations - IWOSAN" }] }),
+  component: ReservationsPage,
+});

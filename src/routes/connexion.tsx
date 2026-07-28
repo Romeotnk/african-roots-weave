@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { login } from "@/lib/api/auth";
+import { useTranslation } from "react-i18next";
+import { login, resendVerificationEmail } from "@/lib/api/auth";
 import { consumePendingSocialAccountType, signInWithSocialProvider, type SocialAuthProvider } from "@/lib/auth/social";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { getAccountHomePath } from "@/lib/auth/roles";
@@ -13,12 +14,16 @@ export const Route = createFileRoute("/connexion")({
 
 function Connexion() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, loading, roles, authSyncError } = useAuth();
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [isSocialSubmitting, setIsSocialSubmitting] = useState<SocialAuthProvider | null>(null);
   const accountTarget = getAccountHomePath(roles);
 
@@ -36,6 +41,8 @@ function Connexion() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+    setNeedsVerification(false);
+    setResendStatus(null);
     setIsSubmitting(true);
     try {
       const response = await login(email, password);
@@ -43,9 +50,24 @@ function Connexion() {
       const backendIsPro = ["PROFESSIONAL", "RESEARCHER", "ADMIN", "SUPER_ADMIN"].includes(backendRole ?? "");
       navigate({ to: backendIsPro ? "/tableau-de-bord" : "/mon-compte" });
     } catch (apiError) {
-      setError(apiError instanceof Error ? apiError.message : "Connexion impossible pour le moment.");
+      const message = apiError instanceof Error ? apiError.message : t("auth.login.genericError");
+      setError(message);
+      setNeedsVerification(message.includes("vérifier votre adresse email"));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setIsResending(true);
+    setResendStatus(null);
+    try {
+      await resendVerificationEmail(email);
+      setResendStatus(t("auth.login.resendSuccess"));
+    } catch {
+      setResendStatus(t("auth.login.resendError"));
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -56,7 +78,7 @@ function Connexion() {
     try {
       await signInWithSocialProvider(provider);
     } catch (socialError) {
-      setError(socialError instanceof Error ? socialError.message : "La connexion sociale n'a pas pu être lancée.");
+      setError(socialError instanceof Error ? socialError.message : t("auth.login.socialError"));
       setIsSocialSubmitting(null);
     }
   };
@@ -68,14 +90,14 @@ function Connexion() {
           <span className="font-extrabold text-[28px] text-[var(--brand-primary)]">IWOSAN</span>
         </Link>
         <div className="bg-[var(--color-surface)] rounded-[24px] shadow-iwosan-xl p-8 md:p-10">
-          <h2 className="text-[28px] text-center font-bold">Bon retour !</h2>
+          <h2 className="text-[28px] text-center font-bold">{t("auth.login.title")}</h2>
           <p className="text-center text-[14px] text-[var(--color-text-muted)] mt-1">
-            Connectez-vous à votre espace Iwosan
+            {t("auth.login.subtitle")}
           </p>
           <form className="mt-7 space-y-4" onSubmit={handleSubmit}>
             <input
               type="email"
-              placeholder="Email"
+              placeholder={t("auth.login.emailPlaceholder")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -84,7 +106,7 @@ function Connexion() {
             <div className="relative">
               <input
                 type={show ? "text" : "password"}
-                placeholder="Mot de passe"
+                placeholder={t("auth.login.passwordPlaceholder")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -94,39 +116,52 @@ function Connexion() {
                 type="button"
                 onClick={() => setShow((current) => !current)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
-                aria-label={show ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                aria-label={show ? t("auth.hidePassword") : t("auth.showPassword")}
               >
                 {show ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
             <div className="text-right">
               <Link to="/mot-de-passe-oublie" className="text-[13px] font-semibold text-[var(--brand-primary)] hover:underline">
-                Mot de passe oublié ?
+                {t("auth.login.forgotPassword")}
               </Link>
             </div>
             {(error || authSyncError) && (
               <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[13px] text-red-700">{error || authSyncError}</p>
             )}
+            {needsVerification && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] text-amber-800">
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={isResending || !email}
+                  className="font-semibold underline disabled:opacity-60"
+                >
+                  {isResending ? t("auth.login.resending") : t("auth.login.resend")}
+                </button>
+                {resendStatus && <p className="mt-1">{resendStatus}</p>}
+              </div>
+            )}
             <button disabled={isSubmitting} className="w-full h-12 rounded-full bg-[var(--brand-primary)] text-white font-semibold hover:bg-[var(--brand-primary-dark)] disabled:opacity-70 transition">
-              {isSubmitting ? "Connexion..." : "Se connecter"}
+              {isSubmitting ? t("auth.login.submitting") : t("auth.login.submit")}
             </button>
           </form>
 
           <div className="my-6 flex items-center gap-3 text-[12px] text-[var(--color-text-muted)]">
-            <div className="h-px flex-1 bg-[var(--brand-border-light)]" /> ou continuer avec <div className="h-px flex-1 bg-[var(--brand-border-light)]" />
+            <div className="h-px flex-1 bg-[var(--brand-border-light)]" /> {t("auth.orContinueWith")} <div className="h-px flex-1 bg-[var(--brand-border-light)]" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <button type="button" onClick={() => handleSocialSignIn("google")} disabled={isSocialSubmitting !== null} className="h-11 rounded-[8px] border border-[var(--brand-border)] text-[14px] font-semibold hover:bg-[var(--brand-surface-alt)] disabled:opacity-70">
-              {isSocialSubmitting === "google" ? "Ouverture..." : "Google"}
+              {isSocialSubmitting === "google" ? t("auth.opening") : "Google"}
             </button>
             <button type="button" onClick={() => handleSocialSignIn("facebook")} disabled={isSocialSubmitting !== null} className="h-11 rounded-[8px] bg-[#1877F2] text-[14px] font-semibold text-white disabled:opacity-70">
-              {isSocialSubmitting === "facebook" ? "Ouverture..." : "Facebook"}
+              {isSocialSubmitting === "facebook" ? t("auth.opening") : "Facebook"}
             </button>
           </div>
 
           <p className="mt-6 text-center text-[14px] text-[var(--color-text-muted)]">
-            Pas encore inscrit ?{" "}
-            <Link to="/inscription" className="font-semibold text-[var(--brand-primary)]">Créer un compte</Link>
+            {t("auth.login.noAccount")}{" "}
+            <Link to="/inscription" className="font-semibold text-[var(--brand-primary)]">{t("auth.login.createAccount")}</Link>
           </p>
         </div>
       </div>

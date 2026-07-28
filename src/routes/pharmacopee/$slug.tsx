@@ -12,10 +12,10 @@ export const Route = createFileRoute("/pharmacopee/$slug")({
 
 function PlantMonograph() {
   const { slug } = Route.useParams();
-  const staticPlant = plants.find((item) => item.slug === slug);
-  const { data: monograph } = useMonograph(slug, !staticPlant);
+  const { data: monograph } = useMonograph(slug);
   const apiPlant = useMemo(() => mapMonographToPlant(monograph), [monograph]);
-  const plant = staticPlant ?? apiPlant ?? plants[0];
+  const staticPlant = plants.find((item) => item.slug === slug);
+  const plant = apiPlant ?? staticPlant ?? plants[0];
   const gallery = useMemo(() => plant.gallery ?? [plant.image], [plant.gallery, plant.image]);
   const [activeImage, setActiveImage] = useState(gallery[0]);
   const [feedback, setFeedback] = useState<"error" | "improve" | null>(null);

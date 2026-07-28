@@ -1,101 +1,76 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-import { Banknote, CheckCircle2, Copy, Download, Search, Wallet } from "lucide-react";
+import { Banknote, CheckCircle2, Copy, Loader2, Search, Wallet } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { useAffiliateLink, useMyCommissions } from "@/hooks/useMlmApi";
+import type { MlmCommission } from "@/lib/api/mlm";
 
-type CommissionStatus = "available" | "pending" | "paid";
-
-type Commission = {
-  id: string;
-  source: string;
-  level: string;
-  amount: number;
-  status: CommissionStatus;
-  date: string;
-};
-
-const initialCommissions: Commission[] = [
-  { id: "com-1", source: "Pack formation Ayurveda", level: "Affiliation directe", amount: 9500, status: "available", date: "08/07/2026" },
-  { id: "com-2", source: "Abonnement Pro", level: "Niveau 2", amount: 4200, status: "pending", date: "07/07/2026" },
-  { id: "com-3", source: "Huile essentielle", level: "Affiliation directe", amount: 2100, status: "paid", date: "02/07/2026" },
-];
+type CommissionStatus = MlmCommission["status"];
 
 const statusLabels: Record<CommissionStatus, string> = {
-  available: "Disponible",
-  pending: "En attente",
-  paid: "Payee",
+  PENDING: "En attente",
+  APPROVED: "Calculee - versee a la livraison",
+  PAID: "Versee au portefeuille",
+  CANCELLED: "Annulee",
 };
 
 const statusClasses: Record<CommissionStatus, string> = {
-  available: "bg-emerald-50 text-emerald-700 border-emerald-100",
-  pending: "bg-amber-50 text-amber-700 border-amber-100",
-  paid: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)] border-[var(--brand-border-light)]",
+  PENDING: "bg-slate-100 text-slate-700 border-slate-200",
+  APPROVED: "bg-amber-50 text-amber-700 border-amber-100",
+  PAID: "bg-emerald-50 text-emerald-700 border-emerald-100",
+  CANCELLED: "bg-red-50 text-red-700 border-red-100",
+};
+
+const levelLabels: Record<MlmCommission["type"], string> = {
+  DIRECT: "Vente directe",
+  MLM_LEVEL1: "Reseau - niveau 1",
+  MLM_LEVEL2: "Reseau - niveau 2",
+  MLM_LEVEL3: "Reseau - niveau 3",
+  AFFILIATE: "Affiliation",
 };
 
 const formatMoney = (amount: number) => `${amount.toLocaleString("fr-FR")} FCFA`;
+const formatDate = (value: string) => new Date(value).toLocaleDateString("fr-FR");
 
 function CommissionsPage() {
-  const [commissions, setCommissions] = useState(initialCommissions);
+  const { data: commissions, isLoading, isError } = useMyCommissions();
+  const { data: affiliate } = useAffiliateLink();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | CommissionStatus>("all");
-  const [withdrawAmount, setWithdrawAmount] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  const list = commissions ?? [];
+
   const totals = useMemo(
     () => ({
-      available: commissions.filter((commission) => commission.status === "available").reduce((sum, commission) => sum + commission.amount, 0),
-      pending: commissions.filter((commission) => commission.status === "pending").reduce((sum, commission) => sum + commission.amount, 0),
-      paid: commissions.filter((commission) => commission.status === "paid").reduce((sum, commission) => sum + commission.amount, 0),
+      pendingPayout: list.filter((c) => c.status === "APPROVED").reduce((sum, c) => sum + Number(c.amount), 0),
+      paid: list.filter((c) => c.status === "PAID").reduce((sum, c) => sum + Number(c.amount), 0),
     }),
-    [commissions],
+    [list],
   );
 
   const filteredCommissions = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    return commissions.filter((commission) => {
+    return list.filter((commission) => {
       const matchesStatus = statusFilter === "all" || commission.status === statusFilter;
-      const matchesQuery =
-        normalizedQuery.length === 0 ||
-        [commission.source, commission.level, commission.date].some((value) => value.toLowerCase().includes(normalizedQuery));
+      const source = commission.sourceOrder?.product?.title ?? "Commande";
+      const matchesQuery = normalizedQuery.length === 0 || source.toLowerCase().includes(normalizedQuery);
       return matchesStatus && matchesQuery;
     });
-  }, [commissions, query, statusFilter]);
-
-  const requestWithdrawal = () => {
-    const amount = Number(withdrawAmount);
-    setMessage("");
-    setError("");
-
-    if (!Number.isFinite(amount) || amount <= 0) {
-      setError("Saisissez un montant valide avant de demander un retrait.");
-      return;
-    }
-
-    if (amount > totals.available) {
-      setError("Le montant demande depasse le solde disponible.");
-      return;
-    }
-
-    let remaining = amount;
-    setCommissions((current) =>
-      current.map((commission) => {
-        if (commission.status !== "available" || remaining <= 0) return commission;
-        remaining -= commission.amount;
-        return { ...commission, status: "pending" };
-      }),
-    );
-    setWithdrawAmount("");
-    setMessage("Demande de retrait enregistree. Elle restera en attente jusqu'a validation admin.");
-  };
+  }, [list, query, statusFilter]);
 
   const copyAffiliateLink = async () => {
     setError("");
     setMessage("");
+    if (!affiliate?.link) {
+      setError("Votre lien d'affiliation n'est pas encore disponible.");
+      return;
+    }
     try {
-      await navigator.clipboard.writeText("https://iwosan.com?ref=mon-code");
+      await navigator.clipboard.writeText(affiliate.link);
       setMessage("Lien d'affiliation copie.");
     } catch {
       setError("Impossible de copier automatiquement le lien. Copiez-le manuellement depuis votre navigateur.");
@@ -113,7 +88,7 @@ function CommissionsPage() {
                 <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Reseau</p>
                 <h1 className="mt-2 text-[32px] md:text-[42px]">Commissions</h1>
                 <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-                  Suivez vos gains d'affiliation et preparez les demandes de retrait sans activer le paiement.
+                  Suivez vos gains de vente directe, d'affiliation et de reseau.
                 </p>
               </div>
               <button type="button" onClick={copyAffiliateLink} className="btn-secondary h-11 px-5 text-[14px]">
@@ -124,10 +99,9 @@ function CommissionsPage() {
         </section>
 
         <section className="container-iwosan py-8">
-          <div className="grid gap-4 md:grid-cols-3">
-            <StatCard icon={Wallet} label="Disponible" value={formatMoney(totals.available)} />
-            <StatCard icon={Banknote} label="En attente" value={formatMoney(totals.pending)} />
-            <StatCard icon={CheckCircle2} label="Deja paye" value={formatMoney(totals.paid)} />
+          <div className="grid gap-4 md:grid-cols-2">
+            <StatCard icon={Banknote} label="A venir (livraison confirmee)" value={formatMoney(totals.pendingPayout)} />
+            <StatCard icon={CheckCircle2} label="Deja versee au portefeuille" value={formatMoney(totals.paid)} />
           </div>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_360px]">
@@ -138,12 +112,12 @@ function CommissionsPage() {
                   <input
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Rechercher une source ou un niveau"
+                    placeholder="Rechercher une commande"
                     className="h-11 w-full rounded-[8px] border border-[var(--brand-border-light)] bg-white pl-10 pr-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
                   />
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {(["all", "available", "pending", "paid"] as const).map((status) => (
+                  {(["all", "APPROVED", "PAID", "CANCELLED"] as const).map((status) => (
                     <button
                       key={status}
                       type="button"
@@ -161,7 +135,15 @@ function CommissionsPage() {
               </div>
 
               <div className="mt-5 space-y-3">
-                {filteredCommissions.length === 0 ? (
+                {isLoading ? (
+                  <div className="flex items-center justify-center rounded-[8px] border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-10">
+                    <Loader2 className="animate-spin text-[var(--brand-primary)]" size={28} />
+                  </div>
+                ) : isError ? (
+                  <div className="rounded-[8px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
+                    Impossible de charger vos commissions pour le moment.
+                  </div>
+                ) : filteredCommissions.length === 0 ? (
                   <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-8 text-center">
                     <Wallet className="mx-auto text-[var(--brand-primary)]" size={34} />
                     <h2 className="mt-4 text-[20px] font-bold">Aucune commission trouvee</h2>
@@ -172,11 +154,15 @@ function CommissionsPage() {
                     <article key={commission.id} className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-4">
                       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
-                          <p className="text-[15px] font-bold text-[var(--color-text-primary)]">{commission.source}</p>
-                          <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">{commission.level} - {commission.date}</p>
+                          <p className="text-[15px] font-bold text-[var(--color-text-primary)]">
+                            {commission.sourceOrder?.product?.title ?? "Commande"}
+                          </p>
+                          <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">
+                            {levelLabels[commission.type]} - {formatDate(commission.createdAt)}
+                          </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-[15px] font-extrabold text-[var(--brand-primary)]">{formatMoney(commission.amount)}</span>
+                          <span className="text-[15px] font-extrabold text-[var(--brand-primary)]">{formatMoney(Number(commission.amount))}</span>
                           <span className={`rounded-full border px-3 py-1 text-[12px] font-bold ${statusClasses[commission.status]}`}>
                             {statusLabels[commission.status]}
                           </span>
@@ -189,23 +175,13 @@ function CommissionsPage() {
             </div>
 
             <aside className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
-              <h2 className="text-[18px] font-bold">Demande de retrait</h2>
-              <p className="mt-2 text-[13px] text-[var(--color-text-muted)]">
-                Le paiement reste desactive pour l'instant. Cette action cree seulement une demande de validation.
+              <h2 className="text-[18px] font-bold">Retirer mes gains</h2>
+              <p className="mt-2 text-[13px] leading-6 text-[var(--color-text-muted)]">
+                Les commissions versees sont automatiquement creditees sur votre portefeuille des la confirmation de livraison. Le retrait se fait depuis votre portefeuille.
               </p>
-              <label className="mt-5 block text-[13px] font-bold text-[var(--color-text-primary)]">
-                Montant a demander
-                <input
-                  value={withdrawAmount}
-                  onChange={(event) => setWithdrawAmount(event.target.value)}
-                  inputMode="numeric"
-                  placeholder="Ex: 5000"
-                  className="mt-2 h-11 w-full rounded-[8px] border border-[var(--brand-border-light)] px-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
-                />
-              </label>
-              <button type="button" onClick={requestWithdrawal} className="btn-primary mt-4 h-11 w-full text-[14px]">
-                <Download size={17} /> Enregistrer la demande
-              </button>
+              <Link to="/mon-compte/portefeuille" className="btn-primary mt-4 flex h-11 w-full items-center justify-center text-[14px]">
+                <Wallet size={17} /> Aller au portefeuille
+              </Link>
               {message && <p className="mt-4 rounded-[8px] bg-emerald-50 px-4 py-3 text-[13px] font-semibold text-emerald-700">{message}</p>}
               {error && <p className="mt-4 rounded-[8px] bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-700">{error}</p>}
             </aside>

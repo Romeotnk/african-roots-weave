@@ -48,3 +48,24 @@ export const createCoupon = asyncHandler(async (req, res) => {
 
   res.status(201).json(apiResponse(true, coupon, "Coupon created"));
 });
+
+export const updateCoupon = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+
+  const existing = await prisma.coupon.findUnique({ where: { id: req.params.id }, select: { sellerId: true } });
+  if (!existing) throw new ApiError(404, "Coupon not found");
+  const canManageAllCoupons = req.user.role === "SUPER_ADMIN" || req.user.role === "ADMIN";
+  if (existing.sellerId !== req.user.id && !canManageAllCoupons) throw new ApiError(403, "Forbidden");
+
+  const coupon = await prisma.coupon.update({
+    where: { id: req.params.id },
+    data: {
+      isActive: typeof req.body.isActive === "boolean" ? req.body.isActive : undefined,
+      discount: req.body.discount !== undefined ? Number(req.body.discount) : undefined,
+      maxUses: req.body.maxUses,
+      expiresAt: req.body.expiresAt ? new Date(req.body.expiresAt) : undefined,
+    },
+  });
+
+  res.json(apiResponse(true, coupon, "Coupon updated"));
+});

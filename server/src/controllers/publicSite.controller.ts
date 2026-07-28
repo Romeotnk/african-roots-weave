@@ -3,10 +3,12 @@ import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
 
-// Only "site.", "cms." and "maintenance." keys are ever exposed here — commission
-// rates and other internal SiteConfig keys must never leak through this
-// unauthenticated endpoint.
-const publicPrefixes = ["site.", "cms.", "maintenance."];
+// Only these prefixes are ever exposed here — commission rates and other
+// internal SiteConfig keys must never leak through this unauthenticated
+// endpoint. "forum." carries only the posting-restriction flag/role list,
+// which the frontend needs to hide post/answer/comment UI for disallowed roles.
+// CMS pages live in the dedicated Page model (see getPublicPage below), not SiteConfig.
+const publicPrefixes = ["site.", "maintenance.", "forum.", "homepage."];
 
 export const getPublicSiteConfig = asyncHandler(async (_req, res) => {
   const rows = await prisma.siteConfig.findMany({
@@ -17,9 +19,25 @@ export const getPublicSiteConfig = asyncHandler(async (_req, res) => {
 });
 
 export const getPublicPage = asyncHandler(async (req, res) => {
-  const row = await prisma.siteConfig.findUnique({ where: { key: "cms.pages" } });
-  const pages: Array<{ slug: string; isPublished: boolean }> = row ? JSON.parse(row.value) : [];
-  const page = pages.find((item) => item.slug === req.params.slug && item.isPublished);
+  const page = await prisma.page.findFirst({ where: { slug: req.params.slug, isPublished: true } });
   if (!page) throw new ApiError(404, "Page not found");
   res.json(apiResponse(true, page, "Page retrieved"));
+});
+
+export const getPublicBanners = asyncHandler(async (_req, res) => {
+  const banners = await prisma.homeBanner.findMany({
+    where: { isActive: true },
+    orderBy: { order: "asc" },
+    select: { id: true, imageUrl: true, title: true, link: true },
+  });
+  res.json(apiResponse(true, banners, "Banners retrieved"));
+});
+
+export const getPublicAds = asyncHandler(async (req, res) => {
+  const position = typeof req.query.position === "string" ? req.query.position : undefined;
+  const ads = await prisma.adSpace.findMany({
+    where: { isActive: true, position },
+    select: { id: true, position: true, code: true },
+  });
+  res.json(apiResponse(true, ads, "Ads retrieved"));
 });

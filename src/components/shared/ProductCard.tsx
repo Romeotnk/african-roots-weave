@@ -1,8 +1,9 @@
 ﻿import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { BadgeCheck, Copy, Gavel, MapPin, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Copy, Gavel, MapPin, Share2, ShieldCheck } from "lucide-react";
 import type { Product } from "@/types";
 import { useProductBids, usePlaceProductBid } from "@/hooks/useApiCatalog";
+import { useCreateQuoteRequest } from "@/hooks/useQuotesApi";
 import { RatingStars } from "./RatingStars";
 import { Badge } from "./Badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -62,6 +63,9 @@ function AuctionBidPanel({ productId, basePrice }: { productId: string; basePric
 
 export function ProductCard({ product }: { product: Product }) {
   const [open, setOpen] = useState(false);
+  const [shareNotice, setShareNotice] = useState("");
+  const [quoteNotice, setQuoteNotice] = useState("");
+  const createQuoteRequest = useCreateQuoteRequest();
   const price = product.price;
   const originalPrice = (product as Product & { originalPrice?: number }).originalPrice;
   const discountPercent = (product as Product & { discountPercent?: number }).discountPercent;
@@ -74,6 +78,34 @@ export function ProductCard({ product }: { product: Product }) {
   const sellerProfileUrl = `/pro/${sellerId}`;
   const reservationUrl = `${sellerProfileUrl}?message=${encodeURIComponent(message)}&product=${encodeURIComponent(product.title)}`;
 
+  const shareProduct = (label: "WhatsApp" | "Facebook" | "Copier") => {
+    const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/marketplace?produit=${product.id}` : "";
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedTitle = encodeURIComponent(product.title);
+    if (label === "Copier") {
+      navigator.clipboard?.writeText(shareUrl).catch(() => undefined);
+      setShareNotice("Lien copié.");
+      return;
+    }
+    const target =
+      label === "WhatsApp"
+        ? `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`
+        : `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+    window.open(target, "_blank", "noopener,noreferrer");
+    setShareNotice(`Ouverture du partage ${label}.`);
+  };
+
+  const requestQuote = () => {
+    setQuoteNotice("");
+    createQuoteRequest.mutate(
+      { productId: product.id },
+      {
+        onSuccess: () => setQuoteNotice("Demande de devis envoyée au vendeur."),
+        onError: (error) => setQuoteNotice(error instanceof Error ? error.message : "Connectez-vous pour demander un devis."),
+      },
+    );
+  };
+
   return (
     <>
       <article className="group overflow-hidden rounded-[20px] border border-[var(--brand-border-light)] bg-white shadow-iwosan-sm transition hover:-translate-y-1 hover:border-[var(--brand-primary)] hover:shadow-iwosan-lg">
@@ -81,9 +113,10 @@ export function ProductCard({ product }: { product: Product }) {
           <div className="relative h-[240px] overflow-hidden">
             <img src={product.image} alt={product.title} loading="lazy" decoding="async" width={400} height={240} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
             <div className="absolute inset-x-0 bottom-0 h-28 bg-[linear-gradient(to_bottom,transparent_40%,#1f5a39_100%)]" />
-            <div className="absolute left-3 top-3 flex gap-2">
+            <div className="absolute left-3 top-3 flex flex-wrap gap-2">
               <Badge variant="category">{product.category}</Badge>
               {product.verified && <Badge variant="gold">Vérifié</Badge>}
+              {product.urgent && <span className="rounded-full bg-red-600 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white">Urgent</span>}
             </div>
             {hasPromo && discountPercent && (
               <div className="absolute right-3 top-3 rounded-full bg-[var(--brand-primary)] px-3 py-1 text-[11px] font-bold text-white">-{discountPercent}%</div>
@@ -102,18 +135,29 @@ export function ProductCard({ product }: { product: Product }) {
           <h3 className="text-[18px] font-bold leading-tight text-[var(--color-text-primary)] line-clamp-2">{product.title}</h3>
           {product.location && <p className="inline-flex items-center gap-1 text-[13px] text-[var(--color-text-muted)]"><MapPin size={14} />{product.location}{product.country ? `, ${product.country}` : ""}</p>}
           <div className="flex items-baseline gap-2">
-            {originalPrice && originalPrice > price && <span className="text-[13px] text-[var(--color-text-muted)] line-through">{originalPrice.toLocaleString("fr-FR")} {product.currency}</span>}
-            <span className="text-[22px] font-bold text-[var(--brand-primary)]">{price.toLocaleString("fr-FR")} {product.currency}</span>
+            {product.quoteOnly ? (
+              <span className="text-[18px] font-bold text-[var(--brand-primary)]">Prix sur devis</span>
+            ) : (
+              <>
+                {originalPrice && originalPrice > price && <span className="text-[13px] text-[var(--color-text-muted)] line-through">{originalPrice.toLocaleString("fr-FR")} {product.currency}</span>}
+                <span className="text-[22px] font-bold text-[var(--brand-primary)]">{price.toLocaleString("fr-FR")} {product.currency}</span>
+              </>
+            )}
           </div>
           <RatingStars rating={product.rating} reviewCount={product.reviewCount} />
           <div className="flex flex-col gap-2 pt-1 sm:flex-row">
             <button type="button" onClick={() => setOpen(true)} className="flex-1 rounded-full border border-[var(--brand-border)] px-4 py-2 text-[13px] font-semibold">Voir</button>
-            {outOfStock ? (
+            {product.quoteOnly ? (
+              <button type="button" onClick={requestQuote} disabled={createQuoteRequest.isPending} className="flex-1 rounded-full bg-[var(--brand-primary)] px-4 py-2 text-center text-[13px] font-semibold text-white disabled:opacity-60">
+                Demander un devis
+              </button>
+            ) : outOfStock ? (
               <span className="flex-1 rounded-full bg-[var(--brand-border-light)] px-4 py-2 text-center text-[13px] font-semibold text-[var(--color-text-muted)]">Indisponible</span>
             ) : (
               <a href={reservationUrl} className="flex-1 rounded-full bg-[var(--brand-primary)] px-4 py-2 text-center text-[13px] font-semibold text-white">Réserver ce produit</a>
             )}
           </div>
+          {quoteNotice && <p className="text-[12px] font-semibold text-[var(--brand-primary)]">{quoteNotice}</p>}
         </div>
       </article>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -125,6 +169,7 @@ export function ProductCard({ product }: { product: Product }) {
             <div className="absolute left-4 top-4 flex flex-wrap gap-2">
               <Badge variant="category">{product.category}</Badge>
               {hasPromo && <Badge variant="gold">Promo</Badge>}
+              {product.urgent && <span className="rounded-full bg-red-600 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white">Urgent</span>}
             </div>
             <div className="absolute right-4 top-4 rounded-full bg-black/55 px-3 py-1 font-mono text-[12px] text-white">{productCode}</div>
           </div>
@@ -137,7 +182,7 @@ export function ProductCard({ product }: { product: Product }) {
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-2xl border p-4">
                 <p className="font-mono text-[12px] text-[var(--brand-primary)]">Prix</p>
-                <p className="mt-1 text-[18px] font-bold">{price.toLocaleString("fr-FR")} {product.currency}</p>
+                <p className="mt-1 text-[18px] font-bold">{product.quoteOnly ? "Sur devis" : `${price.toLocaleString("fr-FR")} ${product.currency}`}</p>
               </div>
               <div className="rounded-2xl border p-4"><p className="font-mono text-[12px] text-[var(--brand-primary)]">Type</p><p className="mt-1 text-[18px] font-bold">{product.type}</p></div>
               <div className="rounded-2xl border p-4"><p className="font-mono text-[12px] text-[var(--brand-primary)]">Stock</p><p className={`mt-1 text-[18px] font-bold ${outOfStock ? "text-red-600" : ""}`}>{product.type === "digital" ? "Illimité" : outOfStock ? "Rupture de stock" : `${product.stock ?? "Disponible"}${typeof product.stock === "number" ? " en stock" : ""}`}</p></div>
@@ -191,12 +236,33 @@ export function ProductCard({ product }: { product: Product }) {
               </div>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              {outOfStock ? (
+              {product.quoteOnly ? (
+                <button type="button" onClick={requestQuote} disabled={createQuoteRequest.isPending} className="inline-flex h-12 flex-1 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 font-semibold text-white disabled:opacity-60">
+                  Demander un devis
+                </button>
+              ) : outOfStock ? (
                 <span className="inline-flex h-12 flex-1 items-center justify-center rounded-full bg-[var(--brand-border-light)] px-5 font-semibold text-[var(--color-text-muted)]">Indisponible (rupture de stock)</span>
               ) : (
                 <a href={reservationUrl} className="inline-flex h-12 flex-1 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 font-semibold text-white">Réserver ce produit</a>
               )}
               <a href={sellerProfileUrl} className="inline-flex h-12 flex-1 items-center justify-center rounded-full border border-[var(--brand-border)] px-5 font-semibold">Voir le profil vendeur</a>
+            </div>
+            {quoteNotice && <p className="text-[13px] font-semibold text-[var(--brand-primary)]">{quoteNotice}</p>}
+            <div className="rounded-2xl border p-4 sm:p-5">
+              <p className="flex items-center gap-2 font-mono text-[12px] text-[var(--brand-primary)]"><Share2 size={14} /> Partager cette annonce</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(["WhatsApp", "Facebook", "Copier"] as const).map((label) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => shareProduct(label)}
+                    className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-3 text-[12px] font-semibold"
+                  >
+                    {label === "Copier" ? <Copy size={14} /> : <Share2 size={14} />} {label}
+                  </button>
+                ))}
+              </div>
+              {shareNotice && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[12px] text-emerald-800">{shareNotice}</p>}
             </div>
           </div>
           </div>
