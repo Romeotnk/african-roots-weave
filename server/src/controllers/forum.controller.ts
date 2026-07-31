@@ -345,8 +345,33 @@ export const listMyFavorites = asyncHandler(async (req, res) => {
     return;
   }
 
+  if (targetType === "ANSWER") {
+    const answers = await prisma.answer.findMany({
+      where: { id: { in: favorites.map((favorite) => favorite.targetId) }, isHidden: false },
+      include: {
+        author: { select: { id: true, firstName: true, lastName: true, reputationScore: true, avatarUrl: true } },
+        question: { select: { id: true, title: true } },
+      },
+    });
+    const byId = new Map(answers.map((answer) => [answer.id, answer]));
+    const ordered = favorites.map((favorite) => byId.get(favorite.targetId)).filter(Boolean);
+    res.json(apiResponse(true, ordered, "Favorites retrieved"));
+    return;
+  }
+
   res.json(apiResponse(true, favorites, "Favorites retrieved"));
 });
+
+// Admin-configurable via SiteConfig ("forum.autoHideReportThreshold", see the
+// forum admin "Réglages" panel) — defaults to 3 reports to match the
+// threshold this project has always used, without a deploy to change it.
+const DEFAULT_AUTO_HIDE_THRESHOLD = 3;
+
+const getAutoHideThreshold = async () => {
+  const row = await prisma.siteConfig.findUnique({ where: { key: "forum.autoHideReportThreshold" } });
+  const parsed = row ? Number(row.value) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_AUTO_HIDE_THRESHOLD;
+};
 
 export const report = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
@@ -361,10 +386,13 @@ export const report = asyncHandler(async (req, res) => {
   const count = await prisma.report.count({
     where: { targetId, targetType },
   });
-  if (count >= 3 && targetType === "QUESTION")
+  const threshold = await getAutoHideThreshold();
+  if (count >= threshold && targetType === "QUESTION")
     await prisma.question.update({ where: { id: targetId }, data: { isHidden: true } });
-  if (count >= 3 && targetType === "ANSWER")
+  if (count >= threshold && targetType === "ANSWER")
     await prisma.answer.update({ where: { id: targetId }, data: { isHidden: true } });
+  if (count >= threshold && targetType === "COMMENT")
+    await prisma.forumComment.update({ where: { id: targetId }, data: { isHidden: true } });
   res.status(201).json(apiResponse(true, reportItem, "Report submitted"));
 });
 

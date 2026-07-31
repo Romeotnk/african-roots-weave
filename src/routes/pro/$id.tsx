@@ -1,12 +1,24 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { BadgeCheck, Facebook, Instagram, Linkedin, MapPin, MessageCircle, Smartphone } from "lucide-react";
+import { BadgeCheck, Facebook, Instagram, Linkedin, MapPin, MessageCircle, Smartphone, Star } from "lucide-react";
 import { useProducts, useProfessional } from "@/hooks/useApiCatalog";
 import { useFormations } from "@/hooks/useEventsFormationsApi";
+import { useCreateReview, useTargetReviews } from "@/hooks/useReviewsApi";
+import { useAuth } from "@/lib/auth/AuthContext";
 import { RatingStars } from "@/components/shared/RatingStars";
 import { PractitionerAvatar } from "@/components/shared/PractitionerAvatar";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { BookingWidget } from "@/components/shared/BookingWidget";
+
+type ProfessionalReview = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  sellerReply: string | null;
+  sellerReplyAt: string | null;
+  createdAt: string;
+  author: { firstName: string; lastName: string };
+};
 
 export const Route = createFileRoute("/pro/$id")({
   head: () => ({ meta: [{ title: "Vitrine professionnelle - IWOSAN" }] }),
@@ -25,10 +37,17 @@ type FormationRecord = {
 function ProfessionalShowcase() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const professionalQuery = useProfessional(id);
   const productsQuery = useProducts(useMemo(() => new URLSearchParams({ sellerId: id }), [id]));
   const formationsQuery = useFormations(useMemo(() => ({ createdById: id }), [id]));
-  const [tab, setTab] = useState<"about" | "location" | "products" | "training" | "booking">("about");
+  const [tab, setTab] = useState<"about" | "location" | "products" | "training" | "reviews" | "booking">("about");
+  const reviewsQuery = useTargetReviews(professionalQuery.data?.profileId ?? "", "PROFESSIONAL", tab === "reviews");
+  const createReview = useCreateReview();
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewHoverRating, setReviewHoverRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewNotice, setReviewNotice] = useState("");
 
   // "Réserver ce produit" lands here with a prefilled message — the
   // conversation must open automatically, not require an extra click.
@@ -123,6 +142,7 @@ function ProfessionalShowcase() {
                 ["location", "Localisation"],
                 ["products", `Ses produits & services (${products.length})`],
                 ["training", `Ses formations (${formations.length})`],
+                ["reviews", `Avis (${pro.reviewCount})`],
                 ...(pro.serviceBookingEnabled ? [["booking", "Réserver"]] : []),
               ].map(([key, label]) => (
                 <button key={key} onClick={() => setTab(key as typeof tab)} className={`rounded-full px-4 py-2 text-[13px] font-semibold ${tab === key ? "bg-[var(--brand-primary)] text-white" : "bg-white border border-[var(--brand-border)]"}`}>{label}</button>
@@ -133,6 +153,31 @@ function ProfessionalShowcase() {
               <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
                 <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">À PROPOS</p>
                 <p className="mt-4 text-[16px] leading-8 text-[var(--color-text-secondary)]">{pro.bio}</p>
+                {pro.innovations && (
+                  <div className="mt-6">
+                    <p className="font-mono text-[12px] tracking-[0.14em] text-[var(--brand-primary)]">INNOVATIONS PERSONNELLES</p>
+                    <p className="mt-2 text-[14px] leading-7 text-[var(--color-text-secondary)]">{pro.innovations}</p>
+                  </div>
+                )}
+                {pro.communityImpact && (
+                  <div className="mt-6">
+                    <p className="font-mono text-[12px] tracking-[0.14em] text-[var(--brand-primary)]">IMPACT COMMUNAUTAIRE</p>
+                    <p className="mt-2 text-[14px] leading-7 text-[var(--color-text-secondary)]">{pro.communityImpact}</p>
+                  </div>
+                )}
+                {pro.philosophy && (
+                  <div className="mt-6">
+                    <p className="font-mono text-[12px] tracking-[0.14em] text-[var(--brand-primary)]">PHILOSOPHIE</p>
+                    <p className="mt-2 text-[14px] leading-7 text-[var(--color-text-secondary)]">{pro.philosophy}</p>
+                  </div>
+                )}
+                {pro.socialLinks && Object.values(pro.socialLinks).some(Boolean) && (
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    {pro.socialLinks.facebook && <a href={pro.socialLinks.facebook} target="_blank" rel="noreferrer" className="rounded-full border border-[var(--brand-border)] px-4 py-2 text-[13px] font-semibold">Facebook</a>}
+                    {pro.socialLinks.instagram && <a href={pro.socialLinks.instagram} target="_blank" rel="noreferrer" className="rounded-full border border-[var(--brand-border)] px-4 py-2 text-[13px] font-semibold">Instagram</a>}
+                    {pro.socialLinks.whatsapp && <a href={pro.socialLinks.whatsapp} target="_blank" rel="noreferrer" className="rounded-full border border-[var(--brand-border)] px-4 py-2 text-[13px] font-semibold">WhatsApp</a>}
+                  </div>
+                )}
                 <div className="mt-6 grid gap-4 sm:grid-cols-3">
                   {stats.map(([value, label]) => (
                     <div key={label as string} className="rounded-2xl bg-[var(--brand-surface-alt)] p-5 text-center">
@@ -196,6 +241,97 @@ function ProfessionalShowcase() {
                 ) : (
                   <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">Aucune formation publiée pour le moment.</p>
                 )}
+              </section>
+            )}
+
+            {tab === "reviews" && (
+              <section className="space-y-5">
+                {user && user.id !== id && (
+                  <div className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
+                    <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">LAISSER UN AVIS</p>
+                    <div className="mt-4 flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((value) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onMouseEnter={() => setReviewHoverRating(value)}
+                          onMouseLeave={() => setReviewHoverRating(0)}
+                          onClick={() => setReviewRating(value)}
+                          aria-label={`${value} étoile${value > 1 ? "s" : ""}`}
+                        >
+                          <Star
+                            size={26}
+                            className={
+                              value <= (reviewHoverRating || reviewRating)
+                                ? "fill-[var(--brand-gold)] text-[var(--brand-gold)]"
+                                : "text-[var(--brand-border)]"
+                            }
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      rows={3}
+                      value={reviewComment}
+                      onChange={(event) => setReviewComment(event.target.value)}
+                      placeholder="Partagez votre expérience avec ce professionnel (facultatif)."
+                      className="mt-3 w-full rounded-lg border border-[var(--brand-border)] px-3 py-2 text-[14px]"
+                    />
+                    <button
+                      type="button"
+                      disabled={createReview.isPending}
+                      onClick={() => {
+                        if (reviewRating < 1) {
+                          setReviewNotice("Choisissez une note avant d'envoyer votre avis.");
+                          return;
+                        }
+                        createReview.mutate(
+                          { targetId: professionalQuery.data!.profileId, targetType: "PROFESSIONAL", rating: reviewRating, comment: reviewComment.trim() || undefined },
+                          {
+                            onSuccess: () => {
+                              setReviewNotice("Merci, votre avis a été publié.");
+                              setReviewRating(0);
+                              setReviewComment("");
+                              reviewsQuery.refetch();
+                              professionalQuery.refetch();
+                            },
+                            onError: (error) => setReviewNotice(error instanceof Error ? error.message : "Connectez-vous pour laisser un avis."),
+                          },
+                        );
+                      }}
+                      className="mt-3 h-10 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white disabled:opacity-60"
+                    >
+                      {createReview.isPending ? "Envoi..." : "Publier mon avis"}
+                    </button>
+                    {reviewNotice && <p className="mt-3 text-[13px] font-semibold text-[var(--color-text-secondary)]">{reviewNotice}</p>}
+                  </div>
+                )}
+
+                <div className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
+                  <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">AVIS DES PATIENTS ({pro.reviewCount})</p>
+                  {reviewsQuery.isLoading && <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">Chargement des avis...</p>}
+                  {!reviewsQuery.isLoading && ((reviewsQuery.data as ProfessionalReview[] | undefined)?.length ?? 0) === 0 && (
+                    <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">Aucun avis publié pour le moment.</p>
+                  )}
+                  <div className="mt-4 divide-y divide-[var(--brand-border-light)]">
+                    {((reviewsQuery.data as ProfessionalReview[] | undefined) ?? []).map((review) => (
+                      <div key={review.id} className="py-4">
+                        <div className="flex items-center justify-between">
+                          <p className="font-semibold text-[var(--color-text-primary)]">{review.author.firstName} {review.author.lastName.slice(0, 1)}.</p>
+                          <RatingStars rating={review.rating} showCount={false} />
+                        </div>
+                        {review.comment && <p className="mt-2 text-[14px] leading-6 text-[var(--color-text-secondary)]">{review.comment}</p>}
+                        <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">{new Date(review.createdAt).toLocaleDateString("fr-FR")}</p>
+                        {review.sellerReply && (
+                          <div className="mt-3 rounded-lg bg-[var(--brand-surface-alt)] p-3">
+                            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--brand-primary)]">Réponse de {pro.name}</p>
+                            <p className="mt-1 text-[13px] text-[var(--color-text-secondary)]">{review.sellerReply}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </section>
             )}
 

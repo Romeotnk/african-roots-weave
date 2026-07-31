@@ -80,6 +80,7 @@ import {
 } from "../controllers/adminFinance.controller.js";
 import { broadcastNotification } from "../controllers/adminNotification.controller.js";
 import { mlmOverview } from "../controllers/adminMlm.controller.js";
+import { createTaxonomy, deleteTaxonomy, listAdminTaxonomy, updateTaxonomy } from "../controllers/taxonomy.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { checkAdminAccess, checkPermission, checkRole } from "../middlewares/role.middleware.js";
 
@@ -232,6 +233,10 @@ adminRouter.delete(
   checkPermission("forum.moderate"),
   deleteForumCategory,
 );
+adminRouter.get("/taxonomy", checkPermission("content.review"), listAdminTaxonomy);
+adminRouter.post("/taxonomy", checkPermission("content.review"), createTaxonomy);
+adminRouter.put("/taxonomy/:id", checkPermission("content.review"), updateTaxonomy);
+adminRouter.delete("/taxonomy/:id", checkPermission("content.review"), deleteTaxonomy);
 adminRouter.get("/reviews", checkPermission("forum.moderate"), listAdminReviews);
 adminRouter.put(
   "/reviews/:id/hide",

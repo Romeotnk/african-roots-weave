@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { listTickets, replyTicket, updateTicketStatus } from "../controllers/admin.controller.js";
-import { createTicket, getMyTicket, listMyTickets, replyMyTicket } from "../controllers/ticket.controller.js";
+import { createTicket, getMyTicket, listMyTickets, replyMyTicket, uploadTicketAttachments } from "../controllers/ticket.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { checkPermission } from "../middlewares/role.middleware.js";
+import { upload } from "../middlewares/upload.middleware.js";
 
 export const ticketRouter = Router();
 
@@ -18,3 +19,4 @@ ticketRouter.post("/staff/:id/reply", checkPermission("support.triage"), replyTi
 ticketRouter.get("/:id", getMyTicket);
 ticketRouter.post("/", createTicket);
 ticketRouter.post("/:id/reply", replyMyTicket);
+ticketRouter.post("/attachments", upload.array("files", 5), uploadTicketAttachments);

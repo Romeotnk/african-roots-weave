@@ -22,7 +22,7 @@ export function toEventItem(event: BackendEvent): EventItem | null {
   return {
     id: event.id,
     title: event.title,
-    type: (event.type as EventItem["type"]) ?? "CONFERENCE",
+    type: (event.type as EventItem["type"]) ?? "SALON",
     category: event.type ? String(event.type).toLowerCase() : "Evenement",
     date: event.startDate,
     endDate: event.endDate,

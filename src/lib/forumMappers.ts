@@ -1,4 +1,4 @@
-import type { Question, ForumAnswer, ForumComment } from "@/types";
+import type { Question, ForumAnswer, ForumAttachment, ForumComment } from "@/types";
 
 export type BackendUser = {
   id?: string;
@@ -21,6 +21,7 @@ export type BackendAnswer = {
   content?: string;
   voteCount?: number;
   isAccepted?: boolean;
+  attachments?: string[];
   createdAt?: string;
   author?: BackendUser | null;
 };
@@ -36,6 +37,7 @@ export type BackendQuestion = {
   isClosed?: boolean;
   isFeatured?: boolean;
   acceptedAnswerId?: string | null;
+  attachments?: string[];
   createdAt?: string;
   author?: BackendUser | null;
   answers?: BackendAnswer[];
@@ -45,6 +47,16 @@ export type BackendQuestion = {
 
 const authorName = (author?: BackendUser | null) =>
   [author?.firstName, author?.lastName].filter(Boolean).join(" ").trim() || "Membre Iwosan";
+
+const imageExtensions = /\.(png|jpe?g|gif|webp|avif|svg)$/i;
+
+const toAttachments = (urls?: string[]): ForumAttachment[] =>
+  (urls ?? []).map((url) => ({
+    id: url,
+    type: imageExtensions.test(url) ? "image" : "file",
+    name: decodeURIComponent(url.split("/").pop() ?? url),
+    url,
+  }));
 
 const toForumComment = (comment: BackendForumComment): ForumComment => ({
   id: comment.id ?? "",
@@ -64,6 +76,7 @@ const toForumAnswer = (answer: BackendAnswer): ForumAnswer => ({
   date: answer.createdAt ?? new Date().toISOString(),
   votes: answer.voteCount ?? 0,
   accepted: Boolean(answer.isAccepted),
+  attachments: toAttachments(answer.attachments),
   comments: [],
 });
 
@@ -84,7 +97,7 @@ export function toQuestion(question: BackendQuestion): Question | null {
     resolved: Boolean(question.acceptedAnswerId),
     featured: question.isFeatured,
     closed: question.isClosed,
-    attachments: [],
+    attachments: toAttachments(question.attachments),
     answerItems: question.answers ? question.answers.map(toForumAnswer) : undefined,
     authorName: authorName(question.author),
     authorAvatar: question.author?.avatarUrl ?? undefined,

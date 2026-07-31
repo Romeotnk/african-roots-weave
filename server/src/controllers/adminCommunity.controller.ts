@@ -40,6 +40,8 @@ const hideTarget = async (targetType: string, targetId: string, hidden: boolean,
       where: { id: targetId },
       data: { isHidden: hidden, hiddenReason: hidden ? reason : null },
     });
+  } else if (targetType === "PRODUCT") {
+    await prisma.product.update({ where: { id: targetId }, data: { isActive: !hidden } });
   } else {
     throw new ApiError(400, `Unsupported report targetType: ${targetType}`);
   }

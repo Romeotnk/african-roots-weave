@@ -49,6 +49,7 @@ import { Route as TableauDeBordFormationsRouteImport } from './routes/tableau-de
 import { Route as TableauDeBordEvenementsRouteImport } from './routes/tableau-de-bord/evenements'
 import { Route as TableauDeBordDevisRouteImport } from './routes/tableau-de-bord/devis'
 import { Route as TableauDeBordCouponsRouteImport } from './routes/tableau-de-bord/coupons'
+import { Route as TableauDeBordCommunicationRouteImport } from './routes/tableau-de-bord/communication'
 import { Route as TableauDeBordCommissionsRouteImport } from './routes/tableau-de-bord/commissions'
 import { Route as TableauDeBordCommandesRouteImport } from './routes/tableau-de-bord/commandes'
 import { Route as TableauDeBordBlogRouteImport } from './routes/tableau-de-bord/blog'
@@ -96,6 +97,7 @@ import { Route as AdminContenusRouteImport } from './routes/admin/contenus'
 import { Route as AdminCommunicationRouteImport } from './routes/admin/communication'
 import { Route as AdminCommunauteRouteImport } from './routes/admin/communaute'
 import { Route as AdminAffiliationRouteImport } from './routes/admin/affiliation'
+import { Route as NewsletterDesabonnementTokenRouteImport } from './routes/newsletter/desabonnement/$token'
 import { Route as MesCommandesIdLitigeRouteImport } from './routes/mes-commandes/$id/litige'
 import { Route as FormationsIdApprendreRouteImport } from './routes/formations/$id/apprendre'
 import { Route as AdminUtilisateursKycRouteImport } from './routes/admin/utilisateurs/kyc'
@@ -109,6 +111,7 @@ import { Route as AdminFinancesTransactionsRouteImport } from './routes/admin/fi
 import { Route as AdminFinancesRemboursementsRouteImport } from './routes/admin/finances/remboursements'
 import { Route as AdminFinancesLitigesRouteImport } from './routes/admin/finances/litiges'
 import { Route as AdminFinancesCommissionsRouteImport } from './routes/admin/finances/commissions'
+import { Route as AdminFinancesAbonnementsRouteImport } from './routes/admin/finances/abonnements'
 import { Route as AdminCommunicationTicketsRouteImport } from './routes/admin/communication/tickets'
 import { Route as AdminCommunicationNotificationsRouteImport } from './routes/admin/communication/notifications'
 import { Route as AdminCommunicationNewsletterRouteImport } from './routes/admin/communication/newsletter'
@@ -318,6 +321,12 @@ const TableauDeBordCouponsRoute = TableauDeBordCouponsRouteImport.update({
   path: '/coupons',
   getParentRoute: () => TableauDeBordRoute,
 } as any)
+const TableauDeBordCommunicationRoute =
+  TableauDeBordCommunicationRouteImport.update({
+    id: '/communication',
+    path: '/communication',
+    getParentRoute: () => TableauDeBordRoute,
+  } as any)
 const TableauDeBordCommissionsRoute =
   TableauDeBordCommissionsRouteImport.update({
     id: '/commissions',
@@ -555,6 +564,12 @@ const AdminAffiliationRoute = AdminAffiliationRouteImport.update({
   path: '/affiliation',
   getParentRoute: () => AdminRoute,
 } as any)
+const NewsletterDesabonnementTokenRoute =
+  NewsletterDesabonnementTokenRouteImport.update({
+    id: '/newsletter/desabonnement/$token',
+    path: '/newsletter/desabonnement/$token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const MesCommandesIdLitigeRoute = MesCommandesIdLitigeRouteImport.update({
   id: '/$id/litige',
   path: '/$id/litige',
@@ -621,6 +636,12 @@ const AdminFinancesCommissionsRoute =
   AdminFinancesCommissionsRouteImport.update({
     id: '/commissions',
     path: '/commissions',
+    getParentRoute: () => AdminFinancesRoute,
+  } as any)
+const AdminFinancesAbonnementsRoute =
+  AdminFinancesAbonnementsRouteImport.update({
+    id: '/abonnements',
+    path: '/abonnements',
     getParentRoute: () => AdminFinancesRoute,
   } as any)
 const AdminCommunicationTicketsRoute =
@@ -733,6 +754,7 @@ export interface FileRoutesByFullPath {
   '/tableau-de-bord/blog': typeof TableauDeBordBlogRoute
   '/tableau-de-bord/commandes': typeof TableauDeBordCommandesRoute
   '/tableau-de-bord/commissions': typeof TableauDeBordCommissionsRoute
+  '/tableau-de-bord/communication': typeof TableauDeBordCommunicationRoute
   '/tableau-de-bord/coupons': typeof TableauDeBordCouponsRoute
   '/tableau-de-bord/devis': typeof TableauDeBordDevisRoute
   '/tableau-de-bord/evenements': typeof TableauDeBordEvenementsRoute
@@ -752,6 +774,7 @@ export interface FileRoutesByFullPath {
   '/admin/communication/newsletter': typeof AdminCommunicationNewsletterRoute
   '/admin/communication/notifications': typeof AdminCommunicationNotificationsRoute
   '/admin/communication/tickets': typeof AdminCommunicationTicketsRoute
+  '/admin/finances/abonnements': typeof AdminFinancesAbonnementsRoute
   '/admin/finances/commissions': typeof AdminFinancesCommissionsRoute
   '/admin/finances/litiges': typeof AdminFinancesLitigesRoute
   '/admin/finances/remboursements': typeof AdminFinancesRemboursementsRoute
@@ -765,6 +788,7 @@ export interface FileRoutesByFullPath {
   '/admin/utilisateurs/kyc': typeof AdminUtilisateursKycRoute
   '/formations/$id/apprendre': typeof FormationsIdApprendreRoute
   '/mes-commandes/$id/litige': typeof MesCommandesIdLitigeRoute
+  '/newsletter/desabonnement/$token': typeof NewsletterDesabonnementTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -841,6 +865,7 @@ export interface FileRoutesByTo {
   '/tableau-de-bord/blog': typeof TableauDeBordBlogRoute
   '/tableau-de-bord/commandes': typeof TableauDeBordCommandesRoute
   '/tableau-de-bord/commissions': typeof TableauDeBordCommissionsRoute
+  '/tableau-de-bord/communication': typeof TableauDeBordCommunicationRoute
   '/tableau-de-bord/coupons': typeof TableauDeBordCouponsRoute
   '/tableau-de-bord/devis': typeof TableauDeBordDevisRoute
   '/tableau-de-bord/evenements': typeof TableauDeBordEvenementsRoute
@@ -860,6 +885,7 @@ export interface FileRoutesByTo {
   '/admin/communication/newsletter': typeof AdminCommunicationNewsletterRoute
   '/admin/communication/notifications': typeof AdminCommunicationNotificationsRoute
   '/admin/communication/tickets': typeof AdminCommunicationTicketsRoute
+  '/admin/finances/abonnements': typeof AdminFinancesAbonnementsRoute
   '/admin/finances/commissions': typeof AdminFinancesCommissionsRoute
   '/admin/finances/litiges': typeof AdminFinancesLitigesRoute
   '/admin/finances/remboursements': typeof AdminFinancesRemboursementsRoute
@@ -873,6 +899,7 @@ export interface FileRoutesByTo {
   '/admin/utilisateurs/kyc': typeof AdminUtilisateursKycRoute
   '/formations/$id/apprendre': typeof FormationsIdApprendreRoute
   '/mes-commandes/$id/litige': typeof MesCommandesIdLitigeRoute
+  '/newsletter/desabonnement/$token': typeof NewsletterDesabonnementTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -950,6 +977,7 @@ export interface FileRoutesById {
   '/tableau-de-bord/blog': typeof TableauDeBordBlogRoute
   '/tableau-de-bord/commandes': typeof TableauDeBordCommandesRoute
   '/tableau-de-bord/commissions': typeof TableauDeBordCommissionsRoute
+  '/tableau-de-bord/communication': typeof TableauDeBordCommunicationRoute
   '/tableau-de-bord/coupons': typeof TableauDeBordCouponsRoute
   '/tableau-de-bord/devis': typeof TableauDeBordDevisRoute
   '/tableau-de-bord/evenements': typeof TableauDeBordEvenementsRoute
@@ -969,6 +997,7 @@ export interface FileRoutesById {
   '/admin/communication/newsletter': typeof AdminCommunicationNewsletterRoute
   '/admin/communication/notifications': typeof AdminCommunicationNotificationsRoute
   '/admin/communication/tickets': typeof AdminCommunicationTicketsRoute
+  '/admin/finances/abonnements': typeof AdminFinancesAbonnementsRoute
   '/admin/finances/commissions': typeof AdminFinancesCommissionsRoute
   '/admin/finances/litiges': typeof AdminFinancesLitigesRoute
   '/admin/finances/remboursements': typeof AdminFinancesRemboursementsRoute
@@ -982,6 +1011,7 @@ export interface FileRoutesById {
   '/admin/utilisateurs/kyc': typeof AdminUtilisateursKycRoute
   '/formations/$id/apprendre': typeof FormationsIdApprendreRoute
   '/mes-commandes/$id/litige': typeof MesCommandesIdLitigeRoute
+  '/newsletter/desabonnement/$token': typeof NewsletterDesabonnementTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1060,6 +1090,7 @@ export interface FileRouteTypes {
     | '/tableau-de-bord/blog'
     | '/tableau-de-bord/commandes'
     | '/tableau-de-bord/commissions'
+    | '/tableau-de-bord/communication'
     | '/tableau-de-bord/coupons'
     | '/tableau-de-bord/devis'
     | '/tableau-de-bord/evenements'
@@ -1079,6 +1110,7 @@ export interface FileRouteTypes {
     | '/admin/communication/newsletter'
     | '/admin/communication/notifications'
     | '/admin/communication/tickets'
+    | '/admin/finances/abonnements'
     | '/admin/finances/commissions'
     | '/admin/finances/litiges'
     | '/admin/finances/remboursements'
@@ -1092,6 +1124,7 @@ export interface FileRouteTypes {
     | '/admin/utilisateurs/kyc'
     | '/formations/$id/apprendre'
     | '/mes-commandes/$id/litige'
+    | '/newsletter/desabonnement/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1168,6 +1201,7 @@ export interface FileRouteTypes {
     | '/tableau-de-bord/blog'
     | '/tableau-de-bord/commandes'
     | '/tableau-de-bord/commissions'
+    | '/tableau-de-bord/communication'
     | '/tableau-de-bord/coupons'
     | '/tableau-de-bord/devis'
     | '/tableau-de-bord/evenements'
@@ -1187,6 +1221,7 @@ export interface FileRouteTypes {
     | '/admin/communication/newsletter'
     | '/admin/communication/notifications'
     | '/admin/communication/tickets'
+    | '/admin/finances/abonnements'
     | '/admin/finances/commissions'
     | '/admin/finances/litiges'
     | '/admin/finances/remboursements'
@@ -1200,6 +1235,7 @@ export interface FileRouteTypes {
     | '/admin/utilisateurs/kyc'
     | '/formations/$id/apprendre'
     | '/mes-commandes/$id/litige'
+    | '/newsletter/desabonnement/$token'
   id:
     | '__root__'
     | '/'
@@ -1276,6 +1312,7 @@ export interface FileRouteTypes {
     | '/tableau-de-bord/blog'
     | '/tableau-de-bord/commandes'
     | '/tableau-de-bord/commissions'
+    | '/tableau-de-bord/communication'
     | '/tableau-de-bord/coupons'
     | '/tableau-de-bord/devis'
     | '/tableau-de-bord/evenements'
@@ -1295,6 +1332,7 @@ export interface FileRouteTypes {
     | '/admin/communication/newsletter'
     | '/admin/communication/notifications'
     | '/admin/communication/tickets'
+    | '/admin/finances/abonnements'
     | '/admin/finances/commissions'
     | '/admin/finances/litiges'
     | '/admin/finances/remboursements'
@@ -1308,6 +1346,7 @@ export interface FileRouteTypes {
     | '/admin/utilisateurs/kyc'
     | '/formations/$id/apprendre'
     | '/mes-commandes/$id/litige'
+    | '/newsletter/desabonnement/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1341,6 +1380,7 @@ export interface RootRouteChildren {
   ProIdRoute: typeof ProIdRoute
   ProfilUsernameRoute: typeof ProfilUsernameRoute
   VerifyEmailTokenRoute: typeof VerifyEmailTokenRoute
+  NewsletterDesabonnementTokenRoute: typeof NewsletterDesabonnementTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1623,6 +1663,13 @@ declare module '@tanstack/react-router' {
       path: '/coupons'
       fullPath: '/tableau-de-bord/coupons'
       preLoaderRoute: typeof TableauDeBordCouponsRouteImport
+      parentRoute: typeof TableauDeBordRoute
+    }
+    '/tableau-de-bord/communication': {
+      id: '/tableau-de-bord/communication'
+      path: '/communication'
+      fullPath: '/tableau-de-bord/communication'
+      preLoaderRoute: typeof TableauDeBordCommunicationRouteImport
       parentRoute: typeof TableauDeBordRoute
     }
     '/tableau-de-bord/commissions': {
@@ -1954,6 +2001,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAffiliationRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/newsletter/desabonnement/$token': {
+      id: '/newsletter/desabonnement/$token'
+      path: '/newsletter/desabonnement/$token'
+      fullPath: '/newsletter/desabonnement/$token'
+      preLoaderRoute: typeof NewsletterDesabonnementTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mes-commandes/$id/litige': {
       id: '/mes-commandes/$id/litige'
       path: '/$id/litige'
@@ -2045,6 +2099,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFinancesCommissionsRouteImport
       parentRoute: typeof AdminFinancesRoute
     }
+    '/admin/finances/abonnements': {
+      id: '/admin/finances/abonnements'
+      path: '/abonnements'
+      fullPath: '/admin/finances/abonnements'
+      preLoaderRoute: typeof AdminFinancesAbonnementsRouteImport
+      parentRoute: typeof AdminFinancesRoute
+    }
     '/admin/communication/tickets': {
       id: '/admin/communication/tickets'
       path: '/tickets'
@@ -2122,6 +2183,7 @@ const AdminCommunicationRouteWithChildren =
   AdminCommunicationRoute._addFileChildren(AdminCommunicationRouteChildren)
 
 interface AdminFinancesRouteChildren {
+  AdminFinancesAbonnementsRoute: typeof AdminFinancesAbonnementsRoute
   AdminFinancesCommissionsRoute: typeof AdminFinancesCommissionsRoute
   AdminFinancesLitigesRoute: typeof AdminFinancesLitigesRoute
   AdminFinancesRemboursementsRoute: typeof AdminFinancesRemboursementsRoute
@@ -2129,6 +2191,7 @@ interface AdminFinancesRouteChildren {
 }
 
 const AdminFinancesRouteChildren: AdminFinancesRouteChildren = {
+  AdminFinancesAbonnementsRoute: AdminFinancesAbonnementsRoute,
   AdminFinancesCommissionsRoute: AdminFinancesCommissionsRoute,
   AdminFinancesLitigesRoute: AdminFinancesLitigesRoute,
   AdminFinancesRemboursementsRoute: AdminFinancesRemboursementsRoute,
@@ -2415,6 +2478,7 @@ interface TableauDeBordRouteChildren {
   TableauDeBordBlogRoute: typeof TableauDeBordBlogRoute
   TableauDeBordCommandesRoute: typeof TableauDeBordCommandesRoute
   TableauDeBordCommissionsRoute: typeof TableauDeBordCommissionsRoute
+  TableauDeBordCommunicationRoute: typeof TableauDeBordCommunicationRoute
   TableauDeBordCouponsRoute: typeof TableauDeBordCouponsRoute
   TableauDeBordDevisRoute: typeof TableauDeBordDevisRoute
   TableauDeBordEvenementsRoute: typeof TableauDeBordEvenementsRoute
@@ -2436,6 +2500,7 @@ const TableauDeBordRouteChildren: TableauDeBordRouteChildren = {
   TableauDeBordBlogRoute: TableauDeBordBlogRoute,
   TableauDeBordCommandesRoute: TableauDeBordCommandesRoute,
   TableauDeBordCommissionsRoute: TableauDeBordCommissionsRoute,
+  TableauDeBordCommunicationRoute: TableauDeBordCommunicationRoute,
   TableauDeBordCouponsRoute: TableauDeBordCouponsRoute,
   TableauDeBordDevisRoute: TableauDeBordDevisRoute,
   TableauDeBordEvenementsRoute: TableauDeBordEvenementsRoute,
@@ -2485,6 +2550,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProIdRoute: ProIdRoute,
   ProfilUsernameRoute: ProfilUsernameRoute,
   VerifyEmailTokenRoute: VerifyEmailTokenRoute,
+  NewsletterDesabonnementTokenRoute: NewsletterDesabonnementTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

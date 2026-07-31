@@ -7,10 +7,16 @@ import { getPagination, paginationMeta } from "../utils/pagination.js";
 import { sanitizeRichText } from "../utils/sanitizeRichText.js";
 import { makeSlug } from "../utils/slug.js";
 
-const adminOnlySpaces: ArticleSpace[] = ["PHARMACOPEE", "RITES_CULTURES"];
 const editorialRoles: Role[] = [Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR];
 
 const canPublishContent = (role: Role) => editorialRoles.includes(role);
+
+// Pharmacopée and Rites & Cultures are "exclusivement gérés par
+// l'administrateur principal" per the cahier des charges — unlike the other
+// editorial spaces (Santé au quotidien, Recettes santé), ADMIN/EDITOR do not
+// get authoring rights here, only SUPER_ADMIN.
+const superAdminOnlySpaces: ArticleSpace[] = ["PHARMACOPEE", "RITES_CULTURES"];
+const isSuperAdmin = (role: Role) => role === Role.SUPER_ADMIN;
 
 export const listArticles = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
@@ -93,8 +99,8 @@ export const getArticle = asyncHandler(async (req, res) => {
 export const createArticle = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
   const space = req.body.space as ArticleSpace;
-  if (adminOnlySpaces.includes(space) && !canPublishContent(req.user.role)) {
-    throw new ApiError(403, "Editorial space only");
+  if (superAdminOnlySpaces.includes(space) && !isSuperAdmin(req.user.role)) {
+    throw new ApiError(403, "This editorial space is managed exclusively by the principal administrator");
   }
 
   const article = await prisma.article.create({
@@ -120,9 +126,12 @@ export const updateArticle = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
   const existing = await prisma.article.findUnique({
     where: { id: req.params.id },
-    select: { authorId: true },
+    select: { authorId: true, space: true },
   });
   if (!existing) throw new ApiError(404, "Article not found");
+  if (superAdminOnlySpaces.includes(existing.space) && !isSuperAdmin(req.user.role)) {
+    throw new ApiError(403, "This editorial space is managed exclusively by the principal administrator");
+  }
   if (existing.authorId !== req.user.id && !canPublishContent(req.user.role))
     throw new ApiError(403, "Forbidden");
 
@@ -146,9 +155,12 @@ export const deleteArticle = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
   const existing = await prisma.article.findUnique({
     where: { id: req.params.id },
-    select: { authorId: true },
+    select: { authorId: true, space: true },
   });
   if (!existing) throw new ApiError(404, "Article not found");
+  if (superAdminOnlySpaces.includes(existing.space) && !isSuperAdmin(req.user.role)) {
+    throw new ApiError(403, "This editorial space is managed exclusively by the principal administrator");
+  }
   if (existing.authorId !== req.user.id && !canPublishContent(req.user.role))
     throw new ApiError(403, "Forbidden");
   await prisma.article.delete({ where: { id: req.params.id } });
@@ -156,6 +168,13 @@ export const deleteArticle = asyncHandler(async (req, res) => {
 });
 
 export const publishArticle = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  const existing = await prisma.article.findUnique({ where: { id: req.params.id }, select: { space: true } });
+  if (!existing) throw new ApiError(404, "Article not found");
+  if (superAdminOnlySpaces.includes(existing.space) && !isSuperAdmin(req.user.role)) {
+    throw new ApiError(403, "This editorial space is managed exclusively by the principal administrator");
+  }
+
   const article = await prisma.article.update({
     where: { id: req.params.id },
     data: { isApproved: true, isPublished: true, publishedAt: new Date() },

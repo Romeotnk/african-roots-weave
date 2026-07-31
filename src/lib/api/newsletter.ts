@@ -10,3 +10,6 @@ export const subscribeNewsletter = (payload: NewsletterSubscriptionPayload) =>
     method: "POST",
     body: payload,
   });
+
+export const unsubscribeNewsletter = (token: string) =>
+  apiRequest<unknown>(`/newsletter/unsubscribe/${token}`, { method: "POST" });

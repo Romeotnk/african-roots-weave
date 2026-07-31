@@ -5,6 +5,8 @@ import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { useAdminModerationActions, usePendingArticles, usePendingEvents, usePendingFormations } from "@/hooks/useAdminApi";
 import { MonographManager } from "@/components/admin/MonographManager";
 import { RitesCultureManager } from "@/components/admin/RitesCultureManager";
+import { TaxonomyManager } from "@/components/admin/TaxonomyManager";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 export const Route = createFileRoute("/admin/contenus")({
   head: () => ({ meta: [{ title: "Admin contenus - IWOSAN" }] }),
@@ -15,11 +17,13 @@ type PendingArticle = { id: string; title: string; space: string; category: stri
 type PendingEvent = { id: string; title: string; type: string; startDate: string; createdBy?: { firstName: string; lastName: string } };
 type PendingFormation = { id: string; title: string; type: string; category: string; createdAt: string; createdBy?: { firstName: string; lastName: string } };
 
-type Tab = "articles" | "events" | "formations" | "pharmacopee" | "rites";
+type Tab = "articles" | "events" | "formations" | "pharmacopee" | "rites" | "categories";
 type ModerationTab = "articles" | "events" | "formations";
 type RejectTarget = { id: string; label: string; kind: ModerationTab };
 
 function AdminContenus() {
+  const { roles } = useAuth();
+  const isSuperAdmin = roles.includes("super_admin");
   const [tab, setTab] = useState<Tab>("articles");
   const articlesQuery = usePendingArticles();
   const eventsQuery = usePendingEvents();
@@ -60,8 +64,8 @@ function AdminContenus() {
           </button>
         ))}
         {([
-          ["pharmacopee", "Pharmacopée"],
-          ["rites", "Rites & Cultures"],
+          ...(isSuperAdmin ? ([["pharmacopee", "Pharmacopée"], ["rites", "Rites & Cultures"]] as const) : []),
+          ["categories", "Catégories"],
         ] as const).map(([value, label]) => (
           <button
             key={value}
@@ -72,6 +76,9 @@ function AdminContenus() {
             {label}
           </button>
         ))}
+        {!isSuperAdmin && (
+          <p className="ml-2 self-center text-[11px] text-slate-400">Pharmacopée et Rites & Cultures sont gérés exclusivement par l'administrateur principal.</p>
+        )}
       </div>
 
       {tab === "articles" && (
@@ -191,8 +198,9 @@ function AdminContenus() {
         </div>
       )}
 
-      {tab === "pharmacopee" && <MonographManager />}
-      {tab === "rites" && <RitesCultureManager />}
+      {tab === "pharmacopee" && isSuperAdmin && <MonographManager />}
+      {tab === "rites" && isSuperAdmin && <RitesCultureManager />}
+      {tab === "categories" && <TaxonomyManager />}
 
       <ConfirmDialog
         open={Boolean(rejectTarget)}

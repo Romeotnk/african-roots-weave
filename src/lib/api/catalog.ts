@@ -87,6 +87,9 @@ type BackendProfessional = {
   displayName: string;
   specialty: string[];
   biography: string;
+  innovations?: string | null;
+  communityImpact?: string | null;
+  philosophy?: string | null;
   location: string;
   latitude?: number | null;
   longitude?: number | null;
@@ -171,14 +174,19 @@ export const toProfessional = (professional: BackendProfessional): Professional 
   // this matches Product.sellerId and can be used directly to start a
   // conversation (Message.senderId/receiverId are User ids).
   id: professional.user.id,
+  profileId: professional.id,
   name: professional.displayName,
   specialty: professional.specialty[0] ?? "Praticien traditionnel",
   specialties: professional.specialty,
   location: professional.location,
   country: professional.user.country,
   bio: professional.biography,
+  innovations: professional.innovations ?? undefined,
+  communityImpact: professional.communityImpact ?? undefined,
+  philosophy: professional.philosophy ?? undefined,
   avatar: professional.photos[0] ?? fallbackAvatar,
   cover: professional.photos[1] ?? professional.photos[0] ?? fallbackImage,
+  gallery: professional.photos.length > 0 ? professional.photos : undefined,
   verified: professional.isVerified,
   rating: professional.averageRating,
   reviewCount: professional.totalReviews,

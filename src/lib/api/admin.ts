@@ -281,6 +281,29 @@ export type AdminWalletTransaction = {
 export const getAdminTransactions = (params: { userId?: string; type?: string; page?: number } = {}) =>
   apiRequest<AdminWalletTransaction[]>(`/admin/transactions${toQuery(params) ? `?${toQuery(params)}` : ""}`);
 
+export type AdminSubscription = {
+  id: string;
+  userId: string;
+  plan: "FREE" | "BASIC" | "PRO" | "EXPERT";
+  price: string | number;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  autoRenew: boolean;
+  maxListings: number;
+  maxDownloads: number;
+  createdAt: string;
+  user: { id: string; firstName: string; lastName: string; email: string };
+};
+
+export const getAdminSubscriptions = (params: { page?: number } = {}) =>
+  apiRequest<AdminSubscription[]>(`/admin/subscriptions${toQuery(params) ? `?${toQuery(params)}` : ""}`);
+
+export const updateAdminSubscription = (
+  id: string,
+  payload: Partial<Pick<AdminSubscription, "plan" | "price" | "endDate" | "isActive" | "autoRenew" | "maxListings" | "maxDownloads">>,
+) => apiRequest<AdminSubscription>(`/admin/subscriptions/${id}`, { method: "PUT", body: payload });
+
 // Affiliation / MLM overview.
 export type AdminMlmOverview = {
   totalsByType: { type: string; _sum: { amount: string | number | null }; _count: { id: number } }[];

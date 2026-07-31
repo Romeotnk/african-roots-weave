@@ -184,20 +184,26 @@ function MessagesPage() {
 
     if (authenticated && !active.id.startsWith("conv")) {
       try {
-        const sent = await sendSocketMessage(active.id, content);
-        if (sent?.id) {
+        const result = await sendSocketMessage(active.id, content);
+        if (result?.message?.id) {
+          const { message: sent, contactInfoRedacted } = result;
           setConversations((current) =>
             current.map((conversation) =>
               conversation.id === active.id
                 ? {
                     ...conversation,
                     messages: conversation.messages.map((message) =>
-                      message.id === nextMessage.id ? { ...message, id: sent.id, read: Boolean(sent.isRead) } : message,
+                      message.id === nextMessage.id
+                        ? { ...message, id: sent.id, content: sent.content, read: Boolean(sent.isRead) }
+                        : message,
                     ),
                   }
                 : conversation,
             ),
           );
+          if (contactInfoRedacted) {
+            setActionMessage("Les coordonnées personnelles (téléphone, email, réseaux sociaux) sont masquées : échangez via Iwosan pour rester protégé.");
+          }
         }
       } catch {
         setActionMessage("Message ajouté à la conversation. La synchronisation reprendra automatiquement.");

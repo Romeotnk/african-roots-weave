@@ -11,6 +11,7 @@ import {
   LifeBuoy,
   Link2,
   LogOut,
+  Megaphone,
   MessageSquare,
   Package,
   Settings,
@@ -75,6 +76,7 @@ const groups = [
       { icon: Users, label: "Mon reseau", to: "/tableau-de-bord/reseau" },
       { icon: Link2, label: "Affiliations", to: "/tableau-de-bord/affiliation" },
       { icon: Wallet, label: "Commissions", to: "/tableau-de-bord/commissions" },
+      { icon: Megaphone, label: "Communication", to: "/tableau-de-bord/communication" },
     ],
   },
   {

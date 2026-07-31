@@ -5,6 +5,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
 import { useCreateArticle, useDeleteArticle, useMyArticles } from "@/hooks/useContentApi";
+import { useTaxonomy } from "@/hooks/useTaxonomyApi";
 import type { ArticleSpace, MyArticle } from "@/lib/api/content";
 
 type DisplayStatus = "review" | "published" | "rejected";
@@ -51,8 +52,11 @@ function BlogPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [space, setSpace] = useState<ArticleSpace>("SANTE_QUOTIDIEN");
+  const [category, setCategory] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const categoriesQuery = useTaxonomy("ARTICLE_CATEGORY");
+  const categories = categoriesQuery.data ?? [];
 
   const list = articles ?? [];
 
@@ -86,11 +90,12 @@ function BlogPage() {
     }
 
     createArticle.mutate(
-      { space, title: title.trim(), content: content.trim() },
+      { space, title: title.trim(), content: content.trim(), category: category || undefined },
       {
         onSuccess: () => {
           setTitle("");
           setContent("");
+          setCategory("");
           setMessage("Article envoye a la moderation editoriale.");
         },
         onError: (mutationError) =>
@@ -159,6 +164,19 @@ function BlogPage() {
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
+                  ))}
+                </select>
+              </label>
+              <label className="mt-4 block text-[13px] font-bold text-[var(--color-text-primary)]">
+                Catégorie
+                <select
+                  value={category}
+                  onChange={(event) => setCategory(event.target.value)}
+                  className="mt-2 h-11 w-full rounded-[8px] border border-[var(--brand-border-light)] bg-white px-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
+                >
+                  <option value="">Sans catégorie</option>
+                  {categories.map((item) => (
+                    <option key={item.id} value={item.name}>{item.name}</option>
                   ))}
                 </select>
               </label>
@@ -235,7 +253,7 @@ function BlogPage() {
                               <span className={`rounded-full border px-3 py-1 text-[12px] font-bold ${statusClasses[status]}`}>{statusLabels[status]}</span>
                             </div>
                             <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">
-                              {spaceLabels[article.space]} - {formatDate(article.updatedAt)} - {article.views} vues
+                              {spaceLabels[article.space]}{article.category ? ` · ${article.category}` : ""} - {formatDate(article.updatedAt)} - {article.views} vues
                             </p>
                             <p className="mt-2 text-[13px] leading-6 text-[var(--color-text-secondary)]">{excerptOf(article.content)}</p>
                           </div>

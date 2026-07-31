@@ -48,7 +48,7 @@ export type VotePayload = {
 
 export type ReportPayload = {
   targetId: string;
-  targetType: "QUESTION" | "ANSWER" | "COMMENT" | "PROFILE";
+  targetType: "QUESTION" | "ANSWER" | "COMMENT" | "PROFILE" | "PRODUCT";
   reason?: string;
   details?: string;
 };
@@ -147,7 +147,7 @@ export async function updateComment(id: string, content: string) {
   return response.data;
 }
 
-export async function toggleFavorite(targetId: string, targetType: "QUESTION" = "QUESTION") {
+export async function toggleFavorite(targetId: string, targetType: "QUESTION" | "ANSWER" = "QUESTION") {
   const response = await apiRequest<{ favorited: boolean }>("/forum/favorites", {
     method: "POST",
     body: { targetId, targetType },
@@ -155,8 +155,8 @@ export async function toggleFavorite(targetId: string, targetType: "QUESTION" = 
   return response.data;
 }
 
-export async function listMyFavorites() {
-  const response = await apiRequest<unknown[]>("/forum/favorites/mine");
+export async function listMyFavorites(targetType: "QUESTION" | "ANSWER" = "QUESTION") {
+  const response = await apiRequest<unknown[]>(`/forum/favorites/mine?targetType=${targetType}`);
   return response.data ?? [];
 }
 

@@ -8,11 +8,16 @@ export interface ProfessionalSocialLinks {
 
 export interface Professional {
   id: string;
+  /** ProfessionalProfile.id — distinct from `id` (User.id). Required target for PROFESSIONAL reviews. */
+  profileId: string;
   name: string;
   specialty: string;
   location: string;
   country: string;
   bio: string;
+  innovations?: string;
+  communityImpact?: string;
+  philosophy?: string;
   avatar: string;
   cover: string;
   verified: boolean;
@@ -184,6 +189,7 @@ export interface Plant {
   region?: string;
   therapeuticCategory?: string;
   botanicalDescription?: string;
+  dosage?: string;
   medicinalProperties?: { property: string; use: string; evidence: string }[];
   preparations?: string[];
   precautions?: string[];
@@ -193,7 +199,7 @@ export interface Plant {
 export interface EventItem {
   id: string;
   title: string;
-  type: "WEBINAIRE" | "FORMATION" | "SALON" | "CONFERENCE" | "ATELIER";
+  type: "WEBINAR" | "FORMATION" | "SALON" | "PORTES_OUVERTES" | "LANCEMENT_PRODUIT";
   date: string; // ISO
   endDate?: string;
   category?: string;
@@ -357,5 +363,6 @@ export interface ForumAnswer {
   date: string;
   votes: number;
   accepted: boolean;
+  attachments?: ForumAttachment[];
   comments: ForumComment[];
 }

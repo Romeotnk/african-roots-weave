@@ -1,12 +1,14 @@
 ﻿import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { BadgeCheck, Copy, Gavel, MapPin, Share2, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Copy, Flag, Gavel, MapPin, Share2, ShieldCheck } from "lucide-react";
 import type { Product } from "@/types";
 import { useProductBids, usePlaceProductBid } from "@/hooks/useApiCatalog";
 import { useCreateQuoteRequest } from "@/hooks/useQuotesApi";
+import { useForumReport } from "@/hooks/useForumApi";
 import { RatingStars } from "./RatingStars";
 import { Badge } from "./Badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { BuyProductPanel } from "./BuyProductPanel";
 
 type ProductBid = { id: string; amount: number | string; bidder?: { firstName: string; lastName: string } };
 
@@ -66,6 +68,10 @@ export function ProductCard({ product }: { product: Product }) {
   const [shareNotice, setShareNotice] = useState("");
   const [quoteNotice, setQuoteNotice] = useState("");
   const createQuoteRequest = useCreateQuoteRequest();
+  const reportMutation = useForumReport();
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportNotice, setReportNotice] = useState("");
   const price = product.price;
   const originalPrice = (product as Product & { originalPrice?: number }).originalPrice;
   const discountPercent = (product as Product & { discountPercent?: number }).discountPercent;
@@ -93,6 +99,24 @@ export function ProductCard({ product }: { product: Product }) {
         : `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
     window.open(target, "_blank", "noopener,noreferrer");
     setShareNotice(`Ouverture du partage ${label}.`);
+  };
+
+  const submitReport = () => {
+    const reason = reportReason.trim();
+    if (reason.length < 10) {
+      setReportNotice("Décrivez le problème en au moins 10 caractères.");
+      return;
+    }
+    reportMutation.mutate(
+      { targetId: product.id, targetType: "PRODUCT", reason },
+      {
+        onSuccess: () => {
+          setReportNotice("Signalement transmis à l'équipe de modération. Merci.");
+          setReportReason("");
+        },
+        onError: (error) => setReportNotice(error instanceof Error ? error.message : "Connectez-vous pour signaler cette annonce."),
+      },
+    );
   };
 
   const requestQuote = () => {
@@ -189,6 +213,9 @@ export function ProductCard({ product }: { product: Product }) {
               <div className="rounded-2xl border p-4"><p className="font-mono text-[12px] text-[var(--brand-primary)]">Localisation</p><p className="mt-1 text-[18px] font-bold">{product.location ?? "Afrique"}</p></div>
             </div>
             {product.auction && open && <AuctionBidPanel productId={product.id} basePrice={price} />}
+            {!product.auction && !product.quoteOnly && product.type !== "service" && !outOfStock && open && (
+              <BuyProductPanel productId={product.id} maxQuantity={product.stock} isDigital={product.type === "digital"} />
+            )}
             <div className="rounded-2xl border p-4 sm:p-5">
               <p className="font-mono text-[12px] text-[var(--brand-terracotta)]">Vendeur</p>
               <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -263,6 +290,35 @@ export function ProductCard({ product }: { product: Product }) {
                 ))}
               </div>
               {shareNotice && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[12px] text-emerald-800">{shareNotice}</p>}
+            </div>
+            <div className="rounded-2xl border p-4 sm:p-5">
+              <button
+                type="button"
+                onClick={() => { setReportOpen((current) => !current); setReportNotice(""); }}
+                className="inline-flex items-center gap-2 text-[12px] font-semibold text-red-700"
+              >
+                <Flag size={14} /> Signaler cette annonce
+              </button>
+              {reportOpen && (
+                <div className="mt-3 space-y-2">
+                  <textarea
+                    rows={3}
+                    value={reportReason}
+                    onChange={(event) => setReportReason(event.target.value)}
+                    placeholder="Décrivez le problème (contenu frauduleux, produit interdit, arnaque...)"
+                    className="w-full rounded-lg border border-[var(--brand-border)] px-3 py-2 text-[13px]"
+                  />
+                  <button
+                    type="button"
+                    disabled={reportMutation.isPending}
+                    onClick={submitReport}
+                    className="inline-flex h-9 items-center gap-2 rounded-full bg-red-600 px-4 text-[12px] font-semibold text-white disabled:opacity-60"
+                  >
+                    {reportMutation.isPending ? "Envoi..." : "Envoyer le signalement"}
+                  </button>
+                </div>
+              )}
+              {reportNotice && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">{reportNotice}</p>}
             </div>
           </div>
           </div>

@@ -38,6 +38,7 @@ import {
   getAdminRefundRequests,
   getAdminReports,
   getAdminReviews,
+  getAdminSubscriptions,
   getAdminTickets,
   getAdminTransactions,
   getAdminUser,
@@ -67,6 +68,7 @@ import {
   updateAdminBanner,
   updateAdminCommissionConfig,
   updateAdminConfig,
+  updateAdminSubscription,
   updateAdminTicketStatus,
   updateAdminUserRole,
   updateMaintenanceMode,
@@ -103,6 +105,7 @@ export const adminKeys = {
   refunds: (params: Record<string, unknown> = {}) => ["admin", "refunds", params] as const,
   disputes: (params: Record<string, unknown> = {}) => ["admin", "disputes", params] as const,
   transactions: (params: Record<string, unknown> = {}) => ["admin", "transactions", params] as const,
+  subscriptions: (params: Record<string, unknown> = {}) => ["admin", "subscriptions", params] as const,
   mlmOverview: ["admin", "mlm", "overview"] as const,
 };
 
@@ -508,6 +511,28 @@ export function useAdminRefundActions() {
     reject: useMutation({
       mutationFn: ({ id, reason }: { id: string; reason: string }) => rejectAdminRefund(id, reason),
       onSuccess: refresh,
+    }),
+  };
+}
+
+export function useAdminSubscriptions(params: { page?: number } = {}) {
+  return useQuery({
+    queryKey: adminKeys.subscriptions(params),
+    queryFn: () => getAdminSubscriptions(params),
+    enabled: adminEnabled(),
+    retry: false,
+  });
+}
+
+export function useAdminSubscriptionActions() {
+  const queryClient = useQueryClient();
+  return {
+    update: useMutation({
+      mutationFn: ({
+        id,
+        ...payload
+      }: { id: string } & Parameters<typeof updateAdminSubscription>[1]) => updateAdminSubscription(id, payload),
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "subscriptions"] }),
     }),
   };
 }

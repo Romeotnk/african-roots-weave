@@ -322,12 +322,14 @@ function SettingsPanel({ onNotice }: { onNotice: (message: string) => void }) {
   const updateConfig = useUpdateAdminConfig();
   const [restrictPosting, setRestrictPosting] = useState(false);
   const [allowedRoles, setAllowedRoles] = useState<string[]>([]);
+  const [autoHideThreshold, setAutoHideThreshold] = useState("3");
 
   useEffect(() => {
     if (!configQuery.data?.data) return;
     const byKey = Object.fromEntries(configQuery.data.data.map((row) => [row.key, row.value]));
     setRestrictPosting(byKey["forum.restrictPosting"] === "true");
     setAllowedRoles((byKey["forum.allowedRoles"] ?? "").split(",").map((role) => role.trim()).filter(Boolean));
+    setAutoHideThreshold(byKey["forum.autoHideReportThreshold"] ?? "3");
   }, [configQuery.data]);
 
   const toggleRole = (role: string) => {
@@ -335,8 +337,13 @@ function SettingsPanel({ onNotice }: { onNotice: (message: string) => void }) {
   };
 
   const save = () => {
+    const threshold = Math.max(1, Number(autoHideThreshold) || 3);
     updateConfig.mutate(
-      { "forum.restrictPosting": String(restrictPosting), "forum.allowedRoles": allowedRoles.join(",") },
+      {
+        "forum.restrictPosting": String(restrictPosting),
+        "forum.allowedRoles": allowedRoles.join(","),
+        "forum.autoHideReportThreshold": String(threshold),
+      },
       { onSuccess: () => onNotice("Réglages du forum mis à jour.") },
     );
   };
@@ -374,6 +381,24 @@ function SettingsPanel({ onNotice }: { onNotice: (message: string) => void }) {
           </div>
         </div>
       )}
+
+      <div className="mt-6 border-t border-white/10 pt-5">
+        <h2 className="text-[16px] font-bold text-white">Modération anti-spam</h2>
+        <p className="mt-2 text-[13px] text-slate-400">
+          Une question, réponse ou commentaire est automatiquement masqué dès qu'il atteint ce nombre de signalements.
+        </p>
+        <label className="mt-4 flex items-center justify-between gap-4 rounded-lg border border-white/10 bg-white/5 px-3 py-3 text-[13px] text-slate-300">
+          Seuil de signalements avant masquage automatique
+          <input
+            type="number"
+            min={1}
+            value={autoHideThreshold}
+            onChange={(event) => setAutoHideThreshold(event.target.value)}
+            className="h-9 w-20 rounded-lg border border-white/10 bg-white/5 px-2 text-center text-white outline-none focus:border-emerald-400"
+          />
+        </label>
+      </div>
+
       <button
         type="button"
         disabled={updateConfig.isPending}

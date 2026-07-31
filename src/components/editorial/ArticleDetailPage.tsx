@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Copy, Facebook, MessageCircle } from "lucide-react";
 import { ArticleCard } from "@/components/shared/ArticleCard";
+import { AdSlot } from "@/components/shared/AdSlot";
 import { articles } from "@/data/articles";
 import { useArticle, useArticles } from "@/hooks/useContentApi";
 import { toArticle, type BackendArticle } from "@/components/editorial/ArticleListPage";
@@ -81,6 +82,8 @@ export function ArticleDetailPage({ slug, fallbackSpace }: { slug: string; fallb
             dangerouslySetInnerHTML={{ __html: article.body ?? article.excerpt }}
           />
 
+          <AdSlot position="article_bottom" className="mt-8" />
+
           <div className="mt-8 rounded-[12px] bg-[var(--brand-surface-alt)] p-5">
             <h2 className="text-[18px] font-bold">Auteur</h2>
             <div className="mt-4 flex gap-4">
@@ -120,6 +123,7 @@ export function ArticleDetailPage({ slug, fallbackSpace }: { slug: string; fallb
         </article>
 
         <aside className="h-fit space-y-5">
+          <AdSlot position="article_sidebar" />
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
             <h2 className="mb-3 text-[15px] font-bold">Partager</h2>
             <div className="flex flex-wrap gap-2">

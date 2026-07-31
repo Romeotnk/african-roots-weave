@@ -31,9 +31,17 @@ type EventForm = {
   meetingUrl: string;
 };
 
+const eventTypeOptions = [
+  { value: "WEBINAR", label: "Webinaire" },
+  { value: "FORMATION", label: "Formation / Atelier" },
+  { value: "SALON", label: "Salon professionnel" },
+  { value: "PORTES_OUVERTES", label: "Journée portes ouvertes" },
+  { value: "LANCEMENT_PRODUIT", label: "Lancement de produit certifié" },
+] as const;
+
 const emptyEventForm: EventForm = {
   title: "",
-  category: "Atelier",
+  category: "WEBINAR",
   date: "",
   location: "En ligne",
   capacity: "30",
@@ -130,7 +138,7 @@ function EventsDashboard() {
     createEventMutation.mutate(
       {
         title,
-        type: form.category.toLowerCase().includes("webinaire") ? "WEBINAR" : form.category.toLowerCase().includes("formation") ? "FORMATION" : "SALON",
+        type: form.category,
         description: "Description à compléter avant publication.",
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
@@ -182,7 +190,11 @@ function EventsDashboard() {
           <form onSubmit={createEvent} className="mt-6 rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
             <div className="grid gap-4 md:grid-cols-6">
               <input value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} placeholder="Titre de l'événement" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px] md:col-span-2" />
-              <input value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} placeholder="Catégorie" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
+              <select value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} className="h-11 rounded-[8px] border border-[var(--brand-border)] bg-white px-4 text-[14px]">
+                {eventTypeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
               <input type="datetime-local" value={form.date} onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))} className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
               <input value={form.capacity} onChange={(event) => setForm((current) => ({ ...current, capacity: event.target.value }))} inputMode="numeric" placeholder="Capacité" className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 text-[14px]" />
               <button type="submit" className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-gold)] px-5 text-[13px] font-bold text-[var(--color-text-primary)]">

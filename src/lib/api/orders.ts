@@ -4,10 +4,10 @@ import { getStoredAffiliateCode } from "./affiliate";
 export const listMyOrders = (scope: "all" | "buyer" | "seller" = "all") =>
   apiRequest<unknown[]>(`/orders/mine?scope=${scope === "buyer" ? "purchases" : scope === "seller" ? "sales" : "all"}`);
 
-export const createOrder = (productId: string, quantity = 1) =>
-  apiRequest<unknown>("/orders", {
+export const createOrder = (productId: string, quantity = 1, couponCode?: string) =>
+  apiRequest<{ id: string }>("/orders", {
     method: "POST",
-    body: { productId, quantity, affiliateCode: getStoredAffiliateCode() ?? undefined },
+    body: { productId, quantity, couponCode: couponCode || undefined, affiliateCode: getStoredAffiliateCode() ?? undefined },
   });
 
 export const confirmOrderDelivery = (orderId: string) =>

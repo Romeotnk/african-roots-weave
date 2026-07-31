@@ -12,10 +12,45 @@ const MAX_MESSAGE_LENGTH = 4000;
 /** Strips HTML tags: chat content is stored and rendered as plain text. */
 const stripHtml = (value: string) => value.replace(/<[^>]*>/g, "");
 
+const REDACTION_PLACEHOLDER = "[coordonnees masquees]";
+const EMAIL_PATTERN = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+const CONTACT_LINK_PATTERN =
+  /\b(?:https?:\/\/)?(?:www\.)?(?:wa\.me|t\.me|api\.whatsapp\.com|chat\.whatsapp\.com|instagram\.com|facebook\.com|m\.me)\/\S+/gi;
+const PHONE_CANDIDATE_PATTERN = /(?:\+\d{1,3}[\s.-]?)?(?:\(?\d{2,4}\)?[\s.-]?){2,6}\d{2,4}/g;
+
+/**
+ * Marketplace buyers/sellers must transact through the platform (escrow,
+ * commission) — letting them swap phone numbers/emails/social links in chat
+ * is a direct path to circumventing that. Redact rather than block outright
+ * so a conversation can continue with the rest of the message intact.
+ */
+const redactContactInfo = (value: string) => {
+  let redacted = false;
+  let text = value.replace(EMAIL_PATTERN, () => {
+    redacted = true;
+    return REDACTION_PLACEHOLDER;
+  });
+  text = text.replace(CONTACT_LINK_PATTERN, () => {
+    redacted = true;
+    return REDACTION_PLACEHOLDER;
+  });
+  text = text.replace(PHONE_CANDIDATE_PATTERN, (match) => {
+    const digits = match.replace(/\D/g, "");
+    if (digits.length >= 7 && digits.length <= 15) {
+      redacted = true;
+      return REDACTION_PLACEHOLDER;
+    }
+    return match;
+  });
+  return { text, redacted };
+};
+
 const sanitizeMessageContent = (content: unknown) => {
   if (typeof content !== "string") return null;
   const cleaned = stripHtml(content).trim().slice(0, MAX_MESSAGE_LENGTH);
-  return cleaned.length > 0 ? cleaned : null;
+  if (cleaned.length === 0) return null;
+  const { text, redacted } = redactContactInfo(cleaned);
+  return { text, redacted };
 };
 
 type AuthenticatedSocket = Socket & { data: { userId: string } };
@@ -74,9 +109,9 @@ export const initSocket = (server: HttpServer) => {
       ) => {
         try {
           const receiverId = typeof payload?.receiverId === "string" ? payload.receiverId : null;
-          const content = sanitizeMessageContent(payload?.content);
+          const sanitized = sanitizeMessageContent(payload?.content);
 
-          if (!receiverId || receiverId === userId || !content) {
+          if (!receiverId || receiverId === userId || !sanitized) {
             ack?.({ success: false, message: "Invalid message payload" });
             return;
           }
@@ -95,7 +130,7 @@ export const initSocket = (server: HttpServer) => {
             : [];
 
           const message = await prisma.message.create({
-            data: { senderId: userId, receiverId, content, attachments },
+            data: { senderId: userId, receiverId, content: sanitized.text, attachments },
             include: { sender: { select: { id: true, firstName: true, lastName: true } } },
           });
 
@@ -110,7 +145,7 @@ export const initSocket = (server: HttpServer) => {
             },
           });
           io?.to(receiverId).emit("notification:new", notification);
-          ack?.({ success: true, data: message });
+          ack?.({ success: true, data: message, contactInfoRedacted: sanitized.redacted });
         } catch (error) {
           console.error("[socket] message:send failed:", error);
           ack?.({ success: false, message: "Message could not be sent" });

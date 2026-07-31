@@ -32,6 +32,15 @@ export const listNotifications = async () => {
   return (response.data ?? []).map(toNotification);
 };
 
+// Broadcast announcements (opportunités, informations réseau) sent via
+// broadcastAdminNotification — same underlying Notification rows as
+// listNotifications, filtered to the SYSTEM type before the narrower
+// AppNotification mapping above would otherwise fold them into "forum".
+export const listMyAnnouncements = async () => {
+  const response = await apiRequest<BackendNotification[]>("/notifications");
+  return (response.data ?? []).filter((item) => item.type === "SYSTEM");
+};
+
 export const markNotificationRead = (id: string) =>
   apiRequest<BackendNotification>(`/notifications/${id}/read`, { method: "PUT" });
 

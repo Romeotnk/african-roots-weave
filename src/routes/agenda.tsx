@@ -13,7 +13,14 @@ export const Route = createFileRoute("/agenda")({
   component: Agenda,
 });
 
-const filters = ["Tous", "WEBINAIRE", "FORMATION", "SALON", "CONFERENCE", "ATELIER"];
+const filters = ["Tous", "WEBINAR", "FORMATION", "SALON", "PORTES_OUVERTES", "LANCEMENT_PRODUIT"];
+const filterLabels: Record<string, string> = {
+  WEBINAR: "webinaire",
+  FORMATION: "formation",
+  SALON: "salon",
+  PORTES_OUVERTES: "portes ouvertes",
+  LANCEMENT_PRODUIT: "lancement de produit",
+};
 
 function monthDays(date: Date) {
   const first = new Date(date.getFullYear(), date.getMonth(), 1);
@@ -62,7 +69,7 @@ function Agenda() {
       <HeroSection image="https://images.unsplash.com/photo-1511578314322-379afb476865?w=1920&q=80" badge="Agenda" title="Agenda & Événements" subtitle="Vue par défaut en liste, avec calendrier latéral optionnel." size="md" />
       <section className="container-iwosan py-10">
         <div className="mb-6 flex items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-2">{filters.map((item) => <button key={item} onClick={() => setFilter(item)} className={`rounded-full px-4 py-2 text-[13px] font-semibold ${filter === item ? "bg-[var(--brand-primary)] text-white" : "border border-[var(--brand-border)] bg-white"}`}>{item === "Tous" ? "Tous" : item.toLowerCase()}</button>)}</div>
+          <div className="flex flex-wrap gap-2">{filters.map((item) => <button key={item} onClick={() => setFilter(item)} className={`rounded-full px-4 py-2 text-[13px] font-semibold ${filter === item ? "bg-[var(--brand-primary)] text-white" : "border border-[var(--brand-border)] bg-white"}`}>{item === "Tous" ? "Tous" : filterLabels[item]}</button>)}</div>
           <button onClick={() => setPanelOpen(true)} className="inline-flex h-11 items-center gap-2 rounded-full border border-[var(--brand-border)] bg-white px-4 text-[13px] font-semibold"><CalendarDays size={15} /> Calendrier</button>
         </div>
 

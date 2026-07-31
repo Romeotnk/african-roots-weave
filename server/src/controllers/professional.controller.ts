@@ -134,6 +134,8 @@ export const upsertMyProfile = asyncHandler(async (req, res) => {
     communityImpact,
     philosophy,
     location,
+    latitude,
+    longitude,
     availabilitySchedule,
     serviceBookingEnabled,
     socialLinks,
@@ -147,6 +149,8 @@ export const upsertMyProfile = asyncHandler(async (req, res) => {
     communityImpact?: string;
     philosophy?: string;
     location: string;
+    latitude?: number;
+    longitude?: number;
     availabilitySchedule?: Prisma.InputJsonValue;
     serviceBookingEnabled?: boolean;
     socialLinks?: Prisma.InputJsonValue;
@@ -163,6 +167,8 @@ export const upsertMyProfile = asyncHandler(async (req, res) => {
     communityImpact: communityImpact || null,
     philosophy: philosophy || null,
     location,
+    latitude: typeof latitude === "number" ? latitude : null,
+    longitude: typeof longitude === "number" ? longitude : null,
     availabilitySchedule: availabilitySchedule ?? Prisma.JsonNull,
     serviceBookingEnabled: Boolean(serviceBookingEnabled),
     socialLinks: socialLinks ?? Prisma.JsonNull,

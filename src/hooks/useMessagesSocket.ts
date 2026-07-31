@@ -89,12 +89,12 @@ export function useMessagesSocket(options: UseMessagesSocketOptions = {}) {
     const socket = socketRef.current;
     if (!socket || !receiverId || !content.trim()) return Promise.resolve(null);
 
-    return new Promise<BackendMessage | null>((resolve) => {
+    return new Promise<{ message: BackendMessage; contactInfoRedacted: boolean } | null>((resolve) => {
       socket.emit(
         "message:send",
         { receiverId, content: content.trim() },
-        (payload: { success?: boolean; data?: BackendMessage }) => {
-          resolve(payload?.success ? payload.data ?? null : null);
+        (payload: { success?: boolean; data?: BackendMessage; contactInfoRedacted?: boolean }) => {
+          resolve(payload?.success && payload.data ? { message: payload.data, contactInfoRedacted: Boolean(payload.contactInfoRedacted) } : null);
         },
       );
     });

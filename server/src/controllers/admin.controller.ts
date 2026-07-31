@@ -1,11 +1,13 @@
 import { AdminSubRole, Role } from "@prisma/client";
 import { prisma } from "../config/db.js";
+import { env } from "../config/env.js";
 import { sendEmail } from "../services/email.service.js";
 import { writeAuditLog } from "../services/audit.service.js";
 import { invalidateRolePermissionsCache } from "../services/permissions.service.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
+import { renderNewsletterEmail } from "../utils/newsletterTemplate.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
 import { PERMISSION_CATALOG, PERMISSION_KEYS } from "../utils/permissions.js";
 import { sanitizeRichText } from "../utils/sanitizeRichText.js";
@@ -715,11 +717,16 @@ export const replyTicket = asyncHandler(async (req, res) => {
 });
 
 export const sendNewsletter = asyncHandler(async (req, res) => {
-  const html = sanitizeRichText(String(req.body.html ?? ""));
+  const bodyHtml = sanitizeRichText(String(req.body.html ?? ""));
+  const subject = String(req.body.subject ?? "Iwosan");
   const subscribers = await prisma.newsletterSubscriber.findMany({ where: { isActive: true } });
   await Promise.all(
     subscribers.map((subscriber) =>
-      sendEmail({ to: subscriber.email, subject: req.body.subject, html }),
+      sendEmail({
+        to: subscriber.email,
+        subject,
+        html: renderNewsletterEmail(subject, bodyHtml, `${env.clientUrl}/newsletter/desabonnement/${subscriber.unsubscribeToken}`),
+      }),
     ),
   );
   await writeAuditLog(req, {

@@ -71,7 +71,37 @@ export const createOrder = asyncHandler(async (req, res) => {
       if (decremented.count === 0) throw new ApiError(400, "Insufficient stock");
     }
 
-    const totalAmount = product.price.mul(quantity);
+    const grossAmount = product.price.mul(quantity);
+
+    // Coupons are validated and consumed atomically here (not just at the
+    // /coupons/validate preview step) so a stale client-side check can never
+    // apply a discount the coupon no longer allows (expired, exhausted,
+    // deactivated, or scoped to a different seller since the preview).
+    let discountAmount = new Prisma.Decimal(0);
+    const couponCode = typeof req.body.couponCode === "string" ? req.body.couponCode.trim().toUpperCase() : "";
+    if (couponCode) {
+      const coupon = await tx.coupon.findUnique({ where: { code: couponCode } });
+      const isUsable =
+        coupon &&
+        coupon.isActive &&
+        (!coupon.expiresAt || coupon.expiresAt > new Date()) &&
+        (!coupon.maxUses || coupon.usedCount < coupon.maxUses) &&
+        (!coupon.sellerId || coupon.sellerId === product.sellerId);
+      if (!isUsable) throw new ApiError(400, "Ce code coupon n'est plus valide pour cet achat.");
+
+      const consumed = await tx.coupon.updateMany({
+        where: { id: coupon.id, usedCount: coupon.usedCount },
+        data: { usedCount: { increment: 1 } },
+      });
+      if (consumed.count === 0) throw new ApiError(409, "Ce coupon vient d'être utilisé, réessayez.");
+
+      discountAmount = coupon.isPercentage
+        ? grossAmount.mul(coupon.discount).div(100)
+        : new Prisma.Decimal(coupon.discount);
+      if (discountAmount.greaterThan(grossAmount)) discountAmount = grossAmount;
+    }
+
+    const totalAmount = grossAmount.minus(discountAmount);
     const rates = await getCommissionRates(tx);
     const commissionRate = resolveProductCommissionRate(rates, product, product.seller.professionalProfile?.defaultCommissionRate);
     const commissionAmount = totalAmount.mul(commissionRate);
@@ -96,6 +126,7 @@ export const createOrder = asyncHandler(async (req, res) => {
         unitPrice: product.price,
         totalAmount,
         commissionAmount,
+        discountAmount,
         affiliateLinkId,
       },
     });

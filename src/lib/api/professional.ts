@@ -12,7 +12,11 @@ export type MyProfessionalProfile = {
   communityImpact: string | null;
   philosophy: string | null;
   location: string;
+  latitude: number | null;
+  longitude: number | null;
   isVerified: boolean;
+  averageRating: number;
+  totalReviews: number;
   photos: string[];
   verificationDocs: string[] | null;
   socialLinks: Record<string, string> | null;
@@ -30,6 +34,8 @@ export type UpsertProfilePayload = {
   communityImpact?: string;
   philosophy?: string;
   location: string;
+  latitude?: number;
+  longitude?: number;
   serviceBookingEnabled?: boolean;
   availabilitySchedule?: Record<string, unknown>;
   socialLinks?: Record<string, string>;

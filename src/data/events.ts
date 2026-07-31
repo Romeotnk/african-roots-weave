@@ -4,7 +4,7 @@ export const events: EventItem[] = [
   {
     id: "e1",
     title: "Webinaire - Pharmacopee et diabete type 2",
-    type: "WEBINAIRE",
+    type: "WEBINAR",
     category: "Webinaire",
     date: "2026-06-18T18:00:00Z",
     endDate: "2026-06-18T19:30:00Z",
@@ -79,7 +79,7 @@ export const events: EventItem[] = [
   {
     id: "e4",
     title: "Atelier - Rites de guerison et sante mentale",
-    type: "ATELIER",
+    type: "FORMATION",
     category: "Atelier",
     date: "2026-06-28T17:00:00Z",
     endDate: "2026-06-28T19:00:00Z",

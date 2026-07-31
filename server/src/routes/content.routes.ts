@@ -1,3 +1,4 @@
+import { Role } from "@prisma/client";
 import { Router } from "express";
 import {
   createArticle,
@@ -16,7 +17,7 @@ import {
   updateMonograph,
 } from "../controllers/content.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
-import { checkPermission, requireEmailVerified } from "../middlewares/role.middleware.js";
+import { checkPermission, checkRole, requireEmailVerified } from "../middlewares/role.middleware.js";
 
 export const articleRouter = Router();
 export const monographRouter = Router();
@@ -49,13 +50,14 @@ articleRouter.post(
   publishArticle,
 );
 
-// Pharmacopoeia monographs.
+// Pharmacopoeia monographs — exclusivement geres par l'administrateur
+// principal per the cahier des charges, unlike the other editorial spaces.
 monographRouter.get("/", listMonographs);
 monographRouter.get(
   "/admin/all",
   authMiddleware,
   requireEmailVerified,
-  checkPermission("content.review"),
+  checkRole(Role.SUPER_ADMIN),
   listAllMonographsForAdmin,
 );
 monographRouter.get("/:id", getMonograph);
@@ -63,20 +65,20 @@ monographRouter.post(
   "/",
   authMiddleware,
   requireEmailVerified,
-  checkPermission("content.review"),
+  checkRole(Role.SUPER_ADMIN),
   createMonograph,
 );
 monographRouter.put(
   "/:id",
   authMiddleware,
   requireEmailVerified,
-  checkPermission("content.review"),
+  checkRole(Role.SUPER_ADMIN),
   updateMonograph,
 );
 monographRouter.delete(
   "/:id",
   authMiddleware,
   requireEmailVerified,
-  checkPermission("content.review"),
+  checkRole(Role.SUPER_ADMIN),
   deleteMonograph,
 );

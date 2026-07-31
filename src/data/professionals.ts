@@ -3,6 +3,7 @@
 export const professionals: Professional[] = [
   {
     id: "p1",
+    profileId: "p1",
     name: "Mama Aissata Diallo",
     specialty: "Tradi-praticienne - Pharmacopée femme & enfant",
     location: "Bamako",
@@ -25,6 +26,7 @@ export const professionals: Professional[] = [
   },
   {
     id: "p2",
+    profileId: "p2",
     name: "Dr. Kwame Mensah",
     specialty: "Phytothérapeute - Maladies chroniques",
     location: "Accra",
@@ -47,6 +49,7 @@ export const professionals: Professional[] = [
   },
   {
     id: "p3",
+    profileId: "p3",
     name: "Tata Ngozi Okeke",
     specialty: "Herboriste - Dermatologie traditionnelle",
     location: "Enugu",
@@ -69,6 +72,7 @@ export const professionals: Professional[] = [
   },
   {
     id: "p4",
+    profileId: "p4",
     name: "Baba Sadio Camara",
     specialty: "Guérisseur - Affections ostéo-articulaires",
     location: "Conakry",
@@ -91,6 +95,7 @@ export const professionals: Professional[] = [
   },
   {
     id: "p5",
+    profileId: "p5",
     name: "Dr. Amina Traoré",
     specialty: "Chercheuse - Ethnobotanique",
     location: "Ouagadougou",
@@ -113,6 +118,7 @@ export const professionals: Professional[] = [
   },
   {
     id: "p6",
+    profileId: "p6",
     name: "Mama Rose Ekwalla",
     specialty: "Sage-femme traditionnelle",
     location: "Douala",
@@ -134,6 +140,7 @@ export const professionals: Professional[] = [
   },
   {
     id: "p7",
+    profileId: "p7",
     name: "Hakim Mbaye",
     specialty: "Aromathérapeute - Huiles essentielles africaines",
     location: "Dakar",
@@ -155,6 +162,7 @@ export const professionals: Professional[] = [
   },
   {
     id: "p8",
+    profileId: "p8",
     name: "Mama Fatou Sow",
     specialty: "Nutritionniste traditionnelle",
     location: "Saint-Louis",

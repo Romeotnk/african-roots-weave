@@ -7,6 +7,7 @@ import {
   replyMyTicket,
   replyStaffTicket,
   updateStaffTicketStatus,
+  uploadTicketAttachments,
 } from "@/lib/api/tickets";
 
 const isBrowser = typeof window !== "undefined";
@@ -39,9 +40,15 @@ export function useMyTicket(id: string) {
 export function useCreateTicket() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ subject, category, content }: { subject: string; category: string; content: string }) =>
-      createTicket(subject, category, content),
+    mutationFn: ({ subject, category, content, attachments }: { subject: string; category: string; content: string; attachments?: string[] }) =>
+      createTicket(subject, category, content, attachments),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ticketKeys.all }),
+  });
+}
+
+export function useUploadTicketAttachments() {
+  return useMutation({
+    mutationFn: uploadTicketAttachments,
   });
 }
 

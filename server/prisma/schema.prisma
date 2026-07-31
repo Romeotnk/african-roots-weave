@@ -359,15 +359,17 @@ model Coupon {
 }
 
 model Review {
-  id           String       @id @default(cuid())
-  authorId     String
-  targetId     String
-  targetType   ReviewTarget
-  rating       Int
-  comment      String?      @db.Text
-  isHidden     Boolean      @default(false)
-  hiddenReason String?
-  createdAt    DateTime     @default(now())
+  id            String       @id @default(cuid())
+  authorId      String
+  targetId      String
+  targetType    ReviewTarget
+  rating        Int
+  comment       String?      @db.Text
+  isHidden      Boolean      @default(false)
+  hiddenReason  String?
+  sellerReply   String?      @db.Text
+  sellerReplyAt DateTime?
+  createdAt     DateTime     @default(now())
 
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
@@ -504,6 +506,22 @@ model ForumCategory {
   questions Question[]
 
   @@index([parentId])
+}
+
+// Flat, admin-managed category lists for form fields that were previously
+// free text (ProfessionalProfile.specialty, Article.category). `scope`
+// discriminates which picker consumes a given row — same generic pattern as
+// Report/Notification rather than one dedicated model per picker.
+model Taxonomy {
+  id        String   @id @default(cuid())
+  scope     String
+  name      String
+  slug      String
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([scope, slug])
+  @@index([scope])
 }
 
 model Answer {
@@ -1066,6 +1084,7 @@ enum EventType {
   FORMATION
   SALON
   PORTES_OUVERTES
+  LANCEMENT_PRODUIT
 }
 
 enum FormationType {

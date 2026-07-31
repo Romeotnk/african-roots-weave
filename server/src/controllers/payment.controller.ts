@@ -56,6 +56,8 @@ export const initiatePayment = asyncHandler(async (req, res) => {
       });
     });
 
+    await calculateOrderCommissions(paid.id);
+
     res.json(apiResponse(true, { order: paid, checkoutUrl: null }, "Wallet payment successful"));
     return;
   }

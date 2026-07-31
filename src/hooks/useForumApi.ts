@@ -141,10 +141,10 @@ export function useForumCategories() {
   });
 }
 
-export function useMyFavorites() {
+export function useMyFavorites(targetType: "QUESTION" | "ANSWER" = "QUESTION") {
   return useQuery({
-    queryKey: forumKeys.favorites,
-    queryFn: listMyFavorites,
+    queryKey: [...forumKeys.favorites, targetType],
+    queryFn: () => listMyFavorites(targetType),
     enabled: hasAccessToken(),
     retry: false,
   });
@@ -153,7 +153,8 @@ export function useMyFavorites() {
 export function useToggleFavorite() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ targetId }: { targetId: string }) => toggleFavorite(targetId),
+    mutationFn: ({ targetId, targetType }: { targetId: string; targetType?: "QUESTION" | "ANSWER" }) =>
+      toggleFavorite(targetId, targetType),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: forumKeys.favorites }),
   });
 }

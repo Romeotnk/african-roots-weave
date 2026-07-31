@@ -84,6 +84,27 @@ export const createReview = asyncHandler(async (req, res) => {
   res.status(201).json(apiResponse(true, review, "Review saved"));
 });
 
+// Lets the reviewed party (seller on a PRODUCT review, professional on a
+// PROFESSIONAL review) post one public reply — not moderation, just the
+// standard "seller responds to feedback" trust mechanic.
+export const replyToReview = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  const content = String(req.body.content ?? "").trim();
+  if (!content) throw new ApiError(400, "Reply content is required");
+
+  const review = await prisma.review.findUnique({ where: { id: req.params.id } });
+  if (!review) throw new ApiError(404, "Review not found");
+
+  const ownerId = await resolveTargetOwner(review.targetType, review.targetId);
+  if (!ownerId || ownerId !== req.user.id) throw new ApiError(403, "Forbidden");
+
+  const updated = await prisma.review.update({
+    where: { id: review.id },
+    data: { sellerReply: content, sellerReplyAt: new Date() },
+  });
+  res.json(apiResponse(true, updated, "Reply saved"));
+});
+
 export const listTargetReviews = asyncHandler(async (req, res) => {
   const targetType = req.query.targetType as ReviewTarget;
   const targetId = req.query.targetId as string;

@@ -20,7 +20,8 @@ export function useMyOrders(scope: "all" | "buyer" | "seller" = "all") {
 
 export function useCreateOrder() {
   return useMutation({
-    mutationFn: ({ productId, quantity = 1 }: { productId: string; quantity?: number }) => createOrder(productId, quantity),
+    mutationFn: ({ productId, quantity = 1, couponCode }: { productId: string; quantity?: number; couponCode?: string }) =>
+      createOrder(productId, quantity, couponCode),
   });
 }
 

@@ -41,3 +41,17 @@ export const getPublicAds = asyncHandler(async (req, res) => {
   });
   res.json(apiResponse(true, ads, "Ads retrieved"));
 });
+
+const PUBLIC_TAXONOMY_SCOPES = ["PROFESSIONAL_SPECIALTY", "ARTICLE_CATEGORY"];
+
+export const getPublicTaxonomy = asyncHandler(async (req, res) => {
+  const scope = typeof req.query.scope === "string" ? req.query.scope : "";
+  if (!PUBLIC_TAXONOMY_SCOPES.includes(scope)) throw new ApiError(400, "Invalid taxonomy scope");
+
+  const items = await prisma.taxonomy.findMany({
+    where: { scope },
+    orderBy: [{ position: "asc" }, { name: "asc" }],
+    select: { id: true, name: true, slug: true },
+  });
+  res.json(apiResponse(true, items, "Taxonomy retrieved"));
+});

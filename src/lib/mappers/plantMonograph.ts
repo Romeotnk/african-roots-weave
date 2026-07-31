@@ -80,6 +80,7 @@ export function mapMonographToPlant(monograph: unknown): Plant | null {
     gallery: gallery.length ? gallery : [image, ...fieldPhotos.filter((photo) => photo !== image)].slice(0, 6),
     summary: asString(monograph.summary) || firstSentence(therapeuticIndications, "Monographie issue de la base IWOSAN."),
     botanicalDescription: asString(monograph.botanicalDescription),
+    dosage: asString(monograph.dosage) || undefined,
     medicinalProperties: medicinalProperties.length
       ? medicinalProperties
       : [

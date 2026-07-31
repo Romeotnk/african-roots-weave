@@ -5,6 +5,7 @@ import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { ProfessionalCard } from "@/components/shared/ProfessionalCard";
 import { LeafletMap, type MapMarker } from "@/components/shared/LeafletMap";
+import { AdSlot } from "@/components/shared/AdSlot";
 import { professionals as fallbackProfessionals } from "@/data/professionals";
 import type { Professional } from "@/types";
 import { getProfessionals } from "@/lib/api/catalog";
@@ -218,6 +219,7 @@ function Annuaire() {
               {error}
             </p>
           )}
+          <AdSlot position="annuaire_top" className="mb-6" />
           {viewMode === "map" ? (
             mapMarkers.length > 0 ? (
               <LeafletMap markers={mapMarkers} heightClassName="h-[520px]" />

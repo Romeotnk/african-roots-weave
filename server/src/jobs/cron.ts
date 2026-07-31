@@ -227,4 +227,77 @@ export const startCronJobs = () => {
       });
     }),
   );
+
+  // Matches freshly published listings against active "SavedSearch" alerts
+  // (marketplace.tsx's "creer une alerte" button). Runs every 10 minutes and
+  // looks at a 15-minute window (buffer against job-start jitter); duplicate
+  // notifications are prevented by checking for an existing notification on
+  // the same (user, product) pair rather than by the window itself.
+  cron.schedule(
+    "*/10 * * * *",
+    runJob("saved-search-alerts", async () => {
+      const since = new Date(Date.now() - 15 * 60 * 1000);
+      const [freshProducts, searches] = await Promise.all([
+        prisma.product.findMany({
+          where: { isActive: true, isApproved: true, createdAt: { gte: since } },
+          include: {
+            seller: { select: { country: true, professionalProfile: { select: { location: true, isVerified: true, averageRating: true } } } },
+          },
+        }),
+        prisma.savedSearch.findMany({ where: { isActive: true } }),
+      ]);
+
+      if (freshProducts.length === 0 || searches.length === 0) return;
+
+      for (const product of freshProducts) {
+        for (const search of searches) {
+          if (search.userId === product.sellerId) continue;
+          const criteria = (search.criteria ?? {}) as {
+            search?: string;
+            categories?: string[];
+            types?: string[];
+            priceMin?: string | number;
+            priceMax?: string | number;
+            country?: string;
+            city?: string;
+            minRating?: number;
+            verifiedOnly?: boolean;
+          };
+
+          if (criteria.search) {
+            const keyword = criteria.search.toLowerCase();
+            if (!product.title.toLowerCase().includes(keyword) && !product.description.toLowerCase().includes(keyword)) continue;
+          }
+          if (criteria.categories && criteria.categories.length > 0) {
+            const wanted = criteria.categories.map((value) => value.replaceAll(" ", "_"));
+            if (!wanted.includes(product.category)) continue;
+          }
+          if (criteria.types && criteria.types.length > 0) {
+            if (!criteria.types.some((value) => value.toUpperCase() === product.type)) continue;
+          }
+          if (criteria.priceMin && product.price.lessThan(new Prisma.Decimal(criteria.priceMin))) continue;
+          if (criteria.priceMax && product.price.greaterThan(new Prisma.Decimal(criteria.priceMax))) continue;
+          if (criteria.country && product.seller.country?.toLowerCase() !== criteria.country.toLowerCase()) continue;
+          if (criteria.city && !product.seller.professionalProfile?.location?.toLowerCase().includes(criteria.city.toLowerCase())) continue;
+          if (criteria.minRating && (product.seller.professionalProfile?.averageRating ?? 0) < criteria.minRating) continue;
+          if (criteria.verifiedOnly && !product.seller.professionalProfile?.isVerified) continue;
+
+          const link = `/marketplace?produit=${product.id}`;
+          const alreadyNotified = await prisma.notification.findFirst({
+            where: { userId: search.userId, type: "SAVED_SEARCH_MATCH", link },
+            select: { id: true },
+          });
+          if (alreadyNotified) continue;
+
+          await createNotification({
+            userId: search.userId,
+            type: "SAVED_SEARCH_MATCH",
+            title: "Nouvelle annonce pour votre alerte",
+            message: `"${product.title}" correspond a votre alerte "${search.name}".`,
+            link,
+          });
+        }
+      }
+    }),
+  );
 };

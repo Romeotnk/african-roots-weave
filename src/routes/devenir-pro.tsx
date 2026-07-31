@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { Camera, CheckCircle2, FileUp, MapPin, Plus, Stethoscope, Upload } from "lucide-react";
+import { Camera, CheckCircle2, Compass, FileUp, MapPin, Plus, Sparkles, Stethoscope, Upload } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CountrySelect } from "@/components/shared/CountrySelect";
 import { Switch } from "@/components/ui/switch";
@@ -10,6 +10,7 @@ import {
   useUploadMyVerificationDocs,
   useUpsertMyProfessionalProfile,
 } from "@/hooks/useProfessionalApi";
+import { useTaxonomy } from "@/hooks/useTaxonomyApi";
 
 export const Route = createFileRoute("/devenir-pro")({
   head: () => ({ meta: [{ title: "Devenir professionnel - IWOSAN" }] }),
@@ -38,6 +39,10 @@ function BecomePro() {
   const upsertProfile = useUpsertMyProfessionalProfile();
   const uploadPhotos = useUploadMyProfilePhotos();
   const uploadDocs = useUploadMyVerificationDocs();
+  const specialtyTaxonomyQuery = useTaxonomy("PROFESSIONAL_SPECIALTY");
+  const specialtyOptions = specialtyTaxonomyQuery.data && specialtyTaxonomyQuery.data.length > 0
+    ? specialtyTaxonomyQuery.data.map((item) => item.name)
+    : specialties;
 
   const [country, setCountry] = useState("BJ");
   const [mainSpecialty, setMainSpecialty] = useState(specialties[0]);
@@ -51,7 +56,16 @@ function BecomePro() {
   const [bio, setBio] = useState("");
   const [initiationPath, setInitiationPath] = useState("");
   const [successRate, setSuccessRate] = useState("");
+  const [innovations, setInnovations] = useState("");
+  const [communityImpact, setCommunityImpact] = useState("");
+  const [philosophy, setPhilosophy] = useState("");
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [city, setCity] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [locationMessage, setLocationMessage] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [documentFiles, setDocumentFiles] = useState<File[]>([]);
@@ -66,7 +80,15 @@ function BecomePro() {
     setBio(existingProfile.biography);
     setInitiationPath(existingProfile.initiationPath ?? "");
     setSuccessRate(existingProfile.therapeuticSuccessRate != null ? String(existingProfile.therapeuticSuccessRate) : "");
+    setInnovations(existingProfile.innovations ?? "");
+    setCommunityImpact(existingProfile.communityImpact ?? "");
+    setPhilosophy(existingProfile.philosophy ?? "");
+    setFacebookUrl(existingProfile.socialLinks?.facebook ?? "");
+    setInstagramUrl(existingProfile.socialLinks?.instagram ?? "");
+    setWhatsapp(existingProfile.socialLinks?.whatsapp ?? "");
     setCity(existingProfile.location);
+    setLatitude(existingProfile.latitude);
+    setLongitude(existingProfile.longitude);
     setTreated(existingProfile.specialty);
     setOnline(existingProfile.serviceBookingEnabled);
     const schedule = existingProfile.availabilitySchedule as { slots?: string[]; videoUrl?: string; consultationPrice?: string } | null;
@@ -129,15 +151,26 @@ function BecomePro() {
     }
 
     try {
+      const socialLinks: Record<string, string> = {};
+      if (facebookUrl.trim()) socialLinks.facebook = facebookUrl.trim();
+      if (instagramUrl.trim()) socialLinks.instagram = instagramUrl.trim();
+      if (whatsapp.trim()) socialLinks.whatsapp = whatsapp.trim();
+
       await upsertProfile.mutateAsync({
         displayName: profileName.trim(),
         specialty: allSpecialties,
         biography: bio.trim(),
         initiationPath: initiationPath.trim() || undefined,
         therapeuticSuccessRate: successRate ? Number(successRate) : undefined,
+        innovations: innovations.trim() || undefined,
+        communityImpact: communityImpact.trim() || undefined,
+        philosophy: philosophy.trim() || undefined,
         location: city.trim(),
+        latitude: latitude ?? undefined,
+        longitude: longitude ?? undefined,
         serviceBookingEnabled: online,
         availabilitySchedule: { slots: selectedSlots, videoUrl: online ? videoUrl.trim() : "", consultationPrice: consultationPrice.trim() },
+        socialLinks: Object.keys(socialLinks).length > 0 ? socialLinks : undefined,
       });
 
       const photoFiles = [avatarFile, ...galleryFiles].filter((file): file is File => Boolean(file));
@@ -179,7 +212,7 @@ function BecomePro() {
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               <input required value={profileName} onChange={(event) => { setProfileName(event.target.value); setFormMessage(""); }} placeholder="Nom de pratique / nom d'exercice" className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
               <select value={mainSpecialty} onChange={(event) => setMainSpecialty(event.target.value)} className="h-11 rounded-lg border border-[var(--brand-border)] bg-white px-4">
-                {specialties.map((item) => <option key={item}>{item}</option>)}
+                {specialtyOptions.map((item) => <option key={item}>{item}</option>)}
               </select>
             </div>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -215,11 +248,54 @@ function BecomePro() {
           </div>
 
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
+            <h2 className="flex items-center gap-2 text-[20px] font-bold"><Sparkles size={20} /> Innovations, impact et philosophie</h2>
+            <div className="mt-5 space-y-3">
+              <textarea value={innovations} onChange={(event) => setInnovations(event.target.value)} rows={3} placeholder="Innovations personnelles (nouvelles preparations, protocoles, etc.)" className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
+              <textarea value={communityImpact} onChange={(event) => setCommunityImpact(event.target.value)} rows={3} placeholder="Impact communautaire (personnes formees, actions locales, etc.)" className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
+              <textarea value={philosophy} onChange={(event) => setPhilosophy(event.target.value)} rows={3} placeholder="Philosophie de soin et valeurs" className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
+              <div className="grid gap-3 md:grid-cols-3">
+                <input value={facebookUrl} onChange={(event) => setFacebookUrl(event.target.value)} placeholder="Lien Facebook" className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
+                <input value={instagramUrl} onChange={(event) => setInstagramUrl(event.target.value)} placeholder="Lien Instagram" className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
+                <input value={whatsapp} onChange={(event) => setWhatsapp(event.target.value)} placeholder="WhatsApp (numero ou lien)" className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
             <h2 className="flex items-center gap-2 text-[20px] font-bold"><MapPin size={20} /> Localisation et disponibilite</h2>
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               <CountrySelect value={country} onChange={setCountry} className="h-11 w-full rounded-lg border border-[var(--brand-border)] bg-white px-4" />
               <input value={city} onChange={(event) => { setCity(event.target.value); setFormMessage(""); }} placeholder="Ville" className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
             </div>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setLocationMessage("");
+                  if (!navigator.geolocation) {
+                    setLocationMessage("La géolocalisation n'est pas disponible sur cet appareil.");
+                    return;
+                  }
+                  navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                      setLatitude(position.coords.latitude);
+                      setLongitude(position.coords.longitude);
+                      setLocationMessage("Position enregistree pour la carte de l'annuaire.");
+                    },
+                    () => setLocationMessage("Impossible de recuperer votre position."),
+                  );
+                }}
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold"
+              >
+                <Compass size={16} /> Utiliser ma position actuelle
+              </button>
+              {latitude != null && longitude != null && (
+                <span className="text-[12px] text-[var(--color-text-muted)]">
+                  Position enregistree : {latitude.toFixed(4)}, {longitude.toFixed(4)}
+                </span>
+              )}
+            </div>
+            {locationMessage && <p className="mt-2 text-[12px] text-[var(--brand-primary)]">{locationMessage}</p>}
             <div className="mt-5 overflow-x-auto">
               <div className="grid min-w-[620px] grid-cols-[120px_repeat(3,1fr)] gap-2 text-[13px]">
                 <div />

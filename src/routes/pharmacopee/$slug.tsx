@@ -1,8 +1,10 @@
 ﻿import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Bug, Lightbulb, X } from "lucide-react";
+import { AdSlot } from "@/components/shared/AdSlot";
 import { plants } from "@/data/plants";
 import { useMonograph } from "@/hooks/useContentApi";
+import { useCreateTicket } from "@/hooks/useTicketsApi";
 import { mapMonographToPlant } from "@/lib/mappers/plantMonograph";
 
 export const Route = createFileRoute("/pharmacopee/$slug")({
@@ -18,9 +20,11 @@ function PlantMonograph() {
   const plant = apiPlant ?? staticPlant ?? plants[0];
   const gallery = useMemo(() => plant.gallery ?? [plant.image], [plant.gallery, plant.image]);
   const [activeImage, setActiveImage] = useState(gallery[0]);
+  const createTicket = useCreateTicket();
   const [feedback, setFeedback] = useState<"error" | "improve" | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
 
   useEffect(() => {
     if (plant?.scientificName) document.title = `${plant.scientificName} - IWOSAN`;
@@ -67,6 +71,12 @@ function PlantMonograph() {
               <div><dt className="text-[12px] font-bold uppercase text-[var(--color-text-muted)]">Catégorie</dt><dd>{plant.therapeuticCategory}</dd></div>
             </dl>
             <p className="mt-4 leading-7 text-[var(--color-text-secondary)]">{plant.botanicalDescription}</p>
+            {plant.dosage && (
+              <div className="mt-5 rounded-lg bg-[var(--brand-surface-alt)] p-4">
+                <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-[var(--brand-primary)]">Posologie</p>
+                <p className="mt-2 leading-7 text-[var(--color-text-secondary)]">{plant.dosage}</p>
+              </div>
+            )}
           </section>
 
           <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-6">
@@ -116,7 +126,9 @@ function PlantMonograph() {
           </section>
         </div>
 
-        <aside className="h-fit space-y-4 rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
+        <aside className="h-fit space-y-4">
+          <AdSlot position="pharmacopee_sidebar" />
+          <div className="space-y-4 rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
           <button type="button" onClick={() => { setFeedback("error"); setFeedbackMessage(""); setFeedbackSent(false); }} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[13px] font-semibold">
             <Bug size={15} /> Signaler une erreur
           </button>
@@ -129,13 +141,33 @@ function PlantMonograph() {
                 <p className="font-bold">{feedback === "error" ? "Erreur signalée" : "Amélioration proposée"}</p>
                 <button type="button" onClick={() => { setFeedback(null); setFeedbackMessage(""); setFeedbackSent(false); }} aria-label="Fermer le formulaire"><X size={15} /></button>
               </div>
-              <textarea rows={4} value={feedbackMessage} onChange={(event) => { setFeedbackMessage(event.target.value); setFeedbackSent(false); }} placeholder="Votre message..." className="mt-3 w-full rounded-lg border border-[var(--brand-border)] px-3 py-2 text-[13px]" />
-              <button type="button" onClick={() => setFeedbackSent(true)} disabled={feedbackMessage.trim().length < 10} className="mt-3 h-9 rounded-full bg-[var(--brand-primary)] px-4 text-[12px] font-semibold text-white disabled:opacity-50">
-                Envoyer la contribution
+              <textarea rows={4} value={feedbackMessage} onChange={(event) => { setFeedbackMessage(event.target.value); setFeedbackSent(false); setFeedbackError(""); }} placeholder="Votre message..." className="mt-3 w-full rounded-lg border border-[var(--brand-border)] px-3 py-2 text-[13px]" />
+              <button
+                type="button"
+                disabled={feedbackMessage.trim().length < 10 || createTicket.isPending}
+                onClick={() => {
+                  setFeedbackError("");
+                  createTicket.mutate(
+                    {
+                      subject: `Pharmacopée — ${feedback === "error" ? "Erreur signalée" : "Suggestion"} : ${plant.scientificName}`,
+                      category: "Pharmacopée",
+                      content: feedbackMessage.trim(),
+                    },
+                    {
+                      onSuccess: () => setFeedbackSent(true),
+                      onError: (error) => setFeedbackError(error instanceof Error ? error.message : "Connectez-vous pour envoyer une contribution."),
+                    },
+                  );
+                }}
+                className="mt-3 h-9 rounded-full bg-[var(--brand-primary)] px-4 text-[12px] font-semibold text-white disabled:opacity-50"
+              >
+                {createTicket.isPending ? "Envoi..." : "Envoyer la contribution"}
               </button>
-              {feedbackSent && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[12px] text-emerald-800">Contribution enregistrée. Elle sera examinée par notre équipe éditoriale.</p>}
+              {feedbackError && <p className="mt-3 text-[12px] font-semibold text-red-700">{feedbackError}</p>}
+              {feedbackSent && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[12px] text-emerald-800">Contribution enregistrée comme ticket support. Elle sera examinée par notre équipe éditoriale.</p>}
             </div>
           )}
+          </div>
         </aside>
       </section>
     </main>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { useArticlesForAdmin, useCreateArticle, useDeleteArticle, usePublishArticle, useUpdateArticle } from "@/hooks/useContentApi";
+import { useTaxonomy } from "@/hooks/useTaxonomyApi";
 import type { MyArticle } from "@/lib/api/content";
 
 type FormState = {
@@ -16,6 +17,8 @@ const emptyForm: FormState = { title: "", category: "", coverImage: "", tags: ""
 
 export function RitesCultureManager() {
   const articlesQuery = useArticlesForAdmin("RITES_CULTURES");
+  const categoriesQuery = useTaxonomy("ARTICLE_CATEGORY");
+  const categories = categoriesQuery.data ?? [];
   const createArticle = useCreateArticle();
   const updateArticle = useUpdateArticle();
   const deleteArticle = useDeleteArticle();
@@ -141,7 +144,19 @@ export function RitesCultureManager() {
 
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <Field label="Titre *" value={form.title} onChange={setField("title")} />
-            <Field label="Catégorie" value={form.category} onChange={setField("category")} placeholder="Rituel, tradition orale, cérémonie..." />
+            <label className="block text-[12px] font-semibold text-slate-300">
+              Catégorie
+              <select
+                value={form.category}
+                onChange={(event) => setField("category")(event.target.value)}
+                className="mt-1 h-10 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none focus:border-emerald-400"
+              >
+                <option value="">Sans catégorie</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.name}>{category.name}</option>
+                ))}
+              </select>
+            </label>
             <Field label="Image de couverture (URL)" value={form.coverImage} onChange={setField("coverImage")} />
             <Field label="Tags (séparés par des virgules)" value={form.tags} onChange={setField("tags")} />
           </div>

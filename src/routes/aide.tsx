@@ -6,7 +6,7 @@ import { toRecipe } from "@/components/editorial/RecipeListPage";
 import { faqCategories } from "@/data/help";
 import { useArticles } from "@/hooks/useContentApi";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useCreateTicket, useMyTickets } from "@/hooks/useTicketsApi";
+import { useCreateTicket, useMyTickets, useUploadTicketAttachments } from "@/hooks/useTicketsApi";
 import { useAuth } from "@/lib/auth/AuthContext";
 
 const ticketStatusLabels: Record<string, string> = { OPEN: "Ouvert", IN_PROGRESS: "En cours", RESOLVED: "Résolu", CLOSED: "Fermé" };
@@ -20,6 +20,7 @@ export const Route = createFileRoute("/aide")({
 function HelpCenter() {
   const { user } = useAuth();
   const createTicket = useCreateTicket();
+  const uploadAttachments = useUploadTicketAttachments();
   const recipesQuery = useArticles({ space: "RECETTES_SANTE", page: 1, limit: 4 });
   const myTicketsQuery = useMyTickets();
   const [query, setQuery] = useState("");
@@ -28,6 +29,7 @@ function HelpCenter() {
   const [category, setCategory] = useState("Marketplace");
   const [message, setMessage] = useState("");
   const [attachmentName, setAttachmentName] = useState("");
+  const [attachmentUrl, setAttachmentUrl] = useState("");
   const [formMessage, setFormMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const debouncedQuery = useDebounce(query, 300);
@@ -74,13 +76,14 @@ function HelpCenter() {
     }
 
     createTicket.mutate(
-      { subject: cleanSubject, category, content: cleanMessage },
+      { subject: cleanSubject, category, content: cleanMessage, attachments: attachmentUrl ? [attachmentUrl] : undefined },
       {
         onSuccess: () => {
           setFormMessage(`Ticket créé dans la catégorie ${category}. Retrouvez-le dans votre espace tickets.`);
           setSubject("");
           setMessage("");
           setAttachmentName("");
+          setAttachmentUrl("");
         },
         onError: (error) => setFormMessage(error instanceof Error ? error.message : "Impossible de créer le ticket."),
       },
@@ -208,17 +211,30 @@ function HelpCenter() {
                   const file = event.target.files?.[0];
                   if (!file) return;
                   setAttachmentName(file.name);
-                  setFormMessage("Pièce jointe ajoutée au ticket.");
+                  setAttachmentUrl("");
+                  setFormMessage("");
+                  uploadAttachments.mutate([file], {
+                    onSuccess: (urls) => {
+                      setAttachmentUrl(urls[0] ?? "");
+                      setFormMessage("Pièce jointe ajoutée au ticket.");
+                    },
+                    onError: (error) => {
+                      setAttachmentName("");
+                      setFormMessage(error instanceof Error ? error.message : "Impossible d'envoyer la pièce jointe.");
+                    },
+                  });
                 }}
               />
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[12px] font-semibold"
+                disabled={uploadAttachments.isPending}
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[12px] font-semibold disabled:opacity-50"
               >
-                <Paperclip size={14} /> Ajouter une pièce jointe
+                <Paperclip size={14} /> {uploadAttachments.isPending ? "Envoi en cours..." : "Ajouter une pièce jointe"}
               </button>
-              {attachmentName && <p className="text-[12px] text-[var(--color-text-muted)]">{attachmentName}</p>}              <button type="submit" className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] text-[12px] font-semibold text-white">
+              {attachmentName && <p className="text-[12px] text-[var(--color-text-muted)]">{attachmentName}</p>}
+              <button type="submit" className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] text-[12px] font-semibold text-white">
                 <Send size={14} /> Envoyer
               </button>
               {formMessage && (

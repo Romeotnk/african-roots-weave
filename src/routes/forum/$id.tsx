@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
@@ -7,10 +7,13 @@ import {
   Check,
   Eye,
   Flag,
+  Loader2,
   MessageCircle,
+  Paperclip,
   Pencil,
   Star,
 } from "lucide-react";
+import { AdSlot } from "@/components/shared/AdSlot";
 import { questions } from "@/data/questions";
 import {
   useAcceptForumAnswer,
@@ -22,9 +25,42 @@ import {
   useMyFavorites,
   useToggleFavorite,
   useUpdateForumComment,
+  useUploadForumAttachments,
 } from "@/hooks/useForumApi";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { toComments, toQuestion, type BackendQuestion } from "@/lib/forumMappers";
+import type { ForumAttachment } from "@/types";
+
+function AttachmentGallery({ attachments }: { attachments?: ForumAttachment[] }) {
+  if (!attachments || attachments.length === 0) return null;
+  return (
+    <div className="mt-4 flex flex-wrap gap-2">
+      {attachments.map((attachment) =>
+        attachment.type === "image" ? (
+          <a
+            key={attachment.id}
+            href={attachment.url}
+            target="_blank"
+            rel="noreferrer"
+            className="block h-20 w-20 overflow-hidden rounded-lg border border-[var(--brand-border-light)]"
+          >
+            <img src={attachment.url} alt={attachment.name} className="h-full w-full object-cover" />
+          </a>
+        ) : (
+          <a
+            key={attachment.id}
+            href={attachment.url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] px-3 py-2 text-[12px] font-semibold text-[var(--brand-primary)]"
+          >
+            <Paperclip size={13} /> {attachment.name}
+          </a>
+        ),
+      )}
+    </div>
+  );
+}
 
 const moderatorRoles = ["admin", "super_admin", "moderator"];
 
@@ -45,7 +81,7 @@ function formatDate(date: string) {
 
 function QuestionDetail() {
   const { id } = Route.useParams();
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const questionQuery = useForumQuestion(id);
   const voteMutation = useForumVote();
   const answerMutation = useCreateForumAnswer();
@@ -53,7 +89,8 @@ function QuestionDetail() {
   const reportMutation = useForumReport();
   const commentMutation = useCreateForumComment();
   const updateCommentMutation = useUpdateForumComment();
-  const favoritesQuery = useMyFavorites();
+  const favoritesQuery = useMyFavorites("QUESTION");
+  const answerFavoritesQuery = useMyFavorites("ANSWER");
   const toggleFavoriteMutation = useToggleFavorite();
 
   const apiQuestion = useMemo(() => {
@@ -71,8 +108,11 @@ function QuestionDetail() {
   }, [question?.title]);
   const isRealQuestion = Boolean(apiQuestion);
   const isAuthor = isRealQuestion && Boolean(user) && question.authorId === user?.id;
-  const isModerator = Boolean(user) && moderatorRoles.includes(user?.role ?? "");
+  const isModerator = roles.some((role) => moderatorRoles.includes(role));
   const isFavorited = ((favoritesQuery.data ?? []) as { id: string }[]).some((item) => item.id === id);
+  const favoritedAnswerIds = new Set(
+    ((answerFavoritesQuery.data ?? []) as { id: string }[]).map((item) => item.id),
+  );
 
   const sortedAnswers = useMemo(
     () => [...(question.answerItems ?? [])].sort((a, b) => Number(b.accepted) - Number(a.accepted) || b.votes - a.votes),
@@ -81,6 +121,10 @@ function QuestionDetail() {
   const [reported, setReported] = useState(false);
   const [reportedAnswerIds, setReportedAnswerIds] = useState<string[]>([]);
   const [answer, setAnswer] = useState("");
+  const [answerAttachments, setAnswerAttachments] = useState<string[]>([]);
+  const [answerAttachmentNotice, setAnswerAttachmentNotice] = useState("");
+  const answerAttachmentInputRef = useRef<HTMLInputElement>(null);
+  const uploadAnswerAttachments = useUploadForumAttachments();
   const [answerSubmitted, setAnswerSubmitted] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [commentError, setCommentError] = useState("");
@@ -125,6 +169,11 @@ function QuestionDetail() {
     if (isRealQuestion) reportMutation.mutate({ targetId: answerId, targetType: "ANSWER" });
   };
 
+  const favoriteAnswer = (answerId: string) => {
+    if (!isRealQuestion) return;
+    toggleFavoriteMutation.mutate({ targetId: answerId, targetType: "ANSWER" });
+  };
+
   const submitComment = () => {
     setCommentError("");
     if (!isRealQuestion) return;
@@ -142,11 +191,12 @@ function QuestionDetail() {
     if (!isRealQuestion) {
       setAnswerSubmitted(true);
       setAnswer("");
+      setAnswerAttachments([]);
       return;
     }
     answerMutation.mutate(
-      { questionId: id, payload: { content: answer } },
-      { onSuccess: () => { setAnswerSubmitted(true); setAnswer(""); } },
+      { questionId: id, payload: { content: answer, attachments: answerAttachments } },
+      { onSuccess: () => { setAnswerSubmitted(true); setAnswer(""); setAnswerAttachments([]); } },
     );
   };
 
@@ -221,6 +271,7 @@ function QuestionDetail() {
               className="prose max-w-none text-[var(--color-text-secondary)]"
               dangerouslySetInnerHTML={{ __html: question.body ?? question.excerpt }}
             />
+            <AttachmentGallery attachments={question.attachments} />
             <div className="mt-5 flex flex-wrap gap-2">
               {question.tags.map((tag) => (
                 <span key={tag} className="rounded-full bg-[var(--brand-primary-subtle)] px-3 py-1 text-[12px] font-semibold text-[var(--brand-primary)]">
@@ -324,6 +375,7 @@ function QuestionDetail() {
             {sortedAnswers.map((item) => {
               const accepted = item.accepted;
               const itemReported = reportedAnswerIds.includes(item.id);
+              const itemFavorited = favoritedAnswerIds.has(item.id);
               return (
                 <article
                   key={item.id}
@@ -350,11 +402,20 @@ function QuestionDetail() {
                         </div>
                       )}
                       <p className="leading-7 text-[var(--color-text-secondary)]">{item.body}</p>
+                      <AttachmentGallery attachments={item.attachments} />
                       <div className="mt-4 flex flex-wrap items-center gap-3 text-[12px] text-[var(--color-text-muted)]">
                         <img src={item.authorAvatar ?? "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=120&q=80"} alt="" className="h-8 w-8 rounded-full object-cover" />
                         <strong className="text-[var(--color-text-primary)]">{item.authorName}</strong>
                         <span>{item.authorReputation} pts</span>
                         <span>{formatDate(item.date)}</span>
+                        <button
+                          type="button"
+                          disabled={!isRealQuestion || toggleFavoriteMutation.isPending}
+                          onClick={() => favoriteAnswer(item.id)}
+                          className={`inline-flex items-center gap-1 font-semibold disabled:opacity-50 ${itemFavorited ? "text-[var(--brand-primary)]" : ""}`}
+                        >
+                          <Bookmark size={13} className={itemFavorited ? "fill-current" : undefined} /> {itemFavorited ? "Dans mes favoris" : "Favori"}
+                        </button>
                         <button type="button" onClick={() => reportAnswer(item.id)} className="inline-flex items-center gap-1 font-semibold">
                           <Flag size={13} /> {itemReported ? "Signalée" : "Signaler"}
                         </button>
@@ -390,7 +451,53 @@ function QuestionDetail() {
               placeholder="Rédigez une réponse argumentée, prudente et utile..."
               className="mt-4 w-full rounded-lg border border-[var(--brand-border)] px-4 py-3"
             />
+            <input
+              ref={answerAttachmentInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(event) => {
+                const files = Array.from(event.target.files ?? []);
+                event.target.value = "";
+                if (files.length === 0) return;
+                setAnswerAttachmentNotice("");
+                uploadAnswerAttachments.mutate(files, {
+                  onSuccess: (urls) => {
+                    setAnswerAttachments((current) => [...current, ...urls]);
+                    setAnswerAttachmentNotice(`${urls.length} fichier(s) ajouté(s) à la réponse.`);
+                  },
+                  onError: (error) =>
+                    setAnswerAttachmentNotice(error instanceof Error ? error.message : "Impossible d'envoyer ces fichiers."),
+                });
+              }}
+            />
+            {answerAttachments.length > 0 && (
+              <ul className="mt-3 space-y-1.5">
+                {answerAttachments.map((url) => (
+                  <li key={url} className="flex items-center justify-between gap-2 rounded-lg bg-[var(--brand-surface-alt)] px-3 py-2 text-[12px]">
+                    <a href={url} target="_blank" rel="noreferrer" className="truncate text-[var(--brand-primary)]">{url}</a>
+                    <button
+                      type="button"
+                      onClick={() => setAnswerAttachments((current) => current.filter((item) => item !== url))}
+                      className="shrink-0 text-[var(--color-text-muted)] hover:text-red-600"
+                      aria-label="Retirer ce fichier"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {answerAttachmentNotice && <p className="mt-2 text-[12px] text-[var(--color-text-muted)]">{answerAttachmentNotice}</p>}
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => answerAttachmentInputRef.current?.click()}
+                disabled={uploadAnswerAttachments.isPending}
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold disabled:opacity-50"
+              >
+                {uploadAnswerAttachments.isPending ? <Loader2 size={14} className="animate-spin" /> : <Paperclip size={14} />} Joindre un fichier
+              </button>
               <button
                 type="button"
                 onClick={submitAnswer}
@@ -408,7 +515,9 @@ function QuestionDetail() {
           </section>
         </div>
 
-        <aside className="h-fit space-y-3 rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
+        <aside className="h-fit space-y-4">
+          <AdSlot position="forum_sidebar" />
+          <div className="space-y-3 rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
           <button
             type="button"
             disabled={!isRealQuestion || toggleFavoriteMutation.isPending}
@@ -433,6 +542,7 @@ function QuestionDetail() {
           {reported && <p className="rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">Signalement enregistré.</p>}
           <div className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[12px] text-[var(--color-text-muted)]">
             Les actions de modération avancées seront disponibles selon vos droits.
+          </div>
           </div>
         </aside>
       </section>
