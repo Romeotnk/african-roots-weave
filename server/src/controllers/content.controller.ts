@@ -15,8 +15,8 @@ const canPublishContent = (role: Role) => editorialRoles.includes(role);
 // l'administrateur principal" per the cahier des charges — unlike the other
 // editorial spaces (Santé au quotidien, Recettes santé), ADMIN/EDITOR do not
 // get authoring rights here, only SUPER_ADMIN.
-const superAdminOnlySpaces: ArticleSpace[] = ["PHARMACOPEE", "RITES_CULTURES"];
-const isSuperAdmin = (role: Role) => role === Role.SUPER_ADMIN;
+export const superAdminOnlySpaces: ArticleSpace[] = ["PHARMACOPEE", "RITES_CULTURES"];
+export const isSuperAdmin = (role: Role) => role === Role.SUPER_ADMIN;
 
 export const listArticles = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);

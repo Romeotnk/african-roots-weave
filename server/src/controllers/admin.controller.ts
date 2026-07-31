@@ -1,9 +1,11 @@
 import { AdminSubRole, Role } from "@prisma/client";
+import type { Request } from "express";
 import { prisma } from "../config/db.js";
 import { env } from "../config/env.js";
 import { sendEmail } from "../services/email.service.js";
 import { writeAuditLog } from "../services/audit.service.js";
 import { invalidateRolePermissionsCache } from "../services/permissions.service.js";
+import { isSuperAdmin, superAdminOnlySpaces } from "./content.controller.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
@@ -11,6 +13,7 @@ import { renderNewsletterEmail } from "../utils/newsletterTemplate.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
 import { PERMISSION_CATALOG, PERMISSION_KEYS } from "../utils/permissions.js";
 import { sanitizeRichText } from "../utils/sanitizeRichText.js";
+import { isSubscriptionPlanKey } from "../utils/subscriptionPlans.js";
 
 const adminAssignableRoles: Role[] = [Role.MODERATOR, Role.EDITOR, Role.RESEARCHER];
 
@@ -337,7 +340,14 @@ export const rejectProduct = asyncHandler(async (req, res) => {
 
 export const pendingArticles = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
-  const where = { isApproved: false, rejectedAt: null };
+  const where = {
+    isApproved: false,
+    rejectedAt: null,
+    // Pharmacopée/Rites & Cultures moderation is exclusive to the principal
+    // administrator — don't even surface these in the generic queue for
+    // ADMIN/EDITOR/MODERATOR, since the approve/reject actions below reject them anyway.
+    space: req.user && isSuperAdmin(req.user.role) ? undefined : { notIn: superAdminOnlySpaces },
+  };
   const [articles, total] = await prisma.$transaction([
     prisma.article.findMany({ where, orderBy: { createdAt: "desc" }, skip, take: limit }),
     prisma.article.count({ where }),
@@ -345,7 +355,16 @@ export const pendingArticles = asyncHandler(async (req, res) => {
   res.json(apiResponse(true, articles, "Pending articles retrieved", paginationMeta(page, limit, total)));
 });
 
+const assertCanModerateArticle = async (req: Request, articleId: string) => {
+  const existing = await prisma.article.findUnique({ where: { id: articleId }, select: { space: true } });
+  if (!existing) throw new ApiError(404, "Article not found");
+  if (superAdminOnlySpaces.includes(existing.space) && !(req.user && isSuperAdmin(req.user.role))) {
+    throw new ApiError(403, "This editorial space is managed exclusively by the principal administrator");
+  }
+};
+
 export const approveArticle = asyncHandler(async (req, res) => {
+  await assertCanModerateArticle(req, req.params.id);
   const article = await prisma.article.update({
     where: { id: req.params.id },
     data: { isApproved: true, rejectedAt: null },
@@ -355,6 +374,7 @@ export const approveArticle = asyncHandler(async (req, res) => {
 });
 
 export const rejectArticle = asyncHandler(async (req, res) => {
+  await assertCanModerateArticle(req, req.params.id);
   const article = await prisma.article.update({
     where: { id: req.params.id },
     data: { isApproved: false, isPublished: false, rejectedAt: new Date() },
@@ -519,6 +539,7 @@ export const updateSubscription = asyncHandler(async (req, res) => {
     maxDownloads?: number;
     autoRenew?: boolean;
   };
+  if (plan !== undefined && !isSubscriptionPlanKey(plan)) throw new ApiError(400, "Invalid subscription plan");
   const subscription = await prisma.subscription.update({
     where: { id: req.params.id },
     data: {

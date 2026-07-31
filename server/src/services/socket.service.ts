@@ -16,7 +16,13 @@ const REDACTION_PLACEHOLDER = "[coordonnees masquees]";
 const EMAIL_PATTERN = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 const CONTACT_LINK_PATTERN =
   /\b(?:https?:\/\/)?(?:www\.)?(?:wa\.me|t\.me|api\.whatsapp\.com|chat\.whatsapp\.com|instagram\.com|facebook\.com|m\.me)\/\S+/gi;
-const PHONE_CANDIDATE_PATTERN = /(?:\+\d{1,3}[\s.-]?)?(?:\(?\d{2,4}\)?[\s.-]?){2,6}\d{2,4}/g;
+// Matches digit-by-digit too (e.g. "0 7 0 0 0 0 0 0 0") — a fixed-width
+// \d{2,4} group pattern could be trivially bypassed by spacing every digit.
+const PHONE_CANDIDATE_PATTERN = /\+?\d(?:[\s.-]?\d){6,14}/g;
+// Skip matches that are actually prices ("15 000 000 FCFA") or calendar
+// dates ("01-01-2026") — both commonly produce 7+ digit runs in normal chat.
+const CURRENCY_CONTEXT_PATTERN = /(FCFA|CFA|XOF|XAF|F\s*CFA|€|EUR|\$|USD)/i;
+const DATE_SHAPE_PATTERN = /^\d{1,2}[\s.-]\d{1,2}[\s.-]\d{2,4}$/;
 
 /**
  * Marketplace buyers/sellers must transact through the platform (escrow,
@@ -34,13 +40,17 @@ const redactContactInfo = (value: string) => {
     redacted = true;
     return REDACTION_PLACEHOLDER;
   });
-  text = text.replace(PHONE_CANDIDATE_PATTERN, (match) => {
+  text = text.replace(PHONE_CANDIDATE_PATTERN, (match, offset: number, full: string) => {
     const digits = match.replace(/\D/g, "");
-    if (digits.length >= 7 && digits.length <= 15) {
-      redacted = true;
-      return REDACTION_PLACEHOLDER;
-    }
-    return match;
+    if (digits.length < 7 || digits.length > 15) return match;
+    if (DATE_SHAPE_PATTERN.test(match.trim())) return match;
+
+    const contextStart = Math.max(0, offset - 8);
+    const contextEnd = Math.min(full.length, offset + match.length + 8);
+    if (CURRENCY_CONTEXT_PATTERN.test(full.slice(contextStart, contextEnd))) return match;
+
+    redacted = true;
+    return REDACTION_PLACEHOLDER;
   });
   return { text, redacted };
 };

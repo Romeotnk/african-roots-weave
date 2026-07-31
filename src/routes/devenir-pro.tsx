@@ -46,6 +46,11 @@ function BecomePro() {
 
   const [country, setCountry] = useState("BJ");
   const [mainSpecialty, setMainSpecialty] = useState(specialties[0]);
+
+  useEffect(() => {
+    setMainSpecialty((current) => (specialtyOptions.includes(current) ? current : specialtyOptions[0]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [specialtyTaxonomyQuery.data]);
   const [online, setOnline] = useState(true);
   const [videoUrl, setVideoUrl] = useState("");
   const [consultationPrice, setConsultationPrice] = useState("");
