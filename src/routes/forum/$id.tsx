@@ -113,6 +113,8 @@ function QuestionDetail() {
   const favoritedAnswerIds = new Set(
     ((answerFavoritesQuery.data ?? []) as { id: string }[]).map((item) => item.id),
   );
+  const isFavoriteTogglePending = (targetId: string) =>
+    toggleFavoriteMutation.isPending && toggleFavoriteMutation.variables?.targetId === targetId;
 
   const sortedAnswers = useMemo(
     () => [...(question.answerItems ?? [])].sort((a, b) => Number(b.accepted) - Number(a.accepted) || b.votes - a.votes),
@@ -410,7 +412,7 @@ function QuestionDetail() {
                         <span>{formatDate(item.date)}</span>
                         <button
                           type="button"
-                          disabled={!isRealQuestion || toggleFavoriteMutation.isPending}
+                          disabled={!isRealQuestion || isFavoriteTogglePending(item.id)}
                           onClick={() => favoriteAnswer(item.id)}
                           className={`inline-flex items-center gap-1 font-semibold disabled:opacity-50 ${itemFavorited ? "text-[var(--brand-primary)]" : ""}`}
                         >
@@ -520,7 +522,7 @@ function QuestionDetail() {
           <div className="space-y-3 rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
           <button
             type="button"
-            disabled={!isRealQuestion || toggleFavoriteMutation.isPending}
+            disabled={!isRealQuestion || isFavoriteTogglePending(id)}
             onClick={() => toggleFavoriteMutation.mutate({ targetId: id })}
             className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-full text-[13px] font-semibold disabled:opacity-50 ${
               isFavorited ? "bg-[var(--brand-primary)] text-white" : "border border-[var(--brand-border)]"

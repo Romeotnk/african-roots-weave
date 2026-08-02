@@ -1377,6 +1377,39 @@ async function main() {
   });
   console.log("✅ Bannières, config et espaces publicitaires créés");
 
+  const taxonomySlug = (value: string) =>
+    value
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+
+  await prisma.taxonomy.createMany({
+    skipDuplicates: true,
+    data: [
+      "Gynéco-obstétrique",
+      "Phytothérapie",
+      "Dermatologie traditionnelle",
+      "Ostéo-articulaire",
+      "Nutrition traditionnelle",
+      "Ethnobotanique",
+      "Sage-femme traditionnelle",
+    ].map((name, index) => ({ scope: "PROFESSIONAL_SPECIALTY", name, slug: taxonomySlug(name), position: index })),
+  });
+  await prisma.taxonomy.createMany({
+    skipDuplicates: true,
+    data: [
+      "Alimentation & nutrition",
+      "Prévention",
+      "Bien-être & hygiène de vie",
+      "Rituel",
+      "Tradition orale",
+      "Cérémonie",
+    ].map((name, index) => ({ scope: "ARTICLE_CATEGORY", name, slug: taxonomySlug(name), position: index })),
+  });
+  console.log("✅ Taxonomies (spécialités pro, catégories d'articles) créées");
+
   // ─── RÉSUMÉ FINAL ───
   console.log("\n🌿 ═══════════════════════════════════════");
   console.log("   SEED IWOSAN TERMINÉ AVEC SUCCÈS !");

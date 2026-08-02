@@ -59,7 +59,7 @@ export const createOrder = asyncHandler(async (req, res) => {
       throw new ApiError(404, "Product unavailable");
     if (product.sellerId === req.user!.id) throw new ApiError(400, "Cannot buy your own product");
 
-    if (product.type !== "DIGITAL") {
+    if (product.type !== "DIGITAL" && product.type !== "SERVICE") {
       // Conditional update instead of read-then-write: the WHERE clause is
       // evaluated atomically by Postgres as part of the UPDATE, so two
       // concurrent buyers can't both pass a stale stock check and push the

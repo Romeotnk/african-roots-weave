@@ -51,12 +51,15 @@ const authorName = (author?: BackendUser | null) =>
 const imageExtensions = /\.(png|jpe?g|gif|webp|avif|svg)$/i;
 
 const toAttachments = (urls?: string[]): ForumAttachment[] =>
-  (urls ?? []).map((url) => ({
-    id: url,
-    type: imageExtensions.test(url) ? "image" : "file",
-    name: decodeURIComponent(url.split("/").pop() ?? url),
-    url,
-  }));
+  (urls ?? []).map((url) => {
+    const withoutQuery = url.split(/[?#]/)[0];
+    return {
+      id: url,
+      type: imageExtensions.test(withoutQuery) ? "image" : "file",
+      name: decodeURIComponent(withoutQuery.split("/").pop() ?? withoutQuery),
+      url,
+    };
+  });
 
 const toForumComment = (comment: BackendForumComment): ForumComment => ({
   id: comment.id ?? "",
