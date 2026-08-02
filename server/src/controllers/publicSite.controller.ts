@@ -10,12 +10,29 @@ import { ApiError } from "../utils/errors.js";
 // CMS pages live in the dedicated Page model (see getPublicPage below), not SiteConfig.
 const publicPrefixes = ["site.", "maintenance.", "forum.", "homepage."];
 
+// This endpoint is hit on literally every page load — it backs the root
+// route's SSR loader (see src/routes/__root.tsx), which blocks the entire
+// render on this response for the <title>/meta tags. Site config changes
+// only when an admin edits it in the admin panel, so a short cache turns an
+// unconditional DB round-trip on every navigation into a near-instant
+// response almost all the time, without ever serving stale data for more
+// than a few seconds after an actual change.
+const CACHE_TTL_MS = 30_000;
+let cache: { config: Record<string, string>; expiresAt: number } | null = null;
+
+export const invalidatePublicSiteConfigCache = () => {
+  cache = null;
+};
+
 export const getPublicSiteConfig = asyncHandler(async (_req, res) => {
-  const rows = await prisma.siteConfig.findMany({
-    where: { OR: publicPrefixes.map((prefix) => ({ key: { startsWith: prefix } })) },
-  });
-  const config = Object.fromEntries(rows.map((row) => [row.key, row.value]));
-  res.json(apiResponse(true, config, "Site config retrieved"));
+  const now = Date.now();
+  if (!cache || cache.expiresAt <= now) {
+    const rows = await prisma.siteConfig.findMany({
+      where: { OR: publicPrefixes.map((prefix) => ({ key: { startsWith: prefix } })) },
+    });
+    cache = { config: Object.fromEntries(rows.map((row) => [row.key, row.value])), expiresAt: now + CACHE_TTL_MS };
+  }
+  res.json(apiResponse(true, cache.config, "Site config retrieved"));
 });
 
 export const getPublicPage = asyncHandler(async (req, res) => {

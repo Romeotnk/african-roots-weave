@@ -6,6 +6,7 @@ import { sendEmail } from "../services/email.service.js";
 import { writeAuditLog } from "../services/audit.service.js";
 import { invalidateRolePermissionsCache } from "../services/permissions.service.js";
 import { isSuperAdmin, superAdminOnlySpaces } from "./content.controller.js";
+import { invalidatePublicSiteConfigCache } from "./publicSite.controller.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
@@ -688,6 +689,7 @@ export const updateConfig = asyncHandler(async (req, res) => {
       }),
     ),
   );
+  invalidatePublicSiteConfigCache();
   await writeAuditLog(req, { action: "SITE_CONFIG_UPDATED", metadata: { keys: Object.keys(req.body) } });
   res.json(apiResponse(true, entries, "Config updated"));
 });
@@ -706,6 +708,7 @@ export const maintenance = asyncHandler(async (req, res) => {
       }),
     ),
   );
+  invalidatePublicSiteConfigCache();
   await writeAuditLog(req, {
     action: "MAINTENANCE_MODE_UPDATED",
     metadata: { enabled: Boolean(req.body.enabled) },
