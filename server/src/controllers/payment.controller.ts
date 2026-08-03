@@ -54,7 +54,7 @@ export const initiatePayment = asyncHandler(async (req, res) => {
           monerooTransactionId: `wallet_${order.id}`,
         },
       });
-    });
+    }, { timeout: 20000, maxWait: 10000 });
 
     await calculateOrderCommissions(paid.id);
 

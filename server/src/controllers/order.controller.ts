@@ -142,7 +142,7 @@ export const createOrder = asyncHandler(async (req, res) => {
     });
 
     return created;
-  });
+  }, { timeout: 20000, maxWait: 10000 });
 
   res.status(201).json(apiResponse(true, order, "Order created. Payment can be initiated."));
 });

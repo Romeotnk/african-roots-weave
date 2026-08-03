@@ -21,7 +21,10 @@ type EmailPayload = {
 };
 
 export const sendEmail = async ({ to, subject, html }: EmailPayload) => {
-  if (!transporter) {
+  // Never attempt a real SMTP round-trip from the automated test suite: it's slow
+  // (a bad/unreachable server can take many seconds to fail) and doesn't need a
+  // real inbox — tests read the verification/reset link straight from the DB/service layer.
+  if (!transporter || process.env.NODE_ENV === "test") {
     console.info(`[email:dev] ${subject} -> ${to}`);
     console.info(html);
     return;

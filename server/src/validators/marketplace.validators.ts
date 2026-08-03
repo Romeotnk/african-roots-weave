@@ -62,6 +62,12 @@ export const cartQuantityValidator = [
 export const orderValidator = [
   body("productId").isString().notEmpty(),
   body("quantity").optional().isInt({ min: 1 }),
+  // validateRequest rebuilds req.body from only the fields declared here
+  // (via express-validator's matchedData), so any field the controller reads
+  // — even ones it treats as optional itself — must have an entry in this
+  // chain or it gets silently stripped before createOrder ever sees it.
+  body("couponCode").optional().isString().trim(),
+  body("affiliateCode").optional().isString().trim(),
 ];
 
 export const reasonValidator = [

@@ -6,7 +6,10 @@ type TurnstileResponse = {
 };
 
 export const verifyTurnstile = async (token?: string, remoteIp?: string) => {
-  if (!env.turnstileSecretKey) {
+  // Read NODE_ENV live rather than via the cached `env` object: this guards
+  // the automated test suite, whose setup runs after env.ts's module-level
+  // snapshot is taken, so a mutation there wouldn't be reflected in `env`.
+  if (process.env.NODE_ENV === "test" || !env.turnstileSecretKey) {
     return true;
   }
 
