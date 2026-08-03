@@ -1,4 +1,3 @@
-import { Role } from "@prisma/client";
 import { Router } from "express";
 import {
   createEvent,
@@ -17,7 +16,7 @@ import {
   updateFormation,
 } from "../controllers/eventFormation.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
-import { requireEmailVerified, roleMiddleware } from "../middlewares/role.middleware.js";
+import { checkPermission, requireEmailVerified } from "../middlewares/role.middleware.js";
 
 export const eventRouter = Router();
 export const formationRouter = Router();
@@ -31,7 +30,7 @@ eventRouter.post(
   "/",
   authMiddleware,
   requireEmailVerified,
-  roleMiddleware([Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR, Role.PROFESSIONAL]),
+  checkPermission("content.author"),
   createEvent,
 );
 eventRouter.put("/:id", authMiddleware, requireEmailVerified, updateEvent);
@@ -46,14 +45,14 @@ formationRouter.post(
   "/",
   authMiddleware,
   requireEmailVerified,
-  roleMiddleware([Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR, Role.PROFESSIONAL, Role.RESEARCHER]),
+  checkPermission("content.author"),
   createFormation,
 );
 formationRouter.put(
   "/:id",
   authMiddleware,
   requireEmailVerified,
-  roleMiddleware([Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR, Role.PROFESSIONAL, Role.RESEARCHER]),
+  checkPermission("content.author"),
   updateFormation,
 );
 formationRouter.post("/:id/download", downloadFormation);

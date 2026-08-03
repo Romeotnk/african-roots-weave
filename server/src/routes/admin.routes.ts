@@ -152,7 +152,7 @@ adminRouter.get("/subscriptions", checkRole(Role.SUPER_ADMIN), listSubscriptions
 adminRouter.put("/subscriptions/:id", checkRole(Role.SUPER_ADMIN), updateSubscription);
 adminRouter.get("/commissions/config", checkPermission("finance.config"), commissionConfig);
 adminRouter.put("/commissions/config", checkPermission("finance.config"), updateCommissionConfig);
-adminRouter.get("/mlm/overview", checkRole(Role.SUPER_ADMIN, Role.ADMIN), mlmOverview);
+adminRouter.get("/mlm/overview", checkPermission("finance.reports.view"), mlmOverview);
 
 // Finances: refunds, disputes, transactions.
 adminRouter.get("/refunds", checkPermission("finance.refund.approve"), listRefundRequests);
@@ -160,7 +160,7 @@ adminRouter.put("/refunds/:id/approve", checkPermission("finance.refund.approve"
 adminRouter.put("/refunds/:id/reject", checkPermission("finance.refund.approve"), rejectRefund);
 adminRouter.get("/disputes", checkPermission("finance.dispute.resolve"), listDisputes);
 adminRouter.put("/disputes/:id/resolve", checkPermission("finance.dispute.resolve"), resolveDispute);
-adminRouter.get("/transactions", checkRole(Role.SUPER_ADMIN, Role.ADMIN), listWalletTransactions);
+adminRouter.get("/transactions", checkPermission("finance.reports.view"), listWalletTransactions);
 
 // Advertising and site config.
 adminRouter.get("/ads", crudList("adSpace"));
@@ -172,9 +172,9 @@ adminRouter.post("/banners", createBanner);
 adminRouter.put("/banners/:id", updateBanner);
 adminRouter.delete("/banners/:id", deleteBanner);
 adminRouter.get("/pages", listPages);
-adminRouter.post("/pages", checkRole(Role.SUPER_ADMIN, Role.ADMIN), createPage);
-adminRouter.put("/pages/:id", checkRole(Role.SUPER_ADMIN, Role.ADMIN), updatePage);
-adminRouter.delete("/pages/:id", checkRole(Role.SUPER_ADMIN, Role.ADMIN), deletePage);
+adminRouter.post("/pages", checkPermission("content.pages.manage"), createPage);
+adminRouter.put("/pages/:id", checkPermission("content.pages.manage"), updatePage);
+adminRouter.delete("/pages/:id", checkPermission("content.pages.manage"), deletePage);
 adminRouter.get("/config", crudList("siteConfig"));
 adminRouter.put("/config", checkPermission("system.config"), updateConfig);
 adminRouter.post("/maintenance", checkPermission("system.config"), maintenance);

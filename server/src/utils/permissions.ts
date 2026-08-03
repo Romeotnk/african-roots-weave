@@ -1,11 +1,11 @@
 import { Role } from "@prisma/client";
 
-// Central permission catalog. Additive on top of the Role enum: this is the
-// seed of RolePermission rows (see prisma/seedRolePermissions.ts) and mirrors
-// exactly the checkRole(...) allow-lists already in place at the time this
-// was introduced, so seeding it changes nothing about who can do what today —
-// it only makes those allow-lists editable from the admin panel and
-// overridable per user, instead of being fixed in code.
+// Central permission catalog. Additive on top of the Role enum: DEFAULT_ROLE_PERMISSIONS
+// below is a reference for what should be written to the RolePermission table (via the
+// admin roles-and-permissions UI, or a one-off script) for each new permission — it is
+// NOT read at request time. permissions.service.ts's hasPermission(...) checks only the
+// live RolePermission rows, so adding a key here has no runtime effect until those rows
+// actually exist in the database.
 export const PERMISSION_CATALOG: { key: string; label: string; group: string }[] = [
   { key: "users.ban", label: "Bannir/débannir un utilisateur", group: "Utilisateurs" },
   { key: "users.role.update", label: "Modifier le rôle d'un utilisateur", group: "Utilisateurs" },
@@ -19,6 +19,8 @@ export const PERMISSION_CATALOG: { key: string; label: string; group: string }[]
   { key: "finance.refund.approve", label: "Approuver/rejeter un remboursement", group: "Finance" },
   { key: "finance.dispute.resolve", label: "Résoudre un litige commande", group: "Finance" },
   { key: "finance.config", label: "Configurer les taux de commission", group: "Finance" },
+  { key: "finance.reports.view", label: "Consulter la vue d'ensemble MLM et les transactions", group: "Finance" },
+  { key: "content.pages.manage", label: "Gérer les pages CMS", group: "Contenu" },
   { key: "system.config", label: "Configurer le site (identité, maintenance, CSS)", group: "Système" },
   { key: "marketing.newsletter.send", label: "Envoyer la newsletter", group: "Marketing" },
   { key: "support.triage", label: "Répondre aux tickets support", group: "Support" },
@@ -32,7 +34,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<string, Role[]> = {
   "users.role.update": [Role.SUPER_ADMIN, Role.ADMIN],
   "kyc.review": [Role.SUPER_ADMIN, Role.ADMIN],
   "professionals.verify": [Role.SUPER_ADMIN, Role.ADMIN],
-  "content.author": [Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR, Role.PROFESSIONAL],
+  "content.author": [Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR, Role.PROFESSIONAL, Role.RESEARCHER],
   "content.review": [Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR],
   "product.moderate": [Role.SUPER_ADMIN, Role.ADMIN],
   "forum.moderate": [Role.SUPER_ADMIN, Role.ADMIN, Role.MODERATOR],
@@ -40,6 +42,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<string, Role[]> = {
   "finance.refund.approve": [Role.SUPER_ADMIN, Role.ADMIN],
   "finance.dispute.resolve": [Role.SUPER_ADMIN, Role.ADMIN],
   "finance.config": [Role.SUPER_ADMIN],
+  "finance.reports.view": [Role.SUPER_ADMIN, Role.ADMIN],
+  "content.pages.manage": [Role.SUPER_ADMIN, Role.ADMIN],
   "system.config": [Role.SUPER_ADMIN],
   "marketing.newsletter.send": [Role.SUPER_ADMIN, Role.ADMIN],
   "support.triage": [Role.SUPER_ADMIN, Role.ADMIN, Role.MODERATOR, Role.EDITOR, Role.PROFESSIONAL],
