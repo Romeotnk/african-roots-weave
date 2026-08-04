@@ -110,5 +110,103 @@
         "detail3": "Formations, blog et événements"
       }
     }
+  },
+  "marketplace": {
+    "meta": {
+      "title": "Marketplace - IWOSAN",
+      "description": "Produits, services et ressources numériques de la médecine traditionnelle africaine."
+    },
+    "hero": {
+      "title": "Marketplace Iwosan",
+      "subtitle": "Produits, services et ressources numériques de la médecine traditionnelle africaine - vérifiés par notre équipe.",
+      "searchPlaceholder": "Plante, produit, vendeur..."
+    },
+    "filters": {
+      "title": "Filtres",
+      "reset": "Réinitialiser",
+      "category": "Catégorie",
+      "type": "Type",
+      "typePhysical": "Produit physique",
+      "typeService": "Service",
+      "typeDigital": "Produit numérique",
+      "price": "Prix",
+      "pricePlaceholderMin": "Min",
+      "pricePlaceholderMax": "Max",
+      "location": "Localisation",
+      "allCountries": "Tous pays",
+      "cityPlaceholder": "Ville",
+      "distance": "Distance",
+      "distanceKm": "{{count}} km",
+      "activateGeolocation": "Activer ma géolocalisation",
+      "geoUnavailable": "Géolocalisation indisponible sur cet appareil. Renseignez la ville manuellement.",
+      "geoSearching": "Recherche de votre position...",
+      "geoFound": "Position détectée. Ajustez le rayon pour affiner les résultats proches.",
+      "geoDenied": "Permission refusée. Vous pouvez renseigner la ville manuellement.",
+      "publicationQuality": "Publication & qualité",
+      "allDates": "Toutes dates",
+      "today": "Aujourd'hui",
+      "thisWeek": "Cette semaine",
+      "thisMonth": "Ce mois",
+      "minRating": "Note minimale",
+      "ratingAriaLabel": "{{count}} étoiles minimum",
+      "verifiedOnly": "Vendeurs KYC vérifiés"
+    },
+    "results": {
+      "loading": "Chargement...",
+      "count_one": "{{count}} résultat",
+      "count_other": "{{count}} résultats",
+      "forQuery": " pour \"{{query}}\"",
+      "createAlert": "Créer une alerte",
+      "postListing": "Déposer une annonce",
+      "grid": "Grille",
+      "map": "Carte",
+      "sortRelevance": "Pertinence",
+      "sortNewest": "Les plus récents",
+      "sortPriceAsc": "Prix croissant",
+      "sortPriceDesc": "Prix décroissant",
+      "sortRating": "Les mieux notés",
+      "sortPopular": "Plus populaire",
+      "sortDistance": "Distance (proximité)",
+      "noLocationOnMap": "Aucune annonce affichée ne possède de localisation exacte pour l'instant.",
+      "radiusSelected": "Rayon sélectionné : {{km}} km",
+      "viewAction": "Voir",
+      "noResultsTitle": "Aucun résultat",
+      "noResultsSubtitle": "Essayez une autre recherche ou réinitialisez les filtres.",
+      "clearFilters": "Effacer les filtres",
+      "apiUnavailable": "API indisponible, données locales affichées."
+    },
+    "activeFilters": {
+      "searchLabel": "Recherche \"{{query}}\"",
+      "categoryCount_one": "{{count}} catégorie",
+      "categoryCount_other": "{{count}} catégories",
+      "typeCount_one": "{{count}} type",
+      "typeCount_other": "{{count}} types",
+      "priceRange": "{{min}}-{{max}} FCFA",
+      "countryLabel": "Pays: {{country}}",
+      "cityLabel": "Ville: {{city}}",
+      "ratingLabel": "Note {{rating}}+",
+      "verifiedSellers": "Vendeurs vérifiés",
+      "defaultSummary": "Tous les résultats marketplace",
+      "priceRangeChip": "{{min}} - {{max}} FCFA"
+    },
+    "productDialog": {
+      "subtitle": "Fiche rapide issue de la carte marketplace.",
+      "seller": "Vendeur : {{name}}",
+      "location": "Lieu : {{location}}",
+      "reserve": "Réserver ce produit",
+      "reserveMessage": "Bonjour, je souhaite réserver ce produit : {{title}}. Pouvez-vous me donner plus d'informations ?",
+      "close": "Fermer"
+    },
+    "alertDialog": {
+      "title": "Créer une alerte",
+      "subtitle": "Recevez une notification lorsque de nouvelles annonces correspondent à ces filtres.",
+      "namePlaceholder": "Nom de l'alerte",
+      "appliedFilters": "Filtres appliqués",
+      "loginRequired": "Connectez-vous pour enregistrer une alerte.",
+      "nameTooShort": "Donnez un nom à votre alerte (3 caractères minimum).",
+      "createError": "Impossible de créer cette alerte.",
+      "createSuccess": "Alerte enregistrée. Retrouvez-la dans votre compte.",
+      "submit": "Enregistrer l'alerte"
+    }
   }
 }

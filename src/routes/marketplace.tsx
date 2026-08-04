@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Bell, ChevronDown, Grid2X2, Map, MapPin, Navigation, Star, X } from "lucide-react";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
@@ -50,6 +51,7 @@ const distanceKm = (a: { lat: number; lng: number }, b: { lat: number; lng: numb
 };
 
 function Marketplace() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<Product[]>(fallbackProducts);
   const [search, setSearch] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -104,17 +106,18 @@ function Marketplace() {
 
   const activeFilterSummary = useMemo(() => {
     const parts = [
-      debouncedSearch && `Recherche "${debouncedSearch}"`,
-      selectedCategories.length > 0 && `${selectedCategories.length} catégorie(s)`,
-      selectedTypes.length > 0 && `${selectedTypes.length} type(s)`,
+      debouncedSearch && t("marketplace.activeFilters.searchLabel", { query: debouncedSearch }),
+      selectedCategories.length > 0 &&
+        t("marketplace.activeFilters.categoryCount", { count: selectedCategories.length }),
+      selectedTypes.length > 0 && t("marketplace.activeFilters.typeCount", { count: selectedTypes.length }),
       (priceMin || priceMax || priceRange[0] > 0 || priceRange[1] < 50000) &&
-        `${priceMin || priceRange[0]}-${priceMax || priceRange[1]} FCFA`,
-      country && `Pays: ${country}`,
-      city && `Ville: ${city}`,
-      minRating > 0 && `Note ${minRating}+`,
-      verifiedOnly && "Vendeurs vérifiés",
+        t("marketplace.activeFilters.priceRange", { min: priceMin || priceRange[0], max: priceMax || priceRange[1] }),
+      country && t("marketplace.activeFilters.countryLabel", { country }),
+      city && t("marketplace.activeFilters.cityLabel", { city }),
+      minRating > 0 && t("marketplace.activeFilters.ratingLabel", { rating: minRating }),
+      verifiedOnly && t("marketplace.activeFilters.verifiedSellers"),
     ].filter(Boolean);
-    return parts.join(", ") || "Tous les résultats marketplace";
+    return parts.join(", ") || t("marketplace.activeFilters.defaultSummary");
   }, [
     city,
     country,
@@ -125,6 +128,7 @@ function Marketplace() {
     priceRange,
     selectedCategories,
     selectedTypes,
+    t,
     verifiedOnly,
   ]);
 
@@ -271,18 +275,18 @@ function Marketplace() {
 
   const activateGeolocation = () => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setLocationMessage("Geolocalisation indisponible sur cet appareil. Renseignez la ville manuellement.");
+      setLocationMessage(t("marketplace.filters.geoUnavailable"));
       return;
     }
 
-    setLocationMessage("Recherche de votre position...");
+    setLocationMessage(t("marketplace.filters.geoSearching"));
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setUserPosition({ lat: position.coords.latitude, lng: position.coords.longitude });
         setSort("distance");
-        setLocationMessage("Position detectee. Ajustez le rayon pour affiner les resultats proches.");
+        setLocationMessage(t("marketplace.filters.geoFound"));
       },
-      () => setLocationMessage("Permission refusee. Vous pouvez renseigner la ville manuellement."),
+      () => setLocationMessage(t("marketplace.filters.geoDenied")),
       { enableHighAccuracy: true, timeout: 8000 },
     );
   };
@@ -297,7 +301,7 @@ function Marketplace() {
       })
       .catch((apiError) => {
         if (!cancelled) {
-          setError(apiError instanceof Error ? apiError.message : "API indisponible, données locales affichées.");
+          setError(apiError instanceof Error ? apiError.message : t("marketplace.results.apiUnavailable"));
           setItems(fallbackProducts);
         }
       })
@@ -323,13 +327,13 @@ function Marketplace() {
       <HeroSection
         image="https://images.unsplash.com/photo-1597318181409-cf64d0b9d3d2?w=1920&q=80"
         badge="Marketplace"
-        title="Marketplace Iwosan"
-        subtitle="Produits, services et ressources numériques de la médecine traditionnelle africaine - vérifiés par notre équipe."
+        title={t("marketplace.hero.title")}
+        subtitle={t("marketplace.hero.subtitle")}
         size="md"
-        breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Marketplace" }]}
+        breadcrumb={[{ label: t("nav.home"), to: "/" }, { label: t("nav.marketplace") }]}
       >
         <div className="max-w-2xl mx-auto">
-          <SearchBar placeholder="Plante, produit, vendeur..." value={search} onChange={setSearch} />
+          <SearchBar placeholder={t("marketplace.hero.searchPlaceholder")} value={search} onChange={setSearch} />
         </div>
       </HeroSection>
 
@@ -337,18 +341,18 @@ function Marketplace() {
         <div className="container-iwosan grid lg:grid-cols-[280px_1fr] gap-8">
           <aside data-filter-panel className="hidden lg:block bg-white rounded-[16px] border border-[var(--brand-border-light)] p-6 h-fit sticky top-[88px]">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-bold text-[16px]">Filtres</h3>
+              <h3 className="font-bold text-[16px]">{t("marketplace.filters.title")}</h3>
               <button
                 onClick={resetFilters}
                 className="text-[12px] text-[var(--brand-primary)] font-semibold"
               >
-                Réinitialiser {activeFilterCount > 0 ? `(${activeFilterCount})` : ""}
+                {t("marketplace.filters.reset")} {activeFilterCount > 0 ? `(${activeFilterCount})` : ""}
               </button>
             </div>
             <AdSlot position="marketplace_sidebar" className="mb-4" />
             <details open className="border-t border-[var(--brand-border-light)] py-4">
               <summary className="font-semibold text-[14px] cursor-pointer flex items-center justify-between">
-                Catégorie <ChevronDown size={14} />
+                {t("marketplace.filters.category")} <ChevronDown size={14} />
               </summary>
               <div className="mt-3 space-y-2 max-h-72 overflow-y-auto pr-2">
                 {categories.map((item) => (
@@ -367,13 +371,13 @@ function Marketplace() {
             </details>
             <details className="border-t border-[var(--brand-border-light)] py-4">
               <summary className="font-semibold text-[14px] cursor-pointer flex items-center justify-between">
-                Type <ChevronDown size={14} />
+                {t("marketplace.filters.type")} <ChevronDown size={14} />
               </summary>
               <div className="mt-3 space-y-2">
                 {[
-                  ["physical", "Produit physique"],
-                  ["service", "Service"],
-                  ["digital", "Produit numérique"],
+                  ["physical", t("marketplace.filters.typePhysical")],
+                  ["service", t("marketplace.filters.typeService")],
+                  ["digital", t("marketplace.filters.typeDigital")],
                 ].map(([value, label]) => (
                   <label key={value} className="flex items-center gap-2 text-[13px]">
                     <input
@@ -389,7 +393,7 @@ function Marketplace() {
             </details>
             <details className="border-t border-[var(--brand-border-light)] py-4">
               <summary className="font-semibold text-[14px] cursor-pointer flex items-center justify-between">
-                Prix <ChevronDown size={14} />
+                {t("marketplace.filters.price")} <ChevronDown size={14} />
               </summary>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <div className="col-span-2 px-1">
@@ -410,7 +414,7 @@ function Marketplace() {
                   min="0"
                   value={priceMin}
                   onChange={(event) => setPriceMin(event.target.value)}
-                  placeholder="Min"
+                  placeholder={t("marketplace.filters.pricePlaceholderMin")}
                   className="h-10 w-full rounded-lg border border-[var(--brand-border)] px-3 text-[13px]"
                 />
                 <input
@@ -418,14 +422,14 @@ function Marketplace() {
                   min="0"
                   value={priceMax}
                   onChange={(event) => setPriceMax(event.target.value)}
-                  placeholder="Max"
+                  placeholder={t("marketplace.filters.pricePlaceholderMax")}
                   className="h-10 w-full rounded-lg border border-[var(--brand-border)] px-3 text-[13px]"
                 />
               </div>
             </details>
             <details className="border-t border-[var(--brand-border-light)] py-4">
               <summary className="font-semibold text-[14px] cursor-pointer flex items-center justify-between">
-                Localisation <ChevronDown size={14} />
+                {t("marketplace.filters.location")} <ChevronDown size={14} />
               </summary>
               <div className="mt-3 space-y-3">
                 <select
@@ -433,7 +437,7 @@ function Marketplace() {
                   onChange={(event) => setCountry(event.target.value)}
                   className="h-10 w-full rounded-lg border border-[var(--brand-border)] bg-white px-3 text-[13px]"
                 >
-                  <option value="">Tous pays</option>
+                  <option value="">{t("marketplace.filters.allCountries")}</option>
                   {countries.map((item) => (
                     <option key={item} value={item}>
                       {item}
@@ -443,13 +447,13 @@ function Marketplace() {
                 <input
                   value={city}
                   onChange={(event) => setCity(event.target.value)}
-                  placeholder="Ville"
+                  placeholder={t("marketplace.filters.cityPlaceholder")}
                   className="h-10 w-full rounded-lg border border-[var(--brand-border)] px-3 text-[13px]"
                 />
                 <div>
                   <div className="mb-2 flex items-center justify-between text-[12px] text-[var(--color-text-muted)]">
-                    <span>Distance</span>
-                    <span>{distance[0]} km</span>
+                    <span>{t("marketplace.filters.distance")}</span>
+                    <span>{t("marketplace.filters.distanceKm", { count: distance[0] })}</span>
                   </div>
                   <Slider value={distance} min={0} max={500} step={10} onValueChange={setDistance} />
                 </div>
@@ -458,13 +462,13 @@ function Marketplace() {
                   onClick={activateGeolocation}
                   className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-[var(--brand-border)] text-[12px] font-semibold"
                 >
-                  <Navigation size={14} /> {locationMessage || "Activer ma géolocalisation"}
+                  <Navigation size={14} /> {locationMessage || t("marketplace.filters.activateGeolocation")}
                 </button>
               </div>
             </details>
             <details className="border-t border-[var(--brand-border-light)] py-4">
               <summary className="font-semibold text-[14px] cursor-pointer flex items-center justify-between">
-                Publication & qualité <ChevronDown size={14} />
+                {t("marketplace.filters.publicationQuality")} <ChevronDown size={14} />
               </summary>
               <div className="mt-3 space-y-3">
                 <select
@@ -472,20 +476,20 @@ function Marketplace() {
                   onChange={(event) => setDateFilter(event.target.value)}
                   className="h-10 w-full rounded-lg border border-[var(--brand-border)] bg-white px-3 text-[13px]"
                 >
-                  <option value="all">Toutes dates</option>
-                  <option value="today">Aujourd'hui</option>
-                  <option value="week">Cette semaine</option>
-                  <option value="month">Ce mois</option>
+                  <option value="all">{t("marketplace.filters.allDates")}</option>
+                  <option value="today">{t("marketplace.filters.today")}</option>
+                  <option value="week">{t("marketplace.filters.thisWeek")}</option>
+                  <option value="month">{t("marketplace.filters.thisMonth")}</option>
                 </select>
                 <div>
-                  <p className="mb-2 text-[12px] font-semibold">Note minimale</p>
+                  <p className="mb-2 text-[12px] font-semibold">{t("marketplace.filters.minRating")}</p>
                   <div className="flex gap-1">
                     {[1, 2, 3, 4, 5].map((rating) => (
                       <button
                         key={rating}
                         onClick={() => setMinRating(minRating === rating ? 0 : rating)}
                         className={rating <= minRating ? "text-[var(--brand-gold)]" : "text-[var(--brand-border)]"}
-                        aria-label={`${rating} étoiles minimum`}
+                        aria-label={t("marketplace.filters.ratingAriaLabel", { count: rating })}
                       >
                         <Star size={18} fill="currentColor" />
                       </button>
@@ -493,7 +497,7 @@ function Marketplace() {
                   </div>
                 </div>
                 <label className="flex items-center justify-between gap-3 text-[13px]">
-                  Vendeurs KYC vérifiés <Switch checked={verifiedOnly} onCheckedChange={setVerifiedOnly} />
+                  {t("marketplace.filters.verifiedOnly")} <Switch checked={verifiedOnly} onCheckedChange={setVerifiedOnly} />
                 </label>
               </div>
             </details>
@@ -503,35 +507,37 @@ function Marketplace() {
             <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
               <p className="text-[14px] text-[var(--color-text-muted)]">
                 <span className="font-bold text-[var(--color-text-primary)]">
-                  {isLoading ? "Chargement..." : `${filteredItems.length} résultats`}
+                  {isLoading
+                    ? t("marketplace.results.loading")
+                    : t("marketplace.results.count", { count: filteredItems.length })}
                 </span>
-                {debouncedSearch && !isLoading ? ` pour "${debouncedSearch}"` : ""}
+                {debouncedSearch && !isLoading ? t("marketplace.results.forQuery", { query: debouncedSearch }) : ""}
               </p>
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setAlertOpen(true)}
                   className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
                 >
-                  <Bell size={15} /> Créer une alerte
+                  <Bell size={15} /> {t("marketplace.results.createAlert")}
                 </button>
                 <Link
                   to="/marketplace/deposer"
                   className="inline-flex h-10 items-center rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white"
                 >
-                  Déposer une annonce
+                  {t("marketplace.results.postListing")}
                 </Link>
                 <div className="inline-flex h-10 rounded-full border border-[var(--brand-border)] bg-white p-1">
                   <button
                     onClick={() => setViewMode("grid")}
                     className={`inline-flex items-center gap-1 rounded-full px-3 text-[12px] font-semibold ${viewMode === "grid" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-secondary)]"}`}
                   >
-                    <Grid2X2 size={14} /> Grille
+                    <Grid2X2 size={14} /> {t("marketplace.results.grid")}
                   </button>
                   <button
                     onClick={() => setViewMode("map")}
                     className={`inline-flex items-center gap-1 rounded-full px-3 text-[12px] font-semibold ${viewMode === "map" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-secondary)]"}`}
                   >
-                    <Map size={14} /> Carte
+                    <Map size={14} /> {t("marketplace.results.map")}
                   </button>
                 </div>
                 <select
@@ -539,13 +545,13 @@ function Marketplace() {
                   onChange={(event) => setSort(event.target.value)}
                   className="h-10 px-4 rounded-full border border-[var(--brand-border)] text-[13px] bg-white"
                 >
-                  <option value="relevance">Pertinence</option>
-                  <option value="newest">Les plus récents</option>
-                  <option value="price_asc">Prix croissant</option>
-                  <option value="price_desc">Prix décroissant</option>
-                  <option value="rating">Les mieux notés</option>
-                  <option value="popular">Plus populaire</option>
-                  {userPosition && <option value="distance">Distance (proximité)</option>}
+                  <option value="relevance">{t("marketplace.results.sortRelevance")}</option>
+                  <option value="newest">{t("marketplace.results.sortNewest")}</option>
+                  <option value="price_asc">{t("marketplace.results.sortPriceAsc")}</option>
+                  <option value="price_desc">{t("marketplace.results.sortPriceDesc")}</option>
+                  <option value="rating">{t("marketplace.results.sortRating")}</option>
+                  <option value="popular">{t("marketplace.results.sortPopular")}</option>
+                  {userPosition && <option value="distance">{t("marketplace.results.sortDistance")}</option>}
                 </select>
               </div>
             </div>
@@ -579,7 +585,8 @@ function Marketplace() {
                     }}
                     className="inline-flex items-center gap-1 rounded-full bg-[var(--brand-primary-subtle)] px-3 py-1 text-[12px] font-semibold text-[var(--brand-primary)]"
                   >
-                    {priceMin || "0"} - {priceMax || "max"} FCFA <X size={12} />
+                    {t("marketplace.activeFilters.priceRangeChip", { min: priceMin || "0", max: priceMax || "max" })}{" "}
+                    <X size={12} />
                   </button>
                 )}
               </div>
@@ -597,12 +604,12 @@ function Marketplace() {
                     <LeafletMap markers={mapMarkers} heightClassName="h-[560px]" />
                   ) : (
                     <div className="flex h-[560px] items-center justify-center rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center text-[13px] text-[var(--color-text-muted)]">
-                      Aucune annonce affichée ne possède de localisation exacte pour l'instant.
+                      {t("marketplace.results.noLocationOnMap")}
                     </div>
                   )}
                   {userPosition && (
                     <div className="absolute bottom-5 left-5 z-[1000] rounded-full border border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] px-4 py-2 text-[12px] font-semibold text-[var(--brand-primary)] shadow-iwosan-sm">
-                      Rayon sélectionné : {distance[0]} km
+                      {t("marketplace.results.radiusSelected", { km: distance[0] })}
                     </div>
                   )}
                 </div>
@@ -613,10 +620,10 @@ function Marketplace() {
                       <div className="min-w-0 flex-1">
                         <p className="line-clamp-2 text-[13px] font-bold">{product.title}</p>
                         <p className="mt-1 text-[12px] text-[var(--color-text-muted)]">
-                          {product.location ?? "Localisation"} - {product.price.toLocaleString("fr-FR")} {product.currency}
+                          {product.location ?? t("marketplace.filters.location")} - {product.price.toLocaleString("fr-FR")} {product.currency}
                         </p>
                         <button type="button" onClick={() => setSelectedProduct(product)} className="mt-2 h-8 rounded-full bg-[var(--brand-primary)] px-3 text-[12px] font-semibold text-white">
-                          Voir
+                          {t("marketplace.results.viewAction")}
                         </button>
                       </div>
                     </article>
@@ -626,15 +633,15 @@ function Marketplace() {
             )}
             {!isLoading && filteredItems.length === 0 && (
               <div className="rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-10 text-center">
-                <p className="text-[18px] font-bold">Aucun résultat</p>
+                <p className="text-[18px] font-bold">{t("marketplace.results.noResultsTitle")}</p>
                 <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-                  Essayez une autre recherche ou réinitialisez les filtres.
+                  {t("marketplace.results.noResultsSubtitle")}
                 </p>
                 <button
                   onClick={resetFilters}
                   className="mt-5 h-10 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white"
                 >
-                  Effacer les filtres
+                  {t("marketplace.results.clearFilters")}
                 </button>
               </div>
             )}
@@ -647,18 +654,24 @@ function Marketplace() {
             <>
               <DialogHeader>
                 <DialogTitle>{selectedProduct.title}</DialogTitle>
-                <DialogDescription>Fiche rapide issue de la carte marketplace.</DialogDescription>
+                <DialogDescription>{t("marketplace.productDialog.subtitle")}</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 md:grid-cols-[220px_1fr]">
                 <img src={selectedProduct.image} alt={selectedProduct.title} className="h-56 w-full rounded-lg object-cover" />
                 <div className="space-y-3 text-[14px]">
                   <p className="text-[18px] font-bold text-[var(--brand-primary)]">{selectedProduct.price.toLocaleString("fr-FR")} {selectedProduct.currency}</p>
-                  <p>Vendeur : {selectedProduct.sellerName}</p>
-                  {selectedProduct.location && <p>Lieu : {selectedProduct.location}{selectedProduct.country ? `, ${selectedProduct.country}` : ""}</p>}
+                  <p>{t("marketplace.productDialog.seller", { name: selectedProduct.sellerName })}</p>
+                  {selectedProduct.location && (
+                    <p>
+                      {t("marketplace.productDialog.location", {
+                        location: `${selectedProduct.location}${selectedProduct.country ? `, ${selectedProduct.country}` : ""}`,
+                      })}
+                    </p>
+                  )}
                   <RatingStars rating={selectedProduct.rating} reviewCount={selectedProduct.reviewCount} />
                   <div className="grid gap-2 sm:grid-cols-2">
-                    <button type="button" onClick={() => { if (!selectedProduct) return; const sellerId = selectedProduct.sellerProfileId ?? selectedProduct.sellerId; const sellerProfileUrl = sellerId ? "/pro/" + sellerId : "/annuaire"; const message = `Bonjour, je souhaite réserver ce produit : ${selectedProduct.title}. Pouvez-vous me donner plus d'informations ?`; window.location.href = `${sellerProfileUrl}?message=${encodeURIComponent(message)}&product=${encodeURIComponent(selectedProduct.title)}`; }} className="h-10 rounded-full bg-[var(--brand-primary)] font-semibold text-white">Réserver ce produit</button>
-                    <button type="button" onClick={() => setSelectedProduct(null)} className="h-10 rounded-full border border-[var(--brand-border)] font-semibold">Fermer</button>
+                    <button type="button" onClick={() => { if (!selectedProduct) return; const sellerId = selectedProduct.sellerProfileId ?? selectedProduct.sellerId; const sellerProfileUrl = sellerId ? "/pro/" + sellerId : "/annuaire"; const message = t("marketplace.productDialog.reserveMessage", { title: selectedProduct.title }); window.location.href = `${sellerProfileUrl}?message=${encodeURIComponent(message)}&product=${encodeURIComponent(selectedProduct.title)}`; }} className="h-10 rounded-full bg-[var(--brand-primary)] font-semibold text-white">{t("marketplace.productDialog.reserve")}</button>
+                    <button type="button" onClick={() => setSelectedProduct(null)} className="h-10 rounded-full border border-[var(--brand-border)] font-semibold">{t("marketplace.productDialog.close")}</button>
                   </div>
                 </div>
               </div>
@@ -678,21 +691,21 @@ function Marketplace() {
       >
         <DialogContent className="bg-white">
           <DialogHeader>
-            <DialogTitle>Créer une alerte</DialogTitle>
+            <DialogTitle>{t("marketplace.alertDialog.title")}</DialogTitle>
             <DialogDescription>
-              Recevez une notification lorsque de nouvelles annonces correspondent à ces filtres.
+              {t("marketplace.alertDialog.subtitle")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <input
               value={alertName}
               onChange={(event) => setAlertName(event.target.value)}
-              placeholder="Nom de l'alerte"
+              placeholder={t("marketplace.alertDialog.namePlaceholder")}
               className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4"
             />
             <div className="rounded-lg bg-[var(--brand-surface-alt)] p-4">
               <p className="text-[12px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-                Filtres appliqués
+                {t("marketplace.alertDialog.appliedFilters")}
               </p>
               <p className="mt-2 text-[14px] text-[var(--color-text-secondary)]">{activeFilterSummary}</p>
             </div>
@@ -703,11 +716,11 @@ function Marketplace() {
                 setAlertError("");
                 setAlertSuccess("");
                 if (!user) {
-                  setAlertError("Connectez-vous pour enregistrer une alerte.");
+                  setAlertError(t("marketplace.alertDialog.loginRequired"));
                   return;
                 }
                 if (alertName.trim().length < 3) {
-                  setAlertError("Donnez un nom à votre alerte (3 caractères minimum).");
+                  setAlertError(t("marketplace.alertDialog.nameTooShort"));
                   return;
                 }
                 savedSearchActions.create.mutate(
@@ -729,18 +742,22 @@ function Marketplace() {
                   },
                   {
                     onSuccess: () => {
-                      setAlertSuccess("Alerte enregistrée. Retrouvez-la dans votre compte.");
+                      setAlertSuccess(t("marketplace.alertDialog.createSuccess"));
                       setAlertName("");
                     },
                     onError: (mutationError) =>
-                      setAlertError(mutationError instanceof Error ? mutationError.message : "Impossible de créer cette alerte."),
+                      setAlertError(
+                        mutationError instanceof Error
+                          ? mutationError.message
+                          : t("marketplace.alertDialog.createError"),
+                      ),
                   },
                 );
               }}
               disabled={savedSearchActions.create.isPending}
               className="h-11 w-full rounded-full bg-[var(--brand-primary)] font-semibold text-white disabled:opacity-60"
             >
-              Enregistrer l'alerte
+              {t("marketplace.alertDialog.submit")}
             </button>
           </div>
         </DialogContent>

@@ -110,5 +110,103 @@
         "detail3": "Courses, blog and events"
       }
     }
+  },
+  "marketplace": {
+    "meta": {
+      "title": "Marketplace - IWOSAN",
+      "description": "Products, services and digital resources of African traditional medicine."
+    },
+    "hero": {
+      "title": "Iwosan Marketplace",
+      "subtitle": "Products, services and digital resources of African traditional medicine - verified by our team.",
+      "searchPlaceholder": "Plant, product, seller..."
+    },
+    "filters": {
+      "title": "Filters",
+      "reset": "Reset",
+      "category": "Category",
+      "type": "Type",
+      "typePhysical": "Physical product",
+      "typeService": "Service",
+      "typeDigital": "Digital product",
+      "price": "Price",
+      "pricePlaceholderMin": "Min",
+      "pricePlaceholderMax": "Max",
+      "location": "Location",
+      "allCountries": "All countries",
+      "cityPlaceholder": "City",
+      "distance": "Distance",
+      "distanceKm": "{{count}} km",
+      "activateGeolocation": "Enable my location",
+      "geoUnavailable": "Geolocation is unavailable on this device. Enter a city manually.",
+      "geoSearching": "Finding your location...",
+      "geoFound": "Location found. Adjust the radius to refine nearby results.",
+      "geoDenied": "Permission denied. You can enter a city manually.",
+      "publicationQuality": "Publication & quality",
+      "allDates": "All dates",
+      "today": "Today",
+      "thisWeek": "This week",
+      "thisMonth": "This month",
+      "minRating": "Minimum rating",
+      "ratingAriaLabel": "{{count}} stars minimum",
+      "verifiedOnly": "KYC-verified sellers"
+    },
+    "results": {
+      "loading": "Loading...",
+      "count_one": "{{count}} result",
+      "count_other": "{{count}} results",
+      "forQuery": " for \"{{query}}\"",
+      "createAlert": "Create an alert",
+      "postListing": "Post a listing",
+      "grid": "Grid",
+      "map": "Map",
+      "sortRelevance": "Relevance",
+      "sortNewest": "Newest",
+      "sortPriceAsc": "Price: low to high",
+      "sortPriceDesc": "Price: high to low",
+      "sortRating": "Top rated",
+      "sortPopular": "Most popular",
+      "sortDistance": "Distance (nearby)",
+      "noLocationOnMap": "None of the listings shown has an exact location yet.",
+      "radiusSelected": "Selected radius: {{km}} km",
+      "viewAction": "View",
+      "noResultsTitle": "No results",
+      "noResultsSubtitle": "Try another search or reset the filters.",
+      "clearFilters": "Clear filters",
+      "apiUnavailable": "API unavailable, showing local data."
+    },
+    "activeFilters": {
+      "searchLabel": "Search \"{{query}}\"",
+      "categoryCount_one": "{{count}} category",
+      "categoryCount_other": "{{count}} categories",
+      "typeCount_one": "{{count}} type",
+      "typeCount_other": "{{count}} types",
+      "priceRange": "{{min}}-{{max}} FCFA",
+      "countryLabel": "Country: {{country}}",
+      "cityLabel": "City: {{city}}",
+      "ratingLabel": "Rating {{rating}}+",
+      "verifiedSellers": "Verified sellers",
+      "defaultSummary": "All marketplace results",
+      "priceRangeChip": "{{min}} - {{max}} FCFA"
+    },
+    "productDialog": {
+      "subtitle": "Quick view from the marketplace card.",
+      "seller": "Seller: {{name}}",
+      "location": "Location: {{location}}",
+      "reserve": "Reserve this product",
+      "reserveMessage": "Hello, I'd like to reserve this product: {{title}}. Could you give me more information?",
+      "close": "Close"
+    },
+    "alertDialog": {
+      "title": "Create an alert",
+      "subtitle": "Get notified when new listings match these filters.",
+      "namePlaceholder": "Alert name",
+      "appliedFilters": "Applied filters",
+      "loginRequired": "Log in to save an alert.",
+      "nameTooShort": "Give your alert a name (3 characters minimum).",
+      "createError": "Unable to create this alert.",
+      "createSuccess": "Alert saved. Find it in your account.",
+      "submit": "Save the alert"
+    }
   }
 }
