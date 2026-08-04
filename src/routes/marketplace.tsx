@@ -5,6 +5,7 @@ import { Bell, ChevronDown, Grid2X2, Map, MapPin, Navigation, Star, X } from "lu
 import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { ProductCard } from "@/components/shared/ProductCard";
+import { ProductCardSkeleton } from "@/components/shared/ProductCardSkeleton";
 import { RatingStars } from "@/components/shared/RatingStars";
 import { products as fallbackProducts } from "@/data/products";
 import type { Product } from "@/types";
@@ -593,9 +594,9 @@ function Marketplace() {
             )}
             {viewMode === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredItems.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
+                {isLoading
+                  ? Array.from({ length: 6 }).map((_, index) => <ProductCardSkeleton key={index} />)
+                  : filteredItems.map((product) => <ProductCard key={product.id} product={product} />)}
               </div>
             ) : (
               <div className="grid xl:grid-cols-[1fr_340px] gap-6">

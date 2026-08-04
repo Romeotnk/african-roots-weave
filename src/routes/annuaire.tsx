@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { ProfessionalCard } from "@/components/shared/ProfessionalCard";
+import { ProfessionalCardSkeleton } from "@/components/shared/ProfessionalCardSkeleton";
 import { LeafletMap, type MapMarker } from "@/components/shared/LeafletMap";
 import { AdSlot } from "@/components/shared/AdSlot";
 import { professionals as fallbackProfessionals } from "@/data/professionals";
@@ -230,9 +231,9 @@ function Annuaire() {
             )
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filteredItems.map((professional) => (
-                <ProfessionalCard key={professional.id} pro={professional} />
-              ))}
+              {isLoading
+                ? Array.from({ length: 8 }).map((_, index) => <ProfessionalCardSkeleton key={index} />)
+                : filteredItems.map((professional) => <ProfessionalCard key={professional.id} pro={professional} />)}
             </div>
           )}
           {viewMode === "grid" && !isLoading && filteredItems.length === 0 && (

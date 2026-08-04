@@ -9,6 +9,7 @@ import { RatingStars } from "@/components/shared/RatingStars";
 import { PractitionerAvatar } from "@/components/shared/PractitionerAvatar";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { BookingWidget } from "@/components/shared/BookingWidget";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type ProfessionalReview = {
   id: string;
@@ -83,8 +84,36 @@ function ProfessionalShowcase() {
 
   if (professionalQuery.isLoading) {
     return (
-      <main className="grid min-h-[60vh] place-items-center bg-[var(--brand-bg)]">
-        <p className="text-[14px] text-[var(--color-text-muted)]">Chargement du profil...</p>
+      <main className="bg-[var(--brand-bg)]">
+        <section className="bg-[linear-gradient(135deg,#1f5a39_0%,#2d7a4f_100%)]">
+          <div className="container-iwosan py-16 md:py-20">
+            <div className="flex flex-col gap-5 md:flex-row md:items-end">
+              <Skeleton className="h-24 w-24 rounded-full bg-white/15" />
+              <div className="flex-1 space-y-3">
+                <Skeleton className="h-8 w-64 bg-white/15" />
+                <Skeleton className="h-4 w-48 bg-white/15" />
+                <Skeleton className="h-4 w-40 bg-white/15" />
+              </div>
+            </div>
+          </div>
+        </section>
+        <section className="container-iwosan py-10">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="space-y-8">
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Skeleton key={index} className="h-10 w-32 rounded-full" />
+                ))}
+              </div>
+              <div className="space-y-4 rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+            </div>
+            <Skeleton className="h-64 rounded-[24px]" />
+          </div>
+        </section>
       </main>
     );
   }

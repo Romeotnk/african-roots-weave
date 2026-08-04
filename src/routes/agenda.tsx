@@ -15,11 +15,11 @@ export const Route = createFileRoute("/agenda")({
 
 const filters = ["Tous", "WEBINAR", "FORMATION", "SALON", "PORTES_OUVERTES", "LANCEMENT_PRODUIT"];
 const filterLabels: Record<string, string> = {
-  WEBINAR: "webinaire",
-  FORMATION: "formation",
-  SALON: "salon",
-  PORTES_OUVERTES: "portes ouvertes",
-  LANCEMENT_PRODUIT: "lancement de produit",
+  WEBINAR: "Webinaire",
+  FORMATION: "Formation",
+  SALON: "Salon",
+  PORTES_OUVERTES: "Portes ouvertes",
+  LANCEMENT_PRODUIT: "Lancement de produit",
 };
 
 function monthDays(date: Date) {
@@ -66,7 +66,7 @@ function Agenda() {
 
   return (
     <>
-      <HeroSection image="https://images.unsplash.com/photo-1511578314322-379afb476865?w=1920&q=80" badge="Agenda" title="Agenda & Événements" subtitle="Vue par défaut en liste, avec calendrier latéral optionnel." size="md" />
+      <HeroSection image="https://images.unsplash.com/photo-1511578314322-379afb476865?w=1920&q=80" badge="Agenda" title="Agenda & Événements" subtitle="Ateliers, formations, salons et rencontres autour de la médecine traditionnelle africaine." size="md" />
       <section className="container-iwosan py-10">
         <div className="mb-6 flex items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2">{filters.map((item) => <button key={item} onClick={() => setFilter(item)} className={`rounded-full px-4 py-2 text-[13px] font-semibold ${filter === item ? "bg-[var(--brand-primary)] text-white" : "border border-[var(--brand-border)] bg-white"}`}>{item === "Tous" ? "Tous" : filterLabels[item]}</button>)}</div>
