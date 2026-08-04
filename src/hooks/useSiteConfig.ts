@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getAdsByPosition, getHomeBanners, getSiteConfig, getSitePage } from "@/lib/api/site";
+import { getAdsByPosition, getHomeBanners, getPartnerLogos, getSiteConfig, getSitePage } from "@/lib/api/site";
 
 export function useSiteConfig() {
   return useQuery({
@@ -23,6 +23,15 @@ export function useHomeBanners() {
   return useQuery({
     queryKey: ["site", "banners"],
     queryFn: getHomeBanners,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+}
+
+export function usePartnerLogos() {
+  return useQuery({
+    queryKey: ["site", "partner-logos"],
+    queryFn: getPartnerLogos,
     staleTime: 5 * 60 * 1000,
     retry: false,
   });

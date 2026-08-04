@@ -112,6 +112,7 @@ export interface Product {
   contraindications?: string;
   usage?: string;
   sellerProfileId?: string;
+  viewCount?: number;
 }
 
 export interface MarketplaceAlert {

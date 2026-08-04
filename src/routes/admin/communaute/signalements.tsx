@@ -24,6 +24,15 @@ const statusColor: Record<AdminReport["status"], string> = {
   ACTIONED: "bg-emerald-500/20 text-emerald-300",
 };
 
+const reasonCategoryLabel: Record<NonNullable<AdminReport["reasonCategory"]>, string> = {
+  FRAUDULENT_CONTENT: "Contenu frauduleux",
+  PROHIBITED_ITEM: "Produit interdit",
+  SCAM: "Arnaque",
+  INAPPROPRIATE_CONTENT: "Contenu inapproprié",
+  SPAM: "Spam",
+  OTHER: "Autre",
+};
+
 function AdminSignalements() {
   const [status, setStatus] = useState("PENDING");
   const reportsQuery = useAdminReports({ status: status || undefined });
@@ -67,7 +76,14 @@ function AdminSignalements() {
                 <tr key={report.id} className="border-t border-white/10">
                   <td className="px-4 py-3 font-semibold text-white">{report.targetType}</td>
                   <td className="px-4 py-3 text-slate-400">{report.targetId}</td>
-                  <td className="px-4 py-3 text-slate-200">{report.reason}</td>
+                  <td className="px-4 py-3 text-slate-200">
+                    {report.reasonCategory && (
+                      <span className="mr-2 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-bold text-slate-300">
+                        {reasonCategoryLabel[report.reasonCategory]}
+                      </span>
+                    )}
+                    {report.reason}
+                  </td>
                   <td className="px-4 py-3 text-slate-200">{report.reporter ? `${report.reporter.firstName} ${report.reporter.lastName}` : "—"}</td>
                   <td className="px-4 py-3 text-slate-200">{new Date(report.createdAt).toLocaleDateString("fr-FR")}</td>
                   <td className="px-4 py-3">

@@ -578,7 +578,7 @@ export const updateCommissionConfig = asyncHandler(async (req, res) => {
   res.json(apiResponse(true, entries, "Commission config updated"));
 });
 
-export const crudList = (model: "adSpace" | "homeBanner" | "siteConfig") =>
+export const crudList = (model: "adSpace" | "homeBanner" | "siteConfig" | "partnerLogo") =>
   asyncHandler(async (_req, res) =>
     res.json(
       apiResponse(
@@ -640,6 +640,33 @@ export const updateBanner = asyncHandler(async (req, res) =>
 export const deleteBanner = asyncHandler(async (req, res) => {
   await prisma.homeBanner.delete({ where: { id: req.params.id } });
   res.json(apiResponse(true, null, "Banner deleted"));
+});
+
+const partnerLogoFields = (body: Record<string, unknown>) => ({
+  imageUrl: body.imageUrl as string | undefined,
+  title: body.title as string | undefined,
+  link: body.link as string | undefined,
+  order: body.order as number | undefined,
+  isActive: body.isActive as boolean | undefined,
+});
+
+export const createPartnerLogo = asyncHandler(async (req, res) =>
+  res
+    .status(201)
+    .json(apiResponse(true, await prisma.partnerLogo.create({ data: partnerLogoFields(req.body) as never }), "Partner logo created")),
+);
+export const updatePartnerLogo = asyncHandler(async (req, res) =>
+  res.json(
+    apiResponse(
+      true,
+      await prisma.partnerLogo.update({ where: { id: req.params.id }, data: partnerLogoFields(req.body) }),
+      "Partner logo updated",
+    ),
+  ),
+);
+export const deletePartnerLogo = asyncHandler(async (req, res) => {
+  await prisma.partnerLogo.delete({ where: { id: req.params.id } });
+  res.json(apiResponse(true, null, "Partner logo deleted"));
 });
 
 export const listPages = asyncHandler(async (_req, res) => {

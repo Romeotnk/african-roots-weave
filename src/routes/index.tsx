@@ -7,6 +7,7 @@ import { AdSlot } from "@/components/shared/AdSlot";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { ProfessionalCard } from "@/components/shared/ProfessionalCard";
 import { EventCard } from "@/components/shared/EventCard";
+import { PartnerLogosBar } from "@/components/shared/PartnerLogosBar";
 import { products } from "@/data/products";
 import { professionals } from "@/data/professionals";
 import { events } from "@/data/events";
@@ -341,6 +342,7 @@ function Home() {
           </div>
         </div>
       </section>
+      <PartnerLogosBar />
     </>
   );
 }

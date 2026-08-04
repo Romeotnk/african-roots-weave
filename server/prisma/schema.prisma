@@ -592,14 +592,15 @@ model Vote {
 }
 
 model Report {
-  id         String       @id @default(cuid())
-  reporterId String
-  targetId   String
-  targetType String
-  reason     String
-  status     ReportStatus @default(PENDING)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  id             String               @id @default(cuid())
+  reporterId     String
+  targetId       String
+  targetType     String
+  reason         String
+  reasonCategory ReportReasonCategory?
+  status         ReportStatus         @default(PENDING)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
 
   reporter User @relation(fields: [reporterId], references: [id], onDelete: Cascade)
 
@@ -944,6 +945,19 @@ model HomeBanner {
   @@index([isActive, order])
 }
 
+model PartnerLogo {
+  id        String   @id @default(cuid())
+  imageUrl  String
+  title     String?
+  link      String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, order])
+}
+
 model NewsletterSubscriber {
   id               String    @id @default(cuid())
   email            String    @unique
@@ -1077,6 +1091,15 @@ enum ReportStatus {
   REVIEWED
   DISMISSED
   ACTIONED
+}
+
+enum ReportReasonCategory {
+  FRAUDULENT_CONTENT
+  PROHIBITED_ITEM
+  SCAM
+  INAPPROPRIATE_CONTENT
+  SPAM
+  OTHER
 }
 
 enum EventType {

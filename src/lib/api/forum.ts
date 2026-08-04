@@ -46,10 +46,13 @@ export type VotePayload = {
   value: -1 | 0 | 1;
 };
 
+export type ReportReasonCategory = "FRAUDULENT_CONTENT" | "PROHIBITED_ITEM" | "SCAM" | "INAPPROPRIATE_CONTENT" | "SPAM" | "OTHER";
+
 export type ReportPayload = {
   targetId: string;
   targetType: "QUESTION" | "ANSWER" | "COMMENT" | "PROFILE" | "PRODUCT";
   reason?: string;
+  reasonCategory?: ReportReasonCategory;
   details?: string;
 };
 

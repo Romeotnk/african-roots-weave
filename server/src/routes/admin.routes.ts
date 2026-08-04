@@ -11,11 +11,13 @@ import {
   createAd,
   createBanner,
   createPage,
+  createPartnerLogo,
   crudList,
   dashboard,
   deleteAd,
   deleteBanner,
   deletePage,
+  deletePartnerLogo,
   getUser,
   kycApprove,
   kycDocuments,
@@ -46,6 +48,7 @@ import {
   updateCommissionConfig,
   updateConfig,
   updatePage,
+  updatePartnerLogo,
   updateProfessionalCommissionRate,
   updateRole,
   updateRolePermissions,
@@ -171,6 +174,10 @@ adminRouter.get("/banners", crudList("homeBanner"));
 adminRouter.post("/banners", createBanner);
 adminRouter.put("/banners/:id", updateBanner);
 adminRouter.delete("/banners/:id", deleteBanner);
+adminRouter.get("/partner-logos", crudList("partnerLogo"));
+adminRouter.post("/partner-logos", createPartnerLogo);
+adminRouter.put("/partner-logos/:id", updatePartnerLogo);
+adminRouter.delete("/partner-logos/:id", deletePartnerLogo);
 adminRouter.get("/pages", listPages);
 adminRouter.post("/pages", checkPermission("content.pages.manage"), createPage);
 adminRouter.put("/pages/:id", checkPermission("content.pages.manage"), updatePage);

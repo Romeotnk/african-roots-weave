@@ -50,6 +50,15 @@ export const getPublicBanners = asyncHandler(async (_req, res) => {
   res.json(apiResponse(true, banners, "Banners retrieved"));
 });
 
+export const getPublicPartnerLogos = asyncHandler(async (_req, res) => {
+  const logos = await prisma.partnerLogo.findMany({
+    where: { isActive: true },
+    orderBy: { order: "asc" },
+    select: { id: true, imageUrl: true, title: true, link: true },
+  });
+  res.json(apiResponse(true, logos, "Partner logos retrieved"));
+});
+
 export const getPublicAds = asyncHandler(async (req, res) => {
   const position = typeof req.query.position === "string" ? req.query.position : undefined;
   const ads = await prisma.adSpace.findMany({

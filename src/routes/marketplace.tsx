@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Bell, ChevronDown, Grid2X2, Map, MapPin, Navigation, Star, X } from "lucide-react";
+import { Bell, ChevronDown, Grid2X2, List, Map, MapPin, Navigation, Star, X } from "lucide-react";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { ProductCardSkeleton } from "@/components/shared/ProductCardSkeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { RatingStars } from "@/components/shared/RatingStars";
 import { products as fallbackProducts } from "@/data/products";
 import type { Product } from "@/types";
@@ -67,7 +68,7 @@ function Marketplace() {
   const [dateFilter, setDateFilter] = useState("all");
   const [minRating, setMinRating] = useState(0);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list" | "map">("grid");
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertName, setAlertName] = useState("");
   const [alertError, setAlertError] = useState("");
@@ -535,6 +536,12 @@ function Marketplace() {
                     <Grid2X2 size={14} /> {t("marketplace.results.grid")}
                   </button>
                   <button
+                    onClick={() => setViewMode("list")}
+                    className={`inline-flex items-center gap-1 rounded-full px-3 text-[12px] font-semibold ${viewMode === "list" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-secondary)]"}`}
+                  >
+                    <List size={14} /> {t("marketplace.results.list")}
+                  </button>
+                  <button
                     onClick={() => setViewMode("map")}
                     className={`inline-flex items-center gap-1 rounded-full px-3 text-[12px] font-semibold ${viewMode === "map" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-secondary)]"}`}
                   >
@@ -597,6 +604,42 @@ function Marketplace() {
                 {isLoading
                   ? Array.from({ length: 6 }).map((_, index) => <ProductCardSkeleton key={index} />)
                   : filteredItems.map((product) => <ProductCard key={product.id} product={product} />)}
+              </div>
+            ) : viewMode === "list" ? (
+              <div className="space-y-3">
+                {isLoading
+                  ? Array.from({ length: 6 }).map((_, index) => (
+                      <div key={index} className="flex items-center gap-4 rounded-[16px] border border-[var(--brand-border-light)] bg-white p-3">
+                        <Skeleton className="h-20 w-24 shrink-0 rounded-lg" />
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-3/5" />
+                          <Skeleton className="h-3 w-2/5" />
+                          <Skeleton className="h-3 w-1/4" />
+                        </div>
+                        <Skeleton className="h-5 w-20 shrink-0" />
+                      </div>
+                    ))
+                  : filteredItems.map((product) => (
+                      <button
+                        key={product.id}
+                        type="button"
+                        onClick={() => setSelectedProduct(product)}
+                        className="flex w-full items-center gap-4 rounded-[16px] border border-[var(--brand-border-light)] bg-white p-3 text-left transition hover:border-[var(--brand-primary)] hover:shadow-iwosan-sm"
+                      >
+                        <img src={product.image} alt={product.title} loading="lazy" decoding="async" className="h-20 w-24 shrink-0 rounded-lg object-cover" />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[15px] font-bold">{product.title}</p>
+                          <p className="mt-1 text-[12px] text-[var(--color-text-muted)]">
+                            {product.location ?? t("marketplace.filters.location")}
+                            {product.country ? `, ${product.country}` : ""}
+                          </p>
+                          <div className="mt-1"><RatingStars rating={product.rating} reviewCount={product.reviewCount} /></div>
+                        </div>
+                        <span className="shrink-0 text-[16px] font-bold text-[var(--brand-primary)]">
+                          {product.quoteOnly ? t("marketplace.results.viewAction") : `${product.price.toLocaleString("fr-FR")} ${product.currency}`}
+                        </span>
+                      </button>
+                    ))}
               </div>
             ) : (
               <div className="grid xl:grid-cols-[1fr_340px] gap-6">

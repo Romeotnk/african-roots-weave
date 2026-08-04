@@ -15,11 +15,19 @@ export type AdSpace = {
   code: string;
 };
 
+export type PartnerLogo = {
+  id: string;
+  imageUrl: string;
+  title: string | null;
+  link: string | null;
+};
+
 export const getSiteConfig = () => apiRequest<SiteConfigMap>("/site/config");
 export const getSitePage = (slug: string) =>
   apiRequest<{ slug: string; title: string; contentHtml: string; metaTitle: string; metaDescription: string; isPublished: boolean; updatedAt: string }>(
     `/site/pages/${slug}`,
   );
 export const getHomeBanners = () => apiRequest<HomeBanner[]>("/site/banners");
+export const getPartnerLogos = () => apiRequest<PartnerLogo[]>("/site/partner-logos");
 export const getAdsByPosition = (position: string) =>
   apiRequest<AdSpace[]>(`/site/ads?position=${encodeURIComponent(position)}`);

@@ -7,6 +7,8 @@ import {
   useAdminAdsActions,
   useAdminBanners,
   useAdminBannersActions,
+  useAdminPartnerLogos,
+  useAdminPartnerLogosActions,
 } from "@/hooks/useAdminApi";
 
 export const Route = createFileRoute("/admin/site/publicites")({
@@ -16,27 +18,81 @@ export const Route = createFileRoute("/admin/site/publicites")({
 
 type Banner = { id: string; imageUrl: string; title: string | null; link: string | null; isActive: boolean };
 type Ad = { id: string; name: string; position: string; isActive: boolean };
+type PartnerLogo = { id: string; imageUrl: string; title: string | null; link: string | null; isActive: boolean };
 
 function AdminAdsPage() {
   const bannersQuery = useAdminBanners();
   const bannerActions = useAdminBannersActions();
   const adsQuery = useAdminAds();
   const adActions = useAdminAdsActions();
+  const partnerLogosQuery = useAdminPartnerLogos();
+  const partnerLogoActions = useAdminPartnerLogosActions();
 
   const [newBanner, setNewBanner] = useState({ imageUrl: "", title: "", link: "" });
   const [newAd, setNewAd] = useState({ name: "", position: "", code: "" });
+  const [newPartnerLogo, setNewPartnerLogo] = useState({ imageUrl: "", title: "", link: "" });
   const [deleteBanner, setDeleteBanner] = useState<Banner | null>(null);
   const [deleteAd, setDeleteAd] = useState<Ad | null>(null);
+  const [deletePartnerLogo, setDeletePartnerLogo] = useState<PartnerLogo | null>(null);
   const [notice, setNotice] = useState("");
 
   const banners = (bannersQuery.data?.data ?? []) as Banner[];
   const ads = (adsQuery.data?.data ?? []) as Ad[];
+  const partnerLogos = (partnerLogosQuery.data?.data ?? []) as PartnerLogo[];
 
   return (
     <AdminLayout title="Bannières et publicités" description="Emplacements, campagnes et carrousel d'accueil.">
       {notice && <div className="mb-4 rounded-lg bg-emerald-500/15 p-3 text-[13px] text-emerald-200">{notice}</div>}
 
       <div className="grid gap-6 xl:grid-cols-2">
+        <AdminCard>
+          <h2 className="mb-4 text-[18px] font-bold text-white">Logos partenaires</h2>
+          <div className="space-y-3">
+            {partnerLogos.length === 0 && <p className="text-[13px] text-slate-400">Aucun logo configuré.</p>}
+            {partnerLogos.map((logo) => (
+              <div key={logo.id} className="flex items-center gap-3 rounded-lg bg-white/5 p-3">
+                {logo.imageUrl && <img src={logo.imageUrl} alt="" className="h-10 w-20 rounded bg-white/10 object-contain p-1" />}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold text-white">{logo.title || "Sans titre"}</p>
+                  <p className="truncate text-[11px] text-slate-500">{logo.link || logo.imageUrl}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => partnerLogoActions.update.mutate({ id: logo.id, body: { isActive: !logo.isActive } })}
+                  className={`rounded-full px-3 py-1 text-[11px] font-bold ${logo.isActive ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-slate-400"}`}
+                >
+                  {logo.isActive ? "Actif" : "Inactif"}
+                </button>
+                <button type="button" onClick={() => setDeletePartnerLogo(logo)} className="rounded-full bg-red-500/80 px-3 py-1 text-[11px] font-bold text-white">
+                  Suppr.
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 space-y-3 border-t border-white/10 pt-4">
+            <p className="text-[13px] font-semibold text-white">Ajouter un logo</p>
+            <input value={newPartnerLogo.imageUrl} onChange={(event) => setNewPartnerLogo((current) => ({ ...current, imageUrl: event.target.value }))} placeholder="URL de l'image" className="h-10 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none" />
+            <div className="grid grid-cols-2 gap-3">
+              <input value={newPartnerLogo.title} onChange={(event) => setNewPartnerLogo((current) => ({ ...current, title: event.target.value }))} placeholder="Nom du partenaire" className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none" />
+              <input value={newPartnerLogo.link} onChange={(event) => setNewPartnerLogo((current) => ({ ...current, link: event.target.value }))} placeholder="Lien (optionnel)" className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none" />
+            </div>
+            <button
+              type="button"
+              disabled={partnerLogoActions.create.isPending || !newPartnerLogo.imageUrl.trim()}
+              onClick={() =>
+                partnerLogoActions.create.mutate(
+                  { imageUrl: newPartnerLogo.imageUrl.trim(), title: newPartnerLogo.title.trim() || undefined, link: newPartnerLogo.link.trim() || undefined, isActive: true },
+                  { onSuccess: () => { setNewPartnerLogo({ imageUrl: "", title: "", link: "" }); setNotice("Logo ajouté."); } },
+                )
+              }
+              className="rounded-full bg-emerald-400 px-4 py-2 text-[12px] font-bold text-[#111827] disabled:opacity-50"
+            >
+              Ajouter
+            </button>
+          </div>
+        </AdminCard>
+
         <AdminCard>
           <h2 className="mb-4 text-[18px] font-bold text-white">Carrousel d'accueil</h2>
           <div className="space-y-3">
@@ -157,6 +213,19 @@ function AdminAdsPage() {
         onConfirm={() => {
           if (!deleteAd) return;
           adActions.remove.mutate(deleteAd.id, { onSuccess: () => setDeleteAd(null) });
+        }}
+      />
+      <ConfirmDialog
+        open={Boolean(deletePartnerLogo)}
+        onOpenChange={(open) => !open && setDeletePartnerLogo(null)}
+        title="Supprimer ce logo ?"
+        description="Cette action est définitive."
+        danger
+        confirmLabel="Supprimer"
+        pending={partnerLogoActions.remove.isPending}
+        onConfirm={() => {
+          if (!deletePartnerLogo) return;
+          partnerLogoActions.remove.mutate(deletePartnerLogo.id, { onSuccess: () => setDeletePartnerLogo(null) });
         }}
       />
     </AdminLayout>

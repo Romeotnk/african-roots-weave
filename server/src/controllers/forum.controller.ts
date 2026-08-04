@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { ReportReasonCategory, Role } from "@prisma/client";
 import { prisma } from "../config/db.js";
 import { uploadBufferToCloudinary } from "../services/cloudinary.service.js";
 import { apiResponse } from "../utils/apiResponse.js";
@@ -378,10 +378,19 @@ export const report = asyncHandler(async (req, res) => {
   const targetId = String(req.body.targetId ?? "");
   const targetType = String(req.body.targetType ?? "");
   const reason = String(req.body.reason ?? "");
-  if (!targetId || !targetType || !reason) throw new ApiError(422, "targetId, targetType and reason are required");
+  const reasonCategoryRaw = typeof req.body.reasonCategory === "string" ? req.body.reasonCategory : undefined;
+  const reasonCategory = Object.values(ReportReasonCategory).includes(reasonCategoryRaw as ReportReasonCategory)
+    ? (reasonCategoryRaw as ReportReasonCategory)
+    : undefined;
+  // A predefined category or a free-text reason must be present — kept permissive
+  // (not requiring reasonCategory outright) so this shared endpoint (products,
+  // questions, answers, comments) doesn't break for any caller that only sends `reason`.
+  if (!targetId || !targetType || (!reason && !reasonCategory)) {
+    throw new ApiError(422, "targetId, targetType and a reason or reasonCategory are required");
+  }
 
   const reportItem = await prisma.report.create({
-    data: { targetId, targetType, reason, reporterId: req.user.id },
+    data: { targetId, targetType, reason, reasonCategory, reporterId: req.user.id },
   });
   const count = await prisma.report.count({
     where: { targetId, targetType },

@@ -1,14 +1,25 @@
 ﻿import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { BadgeCheck, Copy, Flag, Gavel, MapPin, Share2, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Copy, Eye, Flag, Gavel, MapPin, Share2, ShieldCheck } from "lucide-react";
 import type { Product } from "@/types";
 import { useProductBids, usePlaceProductBid } from "@/hooks/useApiCatalog";
 import { useCreateQuoteRequest } from "@/hooks/useQuotesApi";
 import { useForumReport } from "@/hooks/useForumApi";
+import type { ReportReasonCategory } from "@/lib/api/forum";
 import { RatingStars } from "./RatingStars";
 import { Badge } from "./Badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BuyProductPanel } from "./BuyProductPanel";
+import { SimilarProducts } from "./SimilarProducts";
+
+const REPORT_REASON_OPTIONS: { value: ReportReasonCategory; label: string }[] = [
+  { value: "FRAUDULENT_CONTENT", label: "Contenu frauduleux" },
+  { value: "PROHIBITED_ITEM", label: "Produit interdit" },
+  { value: "SCAM", label: "Arnaque / escroquerie" },
+  { value: "INAPPROPRIATE_CONTENT", label: "Contenu inapproprié" },
+  { value: "SPAM", label: "Spam" },
+  { value: "OTHER", label: "Autre" },
+];
 
 type ProductBid = { id: string; amount: number | string; bidder?: { firstName: string; lastName: string } };
 
@@ -70,7 +81,8 @@ export function ProductCard({ product }: { product: Product }) {
   const createQuoteRequest = useCreateQuoteRequest();
   const reportMutation = useForumReport();
   const [reportOpen, setReportOpen] = useState(false);
-  const [reportReason, setReportReason] = useState("");
+  const [reportReasonCategory, setReportReasonCategory] = useState<ReportReasonCategory | "">("");
+  const [reportDetail, setReportDetail] = useState("");
   const [reportNotice, setReportNotice] = useState("");
   const price = product.price;
   const originalPrice = (product as Product & { originalPrice?: number }).originalPrice;
@@ -102,17 +114,17 @@ export function ProductCard({ product }: { product: Product }) {
   };
 
   const submitReport = () => {
-    const reason = reportReason.trim();
-    if (reason.length < 10) {
-      setReportNotice("Décrivez le problème en au moins 10 caractères.");
+    if (!reportReasonCategory) {
+      setReportNotice("Choisissez un motif de signalement.");
       return;
     }
     reportMutation.mutate(
-      { targetId: product.id, targetType: "PRODUCT", reason },
+      { targetId: product.id, targetType: "PRODUCT", reasonCategory: reportReasonCategory, reason: reportDetail.trim() },
       {
         onSuccess: () => {
           setReportNotice("Signalement transmis à l'équipe de modération. Merci.");
-          setReportReason("");
+          setReportReasonCategory("");
+          setReportDetail("");
         },
         onError: (error) => setReportNotice(error instanceof Error ? error.message : "Connectez-vous pour signaler cette annonce."),
       },
@@ -168,7 +180,14 @@ export function ProductCard({ product }: { product: Product }) {
               </>
             )}
           </div>
-          <RatingStars rating={product.rating} reviewCount={product.reviewCount} />
+          <div className="flex items-center justify-between">
+            <RatingStars rating={product.rating} reviewCount={product.reviewCount} />
+            {typeof product.viewCount === "number" && product.viewCount > 0 && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-[var(--color-text-muted)]">
+                <Eye size={12} /> {product.viewCount}
+              </span>
+            )}
+          </div>
           <div className="flex flex-col gap-2 pt-1 sm:flex-row">
             <button type="button" onClick={() => setOpen(true)} className="flex-1 rounded-full border border-[var(--brand-border)] px-4 py-2 text-[13px] font-semibold">Voir</button>
             {product.quoteOnly ? (
@@ -203,7 +222,7 @@ export function ProductCard({ product }: { product: Product }) {
               <DialogTitle className="text-[24px] font-semibold sm:text-[30px]">{product.title}</DialogTitle>
               <DialogDescription>Produit détaillé et réservation directe auprès du vendeur.</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               <div className="rounded-2xl border p-4">
                 <p className="font-mono text-[12px] text-[var(--brand-primary)]">Prix</p>
                 <p className="mt-1 text-[18px] font-bold">{product.quoteOnly ? "Sur devis" : `${price.toLocaleString("fr-FR")} ${product.currency}`}</p>
@@ -211,6 +230,7 @@ export function ProductCard({ product }: { product: Product }) {
               <div className="rounded-2xl border p-4"><p className="font-mono text-[12px] text-[var(--brand-primary)]">Type</p><p className="mt-1 text-[18px] font-bold">{product.type}</p></div>
               <div className="rounded-2xl border p-4"><p className="font-mono text-[12px] text-[var(--brand-primary)]">Stock</p><p className={`mt-1 text-[18px] font-bold ${outOfStock ? "text-red-600" : ""}`}>{product.type === "digital" ? "Illimité" : outOfStock ? "Rupture de stock" : `${product.stock ?? "Disponible"}${typeof product.stock === "number" ? " en stock" : ""}`}</p></div>
               <div className="rounded-2xl border p-4"><p className="font-mono text-[12px] text-[var(--brand-primary)]">Localisation</p><p className="mt-1 text-[18px] font-bold">{product.location ?? "Afrique"}</p></div>
+              <div className="rounded-2xl border p-4"><p className="font-mono text-[12px] text-[var(--brand-primary)]">Vues</p><p className="mt-1 text-[18px] font-bold">{product.viewCount ?? 0}</p></div>
             </div>
             {product.auction && open && <AuctionBidPanel productId={product.id} basePrice={price} />}
             {!product.auction && !product.quoteOnly && product.type !== "service" && !outOfStock && open && (
@@ -234,6 +254,7 @@ export function ProductCard({ product }: { product: Product }) {
               <p className="font-mono text-[12px] text-[var(--brand-primary)]">Description</p>
               <p className="text-[14px] leading-7 text-[var(--color-text-secondary)]">{product.description ?? product.title}</p>
             </div>
+            {open && <SimilarProducts category={product.category} excludeId={product.id} />}
             <div className="grid gap-3 rounded-2xl border p-4 sm:p-5">
               <div>
                 <p className="font-mono text-[12px] text-[var(--brand-primary)]">Posologie</p>
@@ -301,11 +322,21 @@ export function ProductCard({ product }: { product: Product }) {
               </button>
               {reportOpen && (
                 <div className="mt-3 space-y-2">
+                  <select
+                    value={reportReasonCategory}
+                    onChange={(event) => setReportReasonCategory(event.target.value as ReportReasonCategory)}
+                    className="h-10 w-full rounded-lg border border-[var(--brand-border)] px-3 text-[13px]"
+                  >
+                    <option value="">Choisir un motif...</option>
+                    {REPORT_REASON_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
                   <textarea
                     rows={3}
-                    value={reportReason}
-                    onChange={(event) => setReportReason(event.target.value)}
-                    placeholder="Décrivez le problème (contenu frauduleux, produit interdit, arnaque...)"
+                    value={reportDetail}
+                    onChange={(event) => setReportDetail(event.target.value)}
+                    placeholder="Détail (facultatif)"
                     className="w-full rounded-lg border border-[var(--brand-border)] px-3 py-2 text-[13px]"
                   />
                   <button

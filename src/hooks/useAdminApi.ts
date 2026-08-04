@@ -10,11 +10,14 @@ import {
   broadcastAdminNotification,
   createAdminAd,
   createAdminBanner,
+  createAdminPartnerLogo,
   deleteAdminAd,
   deleteAdminBanner,
+  deleteAdminPartnerLogo,
   getAdminAds,
   getAdminAuditLog,
   getAdminBanners,
+  getAdminPartnerLogos,
   getAdminCommissionConfig,
   getAdminConfig,
   getAdminDashboard,
@@ -66,6 +69,7 @@ import {
   unbanAdminUser,
   updateAdminAd,
   updateAdminBanner,
+  updateAdminPartnerLogo,
   updateAdminCommissionConfig,
   updateAdminConfig,
   updateAdminSubscription,
@@ -92,6 +96,7 @@ export const adminKeys = {
   tickets: ["admin", "tickets"] as const,
   ads: ["admin", "ads"] as const,
   banners: ["admin", "banners"] as const,
+  partnerLogos: ["admin", "partner-logos"] as const,
   pages: ["admin", "pages"] as const,
   config: ["admin", "config"] as const,
   commissionConfig: ["admin", "commissions", "config"] as const,
@@ -176,6 +181,10 @@ export function useAdminAds() {
 
 export function useAdminBanners() {
   return useQuery({ queryKey: adminKeys.banners, queryFn: getAdminBanners, enabled: adminEnabled(), retry: false });
+}
+
+export function useAdminPartnerLogos() {
+  return useQuery({ queryKey: adminKeys.partnerLogos, queryFn: getAdminPartnerLogos, enabled: adminEnabled(), retry: false });
 }
 
 export function useAdminConfig() {
@@ -306,6 +315,19 @@ export function useAdminBannersActions() {
       onSuccess: refresh,
     }),
     remove: useMutation({ mutationFn: deleteAdminBanner, onSuccess: refresh }),
+  };
+}
+
+export function useAdminPartnerLogosActions() {
+  const queryClient = useQueryClient();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: adminKeys.partnerLogos });
+  return {
+    create: useMutation({ mutationFn: createAdminPartnerLogo, onSuccess: refresh }),
+    update: useMutation({
+      mutationFn: ({ id, body }: { id: string; body: Record<string, unknown> }) => updateAdminPartnerLogo(id, body),
+      onSuccess: refresh,
+    }),
+    remove: useMutation({ mutationFn: deleteAdminPartnerLogo, onSuccess: refresh }),
   };
 }
 

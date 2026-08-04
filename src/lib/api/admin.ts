@@ -119,6 +119,14 @@ export const updateAdminBanner = (id: string, body: Record<string, unknown>) =>
 export const deleteAdminBanner = (id: string) =>
   apiRequest<null>(`/admin/banners/${id}`, { method: "DELETE" });
 
+export const getAdminPartnerLogos = () => apiRequest<unknown[]>("/admin/partner-logos");
+export const createAdminPartnerLogo = (body: Record<string, unknown>) =>
+  apiRequest<unknown>("/admin/partner-logos", { method: "POST", body });
+export const updateAdminPartnerLogo = (id: string, body: Record<string, unknown>) =>
+  apiRequest<unknown>(`/admin/partner-logos/${id}`, { method: "PUT", body });
+export const deleteAdminPartnerLogo = (id: string) =>
+  apiRequest<null>(`/admin/partner-logos/${id}`, { method: "DELETE" });
+
 export const getAdminAds = () => apiRequest<unknown[]>("/admin/ads");
 export const createAdminAd = (body: Record<string, unknown>) =>
   apiRequest<unknown>("/admin/ads", { method: "POST", body });
@@ -177,6 +185,7 @@ export type AdminReport = {
   targetId: string;
   targetType: string;
   reason: string;
+  reasonCategory: "FRAUDULENT_CONTENT" | "PROHIBITED_ITEM" | "SCAM" | "INAPPROPRIATE_CONTENT" | "SPAM" | "OTHER" | null;
   status: "PENDING" | "REVIEWED" | "DISMISSED" | "ACTIONED";
   createdAt: string;
   reporter: { id: string; firstName: string; lastName: string; email: string };
