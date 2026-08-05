@@ -1,6 +1,6 @@
 import { apiRequest } from "./client";
 
-export type TaxonomyScope = "PROFESSIONAL_SPECIALTY" | "ARTICLE_CATEGORY";
+export type TaxonomyScope = "PROFESSIONAL_SPECIALTY" | "ARTICLE_CATEGORY" | "PRODUCT_CATEGORY";
 
 export type TaxonomyItem = {
   id: string;
@@ -8,6 +8,7 @@ export type TaxonomyItem = {
   name: string;
   slug: string;
   position: number;
+  parentId: string | null;
   createdAt: string;
 };
 
@@ -21,8 +22,8 @@ export const listAdminTaxonomy = async (scope: TaxonomyScope) => {
   return response.data ?? [];
 };
 
-export const createTaxonomy = (scope: TaxonomyScope, name: string) =>
-  apiRequest<TaxonomyItem>("/admin/taxonomy", { method: "POST", body: { scope, name } });
+export const createTaxonomy = (scope: TaxonomyScope, name: string, parentId?: string) =>
+  apiRequest<TaxonomyItem>("/admin/taxonomy", { method: "POST", body: { scope, name, parentId } });
 
 export const updateTaxonomy = (id: string, payload: { name?: string; position?: number }) =>
   apiRequest<TaxonomyItem>(`/admin/taxonomy/${id}`, { method: "PUT", body: payload });

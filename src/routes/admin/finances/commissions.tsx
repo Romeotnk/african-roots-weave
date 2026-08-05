@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminCommissionConfig, useUpdateAdminCommissionConfig } from "@/hooks/useAdminApi";
+import { useTaxonomy } from "@/hooks/useTaxonomyApi";
 
 export const Route = createFileRoute("/admin/finances/commissions")({
   head: () => ({ meta: [{ title: "Admin commissions - IWOSAN" }] }),
@@ -16,28 +17,16 @@ const fields: { key: "global" | "level1" | "level2" | "level3" | "affiliate"; la
   { key: "level3", label: "Reseau MLM niveau 3 (%)", fallback: "1" },
 ];
 
-// Same order as the MedCategory enum in server/prisma/schema.prisma.
-const categories: { enumValue: string; label: string }[] = [
-  { enumValue: "GYNECO_OBSTETRIQUE", label: "Gynéco-obstétriques" },
-  { enumValue: "GASTRO_INTESTINAL", label: "Gastro-intestinales" },
-  { enumValue: "MALADIES_ENFANCE", label: "Maladies de l'enfance" },
-  { enumValue: "ETATS_FEBRILES_ICTERES", label: "États fébriles/Ictères" },
-  { enumValue: "AFFECTIONS_CUTANEES", label: "Affections cutanées" },
-  { enumValue: "SYSTEME_NERVEUX", label: "Système nerveux" },
-  { enumValue: "OSTEO_ARTICULAIRE", label: "Ostéo-articulaire" },
-  { enumValue: "PULMONAIRE", label: "Pulmonaire" },
-  { enumValue: "URO_GENITAL", label: "Uro-génital" },
-  { enumValue: "ORL", label: "ORL" },
-  { enumValue: "OPHTALMOLOGIQUE", label: "Ophtalmologique" },
-  { enumValue: "BUCCO_DENTAIRE", label: "Bucco-dentaire" },
-  { enumValue: "CARDIO_VASCULAIRE", label: "Cardio-vasculaire" },
-  { enumValue: "STOMATOLOGIQUE", label: "Stomatologique" },
-  { enumValue: "MYSTIQUE", label: "Mystique" },
-];
-
 function AdminCommissionsPage() {
   const configQuery = useAdminCommissionConfig();
   const updateConfig = useUpdateAdminCommissionConfig();
+  const taxonomyQuery = useTaxonomy("PRODUCT_CATEGORY");
+  // Only subcategories carry commission-relevant granularity — the 4 parent
+  // groups are just organizational and aren't assigned to products directly.
+  const categories = useMemo(
+    () => (taxonomyQuery.data ?? []).filter((item) => item.parentId).map((item) => ({ enumValue: item.slug, label: item.name })),
+    [taxonomyQuery.data],
+  );
   const [values, setValues] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
 

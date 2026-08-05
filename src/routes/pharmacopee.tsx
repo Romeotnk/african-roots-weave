@@ -4,7 +4,7 @@ import { SearchBar } from "@/components/shared/SearchBar";
 import { PlantCard } from "@/components/shared/PlantCard";
 import { plants } from "@/data/plants";
 import { SectionHeader } from "@/components/shared/SectionHeader";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Leaf } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useMonographs } from "@/hooks/useContentApi";
 import { mapMonographsToPlants } from "@/lib/mappers/plantMonograph";
@@ -98,8 +98,8 @@ function Pharmacopee() {
               <img src={featured.image} className="w-full h-full object-cover" alt="" />
             </div>
             <div className="p-7 md:p-10">
-              <span className="inline-flex bg-[var(--brand-gold)] text-white text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
-                🌿 Plante de la semaine
+              <span className="inline-flex items-center gap-1.5 bg-[var(--brand-gold)] text-white text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+                <Leaf size={12} /> Plante de la semaine
               </span>
               <h2 className="mt-3 text-[28px] italic text-[var(--brand-primary)] font-semibold">
                 {featured.scientificName}

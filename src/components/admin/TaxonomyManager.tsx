@@ -6,6 +6,7 @@ import type { TaxonomyItem, TaxonomyScope } from "@/lib/api/taxonomy";
 const scopeLabels: Record<TaxonomyScope, string> = {
   PROFESSIONAL_SPECIALTY: "Spécialités professionnelles (annuaire)",
   ARTICLE_CATEGORY: "Catégories d'articles (blog)",
+  PRODUCT_CATEGORY: "Catégories produits (marketplace)",
 };
 
 export function TaxonomyManager() {
@@ -13,12 +14,16 @@ export function TaxonomyManager() {
   const taxonomyQuery = useAdminTaxonomy(scope);
   const { create, update, remove } = useTaxonomyActions(scope);
   const [newName, setNewName] = useState("");
+  const [newParentId, setNewParentId] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<TaxonomyItem | null>(null);
   const [notice, setNotice] = useState("");
 
   const items = taxonomyQuery.data ?? [];
+  const isHierarchical = scope === "PRODUCT_CATEGORY";
+  const topLevelItems = items.filter((item) => !item.parentId);
+  const childrenOf = (parentId: string) => items.filter((item) => item.parentId === parentId);
 
   return (
     <div>
@@ -37,21 +42,36 @@ export function TaxonomyManager() {
 
       {notice && <div className="mb-4 rounded-lg bg-emerald-500/15 p-3 text-[13px] text-emerald-200">{notice}</div>}
 
-      <div className="mb-5 flex gap-2">
+      <div className="mb-5 flex flex-wrap gap-2">
         <input
           value={newName}
           onChange={(event) => setNewName(event.target.value)}
-          placeholder="Nouvelle catégorie"
+          placeholder={isHierarchical ? "Nouvelle catégorie ou sous-catégorie" : "Nouvelle catégorie"}
           className="h-10 flex-1 rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none focus:border-emerald-400"
         />
+        {isHierarchical && (
+          <select
+            value={newParentId}
+            onChange={(event) => setNewParentId(event.target.value)}
+            className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none focus:border-emerald-400"
+          >
+            <option value="">Catégorie principale</option>
+            {topLevelItems.map((parent) => (
+              <option key={parent.id} value={parent.id}>Sous-catégorie de : {parent.name}</option>
+            ))}
+          </select>
+        )}
         <button
           type="button"
           disabled={create.isPending || newName.trim().length < 2}
           onClick={() =>
-            create.mutate(newName.trim(), {
-              onSuccess: () => { setNewName(""); setNotice("Catégorie ajoutée."); },
-              onError: (error) => setNotice(error instanceof Error ? error.message : "Impossible d'ajouter cette catégorie."),
-            })
+            create.mutate(
+              { name: newName.trim(), parentId: newParentId || undefined },
+              {
+                onSuccess: () => { setNewName(""); setNewParentId(""); setNotice("Catégorie ajoutée."); },
+                onError: (error) => setNotice(error instanceof Error ? error.message : "Impossible d'ajouter cette catégorie."),
+              },
+            )
           }
           className="rounded-full bg-emerald-400 px-4 py-2 text-[12px] font-bold text-[#111827] disabled:opacity-50"
         >
@@ -63,52 +83,33 @@ export function TaxonomyManager() {
       {!taxonomyQuery.isLoading && items.length === 0 && <p className="text-[13px] text-slate-400">Aucune catégorie pour le moment.</p>}
 
       <div className="space-y-2">
-        {items.map((item) => (
-          <div key={item.id} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-4 py-2">
-            {editingId === item.id ? (
-              <input
-                value={editingName}
-                onChange={(event) => setEditingName(event.target.value)}
-                className="h-9 flex-1 rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none focus:border-emerald-400"
-              />
-            ) : (
-              <span className="text-[13px] font-semibold text-white">{item.name}</span>
-            )}
-            <div className="flex gap-2">
-              {editingId === item.id ? (
-                <>
-                  <button
-                    type="button"
-                    disabled={update.isPending}
-                    onClick={() =>
-                      update.mutate(
-                        { id: item.id, name: editingName.trim() },
-                        { onSuccess: () => { setEditingId(null); setNotice("Catégorie mise à jour."); } },
-                      )
-                    }
-                    className="rounded-full bg-emerald-400 px-3 py-1 text-[12px] font-bold text-[#111827] disabled:opacity-50"
-                  >
-                    Enregistrer
-                  </button>
-                  <button type="button" onClick={() => setEditingId(null)} className="rounded-full bg-white/10 px-3 py-1 text-[12px] font-bold text-slate-200">
-                    Annuler
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => { setEditingId(item.id); setEditingName(item.name); }}
-                    className="rounded-full bg-white/10 px-3 py-1 text-[12px] font-bold text-slate-200"
-                  >
-                    Modifier
-                  </button>
-                  <button type="button" onClick={() => setDeleteTarget(item)} className="rounded-full bg-red-500/80 px-3 py-1 text-[12px] font-bold text-white">
-                    Supprimer
-                  </button>
-                </>
-              )}
-            </div>
+        {(isHierarchical ? topLevelItems : items).map((item) => (
+          <div key={item.id}>
+            <TaxonomyRow
+              item={item}
+              editingId={editingId}
+              editingName={editingName}
+              setEditingId={setEditingId}
+              setEditingName={setEditingName}
+              update={update}
+              setDeleteTarget={setDeleteTarget}
+              setNotice={setNotice}
+            />
+            {isHierarchical &&
+              childrenOf(item.id).map((child) => (
+                <div key={child.id} className="ml-6 mt-2">
+                  <TaxonomyRow
+                    item={child}
+                    editingId={editingId}
+                    editingName={editingName}
+                    setEditingId={setEditingId}
+                    setEditingName={setEditingName}
+                    update={update}
+                    setDeleteTarget={setDeleteTarget}
+                    setNotice={setNotice}
+                  />
+                </div>
+              ))}
           </div>
         ))}
       </div>
@@ -117,7 +118,11 @@ export function TaxonomyManager() {
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
         title={`Supprimer « ${deleteTarget?.name ?? ""} » ?`}
-        description="Les contenus déjà classés dans cette catégorie garderont leur valeur actuelle en texte, mais elle ne sera plus proposée dans les formulaires."
+        description={
+          isHierarchical && deleteTarget && childrenOf(deleteTarget.id).length > 0
+            ? `Cette catégorie a ${childrenOf(deleteTarget.id).length} sous-catégorie(s) — elles seront supprimées avec elle. Les produits déjà classés dedans garderont leur valeur actuelle en texte, mais ne seront plus proposés dans les formulaires.`
+            : "Les contenus déjà classés dans cette catégorie garderont leur valeur actuelle en texte, mais elle ne sera plus proposée dans les formulaires."
+        }
         danger
         confirmLabel="Supprimer"
         pending={remove.isPending}
@@ -126,6 +131,76 @@ export function TaxonomyManager() {
           remove.mutate(deleteTarget.id, { onSuccess: () => { setNotice("Catégorie supprimée."); setDeleteTarget(null); } });
         }}
       />
+    </div>
+  );
+}
+
+function TaxonomyRow({
+  item,
+  editingId,
+  editingName,
+  setEditingId,
+  setEditingName,
+  update,
+  setDeleteTarget,
+  setNotice,
+}: {
+  item: TaxonomyItem;
+  editingId: string | null;
+  editingName: string;
+  setEditingId: (id: string | null) => void;
+  setEditingName: (name: string) => void;
+  update: ReturnType<typeof useTaxonomyActions>["update"];
+  setDeleteTarget: (item: TaxonomyItem) => void;
+  setNotice: (message: string) => void;
+}) {
+  const isEditing = editingId === item.id;
+  return (
+    <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] px-4 py-2">
+      {isEditing ? (
+        <input
+          value={editingName}
+          onChange={(event) => setEditingName(event.target.value)}
+          className="h-9 flex-1 rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none focus:border-emerald-400"
+        />
+      ) : (
+        <span className="text-[13px] font-semibold text-white">{item.name}</span>
+      )}
+      <div className="flex gap-2">
+        {isEditing ? (
+          <>
+            <button
+              type="button"
+              disabled={update.isPending}
+              onClick={() =>
+                update.mutate(
+                  { id: item.id, name: editingName.trim() },
+                  { onSuccess: () => { setEditingId(null); setNotice("Catégorie mise à jour."); } },
+                )
+              }
+              className="rounded-full bg-emerald-400 px-3 py-1 text-[12px] font-bold text-[#111827] disabled:opacity-50"
+            >
+              Enregistrer
+            </button>
+            <button type="button" onClick={() => setEditingId(null)} className="rounded-full bg-white/10 px-3 py-1 text-[12px] font-bold text-slate-200">
+              Annuler
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => { setEditingId(item.id); setEditingName(item.name); }}
+              className="rounded-full bg-white/10 px-3 py-1 text-[12px] font-bold text-slate-200"
+            >
+              Modifier
+            </button>
+            <button type="button" onClick={() => setDeleteTarget(item)} className="rounded-full bg-red-500/80 px-3 py-1 text-[12px] font-bold text-white">
+              Supprimer
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }

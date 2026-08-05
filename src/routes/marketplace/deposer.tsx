@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -23,6 +23,7 @@ import { Switch } from "@/components/ui/switch";
 import { CountrySelect } from "@/components/shared/CountrySelect";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { useCreateProduct, useUploadProductImages } from "@/hooks/useApiCatalog";
+import { useTaxonomy } from "@/hooks/useTaxonomyApi";
 import type { Product } from "@/types";
 
 export const Route = createFileRoute("/marketplace/deposer")({
@@ -43,43 +44,6 @@ const productTypes = [
   { id: "digital", label: "Digital", desc: "PDF, formation, fichier ou ressource téléchargeable.", icon: FileArchive },
 ] as const;
 
-const medicalCategories = [
-  "Gynéco-obstétriques",
-  "Gastro-intestinales",
-  "Maladies de l'enfance",
-  "États fébriles/Ictères",
-  "Affections cutanées",
-  "Système nerveux",
-  "Ostéo-articulaire",
-  "Pulmonaire",
-  "Uro-génital",
-  "ORL",
-  "Ophtalmologique",
-  "Bucco-dentaire",
-  "Cardio-vasculaire",
-  "Stomatologique",
-  "Mystique",
-];
-
-// Same order as the `MedCategory` enum in server/prisma/schema.prisma.
-const medicalCategoryEnum = [
-  "GYNECO_OBSTETRIQUE",
-  "GASTRO_INTESTINAL",
-  "MALADIES_ENFANCE",
-  "ETATS_FEBRILES_ICTERES",
-  "AFFECTIONS_CUTANEES",
-  "SYSTEME_NERVEUX",
-  "OSTEO_ARTICULAIRE",
-  "PULMONAIRE",
-  "URO_GENITAL",
-  "ORL",
-  "OPHTALMOLOGIQUE",
-  "BUCCO_DENTAIRE",
-  "CARDIO_VASCULAIRE",
-  "STOMATOLOGIQUE",
-  "MYSTIQUE",
-];
-
 const productTypeEnum = { physical: "PHYSICAL", service: "SERVICE", digital: "DIGITAL" } as const;
 
 const steps = ["Base", "Localisation", "Médias", "Options", "Récapitulatif"];
@@ -88,7 +52,28 @@ function DepositListing() {
   const [step, setStep] = useState(0);
   const [title, setTitle] = useState("Tisane digestive au kinkeliba");
   const [type, setType] = useState<(typeof productTypes)[number]["id"]>("physical");
-  const [category, setCategory] = useState(medicalCategories[0]);
+  const taxonomyQuery = useTaxonomy("PRODUCT_CATEGORY");
+  const allCategories = useMemo(() => taxonomyQuery.data ?? [], [taxonomyQuery.data]);
+  const parentCategories = useMemo(() => allCategories.filter((item) => !item.parentId), [allCategories]);
+  const [parentCategoryId, setParentCategoryId] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const subcategories = useMemo(
+    () => allCategories.filter((item) => item.parentId === parentCategoryId),
+    [allCategories, parentCategoryId],
+  );
+  // Default to the first parent/subcategory once the taxonomy has loaded, so
+  // the form always has a valid selection without forcing the seller to pick
+  // one manually if they don't care which category applies.
+  useEffect(() => {
+    if (parentCategoryId || parentCategories.length === 0) return;
+    setParentCategoryId(parentCategories[0].id);
+  }, [parentCategories, parentCategoryId]);
+  useEffect(() => {
+    if (subcategories.length === 0) return;
+    if (categoryId && subcategories.some((item) => item.id === categoryId)) return;
+    setCategoryId(subcategories[0].id);
+  }, [subcategories, categoryId]);
+  const selectedCategory = allCategories.find((item) => item.id === categoryId);
   const [description, setDescription] = useState(
     "Préparation traditionnelle documentée, issue de feuilles sélectionnées et séchées à l'ombre.",
   );
@@ -120,7 +105,8 @@ function DepositListing() {
     () => ({
       id: "preview",
       title: title || "Titre de l'annonce",
-      category,
+      category: selectedCategory?.slug ?? "",
+      categoryLabel: selectedCategory?.name ?? "Catégorie",
       type,
       price: Number(price) || 0,
       currency,
@@ -131,7 +117,7 @@ function DepositListing() {
       rating: 0,
       reviewCount: 0,
     }),
-    [category, currency, media, price, title, type],
+    [selectedCategory, currency, media, price, title, type],
   );
 
   const handleFiles = (files: FileList | null) => {
@@ -179,6 +165,10 @@ function DepositListing() {
       return;
     }
     setFormError("");
+    if (!selectedCategory) {
+      setFormError("Choisissez une catégorie pour votre annonce.");
+      return;
+    }
     if (!terms || !salesPolicy) {
       setConfirmation("Veuillez accepter les CGU et la politique de vente avant publication.");
       return;
@@ -189,7 +179,7 @@ function DepositListing() {
         title,
         description,
         price: quoteRequest ? 0 : Number(price),
-        category: medicalCategoryEnum[medicalCategories.indexOf(category)] ?? medicalCategoryEnum[0],
+        category: selectedCategory?.slug ?? "",
         type: productTypeEnum[type],
         stock: type === "physical" ? Number(quantity) || 0 : undefined,
         fileUrl: type === "digital" ? digitalUrl : undefined,
@@ -308,18 +298,31 @@ function DepositListing() {
                   </div>
 
                   <div>
-                    <p className="text-[13px] font-semibold">Catégorie médicale</p>
-                    <div className="mt-3 grid sm:grid-cols-2 xl:grid-cols-3 gap-2">
-                      {medicalCategories.map((item) => (
+                    <p className="text-[13px] font-semibold">Catégorie</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {parentCategories.map((parent) => (
                         <button
-                          key={item}
-                          onClick={() => setCategory(item)}
-                          className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-[13px] ${category === item ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] font-semibold text-[var(--brand-primary)]" : "border-[var(--brand-border)]"}`}
+                          key={parent.id}
+                          onClick={() => { setParentCategoryId(parent.id); setCategoryId(""); }}
+                          className={`rounded-full px-4 py-2 text-[13px] font-semibold ${parentCategoryId === parent.id ? "bg-[var(--brand-primary)] text-white" : "border border-[var(--brand-border)]"}`}
                         >
-                          <Leaf size={15} /> {item}
+                          {parent.name}
                         </button>
                       ))}
                     </div>
+                    {subcategories.length > 0 && (
+                      <div className="mt-3 grid sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                        {subcategories.map((item) => (
+                          <button
+                            key={item.id}
+                            onClick={() => setCategoryId(item.id)}
+                            className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-[13px] ${categoryId === item.id ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] font-semibold text-[var(--brand-primary)]" : "border-[var(--brand-border)]"}`}
+                          >
+                            <Leaf size={15} /> {item.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -558,7 +561,7 @@ function DepositListing() {
                       <h2 className="font-bold">Récapitulatif</h2>
                       <dl className="mt-3 grid sm:grid-cols-2 gap-3 text-[13px]">
                         <div><dt className="text-[var(--color-text-muted)]">Titre</dt><dd className="font-semibold">{title}</dd></div>
-                        <div><dt className="text-[var(--color-text-muted)]">Catégorie</dt><dd className="font-semibold">{category}</dd></div>
+                        <div><dt className="text-[var(--color-text-muted)]">Catégorie</dt><dd className="font-semibold">{selectedCategory?.name ?? "—"}</dd></div>
                         <div><dt className="text-[var(--color-text-muted)]">Localisation</dt><dd className="font-semibold">{city}</dd></div>
                         <div><dt className="text-[var(--color-text-muted)]">Commission</dt><dd className="font-semibold">{estimatedCommission.toLocaleString("fr-FR")} {currency}</dd></div>
                       </dl>

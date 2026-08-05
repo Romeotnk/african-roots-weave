@@ -1,4 +1,4 @@
-import { MedCategory, Prisma, ProductType, Role } from "@prisma/client";
+import { Prisma, ProductType, Role } from "@prisma/client";
 import { prisma } from "../config/db.js";
 import { uploadBufferToCloudinary } from "../services/cloudinary.service.js";
 import { apiResponse } from "../utils/apiResponse.js";
@@ -67,19 +67,53 @@ const productSelect = {
 
 const canModerateProducts = (role: Role) => role === Role.SUPER_ADMIN || role === Role.ADMIN;
 
+// `Product.category` stores a Taxonomy slug (scope: PRODUCT_CATEGORY), not a
+// display name — resolve it to a human label before returning products to the
+// client, same short-TTL-cache pattern as getPublicSiteConfig (this endpoint
+// is hit on every marketplace page load, and the category tree rarely changes).
+const CATEGORY_LABEL_CACHE_TTL_MS = 60_000;
+let categoryLabelCache: { map: Map<string, string>; expiresAt: number } | null = null;
+
+const getCategoryLabelMap = async () => {
+  const now = Date.now();
+  if (categoryLabelCache && categoryLabelCache.expiresAt > now) return categoryLabelCache.map;
+  const rows = await prisma.taxonomy.findMany({ where: { scope: "PRODUCT_CATEGORY" }, select: { slug: true, name: true } });
+  const map = new Map(rows.map((row) => [row.slug, row.name]));
+  categoryLabelCache = { map, expiresAt: now + CATEGORY_LABEL_CACHE_TTL_MS };
+  return map;
+};
+
+const withCategoryLabel = async <T extends { category: string }>(product: T) => {
+  const labels = await getCategoryLabelMap();
+  return { ...product, categoryLabel: labels.get(product.category) ?? product.category };
+};
+
+const withCategoryLabels = async <T extends { category: string }>(products: T[]) => {
+  const labels = await getCategoryLabelMap();
+  return products.map((product) => ({ ...product, categoryLabel: labels.get(product.category) ?? product.category }));
+};
+
 export const listProducts = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
   const minPrice = req.query.minPrice ? new Prisma.Decimal(String(req.query.minPrice)) : undefined;
   const maxPrice = req.query.maxPrice ? new Prisma.Decimal(String(req.query.maxPrice)) : undefined;
   const sort = String(req.query.sort ?? "newest");
 
+  // `category` matches one exact taxonomy slug (a subcategory, typically);
+  // `categories` (comma-separated) matches any of several — used when browsing
+  // a top-level category, where the frontend resolves it to its children's slugs.
+  const categorySlugs =
+    typeof req.query.categories === "string"
+      ? req.query.categories.split(",").map((value) => value.trim()).filter(Boolean)
+      : typeof req.query.category === "string" && req.query.category
+        ? [req.query.category]
+        : undefined;
+
   const where: Prisma.ProductWhereInput = {
     isActive: true,
     isApproved: true,
     ...notExpired(),
-    category: Object.values(MedCategory).includes(req.query.category as MedCategory)
-      ? (req.query.category as MedCategory)
-      : undefined,
+    category: categorySlugs ? { in: categorySlugs } : undefined,
     type: Object.values(ProductType).includes(req.query.type as ProductType)
       ? (req.query.type as ProductType)
       : undefined,
@@ -113,7 +147,7 @@ export const listProducts = asyncHandler(async (req, res) => {
     prisma.product.count({ where }),
   ]);
 
-  res.json(apiResponse(true, products, "Products retrieved", paginationMeta(page, limit, total)));
+  res.json(apiResponse(true, await withCategoryLabels(products), "Products retrieved", paginationMeta(page, limit, total)));
 });
 
 export const listMyProducts = asyncHandler(async (req, res) => {
@@ -131,7 +165,7 @@ export const listMyProducts = asyncHandler(async (req, res) => {
     prisma.product.count({ where: { sellerId: req.user.id } }),
   ]);
 
-  res.json(apiResponse(true, products, "My products retrieved", paginationMeta(page, limit, total)));
+  res.json(apiResponse(true, await withCategoryLabels(products), "My products retrieved", paginationMeta(page, limit, total)));
 });
 
 export const getProductBySlug = asyncHandler(async (req, res) => {
@@ -143,7 +177,7 @@ export const getProductBySlug = asyncHandler(async (req, res) => {
 
   await prisma.product.update({ where: { id: product.id }, data: { viewCount: { increment: 1 } } });
 
-  res.json(apiResponse(true, { ...product, viewCount: product.viewCount + 1 }, "Product retrieved"));
+  res.json(apiResponse(true, await withCategoryLabel({ ...product, viewCount: product.viewCount + 1 }), "Product retrieved"));
 });
 
 // Sellers without a Subscription row are on the implicit FREE plan.

@@ -71,9 +71,9 @@ function Formations() {
           <p className="mb-5 text-[14px] text-[var(--color-text-muted)]"><strong className="text-[var(--color-text-primary)]">{filtered.length}</strong> formations</p>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((course) => (
-              <article key={course.id} className="flex flex-col overflow-hidden rounded-[12px] border border-[var(--brand-border-light)] bg-white shadow-iwosan-sm">
-                <div className="relative h-[180px] overflow-hidden">
-                  <img src={course.image} className="h-full w-full object-cover" alt="" />
+              <article key={course.id} className="flex flex-col overflow-hidden rounded-[20px] border border-[var(--brand-border-light)] bg-white shadow-iwosan-sm card-hover">
+                <div className="relative h-[180px] overflow-hidden bg-[var(--brand-surface-alt)]">
+                  <img src={course.image} className="h-full w-full object-cover" alt="" loading="lazy" decoding="async" />
                   <span className="absolute left-3 top-3 rounded bg-white/95 px-2 py-1 text-[11px] font-bold uppercase tracking-wider">{course.level}</span>
                 </div>
                 <div className="flex flex-1 flex-col p-4">

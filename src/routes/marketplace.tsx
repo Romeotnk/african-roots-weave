@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Bell, ChevronDown, Grid2X2, List, Map, MapPin, Navigation, Star, X } from "lucide-react";
+import { Bell, ChevronDown, Grid2X2, List, Map as MapIcon, MapPin, Navigation, Star, X } from "lucide-react";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { ProductCard } from "@/components/shared/ProductCard";
@@ -15,6 +15,7 @@ import { AdSlot } from "@/components/shared/AdSlot";
 import { LeafletMap, type MapMarker } from "@/components/shared/LeafletMap";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSavedSearchActions } from "@/hooks/useSavedSearchesApi";
+import { useTaxonomy } from "@/hooks/useTaxonomyApi";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
@@ -84,22 +85,35 @@ function Marketplace() {
 
   const query = useMemo(() => {
     const params = new URLSearchParams();
-    if (selectedCategories[0]) params.set("category", selectedCategories[0]);
+    if (selectedCategories.length > 0) params.set("categories", selectedCategories.join(","));
     if (selectedTypes[0]) params.set("type", selectedTypes[0]);
     if (sort) params.set("sort", sort);
     params.set("limit", "24");
     return params;
   }, [selectedCategories, selectedTypes, sort]);
 
-  const categories = useMemo(() => {
-    const counts = items.reduce<Record<string, number>>((acc, product) => {
-      acc[product.category] = (acc[product.category] ?? 0) + 1;
-      return acc;
-    }, {});
-    return Object.entries(counts)
-      .sort(([a], [b]) => a.localeCompare(b, "fr"))
-      .map(([label, count]) => ({ label, value: label, count }));
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    items.forEach((product) => counts.set(product.category, (counts.get(product.category) ?? 0) + 1));
+    return counts;
   }, [items]);
+  // Backward-compat shape for the active-filter chips, which just need value+label.
+  const categories = useMemo(
+    () =>
+      [...categoryCounts.entries()].map(([value, count]) => {
+        const match = items.find((product) => product.category === value);
+        return { value, count, label: match?.categoryLabel ?? value };
+      }),
+    [categoryCounts, items],
+  );
+
+  const categoryTaxonomyQuery = useTaxonomy("PRODUCT_CATEGORY");
+  const categoryTree = useMemo(() => {
+    const all = categoryTaxonomyQuery.data ?? [];
+    return all
+      .filter((item) => !item.parentId)
+      .map((parent) => ({ ...parent, children: all.filter((child) => child.parentId === parent.id) }));
+  }, [categoryTaxonomyQuery.data]);
 
   const countries = useMemo(
     () => Array.from(new Set(items.map((product) => product.country).filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b), "fr")),
@@ -143,7 +157,7 @@ function Marketplace() {
     const filtered = items.filter((product) => {
       const matchesSearch =
         !normalizedSearch ||
-        [product.title, product.category, product.sellerName, product.type, product.location, product.country]
+        [product.title, product.categoryLabel ?? product.category, product.sellerName, product.type, product.location, product.country]
           .join(" ")
           .toLowerCase()
           .includes(normalizedSearch);
@@ -268,6 +282,13 @@ function Marketplace() {
     );
   };
 
+  const toggleCategoryGroup = (childSlugs: string[]) => {
+    const allSelected = childSlugs.every((slug) => selectedCategories.includes(slug));
+    setSelectedCategories((current) =>
+      allSelected ? current.filter((slug) => !childSlugs.includes(slug)) : [...new Set([...current, ...childSlugs])],
+    );
+  };
+
   const toggleType = (value: Product["type"]) => {
     setSelectedTypes((current) =>
       current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
@@ -356,19 +377,39 @@ function Marketplace() {
               <summary className="font-semibold text-[14px] cursor-pointer flex items-center justify-between">
                 {t("marketplace.filters.category")} <ChevronDown size={14} />
               </summary>
-              <div className="mt-3 space-y-2 max-h-72 overflow-y-auto pr-2">
-                {categories.map((item) => (
-                  <label key={item.value} className="flex items-center gap-2 text-[13px] cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedCategories.includes(item.value)}
-                      onChange={() => toggleCategory(item.value)}
-                      className="accent-[var(--brand-primary)]"
-                    />
-                    <span className="flex-1 text-[var(--color-text-secondary)]">{item.label}</span>
-                    <span className="text-[11px] text-[var(--color-text-muted)]">{item.count}</span>
-                  </label>
-                ))}
+              <div className="mt-3 space-y-3 max-h-96 overflow-y-auto pr-2">
+                {categoryTree.map((parent) => {
+                  const childSlugs = parent.children.map((child) => child.slug);
+                  const groupCount = childSlugs.reduce((sum, slug) => sum + (categoryCounts.get(slug) ?? 0), 0);
+                  return (
+                    <div key={parent.id}>
+                      <label className="flex items-center gap-2 text-[13px] font-bold cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={childSlugs.length > 0 && childSlugs.every((slug) => selectedCategories.includes(slug))}
+                          onChange={() => toggleCategoryGroup(childSlugs)}
+                          className="accent-[var(--brand-primary)]"
+                        />
+                        <span className="flex-1 text-[var(--color-text-primary)]">{parent.name}</span>
+                        <span className="text-[11px] font-normal text-[var(--color-text-muted)]">{groupCount}</span>
+                      </label>
+                      <div className="mt-1.5 ml-5 space-y-1.5">
+                        {parent.children.map((child) => (
+                          <label key={child.id} className="flex items-center gap-2 text-[13px] cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectedCategories.includes(child.slug)}
+                              onChange={() => toggleCategory(child.slug)}
+                              className="accent-[var(--brand-primary)]"
+                            />
+                            <span className="flex-1 text-[var(--color-text-secondary)]">{child.name}</span>
+                            <span className="text-[11px] text-[var(--color-text-muted)]">{categoryCounts.get(child.slug) ?? 0}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </details>
             <details className="border-t border-[var(--brand-border-light)] py-4">
@@ -545,7 +586,7 @@ function Marketplace() {
                     onClick={() => setViewMode("map")}
                     className={`inline-flex items-center gap-1 rounded-full px-3 text-[12px] font-semibold ${viewMode === "map" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-secondary)]"}`}
                   >
-                    <Map size={14} /> {t("marketplace.results.map")}
+                    <MapIcon size={14} /> {t("marketplace.results.map")}
                   </button>
                 </div>
                 <select
@@ -582,7 +623,7 @@ function Marketplace() {
                     }}
                     className="inline-flex items-center gap-1 rounded-full bg-[var(--brand-primary-subtle)] px-3 py-1 text-[12px] font-semibold text-[var(--brand-primary)]"
                   >
-                    {filter} <X size={12} />
+                    {categories.find((item) => item.value === filter)?.label ?? filter} <X size={12} />
                   </button>
                 ))}
                 {(priceMin || priceMax) && (

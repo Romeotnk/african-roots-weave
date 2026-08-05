@@ -244,7 +244,7 @@ model Product {
   slug           String      @unique
   description    String      @db.Text
   price          Decimal     @db.Decimal(10, 2)
-  category       MedCategory
+  category       String
   type           ProductType
   images         String[]
   stock          Int         @default(0)
@@ -518,10 +518,15 @@ model Taxonomy {
   name      String
   slug      String
   position  Int      @default(0)
+  parentId  String?
   createdAt DateTime @default(now())
+
+  parent   Taxonomy?  @relation("TaxonomyHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children Taxonomy[] @relation("TaxonomyHierarchy")
 
   @@unique([scope, slug])
   @@index([scope])
+  @@index([parentId])
 }
 
 model Answer {
@@ -1023,24 +1028,6 @@ enum KycStatus {
   SUBMITTED
   VERIFIED
   REJECTED
-}
-
-enum MedCategory {
-  GYNECO_OBSTETRIQUE
-  GASTRO_INTESTINAL
-  MALADIES_ENFANCE
-  ETATS_FEBRILES_ICTERES
-  AFFECTIONS_CUTANEES
-  SYSTEME_NERVEUX
-  OSTEO_ARTICULAIRE
-  PULMONAIRE
-  URO_GENITAL
-  ORL
-  OPHTALMOLOGIQUE
-  BUCCO_DENTAIRE
-  CARDIO_VASCULAIRE
-  STOMATOLOGIQUE
-  MYSTIQUE
 }
 
 enum ProductType {

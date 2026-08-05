@@ -7,17 +7,18 @@ export function PlantCard({ plant, dark = false }: { plant: Plant; dark?: boolea
   return (
     <article
       className={cn(
-        "rounded-[12px] overflow-hidden border card-hover flex flex-col",
+        "rounded-[20px] overflow-hidden border card-hover flex flex-col",
         dark
           ? "bg-[var(--color-surface)] border-[var(--brand-border)] text-[var(--color-text-primary)]"
           : "bg-[var(--color-surface)] border-[var(--brand-border-light)] shadow-iwosan-sm",
       )}
     >
-      <div className="relative h-[200px] overflow-hidden">
+      <div className="relative h-[200px] overflow-hidden bg-[var(--brand-surface-alt)]">
         <img
           src={plant.image}
           alt={plant.scientificName}
           loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[var(--brand-primary-dark)]/60 to-transparent" />

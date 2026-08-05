@@ -68,7 +68,7 @@ export const getPublicAds = asyncHandler(async (req, res) => {
   res.json(apiResponse(true, ads, "Ads retrieved"));
 });
 
-const PUBLIC_TAXONOMY_SCOPES = ["PROFESSIONAL_SPECIALTY", "ARTICLE_CATEGORY"];
+const PUBLIC_TAXONOMY_SCOPES = ["PROFESSIONAL_SPECIALTY", "ARTICLE_CATEGORY", "PRODUCT_CATEGORY"];
 
 export const getPublicTaxonomy = asyncHandler(async (req, res) => {
   const scope = typeof req.query.scope === "string" ? req.query.scope : "";
@@ -77,7 +77,7 @@ export const getPublicTaxonomy = asyncHandler(async (req, res) => {
   const items = await prisma.taxonomy.findMany({
     where: { scope },
     orderBy: [{ position: "asc" }, { name: "asc" }],
-    select: { id: true, name: true, slug: true },
+    select: { id: true, name: true, slug: true, parentId: true },
   });
   res.json(apiResponse(true, items, "Taxonomy retrieved"));
 });

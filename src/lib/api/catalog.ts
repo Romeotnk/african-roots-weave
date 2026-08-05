@@ -9,6 +9,7 @@ type BackendProduct = {
   title: string;
   description?: string;
   category: string;
+  categoryLabel?: string;
   type: "PHYSICAL" | "SERVICE" | "DIGITAL";
   price: string | number;
   images: string[];
@@ -141,7 +142,8 @@ const asList = (value: unknown): unknown[] => {
 export const toProduct = (product: BackendProduct): Product => ({
   id: product.id,
   title: product.title,
-  category: product.category.replaceAll("_", " "),
+  category: product.category,
+  categoryLabel: product.categoryLabel ?? product.category,
   type: productTypeMap[product.type],
   price: Number(product.price),
   currency: "FCFA",
@@ -242,7 +244,7 @@ export const getProfessionalById = async (id: string) => {
 export const toMyProduct = (product: BackendProduct): MyProduct => ({
   id: product.id,
   title: product.title,
-  category: product.category.replaceAll("_", " "),
+  category: product.categoryLabel ?? product.category,
   type: productTypeMap[product.type],
   price: Number(product.price),
   stock: product.stock ?? 0,

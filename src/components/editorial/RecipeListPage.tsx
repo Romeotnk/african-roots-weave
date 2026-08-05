@@ -58,6 +58,12 @@ export function RecipeListPage() {
   );
   const allRecipes = apiRecipes.length > 0 ? apiRecipes : recipes;
 
+  // Hide themes with no recipes yet instead of advertising a "0 recettes" dead end.
+  const populatedThemes = useMemo(
+    () => themes.filter((theme) => allRecipes.some((recipe) => recipe.type === theme.name)),
+    [allRecipes],
+  );
+
   const filteredRecipes = useMemo(() => {
     const normalized = debouncedSearch.trim().toLowerCase();
     return allRecipes.filter((recipe) => {
@@ -88,11 +94,11 @@ export function RecipeListPage() {
         <div className="container-iwosan">
           <h2 className="mb-8 text-[28px]">Parcourir par theme</h2>
           <div className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {themes.map((theme) => (
+            {populatedThemes.map((theme) => (
               <button
                 key={theme.name}
                 onClick={() => setType((current) => (current === theme.name ? "Toutes" : theme.name))}
-                className={`rounded-[12px] border p-6 text-left transition ${
+                className={`rounded-[20px] border p-6 text-left transition card-hover ${
                   type === theme.name ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)]" : "border-[var(--brand-border-light)] bg-white"
                 }`}
               >

@@ -81,6 +81,7 @@ export interface Product {
   id: string;
   title: string;
   category: string;
+  categoryLabel?: string;
   type: "physical" | "service" | "digital";
   price: number;
   currency: string;

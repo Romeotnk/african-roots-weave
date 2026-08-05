@@ -12,12 +12,13 @@ export function articlePath(article: Article) {
 
 export function ArticleCard({ article }: { article: Article }) {
   return (
-    <article className="bg-[var(--color-surface)] rounded-[12px] border border-[var(--brand-border-light)] shadow-iwosan-sm overflow-hidden card-hover flex flex-col">
-      <div className="h-[200px] overflow-hidden">
+    <article className="bg-[var(--color-surface)] rounded-[20px] border border-[var(--brand-border-light)] shadow-iwosan-sm overflow-hidden card-hover flex flex-col">
+      <div className="h-[200px] overflow-hidden bg-[var(--brand-surface-alt)]">
         <img
           src={article.cover}
           alt={article.title}
           loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
         />
       </div>

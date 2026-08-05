@@ -1,8 +1,11 @@
-import { MedCategory, ProductType } from "@prisma/client";
+import { ProductType } from "@prisma/client";
 import { body, param, query } from "express-validator";
 
 export const productListValidator = [
-  query("category").optional().isIn(Object.values(MedCategory)),
+  // Product categories are now Taxonomy rows (scope: PRODUCT_CATEGORY), editable
+  // from the admin panel, so this can't be checked against a fixed enum anymore —
+  // an unknown slug simply matches zero products, same as a typo would.
+  query("category").optional().isString().trim(),
   query("type").optional().isIn(Object.values(ProductType)),
   query("minPrice").optional().isFloat({ min: 0 }),
   query("maxPrice").optional().isFloat({ min: 0 }),
@@ -15,7 +18,7 @@ export const createProductValidator = [
   body("title").isString().isLength({ min: 3, max: 160 }).escape(),
   body("description").isString().isLength({ min: 10 }).trim(),
   body("price").isFloat({ min: 0 }),
-  body("category").isIn(Object.values(MedCategory)),
+  body("category").isString().trim().notEmpty(),
   body("type").isIn(Object.values(ProductType)),
   body("images").optional().isArray(),
   body("stock").optional().isInt({ min: 0 }),
@@ -32,7 +35,7 @@ export const updateProductValidator = [
   body("title").optional().isString().isLength({ min: 3, max: 160 }).escape(),
   body("description").optional().isString().isLength({ min: 10 }).trim(),
   body("price").optional().isFloat({ min: 0 }),
-  body("category").optional().isIn(Object.values(MedCategory)),
+  body("category").optional().isString().trim().notEmpty(),
   body("type").optional().isIn(Object.values(ProductType)),
   body("stock").optional().isInt({ min: 0 }),
   body("isActive").optional().isBoolean(),

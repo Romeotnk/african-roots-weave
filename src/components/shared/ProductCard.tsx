@@ -85,6 +85,7 @@ export function ProductCard({ product }: { product: Product }) {
   const [reportDetail, setReportDetail] = useState("");
   const [reportNotice, setReportNotice] = useState("");
   const price = product.price;
+  const categoryLabel = product.categoryLabel ?? product.category;
   const originalPrice = (product as Product & { originalPrice?: number }).originalPrice;
   const discountPercent = (product as Product & { discountPercent?: number }).discountPercent;
   const sellerId = (product as Product & { sellerProfileId?: string }).sellerProfileId ?? product.sellerId;
@@ -150,7 +151,7 @@ export function ProductCard({ product }: { product: Product }) {
             <img src={product.image} alt={product.title} loading="lazy" decoding="async" width={400} height={240} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
             <div className="absolute inset-x-0 bottom-0 h-28 bg-[linear-gradient(to_bottom,transparent_40%,#1f5a39_100%)]" />
             <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-              <Badge variant="category">{product.category}</Badge>
+              <Badge variant="category">{categoryLabel}</Badge>
               {product.verified && <Badge variant="gold">Vérifié</Badge>}
               {product.urgent && <span className="rounded-full bg-red-600 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white">Urgent</span>}
             </div>
@@ -210,7 +211,7 @@ export function ProductCard({ product }: { product: Product }) {
             <img src={product.image} alt={product.title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
             <div className="absolute inset-x-0 bottom-0 h-32 bg-[linear-gradient(to_bottom,transparent_35%,rgba(31,90,57,.95)_100%)]" />
             <div className="absolute left-4 top-4 flex flex-wrap gap-2">
-              <Badge variant="category">{product.category}</Badge>
+              <Badge variant="category">{categoryLabel}</Badge>
               {hasPromo && <Badge variant="gold">Promo</Badge>}
               {product.urgent && <span className="rounded-full bg-red-600 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white">Urgent</span>}
             </div>
@@ -218,7 +219,7 @@ export function ProductCard({ product }: { product: Product }) {
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto space-y-5 p-5 sm:p-7">
             <DialogHeader>
-              <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-[var(--brand-terracotta)]">{product.category}</p>
+              <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-[var(--brand-terracotta)]">{categoryLabel}</p>
               <DialogTitle className="text-[24px] font-semibold sm:text-[30px]">{product.title}</DialogTitle>
               <DialogDescription>Produit détaillé et réservation directe auprès du vendeur.</DialogDescription>
             </DialogHeader>

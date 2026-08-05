@@ -51,6 +51,15 @@ type Slide = {
   secondary?: { label: string; href: string };
 };
 
+// Same figures as the full stats section further down the page — repeated
+// here, condensed, so the trust signal lands immediately in the hero instead
+// of only after scrolling.
+const heroTrustStats = [
+  { icon: Users, value: "50+", label: "Praticiens documentés" },
+  { icon: Leaf, value: "120+", label: "Plantes médicinales" },
+  { icon: MapPin, value: "10+", label: "Pays africains" },
+];
+
 const fallbackHeroSlides: Slide[] = [
   {
     img: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1920&q=80&auto=format&fit=crop',
@@ -146,11 +155,11 @@ function HeroCarousel() {
       </AnimatePresence>
       {heroSlides.length > 1 && (
         <>
-          <button onClick={() => setIndex((index - 1 + heroSlides.length) % heroSlides.length)} className="absolute left-4 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-white/12 text-white backdrop-blur hover:bg-white/20" aria-label="Slide précédente"><ChevronLeft size={24} /></button>
-          <button onClick={() => setIndex((index + 1) % heroSlides.length)} className="absolute right-4 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-white/12 text-white backdrop-blur hover:bg-white/20" aria-label="Slide suivante"><ChevronRight size={24} /></button>
+          <button onClick={() => setIndex((index - 1 + heroSlides.length) % heroSlides.length)} className="absolute left-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-white/60 transition hover:bg-white/10 hover:text-white" aria-label="Slide précédente"><ChevronLeft size={18} /></button>
+          <button onClick={() => setIndex((index + 1) % heroSlides.length)} className="absolute right-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-white/60 transition hover:bg-white/10 hover:text-white" aria-label="Slide suivante"><ChevronRight size={18} /></button>
         </>
       )}
-      <div className="relative container-iwosan flex min-h-[92vh] flex-col justify-center py-24">
+      <div className="relative container-iwosan grid min-h-[92vh] items-center gap-10 py-24 lg:grid-cols-[1fr_320px]">
         <div className="max-w-5xl">
           {(slide.eyebrow || slide.kicker) && (
             <div className="flex flex-wrap gap-3">
@@ -168,6 +177,27 @@ function HeroCarousel() {
             {slide.secondary && <a href={slide.secondary.href} className="inline-flex h-12 items-center justify-center rounded-full border border-white/25 px-7 font-semibold text-white hover:bg-white/10">{slide.secondary.label}</a>}
           </div>
         </div>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="hidden rounded-[24px] border border-white/15 bg-white/[0.07] p-6 backdrop-blur-md lg:block"
+        >
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/60">En chiffres</p>
+          <div className="mt-5 space-y-5">
+            {heroTrustStats.map((stat) => (
+              <div key={stat.label} className="flex items-center gap-3">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--brand-gold)]/20 text-[var(--brand-gold)]">
+                  <stat.icon size={18} />
+                </div>
+                <div>
+                  <p className="text-[22px] font-bold leading-none text-white">{stat.value}</p>
+                  <p className="mt-1 text-[12px] text-white/70">{stat.label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </div>
       {heroSlides.length > 1 && (
         <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 gap-2">{heroSlides.map((_, dotIndex) => <button key={dotIndex} onClick={() => setIndex(dotIndex)} className={`h-2.5 rounded-full transition-all ${index === dotIndex ? "w-8 bg-white" : "w-2.5 bg-white/45"}`} aria-label={`Aller à la slide ${dotIndex + 1}`} />)}</div>

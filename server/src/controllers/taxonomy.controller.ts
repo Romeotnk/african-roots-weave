@@ -5,7 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
 import { makeSlug } from "../utils/slug.js";
 
-export const TAXONOMY_SCOPES = ["PROFESSIONAL_SPECIALTY", "ARTICLE_CATEGORY"] as const;
+export const TAXONOMY_SCOPES = ["PROFESSIONAL_SPECIALTY", "ARTICLE_CATEGORY", "PRODUCT_CATEGORY"] as const;
 
 const assertScope = (value: unknown): (typeof TAXONOMY_SCOPES)[number] => {
   if (typeof value !== "string" || !(TAXONOMY_SCOPES as readonly string[]).includes(value)) {
@@ -24,9 +24,21 @@ export const createTaxonomy = asyncHandler(async (req, res) => {
   const scope = assertScope(req.body.scope);
   const name = String(req.body.name ?? "").trim();
   if (!name) throw new ApiError(400, "Name is required");
+  const parentId = typeof req.body.parentId === "string" && req.body.parentId ? req.body.parentId : undefined;
+
+  // Prefixed with the parent's own name so a subcategory sharing a name with
+  // one under a different parent (e.g. "Livres" under both CULTES and GUERIR
+  // VITE) still gets a unique slug within the scope — @@unique([scope, slug])
+  // would otherwise reject the second insert.
+  let slug = makeSlug(name);
+  if (parentId) {
+    const parent = await prisma.taxonomy.findUnique({ where: { id: parentId }, select: { name: true, scope: true } });
+    if (!parent || parent.scope !== scope) throw new ApiError(400, "Invalid parent taxonomy");
+    slug = makeSlug(`${parent.name}-${name}`);
+  }
 
   const item = await prisma.taxonomy.create({
-    data: { scope, name, slug: makeSlug(name), position: Number(req.body.position ?? 0) || 0 },
+    data: { scope, name, slug, position: Number(req.body.position ?? 0) || 0, parentId },
   });
   await writeAuditLog(req, { action: "TAXONOMY_CREATED", targetId: item.id, targetType: "Taxonomy" });
   res.status(201).json(apiResponse(true, item, "Taxonomy created"));

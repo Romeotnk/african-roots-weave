@@ -2,7 +2,6 @@ import {
   PrismaClient,
   Role,
   KycStatus,
-  MedCategory,
   ProductType,
   ArticleSpace,
   EventType,
@@ -17,6 +16,7 @@ import {
   ReportStatus,
 } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import slugify from "slugify";
 import { randomUUID } from "node:crypto";
 
 const prisma = new PrismaClient();
@@ -498,27 +498,30 @@ const professionalsData = [
 // 🛒 PRODUITS MARKETPLACE
 // ─────────────────────────────────────
 
+// Category values are Taxonomy slugs (scope: PRODUCT_CATEGORY, seeded by
+// prisma/scripts/seedProductTaxonomy.mjs) — same mapping used to remap the
+// pre-existing test products when the taxonomy was introduced.
 const productsData = [
-  { title: "Tisane Bien-être Quotidien — Kinkeliba & Gingembre", category: MedCategory.GASTRO_INTESTINAL, type: ProductType.PHYSICAL, price: 4500, stock: 50 },
-  { title: "Poudre de Moringa Bio certifiée — 250g", category: MedCategory.MALADIES_ENFANCE, type: ProductType.PHYSICAL, price: 7500, stock: 100 },
-  { title: "Huile de Neem thérapeutique — Dermatologie naturelle", category: MedCategory.AFFECTIONS_CUTANEES, type: ProductType.PHYSICAL, price: 6000, stock: 35 },
-  { title: "Poudre de pulpe de Baobab — Reminéralisant", category: MedCategory.GASTRO_INTESTINAL, type: ProductType.PHYSICAL, price: 5500, stock: 80 },
-  { title: "Bissap séché premium — 500g", category: MedCategory.CARDIO_VASCULAIRE, type: ProductType.PHYSICAL, price: 3500, stock: 200 },
-  { title: "Consultation en ligne — Phytothérapie personnalisée", category: MedCategory.GYNECO_OBSTETRIQUE, type: ProductType.SERVICE, price: 15000, stock: 999 },
-  { title: "Guide PDF — 50 plantes médicinales du Sahel", category: MedCategory.GASTRO_INTESTINAL, type: ProductType.DIGITAL, price: 5000, stock: 999 },
-  { title: "Préparation anti-paludéenne traditionnelle — Neem & Artemisia", category: MedCategory.ETATS_FEBRILES_ICTERES, type: ProductType.PHYSICAL, price: 8000, stock: 40 },
-  { title: "Massage thérapeutique post-partum — 90 min", category: MedCategory.GYNECO_OBSTETRIQUE, type: ProductType.SERVICE, price: 25000, stock: 999 },
-  { title: "Kit Premiers soins naturels — 8 essentiels", category: MedCategory.AFFECTIONS_CUTANEES, type: ProductType.PHYSICAL, price: 18000, stock: 25 },
-  { title: "Sirop Immunité Enfant — Moringa & Miel", category: MedCategory.MALADIES_ENFANCE, type: ProductType.PHYSICAL, price: 4200, stock: 60 },
-  { title: "E-book — Grossesse et plantes médicinales africaines", category: MedCategory.GYNECO_OBSTETRIQUE, type: ProductType.DIGITAL, price: 3500, stock: 999 },
-  { title: "Tisane Anti-stress — Melissa & Passiflore africaine", category: MedCategory.SYSTEME_NERVEUX, type: ProductType.PHYSICAL, price: 3800, stock: 70 },
-  { title: "Pommade cicatrisante — Karité & Aloé vera", category: MedCategory.AFFECTIONS_CUTANEES, type: ProductType.PHYSICAL, price: 5500, stock: 45 },
-  { title: "Programme détox 21 jours — Accompagnement personnalisé", category: MedCategory.GASTRO_INTESTINAL, type: ProductType.SERVICE, price: 35000, stock: 10 },
-  { title: "Gélules Gingembre & Curcuma — Anti-inflammatoire", category: MedCategory.OSTEO_ARTICULAIRE, type: ProductType.PHYSICAL, price: 9000, stock: 55 },
-  { title: "Collyre naturel — Euphraise & eau florale", category: MedCategory.OPHTALMOLOGIQUE, type: ProductType.PHYSICAL, price: 4500, stock: 30 },
-  { title: "Tisane Hypertension — Hibiscus & Aubépine", category: MedCategory.CARDIO_VASCULAIRE, type: ProductType.PHYSICAL, price: 4000, stock: 90 },
-  { title: "Baume Articulations — Harpagophytum & Menthol", category: MedCategory.OSTEO_ARTICULAIRE, type: ProductType.PHYSICAL, price: 7800, stock: 40 },
-  { title: "Consultation Astrologie médicale africaine", category: MedCategory.MYSTIQUE, type: ProductType.SERVICE, price: 20000, stock: 999 },
+  { title: "Tisane Bien-être Quotidien — Kinkeliba & Gingembre", category: "guerir-vite-troubles-digestifs", type: ProductType.PHYSICAL, price: 4500, stock: 50 },
+  { title: "Poudre de Moringa Bio certifiée — 250g", category: "bien-se-nourir-bebe-and-enfant", type: ProductType.PHYSICAL, price: 7500, stock: 100 },
+  { title: "Huile de Neem thérapeutique — Dermatologie naturelle", category: "guerir-vite-problemes-de-peau", type: ProductType.PHYSICAL, price: 6000, stock: 35 },
+  { title: "Poudre de pulpe de Baobab — Reminéralisant", category: "guerir-vite-troubles-digestifs", type: ProductType.PHYSICAL, price: 5500, stock: 80 },
+  { title: "Bissap séché premium — 500g", category: "guerir-vite-problemes-de-circulation", type: ProductType.PHYSICAL, price: 3500, stock: 200 },
+  { title: "Consultation en ligne — Phytothérapie personnalisée", category: "guerir-vite-sexualite", type: ProductType.SERVICE, price: 15000, stock: 999 },
+  { title: "Guide PDF — 50 plantes médicinales du Sahel", category: "guerir-vite-troubles-digestifs", type: ProductType.DIGITAL, price: 5000, stock: 999 },
+  { title: "Préparation anti-paludéenne traditionnelle — Neem & Artemisia", category: "guerir-vite-douleurs-et-fievre", type: ProductType.PHYSICAL, price: 8000, stock: 40 },
+  { title: "Massage thérapeutique post-partum — 90 min", category: "guerir-vite-sexualite", type: ProductType.SERVICE, price: 25000, stock: 999 },
+  { title: "Kit Premiers soins naturels — 8 essentiels", category: "guerir-vite-problemes-de-peau", type: ProductType.PHYSICAL, price: 18000, stock: 25 },
+  { title: "Sirop Immunité Enfant — Moringa & Miel", category: "bien-se-nourir-bebe-and-enfant", type: ProductType.PHYSICAL, price: 4200, stock: 60 },
+  { title: "E-book — Grossesse et plantes médicinales africaines", category: "guerir-vite-sexualite", type: ProductType.DIGITAL, price: 3500, stock: 999 },
+  { title: "Tisane Anti-stress — Melissa & Passiflore africaine", category: "guerir-vite-stress-and-sommeil", type: ProductType.PHYSICAL, price: 3800, stock: 70 },
+  { title: "Pommade cicatrisante — Karité & Aloé vera", category: "guerir-vite-problemes-de-peau", type: ProductType.PHYSICAL, price: 5500, stock: 45 },
+  { title: "Programme détox 21 jours — Accompagnement personnalisé", category: "guerir-vite-troubles-digestifs", type: ProductType.SERVICE, price: 35000, stock: 10 },
+  { title: "Gélules Gingembre & Curcuma — Anti-inflammatoire", category: "guerir-vite-petits-traumatismes", type: ProductType.PHYSICAL, price: 9000, stock: 55 },
+  { title: "Collyre naturel — Euphraise & eau florale", category: "guerir-vite-ophtalmologie", type: ProductType.PHYSICAL, price: 4500, stock: 30 },
+  { title: "Tisane Hypertension — Hibiscus & Aubépine", category: "guerir-vite-problemes-de-circulation", type: ProductType.PHYSICAL, price: 4000, stock: 90 },
+  { title: "Baume Articulations — Harpagophytum & Menthol", category: "guerir-vite-petits-traumatismes", type: ProductType.PHYSICAL, price: 7800, stock: 40 },
+  { title: "Consultation Astrologie médicale africaine", category: "mieux-vivre-aide-spirituelle", type: ProductType.SERVICE, price: 20000, stock: 999 },
 ];
 
 // ─────────────────────────────────────
@@ -1409,6 +1412,84 @@ async function main() {
     ].map((name, index) => ({ scope: "ARTICLE_CATEGORY", name, slug: taxonomySlug(name), position: index })),
   });
   console.log("✅ Taxonomies (spécialités pro, catégories d'articles) créées");
+
+  // Product category tree — same shape and slugs (real `slugify`, matching
+  // src/utils/slug.ts's makeSlug exactly, not the local taxonomySlug helper
+  // above) as prisma/scripts/seedProductTaxonomy.mjs, which is what remapped
+  // the pre-existing products' category field the first time this taxonomy
+  // was introduced. productsData above references these exact slugs.
+  const makeCategorySlug = (value: string) => slugify(value, { lower: true, strict: true, trim: true });
+  const productCategories: Record<string, string[]> = {
+    "MIEUX VIVRE": [
+      "Protection",
+      "Chance & réussite",
+      "Envoutement & Désenvoutement",
+      "Purification",
+      "Aide spirituelle",
+      "Talisman",
+      "Guérison et addiction",
+      "Vaudou",
+      "Magie",
+      "Pouvoirs occultes",
+    ],
+    CULTES: ["Icônes religieuses", "Statues religieuses", "Objets de piété", "Accessoires", "Livres", "CD, DVD", "Thèmes religieux", "Cadeau religieux"],
+    "GUERIR VITE": [
+      "Livres",
+      "Troubles digestifs",
+      "Etat grippal",
+      "Ophtalmologie",
+      "Douleurs et fièvre",
+      "Problèmes de peau",
+      "Mémoire",
+      "Maux de bouche",
+      "Problèmes de circulation",
+      "Oligothérapie",
+      "Stress & sommeil",
+      "Cheveux et ongles",
+      "Sevrage tabagique",
+      "Oreilles",
+      "Petits traumatismes",
+      "Sexualité",
+      "Protection",
+    ],
+    "BIEN SE NOURIR": [
+      "Bébé & Enfant",
+      "Riz, Pâtes & Céréales",
+      "Fruits Secs & Purées",
+      "Sucres",
+      "Graines Germées",
+      "Aides Culinaires",
+      "Assaisonnements",
+      "Légumes",
+      "Boissons",
+      "Thé, Infusions & Café",
+      "Epicerie",
+      "Cosmétiques & Beauté",
+      "Charcuterie",
+      "Produits De La Pêche",
+      "Aliments Pour Animaux",
+      "Autres Produits Alimentaires",
+    ],
+  };
+  let productCategoryPosition = 0;
+  for (const [parentName, children] of Object.entries(productCategories)) {
+    const parentSlug = makeCategorySlug(parentName);
+    const parent = await prisma.taxonomy.upsert({
+      where: { scope_slug: { scope: "PRODUCT_CATEGORY", slug: parentSlug } },
+      update: {},
+      create: { scope: "PRODUCT_CATEGORY", name: parentName, slug: parentSlug, position: productCategoryPosition++ },
+    });
+    let childPosition = 0;
+    for (const childName of children) {
+      const childSlug = makeCategorySlug(`${parentName}-${childName}`);
+      await prisma.taxonomy.upsert({
+        where: { scope_slug: { scope: "PRODUCT_CATEGORY", slug: childSlug } },
+        update: { parentId: parent.id },
+        create: { scope: "PRODUCT_CATEGORY", name: childName, slug: childSlug, position: childPosition++, parentId: parent.id },
+      });
+    }
+  }
+  console.log("✅ Taxonomie des catégories produits (marketplace) créée");
 
   // ─── RÉSUMÉ FINAL ───
   console.log("\n🌿 ═══════════════════════════════════════");

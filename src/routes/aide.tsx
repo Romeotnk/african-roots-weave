@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
-import { Clock, HelpCircle, Paperclip, Send, Ticket as TicketIcon } from "lucide-react";
+import { BookOpen, ChevronDown, Clock, HelpCircle, MessageCircle, Paperclip, Send, ShieldCheck, ShoppingBag, Ticket as TicketIcon } from "lucide-react";
 import type { BackendArticle } from "@/components/editorial/ArticleListPage";
 import { toRecipe } from "@/components/editorial/RecipeListPage";
+import { HeroSection } from "@/components/shared/HeroSection";
 import { faqCategories } from "@/data/help";
 import { useArticles } from "@/hooks/useContentApi";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -11,6 +12,16 @@ import { useAuth } from "@/lib/auth/AuthContext";
 
 const ticketStatusLabels: Record<string, string> = { OPEN: "Ouvert", IN_PROGRESS: "En cours", RESOLVED: "Résolu", CLOSED: "Fermé" };
 type MyTicketSummary = { id: string; subject: string; status: string; createdAt: string };
+
+// Each FAQ category gets its own icon/color instead of a repeated generic "?"
+// so the list is scannable at a glance. Falls back to a neutral style for any
+// category name not in this map, so new categories never break the page.
+const categoryStyles: Record<string, { icon: typeof HelpCircle; className: string }> = {
+  "Compte et securite": { icon: ShieldCheck, className: "bg-emerald-100 text-emerald-700" },
+  Marketplace: { icon: ShoppingBag, className: "bg-amber-100 text-amber-700" },
+  "Savoirs editoriaux": { icon: BookOpen, className: "bg-sky-100 text-sky-700" },
+};
+const defaultCategoryStyle = { icon: HelpCircle, className: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]" };
 
 export const Route = createFileRoute("/aide")({
   head: () => ({ meta: [{ title: "Centre d'aide - IWOSAN" }] }),
@@ -92,21 +103,22 @@ function HelpCenter() {
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">
-      <section className="border-b border-[var(--brand-border-light)] bg-white">
-        <div className="container-iwosan py-10">
-          <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Support</p>
-          <h1 className="mt-2 text-[36px] md:text-[48px]">Centre d'aide</h1>
-          <p className="mt-3 max-w-2xl text-[var(--color-text-secondary)]">
-            Base de connaissances, FAQ et tickets support pour suivre vos demandes.
-          </p>
+      <HeroSection
+        image="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=1920&q=80"
+        badge="Support"
+        title="Centre d'aide"
+        subtitle="Base de connaissances, FAQ et tickets support pour suivre vos demandes."
+        size="md"
+      >
+        <div className="mx-auto max-w-2xl">
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Rechercher dans la FAQ..."
-            className="mt-6 h-12 w-full max-w-2xl rounded-full border border-[var(--brand-border)] bg-white px-5"
+            className="h-12 w-full rounded-full border-none bg-white px-5 text-[var(--color-text-primary)] outline-none"
           />
         </div>
-      </section>
+      </HeroSection>
 
       <section className="container-iwosan grid gap-8 py-10 lg:grid-cols-[1fr_340px]">
         <div className="space-y-5">
@@ -148,22 +160,45 @@ function HelpCenter() {
             </div>
           )}
 
-          {filteredFaq.map((categoryItem) => (
-            <div key={categoryItem.name} className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-              <h2 className="flex items-center gap-2 text-[20px] font-bold"><HelpCircle size={20} /> {categoryItem.name}</h2>
-              <div className="mt-4 divide-y divide-[var(--brand-border-light)]">
-                {categoryItem.items.map((item) => (
-                  <details key={item.question} className="group py-3">
-                    <summary className="cursor-pointer list-none font-semibold">{item.question}</summary>
-                    <p className="mt-2 text-[14px] leading-6 text-[var(--color-text-secondary)]">{item.answer}</p>
-                  </details>
-                ))}
+          {filteredFaq.map((categoryItem) => {
+            const style = categoryStyles[categoryItem.name] ?? defaultCategoryStyle;
+            return (
+              <div key={categoryItem.name} className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
+                <h2 className="flex items-center gap-3 text-[18px] font-bold">
+                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${style.className}`}>
+                    <style.icon size={17} />
+                  </span>
+                  {categoryItem.name}
+                </h2>
+                <div className="mt-4 divide-y divide-[var(--brand-border-light)]">
+                  {categoryItem.items.map((item) => (
+                    <details key={item.question} className="group py-3">
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold">
+                        {item.question}
+                        <ChevronDown size={16} className="shrink-0 text-[var(--color-text-muted)] transition-transform group-open:rotate-180" />
+                      </summary>
+                      <p className="mt-2 text-[14px] leading-6 text-[var(--color-text-secondary)]">{item.answer}</p>
+                    </details>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        <aside className="h-fit rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
+        <aside className="h-fit space-y-5">
+          <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
+            <h2 className="text-[14px] font-bold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">Contact direct</h2>
+            <div className="mt-3 space-y-2">
+              <a href="https://wa.me/221770000000" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-[13px] font-semibold text-[var(--brand-primary)]">
+                <MessageCircle size={16} /> WhatsApp : +221 77 000 00 00
+              </a>
+              <a href="mailto:contact@iwosan.africa" className="flex items-center gap-2 text-[13px] font-semibold text-[var(--brand-primary)]">
+                <Send size={16} /> contact@iwosan.africa
+              </a>
+            </div>
+          </div>
+          <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
           <h2 className="text-[20px] font-bold">Ouvrir un ticket</h2>
           <p className="mt-2 text-[13px] text-[var(--color-text-muted)]">
             Décrivez votre demande. Elle apparaîtra dans votre espace tickets avec son statut.
@@ -264,6 +299,7 @@ function HelpCenter() {
           <Link to="/mon-compte/tickets" className="mt-4 inline-flex text-[13px] font-semibold text-[var(--brand-primary)]">
             Voir mes tickets
           </Link>
+          </div>
         </aside>
       </section>
     </main>

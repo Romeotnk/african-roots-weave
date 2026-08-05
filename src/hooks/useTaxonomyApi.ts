@@ -35,7 +35,7 @@ export function useTaxonomyActions(scope: TaxonomyScope) {
   };
   return {
     create: useMutation({
-      mutationFn: (name: string) => createTaxonomy(scope, name),
+      mutationFn: ({ name, parentId }: { name: string; parentId?: string }) => createTaxonomy(scope, name, parentId),
       onSuccess: refresh,
     }),
     update: useMutation({
