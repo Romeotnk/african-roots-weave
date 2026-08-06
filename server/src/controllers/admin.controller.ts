@@ -7,6 +7,7 @@ import { writeAuditLog } from "../services/audit.service.js";
 import { invalidateRolePermissionsCache } from "../services/permissions.service.js";
 import { isSuperAdmin, superAdminOnlySpaces } from "./content.controller.js";
 import { invalidatePublicSiteConfigCache } from "./publicSite.controller.js";
+import { withCategoryLabels } from "./product.controller.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
@@ -313,7 +314,7 @@ export const pendingProducts = asyncHandler(async (req, res) => {
     prisma.product.findMany({ where, orderBy: { createdAt: "desc" }, skip, take: limit }),
     prisma.product.count({ where }),
   ]);
-  res.json(apiResponse(true, products, "Pending products retrieved", paginationMeta(page, limit, total)));
+  res.json(apiResponse(true, await withCategoryLabels(products), "Pending products retrieved", paginationMeta(page, limit, total)));
 });
 
 export const approveProduct = asyncHandler(async (req, res) => {

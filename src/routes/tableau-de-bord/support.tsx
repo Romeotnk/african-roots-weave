@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LifeBuoy, Send } from "lucide-react";
 import { useState } from "react";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useStaffTicketActions, useStaffTickets } from "@/hooks/useTicketsApi";
 
@@ -32,21 +32,10 @@ function SupportPage() {
   const active = filtered.find((ticket) => ticket.id === activeId) ?? filtered[0] ?? null;
 
   return (
-    <main className="min-h-screen bg-[var(--brand-bg)]">
-      <section className="border-b border-[var(--brand-border-light)] bg-white">
-        <div className="container-iwosan py-8">
-          <AccountBackLink />
-          <div className="mt-5">
-            <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Communauté</p>
-            <h1 className="mt-2 text-[32px] md:text-[42px]">Support utilisateurs</h1>
-            <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-              Aidez les utilisateurs en répondant aux tickets ouverts du centre d'aide. Votre expertise professionnelle est visible sur vos réponses.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="container-iwosan py-8">
+    <AccountLayout
+      title="Support utilisateurs"
+      description="Aidez les utilisateurs en répondant aux tickets ouverts du centre d'aide. Votre expertise professionnelle est visible sur vos réponses."
+    >
         {ticketsQuery.isLoading && <p className="text-[13px] text-[var(--color-text-muted)]">Chargement...</p>}
         {ticketsQuery.isError && (
           <p className="rounded-[8px] border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700">Impossible de charger les tickets.</p>
@@ -152,7 +141,6 @@ function SupportPage() {
             </div>
           </>
         )}
-      </section>
-    </main>
+    </AccountLayout>
   );
 }

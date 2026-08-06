@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import {
   Bell,
   BookOpen,
@@ -80,43 +81,32 @@ function AccountHome() {
   const [showProPrompt, setShowProPrompt] = useState(true);
   const name = (user?.user_metadata?.first_name as string | undefined) || user?.email?.split("@")[0] || "Compte";
   const isProAccount = isProfessionalAccount(roles);
-  const roleLabel = isProAccount ? "Espace professionnel" : "Espace utilisateur";
 
   return (
-    <main className="min-h-screen bg-[var(--brand-bg)]">
-      <section className={`${isProAccount ? "bg-[var(--brand-primary)] text-white" : "bg-white"} border-b border-[var(--brand-border-light)]`}>
-        <div className="container-iwosan py-8">
-          <p className={`text-[12px] font-bold uppercase tracking-[0.14em] ${isProAccount ? "text-white/75" : "text-[var(--brand-primary)]"}`}>
-            {roleLabel}
-          </p>
-          <div className="mt-2 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h1 className="text-[32px] md:text-[42px]">Bonjour {name}</h1>
-              <p className={`mt-2 max-w-2xl text-[14px] ${isProAccount ? "text-white/78" : "text-[var(--color-text-muted)]"}`}>
-                {isProAccount
-                  ? "Votre compte professionnel regroupe vos ventes, contenus, rendez-vous, avis et outils de croissance."
-                  : "Votre compte personnel regroupe vos achats, messages, alertes, tickets et preferences."}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {isProAccount ? (
-                <Link to="/tableau-de-bord" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-white px-5 text-[14px] font-bold text-[var(--brand-primary)]">
-                  <BriefcaseBusiness size={17} /> Ouvrir le tableau de bord
-                </Link>
-              ) : (
-                <Link to="/devenir-pro" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-bold text-white">
-                  <Sparkles size={17} /> Devenir professionnel
-                </Link>
-              )}
-              <Link to="/messages" className={`inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-[14px] font-bold ${isProAccount ? "border border-white/30 text-white" : "border border-[var(--brand-border-light)] bg-white text-[var(--color-text-primary)]"}`}>
-                <MessageSquare size={17} /> Messages
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+    <AccountLayout
+      title={`Bonjour ${name}`}
+      description={
+        isProAccount
+          ? "Votre compte professionnel regroupe vos ventes, contenus, rendez-vous, avis et outils de croissance."
+          : "Votre compte personnel regroupe vos achats, messages, alertes, tickets et preferences."
+      }
+    >
+      <div className="mb-6 flex flex-wrap gap-2">
+        {isProAccount ? (
+          <Link to="/tableau-de-bord" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-bold text-white">
+            <BriefcaseBusiness size={17} /> Ouvrir le tableau de bord
+          </Link>
+        ) : (
+          <Link to="/devenir-pro" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-bold text-white">
+            <Sparkles size={17} /> Devenir professionnel
+          </Link>
+        )}
+        <Link to="/messages" className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[var(--brand-border-light)] bg-white px-5 text-[14px] font-bold text-[var(--color-text-primary)]">
+          <MessageSquare size={17} /> Messages
+        </Link>
+      </div>
 
-      <section className="container-iwosan py-8">
+      <div>
         {upcomingBookings.length > 0 && (
           <div className="mb-8 grid gap-4 rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 shadow-iwosan-md lg:grid-cols-[1.1fr_0.9fr]">
             <div>
@@ -168,8 +158,8 @@ function AccountHome() {
         )}
 
         {isProAccount ? <ProAccountGrid /> : <PersonalAccountGrid />}
-      </section>
-    </main>
+      </div>
+    </AccountLayout>
   );
 }
 

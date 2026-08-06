@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { AlertTriangle, CheckCircle2, Clock, MessageSquare, Package, Search, ShieldCheck, Star, Truck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { useAcknowledgeOrderRefund, useMarkOrderShipped, useMyOrders, useOpenOrderDispute } from "@/hooks/useOrdersApi";
 import { useCreateReview } from "@/hooks/useReviewsApi";
 
@@ -103,26 +103,15 @@ function CommandesPage() {
 
   return (
     <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
-      <main className="min-h-screen bg-[var(--brand-bg)]">
-        <section className="border-b border-[var(--brand-border-light)] bg-white">
-          <div className="container-iwosan py-8">
-            <AccountBackLink />
-            <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-              <div>
-                <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Boutique</p>
-                <h1 className="mt-2 text-[32px] md:text-[42px]">Commandes</h1>
-                <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-                  Traitez les commandes recues, informez les clients et suivez les expeditions.
-                </p>
-              </div>
-              <Link to="/messages" className="btn-secondary h-11 px-5 text-[14px]">
-                <MessageSquare size={17} /> Messages clients
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <section className="container-iwosan py-8">
+      <AccountLayout
+        title="Commandes"
+        description="Traitez les commandes recues, informez les clients et suivez les expeditions."
+        actions={
+          <Link to="/messages" className="btn-secondary h-11 px-5 text-[14px]">
+            <MessageSquare size={17} /> Messages clients
+          </Link>
+        }
+      >
           {ordersQuery.isLoading && <p className="text-[13px] text-[var(--color-text-muted)]">Chargement...</p>}
           {ordersQuery.isError && <p className="rounded-[8px] border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700">Impossible de charger les commandes.</p>}
 
@@ -228,8 +217,7 @@ function CommandesPage() {
               </div>
             </>
           )}
-        </section>
-      </main>
+      </AccountLayout>
     </ProtectedRoute>
   );
 }

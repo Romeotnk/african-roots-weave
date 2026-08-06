@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AlertTriangle, CheckCircle2, FileText, ShieldCheck, Upload, X, XCircle } from "lucide-react";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CountrySelect } from "@/components/shared/CountrySelect";
 import { getAccessTokenClaims } from "@/lib/authToken";
@@ -119,21 +119,11 @@ function KycPage() {
 
   return (
     <ProtectedRoute>
-      <main className="min-h-screen bg-[var(--brand-bg)]">
-        <section className="border-b border-[var(--brand-border-light)] bg-white">
-          <div className="container-iwosan py-8">
-            <AccountBackLink />
-            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--brand-primary)]">
-              Mon compte
-            </p>
-            <h1 className="mt-2 text-[32px] md:text-[42px]">Vérification d'identité</h1>
-            <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-              Soumettez vos documents KYC. Le statut est lie a votre compte connecte et sera controle par l'administration.
-            </p>
-          </div>
-        </section>
-
-        <section className="container-iwosan grid gap-6 py-8 lg:grid-cols-[320px_1fr]">
+      <AccountLayout
+        title="Vérification d'identité"
+        description="Soumettez vos documents KYC. Le statut est lie a votre compte connecte et sera controle par l'administration."
+      >
+        <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
           <aside className="space-y-4">
             <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
               <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[12px] font-bold ${meta.tone}`}>
@@ -223,8 +213,8 @@ function KycPage() {
               </div>
             )}
           </form>
-        </section>
-      </main>
+        </div>
+      </AccountLayout>
     </ProtectedRoute>
   );
 }

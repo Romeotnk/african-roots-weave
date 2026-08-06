@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { Copy, Loader2, Percent, Plus, Search, Tag } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { useCoupons, useCreateCoupon, useUpdateCoupon } from "@/hooks/useCouponsApi";
 
 type CouponForm = {
@@ -106,21 +106,7 @@ function CouponsPage() {
 
   return (
     <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
-      <main className="min-h-screen bg-[var(--brand-bg)]">
-        <section className="border-b border-[var(--brand-border-light)] bg-white">
-          <div className="container-iwosan py-8">
-            <AccountBackLink />
-            <div className="mt-5">
-              <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Boutique</p>
-              <h1 className="mt-2 text-[32px] md:text-[42px]">Coupons</h1>
-              <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-                Creez, activez et surveillez les codes promotionnels de votre boutique.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="container-iwosan py-8">
+      <AccountLayout title="Coupons" description="Creez, activez et surveillez les codes promotionnels de votre boutique.">
           <div className="grid gap-4 md:grid-cols-3">
             <StatCard icon={Tag} label="Coupons" value={String(coupons.length)} />
             <StatCard icon={Percent} label="Actifs" value={String(activeCount)} />
@@ -233,8 +219,7 @@ function CouponsPage() {
               </div>
             </div>
           </div>
-        </section>
-      </main>
+      </AccountLayout>
     </ProtectedRoute>
   );
 }

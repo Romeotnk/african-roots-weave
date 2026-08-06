@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { CheckCircle2, CreditCard, Download, Layers, Loader2, RefreshCw } from "lucide-react";
 import { useState } from "react";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useMySubscription, useSubscriptionPlans, useUpgradeSubscription } from "@/hooks/useSubscriptionApi";
 import type { SubscriptionPlanKey } from "@/lib/api/subscriptions";
@@ -59,21 +59,10 @@ function SubscriptionPage() {
   const isLoading = plansLoading || subscriptionLoading;
 
   return (
-    <main className="min-h-screen bg-[var(--brand-bg)]">
-      <section className="border-b border-[var(--brand-border-light)] bg-white">
-        <div className="container-iwosan py-8">
-          <AccountBackLink />
-          <div className="mt-5">
-            <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Compte professionnel</p>
-            <h1 className="mt-2 text-[32px] md:text-[42px]">Mon abonnement</h1>
-            <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-              Choisissez le forfait adapté à votre activité : nombre d'annonces actives et de téléchargements de produits numériques.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="container-iwosan py-8">
+    <AccountLayout
+      title="Mon abonnement"
+      description="Choisissez le forfait adapté à votre activité : nombre d'annonces actives et de téléchargements de produits numériques."
+    >
         {isLoading ? (
           <p className="text-[14px] text-[var(--color-text-muted)]">Chargement...</p>
         ) : (
@@ -165,8 +154,7 @@ function SubscriptionPage() {
             </div>
           </>
         )}
-      </section>
-    </main>
+    </AccountLayout>
   );
 }
 

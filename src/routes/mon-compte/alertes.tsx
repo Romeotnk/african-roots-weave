@@ -1,10 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Bell, Plus, Trash2 } from "lucide-react";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { Bell, Loader2, Plus, Trash2 } from "lucide-react";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { Switch } from "@/components/ui/switch";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { marketplaceAlerts } from "@/data/marketplaceAlerts";
 import { useMySavedSearches, useSavedSearchActions } from "@/hooks/useSavedSearchesApi";
 import type { MarketplaceAlert } from "@/types";
 
@@ -37,18 +36,12 @@ function AlertsPage() {
   const { create, update, remove } = useSavedSearchActions();
   const [actionMessage, setActionMessage] = useState("");
 
-  const apiAlerts = useMemo(
+  const alerts = useMemo(
     () => ((savedSearchesQuery.data ?? []) as BackendSavedSearch[]).map(toMarketplaceAlert).filter((item): item is MarketplaceAlert => Boolean(item)),
     [savedSearchesQuery.data],
   );
-  const isRealData = savedSearchesQuery.isSuccess;
-  const alerts = isRealData ? apiAlerts : marketplaceAlerts;
 
   const toggleAlert = (alert: MarketplaceAlert, active: boolean) => {
-    if (!isRealData) {
-      setActionMessage(`Alerte ${active ? "activée" : "desactivée"} : ${alert.name}.`);
-      return;
-    }
     update.mutate(
       { id: alert.id, isActive: active },
       { onSuccess: () => setActionMessage(`Alerte ${active ? "activée" : "desactivée"} : ${alert.name}.`) },
@@ -56,18 +49,10 @@ function AlertsPage() {
   };
 
   const deleteAlert = (alert: MarketplaceAlert) => {
-    if (!isRealData) {
-      setActionMessage(`Alerte supprimée : ${alert.name}.`);
-      return;
-    }
     remove.mutate(alert.id, { onSuccess: () => setActionMessage(`Alerte supprimée : ${alert.name}.`) });
   };
 
   const addAlert = () => {
-    if (!isRealData) {
-      setActionMessage("Alerte créée. Ajustez-la depuis vos filtres marketplace.");
-      return;
-    }
     create.mutate(
       { name: "Recherche marketplace sauvegardée", summary: "Produits vérifiés, prix sous 20 000 FCFA, livraison locale." },
       { onSuccess: () => setActionMessage("Alerte créée. Ajustez-la depuis vos filtres marketplace.") },
@@ -76,45 +61,42 @@ function AlertsPage() {
 
   return (
     <ProtectedRoute>
-      <main className="min-h-screen bg-[var(--brand-bg)]">
-        <section className="border-b border-[var(--brand-border-light)] bg-white">
-          <div className="container-iwosan flex flex-col gap-4 py-8 md:flex-row md:items-center md:justify-between">
-            <div>
-              <AccountBackLink />
-              <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--brand-primary)]">
-                Mon compte
-              </p>
-              <h1 className="mt-2 text-[32px] md:text-[42px]">Alertes marketplace</h1>
-              <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-                Activez, désactivez ou supprimez vos recherches sauvegardées.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={addAlert}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] px-5 text-[14px] font-semibold"
-              >
-                <Plus size={16} /> Créer une alerte
-              </button>
-              <Link
-                to="/marketplace"
-                className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white"
-              >
-                Créer depuis la marketplace
-              </Link>
-            </div>
+      <AccountLayout
+        title="Alertes marketplace"
+        description="Activez, désactivez ou supprimez vos recherches sauvegardées."
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={addAlert}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] px-5 text-[14px] font-semibold"
+            >
+              <Plus size={16} /> Créer une alerte
+            </button>
+            <Link
+              to="/marketplace"
+              className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white"
+            >
+              Créer depuis la marketplace
+            </Link>
           </div>
-        </section>
-
-        <section className="container-iwosan py-8">
+        }
+      >
           {actionMessage && (
             <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-[13px] font-semibold text-emerald-800">
               {actionMessage}
             </p>
           )}
 
-          {alerts.length === 0 ? (
+          {savedSearchesQuery.isLoading ? (
+            <div className="flex items-center justify-center rounded-[16px] border border-[var(--brand-border-light)] bg-white p-10">
+              <Loader2 className="animate-spin text-[var(--brand-primary)]" size={28} />
+            </div>
+          ) : savedSearchesQuery.isError ? (
+            <div className="rounded-[16px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
+              Impossible de charger vos alertes pour le moment.
+            </div>
+          ) : alerts.length === 0 ? (
             <div className="rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-10 text-center">
               <Bell className="mx-auto text-[var(--brand-primary)]" size={42} />
               <h2 className="mt-4 text-[24px] font-bold">Aucune alerte active</h2>
@@ -160,8 +142,7 @@ function AlertsPage() {
               ))}
             </div>
           )}
-        </section>
-      </main>
+      </AccountLayout>
     </ProtectedRoute>
   );
 }

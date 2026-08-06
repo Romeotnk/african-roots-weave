@@ -90,7 +90,7 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
                   to={target as any}
                   onClick={() => {
                     setReadIds((value) => new Set(value).add(item.id));
-                    markRead.mutate(item.id);
+                    markRead.mutate({ id: item.id });
                     setOpen(false);
                   }}
                   className="flex gap-3 rounded-lg p-3 text-left hover:bg-[var(--brand-primary-subtle)]"

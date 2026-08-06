@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { Calendar, CheckCircle2, Clock, Loader2, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { useMyBookings, useUpdateBookingStatus } from "@/hooks/useBookingsApi";
 import type { Booking, BookingStatus } from "@/lib/api/bookings";
 
@@ -59,21 +59,10 @@ function ReservationsPage() {
 
   return (
     <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
-      <main className="min-h-screen bg-[var(--brand-bg)]">
-        <section className="border-b border-[var(--brand-border-light)] bg-white">
-          <div className="container-iwosan py-8">
-            <AccountBackLink />
-            <div className="mt-5">
-              <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Boutique</p>
-              <h1 className="mt-2 text-[32px] md:text-[42px]">Réservations</h1>
-              <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-                Confirmez, annulez ou clôturez les demandes de réservation de vos services. Configurez vos disponibilités depuis "Devenir professionnel".
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="container-iwosan py-8">
+      <AccountLayout
+        title="Réservations"
+        description={'Confirmez, annulez ou clôturez les demandes de réservation de vos services. Configurez vos disponibilités depuis "Devenir professionnel".'}
+      >
           <div className="grid gap-4 md:grid-cols-3">
             <StatCard icon={Clock} label="En attente" value={String(pendingCount)} />
             <StatCard icon={CheckCircle2} label="Confirmées" value={String(confirmedCount)} />
@@ -169,8 +158,7 @@ function ReservationsPage() {
               ))
             )}
           </div>
-        </section>
-      </main>
+      </AccountLayout>
     </ProtectedRoute>
   );
 }

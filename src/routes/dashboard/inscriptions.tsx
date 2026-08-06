@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalendarDays, Download, XCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { RouteRedirect } from "@/components/RouteRedirect";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { events } from "@/data/events";
 import { useMyRegistrations, useUnregisterEvent } from "@/hooks/useEventsFormationsApi";
 import { toEventItem, type BackendEvent } from "@/lib/eventMappers";
@@ -54,14 +55,10 @@ export function Registrations() {
   };
 
   return (
-    <main className="min-h-screen bg-[var(--brand-bg)]">
-      <section className="container-iwosan py-10">
-        <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Agenda</p>
-        <h1 className="mt-2 text-[34px] md:text-[44px]">Mes inscriptions</h1>
-        <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-          Retrouvez vos événements, formations et webinaires réservés depuis l'agenda.
-        </p>
-
+    <AccountLayout
+      title="Mes inscriptions"
+      description="Retrouvez vos événements, formations et webinaires réservés depuis l'agenda."
+    >
         {actionMessage && (
           <p className="mt-6 rounded-[8px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-[13px] font-semibold text-emerald-800">
             {actionMessage}
@@ -127,7 +124,6 @@ export function Registrations() {
         <Link to="/agenda" className="mt-6 inline-flex h-10 items-center rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
           Retour agenda
         </Link>
-      </section>
-    </main>
+    </AccountLayout>
   );
 }

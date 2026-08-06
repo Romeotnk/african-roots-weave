@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Calendar, Loader2, X } from "lucide-react";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useMyBookings, useUpdateBookingStatus } from "@/hooks/useBookingsApi";
 import type { BookingStatus } from "@/lib/api/bookings";
@@ -37,21 +37,10 @@ function ReservationsPage() {
   const list = bookings ?? [];
 
   return (
-    <main className="min-h-screen bg-[var(--brand-bg)]">
-      <section className="border-b border-[var(--brand-border-light)] bg-white">
-        <div className="container-iwosan py-8">
-          <AccountBackLink />
-          <div className="mt-5">
-            <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Mon compte</p>
-            <h1 className="mt-2 text-[32px] md:text-[42px]">Mes réservations</h1>
-            <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-              Suivez vos demandes de réservation de services auprès des professionnels.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="container-iwosan py-8">
+    <AccountLayout
+      title="Mes réservations"
+      description="Suivez vos demandes de réservation de services auprès des professionnels."
+    >
         <div className="space-y-3">
           {isLoading ? (
             <div className="flex items-center justify-center rounded-[8px] border border-[var(--brand-border-light)] bg-white p-10">
@@ -95,7 +84,6 @@ function ReservationsPage() {
             ))
           )}
         </div>
-      </section>
-    </main>
+    </AccountLayout>
   );
 }

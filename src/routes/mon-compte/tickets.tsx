@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { MessageCircle, Send } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { useMyTickets, useReplyTicket } from "@/hooks/useTicketsApi";
 import { useAuth } from "@/lib/auth/AuthContext";
 import type { SupportTicket, SupportTicketStatus } from "@/types";
@@ -108,13 +108,8 @@ function TicketsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[var(--brand-bg)]">
-      <section className="container-iwosan py-10">
-        <AccountBackLink />
-        <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Support</p>
-        <h1 className="mt-2 text-[34px] md:text-[44px]">Mes tickets</h1>
-
-        <div className="mt-5 flex flex-wrap items-center gap-3">
+    <AccountLayout title="Mes tickets" description="Suivez vos échanges avec le support Iwosan.">
+        <div className="flex flex-wrap items-center gap-3">
           <label className="text-[13px] font-semibold text-[var(--color-text-muted)]" htmlFor="ticket-status-filter">
             Filtrer
           </label>
@@ -238,7 +233,6 @@ function TicketsPage() {
           </section>
         </div>
         )}
-      </section>
-    </main>
+    </AccountLayout>
   );
 }

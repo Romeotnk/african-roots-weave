@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { Banknote, CheckCircle2, Copy, Loader2, Search, Wallet } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { useAffiliateLink, useMyCommissions } from "@/hooks/useMlmApi";
 import type { MlmCommission } from "@/lib/api/mlm";
 
@@ -79,26 +79,15 @@ function CommissionsPage() {
 
   return (
     <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
-      <main className="min-h-screen bg-[var(--brand-bg)]">
-        <section className="border-b border-[var(--brand-border-light)] bg-white">
-          <div className="container-iwosan py-8">
-            <AccountBackLink />
-            <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-              <div>
-                <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Reseau</p>
-                <h1 className="mt-2 text-[32px] md:text-[42px]">Commissions</h1>
-                <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-                  Suivez vos gains de vente directe, d'affiliation et de reseau.
-                </p>
-              </div>
-              <button type="button" onClick={copyAffiliateLink} className="btn-secondary h-11 px-5 text-[14px]">
-                <Copy size={17} /> Copier le lien
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <section className="container-iwosan py-8">
+      <AccountLayout
+        title="Commissions"
+        description="Suivez vos gains de vente directe, d'affiliation et de reseau."
+        actions={
+          <button type="button" onClick={copyAffiliateLink} className="btn-secondary h-11 px-5 text-[14px]">
+            <Copy size={17} /> Copier le lien
+          </button>
+        }
+      >
           <div className="grid gap-4 md:grid-cols-2">
             <StatCard icon={Banknote} label="A venir (livraison confirmee)" value={formatMoney(totals.pendingPayout)} />
             <StatCard icon={CheckCircle2} label="Deja versee au portefeuille" value={formatMoney(totals.paid)} />
@@ -186,8 +175,7 @@ function CommissionsPage() {
               {error && <p className="mt-4 rounded-[8px] bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-700">{error}</p>}
             </aside>
           </div>
-        </section>
-      </main>
+      </AccountLayout>
     </ProtectedRoute>
   );
 }

@@ -4,7 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Camera, Eye, EyeOff, KeyRound, Save, User } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import type { AppRole } from "@/lib/auth/AuthContext";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { changePassword, updateMe } from "@/lib/api/auth";
 import { useMeQuery } from "@/hooks/useAuthApi";
 import { getPasswordValidationError } from "@/lib/auth/password";
@@ -134,36 +134,26 @@ export function ProfilePage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { all
 
   return (
     <ProtectedRoute requireAnyRole={allowedRoles}>
-      <main className="min-h-screen bg-[var(--brand-bg)]">
-        <section className="border-b border-[var(--brand-border-light)] bg-white">
-          <div className="container-iwosan py-8">
-            <AccountBackLink />
-            <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-              <div>
-                <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Profil</p>
-                <h1 className="mt-2 text-[32px] md:text-[42px]">Mon profil</h1>
-                <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-                  Identite, photo de compte et securite du compte connecte.
-                </p>
-              </div>
-              <div className="flex items-center gap-3 rounded-[8px] border border-[var(--brand-border-light)] px-4 py-3">
-                <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-[var(--brand-primary-subtle)]">
-                  {form.avatarUrl ? (
-                    <img src={form.avatarUrl} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <User size={20} className="text-[var(--brand-primary)]" />
-                  )}
-                </div>
-                <div>
-                  <p className="text-[14px] font-bold">{form.firstName || "Prenom"} {form.lastName || "Nom"}</p>
-                  <p className="text-[12px] text-[var(--color-text-muted)]">{profileQuery.data?.role ?? "Compte"}</p>
-                </div>
-              </div>
+      <AccountLayout
+        title="Mon profil"
+        description="Identite, photo de compte et securite du compte connecte."
+        actions={
+          <div className="flex items-center gap-3 rounded-[8px] border border-[var(--brand-border-light)] px-4 py-3">
+            <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-[var(--brand-primary-subtle)]">
+              {form.avatarUrl ? (
+                <img src={form.avatarUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <User size={20} className="text-[var(--brand-primary)]" />
+              )}
+            </div>
+            <div>
+              <p className="text-[14px] font-bold">{form.firstName || "Prenom"} {form.lastName || "Nom"}</p>
+              <p className="text-[12px] text-[var(--color-text-muted)]">{profileQuery.data?.role ?? "Compte"}</p>
             </div>
           </div>
-        </section>
-
-        <section className="container-iwosan grid gap-5 py-8 lg:grid-cols-[1.3fr_0.7fr]">
+        }
+      >
+        <div className="grid gap-5 lg:grid-cols-[1.3fr_0.7fr]">
           <form onSubmit={submitProfile} className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
             <div className="flex items-center gap-3">
               <Camera size={20} className="text-[var(--brand-primary)]" />
@@ -259,8 +249,8 @@ export function ProfilePage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { all
               {passwordMutation.isPending ? "Changement..." : "Changer le mot de passe"}
             </button>
           </form>
-        </section>
-      </main>
+        </div>
+      </AccountLayout>
     </ProtectedRoute>
   );
 }

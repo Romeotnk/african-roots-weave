@@ -56,6 +56,22 @@ export const passwordResetRateLimit = rateLimit({
   message: authRateLimitMessage,
 });
 
+// The public contact form has no auth to key off of and sends an outbound
+// email per submission — a dedicated, tighter budget keeps it from becoming
+// a free email-spam relay without affecting the generic global limit.
+export const contactFormRateLimit = rateLimit({
+  skip: skipWhenDisabled,
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    data: null,
+    message: "Too many messages sent, please try again later",
+  },
+});
+
 // Payment, wallet and KYC endpoints move money or submit identity documents —
 // worth a tighter, dedicated budget instead of relying on the generic global
 // rate limit that covers every other read-mostly endpoint in the API.

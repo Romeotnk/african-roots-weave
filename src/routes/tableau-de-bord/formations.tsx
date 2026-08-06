@@ -1,9 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Eye, GraduationCap, PlayCircle, Plus, Search, Upload } from "lucide-react";
+import { Eye, GraduationCap, Loader2, PlayCircle, Plus, Search, Upload } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
-import { trainings } from "@/data/trainings";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { useCreateFormation, useMyFormations, useUpdateFormation } from "@/hooks/useEventsFormationsApi";
 import { toTrainingCourses } from "@/lib/mappers/formation";
 import type { TrainingCourse } from "@/types";
@@ -46,18 +45,13 @@ function TrainingsDashboard() {
   const createFormation = useCreateFormation();
   const updateFormation = useUpdateFormation();
 
-  const apiCourses: LocalCourse[] = useMemo(() => {
+  const courses: LocalCourse[] = useMemo(() => {
     const raw = (myFormationsQuery.data?.formations ?? []) as { isPublished?: boolean }[];
     return toTrainingCourses(raw).map((course, index) => ({
       ...course,
       status: raw[index]?.isPublished ? "published" : "draft",
     }));
   }, [myFormationsQuery.data]);
-
-  const isRealData = myFormationsQuery.isSuccess;
-  const courses: LocalCourse[] = isRealData
-    ? apiCourses
-    : trainings.map((course, index) => ({ ...course, status: index === 1 ? "draft" : "published" }));
 
   const [filter, setFilter] = useState<CourseStatus | "all">("all");
   const [query, setQuery] = useState("");
@@ -79,10 +73,6 @@ function TrainingsDashboard() {
   }, [courses, filter, query]);
 
   const updateStatus = (id: string, status: CourseStatus) => {
-    if (!isRealData) {
-      setMessage(status === "published" ? "Formation publiée." : "Formation repassée en brouillon.");
-      return;
-    }
     updateFormation.mutate(
       { id, payload: { isPublished: status === "published" } },
       {
@@ -133,26 +123,15 @@ function TrainingsDashboard() {
   };
 
   return (
-    <main className="min-h-screen bg-[var(--brand-bg)]">
-      <section className="border-b border-[var(--brand-border-light)] bg-white">
-        <div className="container-iwosan py-8">
-          <AccountBackLink />
-          <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Communaute</p>
-              <h1 className="mt-2 text-[32px] md:text-[42px]">Mes formations</h1>
-              <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-                Gérez les ressources de formation que vous avez créées ou publiées.
-              </p>
-            </div>
-            <button type="button" onClick={() => setShowForm((value) => !value)} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white">
-              <Plus size={17} /> {showForm ? "Fermer" : "Nouvelle formation"}
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section className="container-iwosan py-8">
+    <AccountLayout
+      title="Mes formations"
+      description="Gérez les ressources de formation que vous avez créées ou publiées."
+      actions={
+        <button type="button" onClick={() => setShowForm((value) => !value)} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white">
+          <Plus size={17} /> {showForm ? "Fermer" : "Nouvelle formation"}
+        </button>
+      }
+    >
         <div className="grid gap-4 md:grid-cols-3">
           <StatCard label="Formations" value={courses.length} icon={GraduationCap} />
           <StatCard label="Publiées" value={courses.filter((course) => course.status === "published").length} icon={Upload} />
@@ -206,15 +185,22 @@ function TrainingsDashboard() {
         {message && <p className="mt-5 rounded-[8px] bg-emerald-50 p-3 text-[13px] font-semibold text-emerald-800">{message}</p>}
 
         <div className="mt-6 space-y-4">
-          {filtered.length === 0 && (
+          {myFormationsQuery.isLoading ? (
+            <div className="flex items-center justify-center rounded-[8px] border border-[var(--brand-border-light)] bg-white p-10">
+              <Loader2 className="animate-spin text-[var(--brand-primary)]" size={28} />
+            </div>
+          ) : myFormationsQuery.isError ? (
+            <div className="rounded-[8px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
+              Impossible de charger vos formations pour le moment.
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="rounded-[8px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
               <GraduationCap className="mx-auto text-[var(--brand-primary)]" size={32} />
               <h2 className="mt-3 text-[20px] font-bold">Aucune formation trouvée</h2>
               <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Changez le filtre, la recherche ou créez une nouvelle ressource.</p>
             </div>
-          )}
-
-          {filtered.map((course) => (
+          ) : (
+          filtered.map((course) => (
             <article key={course.id} className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
               <div className="grid gap-4 lg:grid-cols-[160px_1fr]">
                 <img src={course.image} alt="" className="aspect-video w-full rounded-[8px] object-cover lg:aspect-square" />
@@ -249,10 +235,10 @@ function TrainingsDashboard() {
                 </div>
               </div>
             </article>
-          ))}
+          ))
+          )}
         </div>
-      </section>
-    </main>
+    </AccountLayout>
   );
 }
 

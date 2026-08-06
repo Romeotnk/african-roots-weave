@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { CheckCircle2, Copy, Link2, MousePointerClick, Wallet } from "lucide-react";
 import { useState } from "react";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useMyAffiliateCommissions, useMyAffiliateLink } from "@/hooks/useAffiliateApi";
 
@@ -44,21 +44,10 @@ function AffiliationPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[var(--brand-bg)]">
-      <section className="border-b border-[var(--brand-border-light)] bg-white">
-        <div className="container-iwosan py-8">
-          <AccountBackLink />
-          <div className="mt-5">
-            <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Croissance</p>
-            <h1 className="mt-2 text-[32px] md:text-[42px]">Programme d'affiliation</h1>
-            <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-              Partagez votre lien unique : vous percevez une commission sur chaque vente qu'il génère, indépendamment de votre réseau MLM.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="container-iwosan py-8">
+    <AccountLayout
+      title="Programme d'affiliation"
+      description="Partagez votre lien unique : vous percevez une commission sur chaque vente qu'il génère, indépendamment de votre réseau MLM."
+    >
         <div className="grid gap-4 md:grid-cols-3">
           <StatCard icon={MousePointerClick} label="Clics" value={String(affiliateLink?.clicks ?? 0)} />
           <StatCard icon={Wallet} label="Versées" value={formatMoney(paidTotal)} />
@@ -104,8 +93,7 @@ function AffiliationPage() {
             )}
           </div>
         </div>
-      </section>
-    </main>
+    </AccountLayout>
   );
 }
 

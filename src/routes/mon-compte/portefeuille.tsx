@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { walletSummary, walletTransactions } from "@/data/wallet";
 import type { WalletTransactionStatus, WalletTransactionType } from "@/types";
@@ -88,7 +88,7 @@ function WalletPage() {
         const matchesType = typeFilter === "all" || transaction.type === typeFilter;
         const matchesStatus = statusFilter === "all" || transaction.status === statusFilter;
         const txDate = new Date(transaction.date).getTime();
-        const now = new Date("2026-06-15").getTime();
+        const now = Date.now();
         const matchesPeriod =
           periodFilter === "week"
             ? now - txDate <= 7 * 24 * 60 * 60 * 1000
@@ -167,21 +167,11 @@ function WalletPage() {
 
   return (
     <ProtectedRoute>
-    <main className="min-h-screen bg-[var(--brand-bg)]">
-      <section className="border-b border-[var(--brand-border-light)] bg-white">
-        <div className="container-iwosan py-8">
-          <AccountBackLink />
-          <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--brand-primary)]">
-            Mon compte
-          </p>
-          <h1 className="mt-2 text-[32px] md:text-[42px]">Portefeuille Iwosan</h1>
-          <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-            Solde, transactions, dépôt, retrait et transfert liés à votre compte connecté.
-          </p>
-        </div>
-      </section>
-
-      <section className="container-iwosan py-8 space-y-6">
+    <AccountLayout
+      title="Portefeuille Iwosan"
+      description="Solde, transactions, dépôt, retrait et transfert liés à votre compte connecté."
+    >
+      <div className="space-y-6">
         <div className="rounded-[16px] bg-[var(--brand-primary)] p-7 text-white">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -298,7 +288,7 @@ function WalletPage() {
             </div>
           </aside>
         </div>
-      </section>
+      </div>
 
       <WalletActionDialog
         dialog={dialog}
@@ -311,7 +301,7 @@ function WalletPage() {
         onConfirm={submitWalletAction}
         isPending={deposit.isPending || withdraw.isPending || transfer.isPending}
       />
-    </main>
+    </AccountLayout>
     </ProtectedRoute>
   );
 }

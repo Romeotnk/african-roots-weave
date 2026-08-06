@@ -88,7 +88,7 @@ const withCategoryLabel = async <T extends { category: string }>(product: T) => 
   return { ...product, categoryLabel: labels.get(product.category) ?? product.category };
 };
 
-const withCategoryLabels = async <T extends { category: string }>(products: T[]) => {
+export const withCategoryLabels = async <T extends { category: string }>(products: T[]) => {
   const labels = await getCategoryLabelMap();
   return products.map((product) => ({ ...product, categoryLabel: labels.get(product.category) ?? product.category }));
 };

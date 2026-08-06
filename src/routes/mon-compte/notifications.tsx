@@ -2,9 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, CheckCircle2, MessageSquare, PackageCheck, Star, Store, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
-import type { AppNotification, NotificationType } from "@/data/notifications";
-import { useNotifications } from "@/hooks/useNotificationsApi";
+import { AccountLayout } from "@/components/account/AccountLayout";
+import type { NotificationType } from "@/data/notifications";
+import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from "@/hooks/useNotificationsApi";
 
 export const Route = createFileRoute("/mon-compte/notifications")({
   head: () => ({ meta: [{ title: "Notifications - IWOSAN" }] }),
@@ -34,45 +34,47 @@ const filterLabels: Record<"all" | NotificationType, string> = {
 
 function NotificationsPage() {
   const [filter, setFilter] = useState<"all" | NotificationType>("all");
-  const [localNotifications, setLocalNotifications] = useState<AppNotification[] | null>(null);
   const [actionMessage, setActionMessage] = useState("");
-  const { data: notifications = [] } = useNotifications();
-  const items = localNotifications ?? notifications;
+  const { data: items = [] } = useNotifications();
+  const markRead = useMarkNotificationRead();
+  const markAllReadMutation = useMarkAllNotificationsRead();
   const filtered = useMemo(() => items.filter((item) => filter === "all" || item.type === filter), [filter, items]);
   const unreadCount = items.filter((item) => !item.read).length;
 
   const updateReadState = (id: string, read: boolean) => {
-    setLocalNotifications((current) => (current ?? notifications).map((item) => (item.id === id ? { ...item, read } : item)));
-    setActionMessage(read ? "Notification marquee comme lue." : "Notification marquee comme non lue.");
+    markRead.mutate(
+      { id, read },
+      {
+        onSuccess: () => setActionMessage(read ? "Notification marquee comme lue." : "Notification marquee comme non lue."),
+        onError: (error) => setActionMessage(error instanceof Error ? error.message : "Action impossible."),
+      },
+    );
   };
 
   const markAllRead = () => {
-    setLocalNotifications((current) => (current ?? notifications).map((item) => ({ ...item, read: true })));
-    setActionMessage("Toutes les notifications sont marquees comme lues.");
+    markAllReadMutation.mutate(undefined, {
+      onSuccess: () => setActionMessage("Toutes les notifications sont marquees comme lues."),
+      onError: (error) => setActionMessage(error instanceof Error ? error.message : "Action impossible."),
+    });
   };
 
   return (
-    <main className="min-h-screen bg-[var(--brand-bg)] py-10">
-      <div className="container-iwosan max-w-4xl">
-        <AccountBackLink />
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-[34px]">Notifications</h1>
-            <p className="mt-2 text-[13px] text-[var(--color-text-muted)]">
-              {unreadCount > 0 ? `${unreadCount} notification${unreadCount > 1 ? "s" : ""} non lue${unreadCount > 1 ? "s" : ""}.` : "Aucune notification non lue."}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={markAllRead}
-            disabled={items.length === 0 || unreadCount === 0}
-            className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] bg-white px-4 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <CheckCircle2 size={15} /> Tout marquer lu
-          </button>
-        </div>
-
-        <div className="mt-5 flex flex-wrap gap-2">
+    <AccountLayout
+      title="Notifications"
+      description={unreadCount > 0 ? `${unreadCount} notification${unreadCount > 1 ? "s" : ""} non lue${unreadCount > 1 ? "s" : ""}.` : "Aucune notification non lue."}
+      actions={
+        <button
+          type="button"
+          onClick={markAllRead}
+          disabled={items.length === 0 || unreadCount === 0 || markAllReadMutation.isPending}
+          className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] bg-white px-4 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <CheckCircle2 size={15} /> Tout marquer lu
+        </button>
+      }
+    >
+      <div className="max-w-4xl">
+        <div className="flex flex-wrap gap-2">
           {(["all", "message", "listing", "order", "review", "forum"] as const).map((item) => (
             <button
               key={item}
@@ -123,7 +125,8 @@ function NotificationsPage() {
                   <button
                     type="button"
                     onClick={() => updateReadState(item.id, !item.read)}
-                    className="rounded-full border border-[var(--brand-border)] px-3 py-1 text-[12px] font-semibold"
+                    disabled={markRead.isPending && markRead.variables?.id === item.id}
+                    className="rounded-full border border-[var(--brand-border)] px-3 py-1 text-[12px] font-semibold disabled:opacity-50"
                   >
                     {item.read ? "Marquer non lue" : "Marquer lue"}
                   </button>
@@ -133,6 +136,6 @@ function NotificationsPage() {
           })}
         </div>
       </div>
-    </main>
+    </AccountLayout>
   );
 }

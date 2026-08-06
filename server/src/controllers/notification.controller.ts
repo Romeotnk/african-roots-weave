@@ -15,11 +15,12 @@ export const listNotifications = asyncHandler(async (req, res) => {
 
 export const readNotification = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
+  const isRead = typeof req.body?.read === "boolean" ? req.body.read : true;
   const notification = await prisma.notification.update({
     where: { id: req.params.id, userId: req.user.id },
-    data: { isRead: true },
+    data: { isRead },
   });
-  res.json(apiResponse(true, notification, "Notification marked as read"));
+  res.json(apiResponse(true, notification, isRead ? "Notification marked as read" : "Notification marked as unread"));
 });
 
 export const readAllNotifications = asyncHandler(async (req, res) => {

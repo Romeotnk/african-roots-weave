@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bookmark, MessageCircle, ThumbsUp } from "lucide-react";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useMyFavorites, useToggleFavorite } from "@/hooks/useForumApi";
 import { toQuestion, type BackendQuestion } from "@/lib/forumMappers";
@@ -28,17 +28,10 @@ function FavoritesPage() {
 
   return (
     <ProtectedRoute>
-      <main className="min-h-screen bg-[var(--brand-bg)]">
-        <section className="border-b border-[var(--brand-border-light)] bg-white">
-          <div className="container-iwosan py-8">
-            <AccountBackLink />
-            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--brand-primary)]">Mon compte</p>
-            <h1 className="mt-2 text-[32px] md:text-[42px]">Mes favoris</h1>
-            <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Questions du forum que vous avez enregistrées pour les retrouver facilement.</p>
-          </div>
-        </section>
-
-        <section className="container-iwosan py-8">
+      <AccountLayout
+        title="Mes favoris"
+        description="Questions du forum que vous avez enregistrées pour les retrouver facilement."
+      >
           {favoritesQuery.isLoading && <p className="text-[13px] text-[var(--color-text-muted)]">Chargement...</p>}
 
           {!favoritesQuery.isLoading && !answerFavoritesQuery.isLoading && favorites.length === 0 && favoriteAnswers.length === 0 && (
@@ -106,8 +99,7 @@ function FavoritesPage() {
               </div>
             </div>
           )}
-        </section>
-      </main>
+      </AccountLayout>
     </ProtectedRoute>
   );
 }

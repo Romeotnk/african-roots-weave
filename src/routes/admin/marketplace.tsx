@@ -14,6 +14,7 @@ type PendingProduct = {
   title: string;
   price: string | number;
   category: string;
+  categoryLabel?: string;
   type: string;
   createdAt: string;
 };
@@ -46,7 +47,7 @@ function AdminMarketplace() {
               {products.map((product) => (
                 <tr key={product.id} className="border-t border-white/10">
                   <td className="px-4 py-3 font-semibold text-white">{product.title}</td>
-                  <td className="px-4 py-3 text-slate-200">{product.category}</td>
+                  <td className="px-4 py-3 text-slate-200">{product.categoryLabel ?? product.category}</td>
                   <td className="px-4 py-3 text-slate-200">{product.type}</td>
                   <td className="px-4 py-3 text-slate-200">{Number(product.price).toLocaleString("fr-FR")} FCFA</td>
                   <td className="px-4 py-3 text-slate-200">{new Date(product.createdAt).toLocaleDateString("fr-FR")}</td>

@@ -44,6 +44,7 @@ export const env = {
     pass: process.env.SMTP_PASS,
     from: process.env.SMTP_FROM ?? "Iwosan <no-reply@iwosan.com>",
   },
+  contactEmail: process.env.CONTACT_EMAIL ?? "contact@iwosan.africa",
 };
 
 export const isTrustedDevEnvironment = () => trustedDevEnvironments.has(env.nodeEnv);

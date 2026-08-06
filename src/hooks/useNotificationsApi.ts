@@ -36,7 +36,7 @@ export function useMyAnnouncements() {
 export function useMarkNotificationRead() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: markNotificationRead,
+    mutationFn: ({ id, read = true }: { id: string; read?: boolean }) => markNotificationRead(id, read),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: notificationKeys.all }),
   });
 }

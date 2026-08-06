@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { BarChart3, CalendarDays, CheckCircle2, MapPin, ShoppingBag, Star } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { RatingStars } from "@/components/shared/RatingStars";
 import { useMyBookings } from "@/hooks/useBookingsApi";
 import { useMyProducts } from "@/hooks/useApiCatalog";
@@ -39,7 +39,9 @@ function ProfessionalShowcasePage() {
   if (profileQuery.isLoading) {
     return (
       <ProtectedRoute>
-        <main className="container-iwosan py-16 text-center text-[14px] text-[var(--color-text-muted)]">Chargement de votre vitrine...</main>
+        <AccountLayout>
+          <p className="py-16 text-center text-[14px] text-[var(--color-text-muted)]">Chargement de votre vitrine...</p>
+        </AccountLayout>
       </ProtectedRoute>
     );
   }
@@ -47,12 +49,14 @@ function ProfessionalShowcasePage() {
   if (!profile) {
     return (
       <ProtectedRoute>
-        <main className="container-iwosan py-16 text-center">
-          <p className="text-[16px] font-semibold">Aucun profil professionnel trouvé.</p>
-          <Link to="/devenir-pro" className="mt-4 inline-flex rounded-full bg-[var(--brand-primary)] px-5 py-3 font-semibold text-white">
-            Créer mon profil professionnel
-          </Link>
-        </main>
+        <AccountLayout>
+          <div className="py-16 text-center">
+            <p className="text-[16px] font-semibold">Aucun profil professionnel trouvé.</p>
+            <Link to="/devenir-pro" className="mt-4 inline-flex rounded-full bg-[var(--brand-primary)] px-5 py-3 font-semibold text-white">
+              Créer mon profil professionnel
+            </Link>
+          </div>
+        </AccountLayout>
       </ProtectedRoute>
     );
   }
@@ -62,15 +66,14 @@ function ProfessionalShowcasePage() {
 
   return (
     <ProtectedRoute>
-      <main className="bg-[var(--brand-bg)]">
-        <section className="relative overflow-hidden bg-[var(--brand-primary-dark)] text-white">
+      <AccountLayout>
+        <section className="relative -m-5 mb-8 overflow-hidden rounded-[24px] bg-[var(--brand-primary-dark)] text-white md:-m-8 md:mb-8">
           <div className="absolute inset-0">
             <img src={cover} alt="" className="h-full w-full object-cover opacity-25" />
             <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(31,90,57,.25),rgba(31,90,57,.92))]" />
           </div>
-          <div className="relative container-iwosan py-16 md:py-20">
-            <AccountBackLink />
-            <div className="mt-8 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="relative px-6 py-16 md:px-10 md:py-20">
+            <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl">
                 <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-[var(--brand-gold)]">VITRINE PROFESSIONNELLE</p>
                 <h1 className="mt-4 text-[36px] md:text-[62px] text-white">{profile.displayName}</h1>
@@ -150,7 +153,7 @@ function ProfessionalShowcasePage() {
             </aside>
           </div>
         </section>
-      </main>
+      </AccountLayout>
     </ProtectedRoute>
   );
 }

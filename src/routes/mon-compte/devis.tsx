@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, FileText, Loader2, X } from "lucide-react";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAcceptQuote, useDeclineQuote, useMyQuotes } from "@/hooks/useQuotesApi";
 import type { QuoteStatus } from "@/lib/api/quotes";
@@ -37,21 +37,10 @@ function MyQuotesPage() {
   const list = quotes ?? [];
 
   return (
-    <main className="min-h-screen bg-[var(--brand-bg)]">
-      <section className="border-b border-[var(--brand-border-light)] bg-white">
-        <div className="container-iwosan py-8">
-          <AccountBackLink />
-          <div className="mt-5">
-            <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Mon compte</p>
-            <h1 className="mt-2 text-[32px] md:text-[42px]">Mes devis</h1>
-            <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-              Suivez vos demandes de devis et acceptez la proposition d'un vendeur pour créer votre commande.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="container-iwosan py-8">
+    <AccountLayout
+      title="Mes devis"
+      description="Suivez vos demandes de devis et acceptez la proposition d'un vendeur pour créer votre commande."
+    >
         <div className="space-y-3">
           {isLoading ? (
             <div className="flex items-center justify-center rounded-[8px] border border-[var(--brand-border-light)] bg-white p-10">
@@ -109,7 +98,6 @@ function MyQuotesPage() {
             ))
           )}
         </div>
-      </section>
-    </main>
+    </AccountLayout>
   );
 }

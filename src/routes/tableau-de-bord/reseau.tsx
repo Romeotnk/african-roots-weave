@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { Copy, Download, Loader2, Network, Search, TrendingUp, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { useAffiliateLink, useMlmTree } from "@/hooks/useMlmApi";
 import type { MlmNode } from "@/lib/api/mlm";
 
@@ -102,26 +102,15 @@ function ReseauPage() {
 
   return (
     <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
-      <main className="min-h-screen bg-[var(--brand-bg)]">
-        <section className="border-b border-[var(--brand-border-light)] bg-white">
-          <div className="container-iwosan py-8">
-            <AccountBackLink />
-            <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-              <div>
-                <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Reseau</p>
-                <h1 className="mt-2 text-[32px] md:text-[42px]">Mon reseau</h1>
-                <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-                  Visualisez votre reseau de filleuls sur 3 niveaux et partagez votre lien pour en inviter de nouveaux.
-                </p>
-              </div>
-              <button type="button" onClick={exportList} className="btn-secondary h-11 px-5 text-[14px]">
-                <Download size={17} /> Exporter
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <section className="container-iwosan py-8">
+      <AccountLayout
+        title="Mon reseau"
+        description="Visualisez votre reseau de filleuls sur 3 niveaux et partagez votre lien pour en inviter de nouveaux."
+        actions={
+          <button type="button" onClick={exportList} className="btn-secondary h-11 px-5 text-[14px]">
+            <Download size={17} /> Exporter
+          </button>
+        }
+      >
           <div className="grid gap-4 md:grid-cols-3">
             <StatCard icon={Users} label="Filleuls" value={String(members.length)} />
             <StatCard icon={Network} label="Niveau 2+" value={String(levelTwoCount)} />
@@ -213,8 +202,7 @@ function ReseauPage() {
               </div>
             </div>
           </div>
-        </section>
-      </main>
+      </AccountLayout>
     </ProtectedRoute>
   );
 }

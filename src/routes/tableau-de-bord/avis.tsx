@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { MessageSquareReply, Search, Star } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { RatingStars } from "@/components/shared/RatingStars";
 import { useMyReceivedReviews, useReplyToReview } from "@/hooks/useReviewsApi";
 
@@ -64,19 +64,10 @@ function ReviewsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[var(--brand-bg)]">
-      <section className="border-b border-[var(--brand-border-light)] bg-white">
-        <div className="container-iwosan py-8">
-          <AccountBackLink />
-          <p className="mt-5 text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Profil professionnel</p>
-          <h1 className="mt-2 text-[32px] md:text-[42px]">Avis reçus</h1>
-          <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-            Suivez les retours clients sur vos produits et votre profil, et répondez-y publiquement.
-          </p>
-        </div>
-      </section>
-
-      <section className="container-iwosan py-8">
+    <AccountLayout
+      title="Avis reçus"
+      description="Suivez les retours clients sur vos produits et votre profil, et répondez-y publiquement."
+    >
         {reviewsQuery.isLoading && <p className="text-[14px] text-[var(--color-text-muted)]">Chargement...</p>}
         {reviewsQuery.isError && (
           <p className="rounded-[8px] border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700">Impossible de charger vos avis.</p>
@@ -156,8 +147,7 @@ function ReviewsPage() {
             </div>
           </>
         )}
-      </section>
-    </main>
+    </AccountLayout>
   );
 }
 

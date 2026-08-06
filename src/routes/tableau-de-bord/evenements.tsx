@@ -1,9 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Calendar, Eye, Plus, Search, Ticket, XCircle } from "lucide-react";
+import { Calendar, Eye, Loader2, Plus, Search, Ticket, XCircle } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
-import { events } from "@/data/events";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { useCreateEvent, useMyEvents, useUpdateEvent } from "@/hooks/useEventsFormationsApi";
 import { toEventItem, type BackendEvent } from "@/lib/eventMappers";
 import type { EventItem } from "@/types";
@@ -61,7 +60,7 @@ function EventsDashboard() {
   const createEventMutation = useCreateEvent();
   const updateEventMutation = useUpdateEvent();
 
-  const apiEvents = useMemo(
+  const items: LocalEvent[] = useMemo(
     () =>
       ((myEventsQuery.data?.events ?? []) as (BackendEvent & { isPublished?: boolean })[])
         .map((event) => {
@@ -71,8 +70,6 @@ function EventsDashboard() {
         .filter((item): item is LocalEvent => Boolean(item)),
     [myEventsQuery.data],
   );
-  const isRealData = myEventsQuery.isSuccess;
-  const items: LocalEvent[] = isRealData ? apiEvents : events.map((event) => ({ ...event, localStatus: event.status ?? "confirmed" }));
 
   const [filter, setFilter] = useState<EventStatus | "all">("all");
   const [query, setQuery] = useState("");
@@ -95,7 +92,6 @@ function EventsDashboard() {
   const registeredTotal = items.reduce((sum, event) => sum + (event.registered ?? 0), 0);
 
   const updateStatus = (id: string, status: EventStatus) => {
-    if (!isRealData) return;
     updateEventMutation.mutate(
       { id, payload: { isPublished: status === "confirmed" } },
       {
@@ -160,26 +156,15 @@ function EventsDashboard() {
   };
 
   return (
-    <main className="min-h-screen bg-[var(--brand-bg)]">
-      <section className="border-b border-[var(--brand-border-light)] bg-white">
-        <div className="container-iwosan py-8">
-          <AccountBackLink />
-          <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Communauté</p>
-              <h1 className="mt-2 text-[32px] md:text-[42px]">Mes événements</h1>
-              <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-                Gérez les webinaires, salons, ateliers et formations que vous proposez.
-              </p>
-            </div>
-            <button type="button" onClick={() => setShowForm((value) => !value)} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white">
-              <Plus size={17} /> {showForm ? "Fermer" : "Nouvel événement"}
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section className="container-iwosan py-8">
+    <AccountLayout
+      title="Mes événements"
+      description="Gérez les webinaires, salons, ateliers et formations que vous proposez."
+      actions={
+        <button type="button" onClick={() => setShowForm((value) => !value)} className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white">
+          <Plus size={17} /> {showForm ? "Fermer" : "Nouvel événement"}
+        </button>
+      }
+    >
         <div className="grid gap-4 md:grid-cols-3">
           <StatCard label="Événements" value={items.length} icon={Calendar} />
           <StatCard label="Publiés" value={items.filter((event) => event.localStatus === "confirmed").length} icon={Eye} />
@@ -248,15 +233,22 @@ function EventsDashboard() {
         {message && <p className="mt-5 rounded-[8px] bg-emerald-50 p-3 text-[13px] font-semibold text-emerald-800">{message}</p>}
 
         <div className="mt-6 space-y-4">
-          {filtered.length === 0 && (
+          {myEventsQuery.isLoading ? (
+            <div className="flex items-center justify-center rounded-[8px] border border-[var(--brand-border-light)] bg-white p-10">
+              <Loader2 className="animate-spin text-[var(--brand-primary)]" size={28} />
+            </div>
+          ) : myEventsQuery.isError ? (
+            <div className="rounded-[8px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
+              Impossible de charger vos événements pour le moment.
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="rounded-[8px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
               <Calendar className="mx-auto text-[var(--brand-primary)]" size={32} />
               <h2 className="mt-3 text-[20px] font-bold">Aucun événement trouvé</h2>
               <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Changez le filtre, la recherche ou préparez un nouvel événement.</p>
             </div>
-          )}
-
-          {filtered.map((event) => {
+          ) : (
+          filtered.map((event) => {
             const capacity = event.capacity ?? 0;
             const registered = event.registered ?? 0;
             const fillRate = capacity > 0 ? Math.min(100, Math.round((registered / capacity) * 100)) : 0;
@@ -309,10 +301,10 @@ function EventsDashboard() {
                 </div>
               </article>
             );
-          })}
+          })
+          )}
         </div>
-      </section>
-    </main>
+    </AccountLayout>
   );
 }
 

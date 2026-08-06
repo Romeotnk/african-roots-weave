@@ -41,8 +41,8 @@ export const listMyAnnouncements = async () => {
   return (response.data ?? []).filter((item) => item.type === "SYSTEM");
 };
 
-export const markNotificationRead = (id: string) =>
-  apiRequest<BackendNotification>(`/notifications/${id}/read`, { method: "PUT" });
+export const markNotificationRead = (id: string, read = true) =>
+  apiRequest<BackendNotification>(`/notifications/${id}/read`, { method: "PUT", body: { read } });
 
 export const markAllNotificationsRead = () =>
   apiRequest<null>("/notifications/read-all", { method: "PUT" });

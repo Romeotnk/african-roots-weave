@@ -1,11 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2, Eye, MessageSquare, Plus, Star } from "lucide-react";
+import { CheckCircle2, Eye, Loader2, MessageSquare, Plus, Star } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import type { AppRole } from "@/lib/auth/AuthContext";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
-import { questions } from "@/data/questions";
-import { useMyForumQuestions } from "@/hooks/useForumApi";
+import { AccountLayout } from "@/components/account/AccountLayout";
+import { useMyFavorites, useMyForumQuestions, useToggleFavorite } from "@/hooks/useForumApi";
 import { toQuestion, type BackendQuestion } from "@/lib/forumMappers";
 import { PROFESSIONAL_ACCOUNT_ROLES } from "@/lib/auth/roles";
 
@@ -26,13 +25,17 @@ export function QuestionsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { a
     () => ((myQuestionsQuery.data?.questions ?? []) as BackendQuestion[]).map(toQuestion).filter((item): item is NonNullable<typeof item> => Boolean(item)),
     [myQuestionsQuery.data],
   );
-  const isRealData = apiQuestions.length > 0;
+  const favoritesQuery = useMyFavorites("QUESTION");
+  const toggleFavorite = useToggleFavorite();
+  const followedIds = useMemo(
+    () => new Set(((favoritesQuery.data ?? []) as { id?: string }[]).map((item) => item.id).filter((id): id is string => Boolean(id))),
+    [favoritesQuery.data],
+  );
   const [filter, setFilter] = useState<QuestionFilter>("all");
   const [message, setMessage] = useState("");
-  const [followedIds, setFollowedIds] = useState<string[]>([]);
-  const items = (isRealData ? apiQuestions : questions).map((question) => ({
+  const items = apiQuestions.map((question) => ({
     ...question,
-    followed: followedIds.includes(question.id) || Boolean(question.followed),
+    followed: followedIds.has(question.id),
   }));
 
   const filtered = useMemo(
@@ -47,31 +50,26 @@ export function QuestionsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { a
   );
 
   const toggleFollow = (id: string) => {
-    setFollowedIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
-    setMessage("Suivi de la question mis à jour.");
+    const wasFollowed = followedIds.has(id);
+    toggleFavorite.mutate(
+      { targetId: id, targetType: "QUESTION" },
+      {
+        onSuccess: () => setMessage(wasFollowed ? "Question retiree du suivi." : "Question suivie."),
+        onError: (error) => setMessage(error instanceof Error ? error.message : "Action impossible."),
+      },
+    );
   };
 
   return (
-    <main className="min-h-screen bg-[var(--brand-bg)]">
-      <section className="border-b border-[var(--brand-border-light)] bg-white">
-        <div className="container-iwosan py-8">
-          <AccountBackLink />
-          <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Communauté</p>
-              <h1 className="mt-2 text-[32px] md:text-[42px]">Mes questions</h1>
-              <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-                Suivez vos questions publiées dans le forum, les réponses et les votes.
-              </p>
-            </div>
-            <Link to="/forum/nouvelle-question" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white">
-              <Plus size={17} /> Poser une question
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="container-iwosan py-8">
+    <AccountLayout
+      title="Mes questions"
+      description="Suivez vos questions publiées dans le forum, les réponses et les votes."
+      actions={
+        <Link to="/forum/nouvelle-question" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white">
+          <Plus size={17} /> Poser une question
+        </Link>
+      }
+    >
         <div className="grid gap-4 md:grid-cols-3">
           <StatCard label="Questions" value={items.length} icon={MessageSquare} />
           <StatCard label="Résolues" value={items.filter((question) => question.resolved).length} icon={CheckCircle2} />
@@ -99,15 +97,22 @@ export function QuestionsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { a
         {message && <p className="mt-5 rounded-[8px] bg-emerald-50 p-3 text-[13px] font-semibold text-emerald-800">{message}</p>}
 
         <div className="mt-6 space-y-4">
-          {filtered.length === 0 && (
+          {myQuestionsQuery.isLoading ? (
+            <div className="flex items-center justify-center rounded-[8px] border border-[var(--brand-border-light)] bg-white p-10">
+              <Loader2 className="animate-spin text-[var(--brand-primary)]" size={28} />
+            </div>
+          ) : myQuestionsQuery.isError ? (
+            <div className="rounded-[8px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
+              Impossible de charger vos questions pour le moment.
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="rounded-[8px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
               <MessageSquare className="mx-auto text-[var(--brand-primary)]" size={32} />
               <h2 className="mt-3 text-[20px] font-bold">Aucune question dans ce filtre</h2>
               <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Posez une nouvelle question ou changez le filtre.</p>
             </div>
-          )}
-
-          {filtered.map((question) => (
+          ) : (
+          filtered.map((question) => (
             <article key={question.id} className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="min-w-0">
@@ -127,8 +132,13 @@ export function QuestionsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { a
                   <Link to="/forum/$id" params={{ id: question.id }} className="inline-flex h-10 items-center rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
                     Voir
                   </Link>
-                  <button type="button" onClick={() => toggleFollow(question.id)} className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
-                    <Star size={15} /> {question.followed ? "Suivie" : "Suivre"}
+                  <button
+                    type="button"
+                    onClick={() => toggleFollow(question.id)}
+                    disabled={toggleFavorite.isPending}
+                    className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold disabled:opacity-50"
+                  >
+                    <Star size={15} className={question.followed ? "fill-current" : ""} /> {question.followed ? "Suivie" : "Suivre"}
                   </button>
                   {!question.resolved && (
                     <span className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-surface-alt)] px-4 text-[12px] text-[var(--color-text-muted)]">
@@ -138,10 +148,10 @@ export function QuestionsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { a
                 </div>
               </div>
             </article>
-          ))}
+          ))
+          )}
         </div>
-      </section>
-    </main>
+    </AccountLayout>
   );
 }
 

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { Calendar, GraduationCap, Megaphone, Video } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { useEvents, useFormations } from "@/hooks/useEventsFormationsApi";
 import { useMyAnnouncements } from "@/hooks/useNotificationsApi";
 import { toEventItem, type BackendEvent } from "@/lib/eventMappers";
@@ -34,19 +34,11 @@ function CommunicationHub() {
   const formations = (formationsQuery.data as { formations?: { id: string; title: string; category?: string; coverImage?: string | null }[] } | undefined)?.formations ?? [];
 
   return (
-    <main className="min-h-screen bg-[var(--brand-bg)]">
-      <section className="border-b border-[var(--brand-border-light)] bg-white">
-        <div className="container-iwosan py-8">
-          <AccountBackLink />
-          <p className="mt-5 text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Réseau Iwosan</p>
-          <h1 className="mt-2 text-[32px] md:text-[42px]">Communication & webinaires</h1>
-          <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-            Annonces de l'équipe Iwosan, webinaires à venir et formations pour développer votre activité.
-          </p>
-        </div>
-      </section>
-
-      <section className="container-iwosan grid gap-6 py-8 lg:grid-cols-[1fr_360px]">
+    <AccountLayout
+      title="Communication & webinaires"
+      description="Annonces de l'équipe Iwosan, webinaires à venir et formations pour développer votre activité."
+    >
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
             <h2 className="flex items-center gap-2 text-[18px] font-bold"><Megaphone size={18} className="text-[var(--brand-primary)]" /> Annonces & opportunités</h2>
@@ -109,7 +101,7 @@ function CommunicationHub() {
           </div>
           <Link to="/agenda" className="mt-4 inline-flex text-[13px] font-semibold text-[var(--brand-primary)]">Voir tout l'agenda</Link>
         </aside>
-      </section>
-    </main>
+      </div>
+    </AccountLayout>
   );
 }

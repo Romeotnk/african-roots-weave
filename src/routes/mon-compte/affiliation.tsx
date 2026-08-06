@@ -1,19 +1,13 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Copy, MessageCircle, Share2, Wallet } from "lucide-react";
-import {
-  affiliateEarnings,
-  affiliateLeaderboard,
-  affiliateProfile,
-  affiliateTree,
-} from "@/data/affiliate";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { Copy, Loader2, MessageCircle, Share2, Wallet } from "lucide-react";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAffiliateLink, useMlmEarnings, useMlmLeaderboard, useMlmStats, useMlmTree, useMyCommissions } from "@/hooks/useMlmApi";
 import type { AffiliateEarning, AffiliateNode } from "@/types";
 
 export const Route = createFileRoute("/mon-compte/affiliation")({
-  head: () => ({ meta: [{ title: "Affiliation - IWOSAN" }] }),
+  head: () => ({ meta: [{ title: "Parrainage - IWOSAN" }] }),
   component: () => (
     <ProtectedRoute requireAnyRole={["user", "researcher", "professional", "admin", "super_admin"]}>
       <AffiliationPage />
@@ -165,29 +159,27 @@ function AffiliationPage() {
   const mlmEarningsQuery = useMlmEarnings();
   const commissionsQuery = useMyCommissions();
   const leaderboardQuery = useMlmLeaderboard();
-  const displayedEarnings = useMemo(() => {
-    const rows = ((commissionsQuery.data ?? []) as BackendCommission[]).map(toAffiliateEarning).filter((row): row is AffiliateEarning => Boolean(row));
-    return rows.length > 0 ? rows : affiliateEarnings;
-  }, [commissionsQuery.data]);
-  const displayedLeaderboard = useMemo(() => {
-    const rows = (leaderboardQuery.data ?? []) as BackendLeaderboardRow[];
-    return rows.length > 0
-      ? rows.map((row) => ({ rank: row.rank ?? 0, name: row.name || "Membre Iwosan", earnings: toAmount(row.earnings) }))
-      : affiliateLeaderboard;
-  }, [leaderboardQuery.data]);
+  const displayedEarnings = useMemo(
+    () => ((commissionsQuery.data ?? []) as BackendCommission[]).map(toAffiliateEarning).filter((row): row is AffiliateEarning => Boolean(row)),
+    [commissionsQuery.data],
+  );
+  const displayedLeaderboard = useMemo(
+    () => ((leaderboardQuery.data ?? []) as BackendLeaderboardRow[]).map((row) => ({ rank: row.rank ?? 0, name: row.name || "Membre Iwosan", earnings: toAmount(row.earnings) })),
+    [leaderboardQuery.data],
+  );
   const treeRoot = useMemo(() => {
     if (mlmTreeQuery.data && typeof mlmTreeQuery.data === "object" && "id" in mlmTreeQuery.data) {
       return fromBackendNode(mlmTreeQuery.data as BackendMlmNode);
     }
-    return affiliateTree;
+    return null;
   }, [mlmTreeQuery.data]);
-  const nodes = useMemo(() => flattenTree(treeRoot), [treeRoot]);
+  const nodes = useMemo(() => (treeRoot ? flattenTree(treeRoot) : []), [treeRoot]);
   const [selectedNode, setSelectedNode] = useState<AffiliateNode | null>(null);
   const activeNode = selectedNode ?? treeRoot;
   const [copied, setCopied] = useState(false);
   const [actionMessage, setActionMessage] = useState("");
-  const affiliateLink = affiliateLinkQuery.data?.link ?? affiliateProfile.link;
-  const affiliateCode = affiliateLinkQuery.data?.code ?? affiliateProfile.code;
+  const affiliateLink = affiliateLinkQuery.data?.link ?? "";
+  const affiliateCode = affiliateLinkQuery.data?.code ?? "";
   const mlmStats = mlmStatsQuery.data as
     | { totalNodes?: number; affiliateLinkClicks?: number; commissionsAmount?: number | string | null }
     | null
@@ -205,9 +197,12 @@ function AffiliationPage() {
       level1: downline.filter((node) => node.level === 1).length,
       level2: downline.filter((node) => node.level === 2).length,
       level3: downline.filter((node) => node.level === 3).length,
-      earnings: liveEarnings ?? (toAmount(mlmStats?.commissionsAmount) || affiliateEarnings.reduce((sum, earning) => sum + earning.amount, 0)),
+      earnings: liveEarnings ?? toAmount(mlmStats?.commissionsAmount),
     };
   }, [liveEarnings, mlmStats?.commissionsAmount, nodes]);
+
+  const isLoading = affiliateLinkQuery.isLoading || mlmTreeQuery.isLoading;
+  const isError = affiliateLinkQuery.isError || mlmTreeQuery.isError;
 
   const copyAffiliateLink = async () => {
     try {
@@ -232,20 +227,32 @@ function AffiliationPage() {
     }
   };
 
-  return (
-    <main className="min-h-screen bg-[var(--brand-bg)]">
-      <section className="border-b border-[var(--brand-border-light)] bg-white">
-        <div className="container-iwosan py-10">
-          <AccountBackLink />
-          <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">MLM & affiliation</p>
-          <h1 className="mt-2 text-[34px] md:text-[44px]">Mon programme d'affiliation</h1>
-          <p className="mt-3 max-w-2xl text-[var(--color-text-secondary)]">
-            Suivez votre lien de parrainage, vos filleuls et les commissions generees par votre reseau.
-          </p>
+  if (isLoading) {
+    return (
+      <AccountLayout title="Mon parrainage" description="Suivez votre lien de parrainage, vos filleuls et les commissions generees par votre reseau.">
+        <div className="flex items-center justify-center rounded-[12px] border border-[var(--brand-border-light)] bg-white p-10">
+          <Loader2 className="animate-spin text-[var(--brand-primary)]" size={28} />
         </div>
-      </section>
+      </AccountLayout>
+    );
+  }
 
-      <section className="container-iwosan space-y-8 py-8">
+  if (isError || !treeRoot || !activeNode) {
+    return (
+      <AccountLayout title="Mon parrainage" description="Suivez votre lien de parrainage, vos filleuls et les commissions generees par votre reseau.">
+        <div className="rounded-[12px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
+          Impossible de charger vos donnees de parrainage pour le moment.
+        </div>
+      </AccountLayout>
+    );
+  }
+
+  return (
+    <AccountLayout
+      title="Mon parrainage"
+      description="Suivez votre lien de parrainage, vos filleuls et les commissions generees par votre reseau."
+    >
+      <div className="space-y-8">
         <div className="grid gap-6 lg:grid-cols-[1fr_260px]">
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
             <h2 className="text-[22px] font-bold">Mon lien de parrainage</h2>
@@ -282,17 +289,16 @@ function AffiliationPage() {
           </div>
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
             <AffiliateQrCode seed={affiliateCode} />
-            <p className="mt-3 text-[13px] font-semibold">QR code d'affiliation</p>
+            <p className="mt-3 text-[13px] font-semibold">QR code de parrainage</p>
             <p className="text-[12px] text-[var(--color-text-muted)]">Code : {affiliateCode}</p>
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-3">
           {[
             ["Inscrits", mlmStats?.totalNodes ?? totals.all],
             ["Actifs", totals.active],
-            ["Taux conversion", `${affiliateProfile.conversionRate}%`],
-            ["Clics lien", mlmStats?.affiliateLinkClicks ?? affiliateProfile.clicks],
+            ["Clics lien", mlmStats?.affiliateLinkClicks ?? 0],
           ].map(([label, value]) => (
             <div key={label} className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
               <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">{label}</p>
@@ -328,7 +334,7 @@ function AffiliationPage() {
         <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-[22px] font-bold">Mes gains d'affiliation</h2>
+              <h2 className="text-[22px] font-bold">Mes gains de parrainage</h2>
               <p className="mt-1 text-[var(--color-text-muted)]">
                 Total gagne : <strong className="text-[var(--color-text-primary)]">{totals.earnings.toLocaleString("fr-FR")} FCFA</strong>
               </p>
@@ -349,6 +355,9 @@ function AffiliationPage() {
                 <tr><th className="p-3">Date</th><th className="p-3">Type</th><th className="p-3">Source</th><th className="p-3">Montant</th><th className="p-3">Statut</th></tr>
               </thead>
               <tbody>
+                {displayedEarnings.length === 0 && (
+                  <tr><td colSpan={5} className="p-6 text-center text-[13px] text-[var(--color-text-muted)]">Aucun gain de parrainage pour le moment.</td></tr>
+                )}
                 {displayedEarnings.map((earning) => (
                   <tr key={earning.id} className="border-t border-[var(--brand-border-light)]">
                     <td className="p-3">{earning.date}</td>
@@ -383,8 +392,11 @@ function AffiliationPage() {
             </p>
           </section>
           <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="text-[18px] font-bold">Top affilies du mois</h2>
+            <h2 className="text-[18px] font-bold">Top parrains du mois</h2>
             <div className="mt-4 space-y-3">
+              {displayedLeaderboard.length === 0 && (
+                <p className="text-[13px] text-[var(--color-text-muted)]">Aucun classement disponible pour le moment.</p>
+              )}
               {displayedLeaderboard.map((row) => (
                 <div key={row.rank} className="flex items-center justify-between rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">
                   <span className="font-bold">#{row.rank} {row.name}</span>
@@ -394,7 +406,7 @@ function AffiliationPage() {
             </div>
           </section>
         </div>
-      </section>
-    </main>
+      </div>
+    </AccountLayout>
   );
 }

@@ -4,7 +4,7 @@ import { Bell, Globe2, LockKeyhole, Save, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import type { AppRole } from "@/lib/auth/AuthContext";
-import { AccountBackLink } from "@/components/dashboard/AccountBackLink";
+import { AccountLayout } from "@/components/account/AccountLayout";
 import { useLanguage } from "@/components/LanguageProvider";
 import { PROFESSIONAL_ACCOUNT_ROLES } from "@/lib/auth/roles";
 import { useMeQuery, meQueryKey } from "@/hooks/useAuthApi";
@@ -48,19 +48,11 @@ export function SettingsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { al
   };
 
   return (
-    <main className="min-h-screen bg-[var(--brand-bg)]">
-      <section className="border-b border-[var(--brand-border-light)] bg-white">
-        <div className="container-iwosan py-8">
-          <AccountBackLink />
-          <p className="mt-5 text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Compte</p>
-          <h1 className="mt-2 text-[32px] md:text-[42px]">Paramètres</h1>
-          <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-            Contrôlez les préférences principales, les notifications et les options de sécurité du compte.
-          </p>
-        </div>
-      </section>
-
-      <section className="container-iwosan grid gap-5 py-8 lg:grid-cols-[1fr_320px]">
+    <AccountLayout
+      title="Paramètres"
+      description="Contrôlez les préférences principales, les notifications et les options de sécurité du compte."
+    >
+      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
         <div className="space-y-5">
           <section className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
             <div className="flex items-center gap-3">
@@ -123,8 +115,8 @@ export function SettingsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { al
             <Save size={17} /> {updateLanguage.isPending ? "Enregistrement..." : "Enregistrer"}
           </button>
         </aside>
-      </section>
-    </main>
+      </div>
+    </AccountLayout>
   );
 }
 
