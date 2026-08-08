@@ -78,7 +78,17 @@ app.use(
 );
 app.use(compression());
 app.use(cookieParser());
-app.use(express.json({ limit: "2mb" }));
+app.use(
+  express.json({
+    limit: "2mb",
+    // Stash the exact bytes received alongside the parsed body — webhook
+    // signature verification (Moneroo) must HMAC what the provider actually
+    // signed, not a re-serialized JSON.stringify(req.body).
+    verify: (req, _res, buf) => {
+      (req as express.Request).rawBody = Buffer.from(buf);
+    },
+  }),
+);
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(sanitizeMiddleware);

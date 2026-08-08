@@ -80,7 +80,11 @@ export const initiatePayment = asyncHandler(async (req, res) => {
 });
 
 export const monerooWebhook = asyncHandler(async (req, res) => {
-  const rawBody = JSON.stringify(req.body);
+  // req.rawBody is the exact byte buffer express.json()'s verify hook
+  // captured (see app.ts) — Moneroo signs those bytes, not a re-serialized
+  // JSON.stringify(req.body), which can differ (key order, number
+  // formatting) and cause a legitimate webhook to fail verification.
+  const rawBody = (req.rawBody ?? Buffer.from(JSON.stringify(req.body))).toString("utf8");
   const signature = req.headers["x-moneroo-signature"] as string | undefined;
 
   if (!verifyMonerooSignature(rawBody, signature)) {
@@ -88,10 +92,13 @@ export const monerooWebhook = asyncHandler(async (req, res) => {
   }
 
   const event = req.body;
-  const orderId = event?.data?.metadata?.orderId ?? event?.metadata?.orderId;
+  const metadata = event?.data?.metadata ?? event?.metadata ?? {};
+  const orderId = metadata?.orderId;
   const status = String(event?.data?.status ?? event?.status ?? "").toLowerCase();
+  const isPaid = ["paid", "success", "successful", "completed"].includes(status);
+  const reference: string | undefined = event?.data?.reference ?? event?.reference;
 
-  if (orderId && ["paid", "success", "successful", "completed"].includes(status)) {
+  if (orderId && isPaid) {
     await prisma.$transaction(async (tx) => {
       const order = await tx.order.update({
         where: { id: orderId },
@@ -126,6 +133,45 @@ export const monerooWebhook = asyncHandler(async (req, res) => {
     });
 
     await calculateOrderCommissions(orderId);
+  } else if (metadata?.type === "wallet_deposit" && metadata?.userId && isPaid) {
+    // Idempotent on webhook replay: WalletTransaction.reference is unique,
+    // so a duplicate delivery of the same event hits a P2002 conflict on
+    // the create below (caught and ignored) instead of crediting twice.
+    const depositReference = `deposit:${reference ?? `${metadata.userId}:${orderId ?? "unknown"}`}`;
+    try {
+      await prisma.$transaction(async (tx) => {
+        const updated = await tx.user.update({
+          where: { id: metadata.userId },
+          data: { walletBalance: { increment: event?.data?.amount ?? event?.amount } },
+          select: { walletBalance: true },
+        });
+        await tx.walletTransaction.create({
+          data: {
+            userId: metadata.userId,
+            amount: new Prisma.Decimal(event?.data?.amount ?? event?.amount ?? 0),
+            type: "DEPOSIT",
+            reference: depositReference,
+            description: "Wallet deposit via Moneroo",
+            balanceBefore: updated.walletBalance.minus(event?.data?.amount ?? event?.amount ?? 0),
+            balanceAfter: updated.walletBalance,
+          },
+        });
+        await tx.notification.create({
+          data: {
+            userId: metadata.userId,
+            type: "WALLET_DEPOSIT",
+            title: "Depot confirme",
+            message: "Votre depot a ete credite sur votre portefeuille Iwosan.",
+            link: "/mon-compte/portefeuille",
+          },
+        });
+      });
+    } catch (error) {
+      if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") {
+        throw error;
+      }
+      // Duplicate webhook delivery for an already-credited deposit — no-op.
+    }
   }
 
   res.json(apiResponse(true, null, "Webhook processed"));
@@ -170,19 +216,50 @@ export const walletDeposit = asyncHandler(async (req, res) => {
 export const walletWithdraw = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
   const amount = new Prisma.Decimal(req.body.amount);
-  const user = await prisma.user.findUnique({
-    where: { id: req.user.id },
-    select: { walletBalance: true },
-  });
-  if (!user || user.walletBalance.lt(amount))
-    throw new ApiError(400, "Insufficient wallet balance");
+  if (amount.lte(0)) throw new ApiError(400, "Invalid withdrawal amount");
 
-  const ticket = await prisma.ticket.create({
-    data: {
-      authorId: req.user.id,
-      subject: `Withdrawal request ${amount.toString()}`,
-      category: "WITHDRAWAL",
-    },
+  // Reserve the funds immediately (same conditional-update pattern as the
+  // other debit paths above) instead of only checking the balance: without
+  // this, nothing stopped a user from filing several withdrawal tickets
+  // against the same balance, each independently passing the check, leaving
+  // an admin to unknowingly approve payouts that exceed what's actually in
+  // the wallet. There is currently no automated admin "reject" action that
+  // refunds this — a rejected request needs a manual wallet credit until
+  // that flow exists.
+  const ticket = await prisma.$transaction(async (tx) => {
+    const decremented = await tx.user.updateMany({
+      where: { id: req.user!.id, walletBalance: { gte: amount } },
+      data: { walletBalance: { decrement: amount } },
+    });
+    if (decremented.count === 0) throw new ApiError(400, "Insufficient wallet balance");
+
+    const user = await tx.user.findUnique({
+      where: { id: req.user!.id },
+      select: { walletBalance: true },
+    });
+    const balanceAfter = user?.walletBalance ?? new Prisma.Decimal(0);
+
+    const createdTicket = await tx.ticket.create({
+      data: {
+        authorId: req.user!.id,
+        subject: `Withdrawal request ${amount.toString()}`,
+        category: "WITHDRAWAL",
+      },
+    });
+
+    await tx.walletTransaction.create({
+      data: {
+        userId: req.user!.id,
+        amount: amount.neg(),
+        type: "WITHDRAWAL",
+        reference: `withdrawal:${createdTicket.id}`,
+        description: "Withdrawal request pending admin processing",
+        balanceBefore: balanceAfter.plus(amount),
+        balanceAfter,
+      },
+    });
+
+    return createdTicket;
   });
 
   res
