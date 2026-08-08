@@ -1,4 +1,3 @@
-import { Role } from "@prisma/client";
 import { Router } from "express";
 import {
   createArticle,
@@ -17,7 +16,7 @@ import {
   updateMonograph,
 } from "../controllers/content.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
-import { checkPermission, checkRole, requireEmailVerified } from "../middlewares/role.middleware.js";
+import { checkPermission, requireEmailVerified } from "../middlewares/role.middleware.js";
 
 export const articleRouter = Router();
 export const monographRouter = Router();
@@ -57,7 +56,7 @@ monographRouter.get(
   "/admin/all",
   authMiddleware,
   requireEmailVerified,
-  checkRole(Role.SUPER_ADMIN),
+  checkPermission("content.monographs.manage"),
   listAllMonographsForAdmin,
 );
 monographRouter.get("/:id", getMonograph);
@@ -65,20 +64,20 @@ monographRouter.post(
   "/",
   authMiddleware,
   requireEmailVerified,
-  checkRole(Role.SUPER_ADMIN),
+  checkPermission("content.monographs.manage"),
   createMonograph,
 );
 monographRouter.put(
   "/:id",
   authMiddleware,
   requireEmailVerified,
-  checkRole(Role.SUPER_ADMIN),
+  checkPermission("content.monographs.manage"),
   updateMonograph,
 );
 monographRouter.delete(
   "/:id",
   authMiddleware,
   requireEmailVerified,
-  checkRole(Role.SUPER_ADMIN),
+  checkPermission("content.monographs.manage"),
   deleteMonograph,
 );

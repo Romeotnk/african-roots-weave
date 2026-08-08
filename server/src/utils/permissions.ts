@@ -21,6 +21,7 @@ export const PERMISSION_CATALOG: { key: string; label: string; group: string }[]
   { key: "finance.config", label: "Configurer les taux de commission", group: "Finance" },
   { key: "finance.reports.view", label: "Consulter la vue d'ensemble MLM et les transactions", group: "Finance" },
   { key: "content.pages.manage", label: "Gérer les pages CMS", group: "Contenu" },
+  { key: "content.monographs.manage", label: "Gérer les monographies Pharmacopée", group: "Contenu" },
   { key: "system.config", label: "Configurer le site (identité, maintenance, CSS)", group: "Système" },
   { key: "marketing.newsletter.send", label: "Envoyer la newsletter", group: "Marketing" },
   { key: "support.triage", label: "Répondre aux tickets support", group: "Support" },
@@ -44,6 +45,11 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<string, Role[]> = {
   "finance.config": [Role.SUPER_ADMIN],
   "finance.reports.view": [Role.SUPER_ADMIN, Role.ADMIN],
   "content.pages.manage": [Role.SUPER_ADMIN, Role.ADMIN],
+  // Pharmacopée monographs are deliberately kept exclusive to the principal
+  // administrator (see the same superAdminOnlySpaces rule for Pharmacopée
+  // articles in content.controller.ts) — unlike content.review, this is not
+  // opened up to ADMIN/EDITOR by default.
+  "content.monographs.manage": [Role.SUPER_ADMIN],
   "system.config": [Role.SUPER_ADMIN],
   "marketing.newsletter.send": [Role.SUPER_ADMIN, Role.ADMIN],
   "support.triage": [Role.SUPER_ADMIN, Role.ADMIN, Role.MODERATOR, Role.EDITOR, Role.PROFESSIONAL],

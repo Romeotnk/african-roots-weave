@@ -109,6 +109,13 @@ adminRouter.get(
 adminRouter.put("/users/:id/kyc-approve", checkPermission("kyc.review"), kycApprove);
 adminRouter.put("/users/:id/kyc-reject", checkPermission("kyc.review"), kycReject);
 adminRouter.get("/audit-log", checkPermission("audit.read"), auditLog);
+// Kept on the hardcoded role check rather than checkPermission("system.config"):
+// this endpoint IS the source of truth for what "system.config" and every other
+// permission key even means. Gating admin/user permission management by a
+// permission that this same endpoint can reassign would let that scope drift
+// over time (e.g. a future edit that adds system.config to ADMIN's grants
+// would silently also hand ADMIN the ability to reassign every role's
+// permissions) — SUPER_ADMIN-only stays deliberate and out of band.
 adminRouter.get("/permissions", checkRole(Role.SUPER_ADMIN), listPermissions);
 adminRouter.put("/permissions/role/:role", checkRole(Role.SUPER_ADMIN), updateRolePermissions);
 adminRouter.patch("/users/:id/permissions", checkRole(Role.SUPER_ADMIN), updateUserPermissionOverrides);
@@ -146,13 +153,13 @@ adminRouter.put(
 );
 adminRouter.put(
   "/professionals/:id/commission-rate",
-  checkRole(Role.SUPER_ADMIN),
+  checkPermission("finance.config"),
   updateProfessionalCommissionRate,
 );
 
 // Subscriptions and commissions.
-adminRouter.get("/subscriptions", checkRole(Role.SUPER_ADMIN), listSubscriptions);
-adminRouter.put("/subscriptions/:id", checkRole(Role.SUPER_ADMIN), updateSubscription);
+adminRouter.get("/subscriptions", checkPermission("finance.config"), listSubscriptions);
+adminRouter.put("/subscriptions/:id", checkPermission("finance.config"), updateSubscription);
 adminRouter.get("/commissions/config", checkPermission("finance.config"), commissionConfig);
 adminRouter.put("/commissions/config", checkPermission("finance.config"), updateCommissionConfig);
 adminRouter.get("/mlm/overview", checkPermission("finance.reports.view"), mlmOverview);
