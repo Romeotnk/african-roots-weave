@@ -209,5 +209,253 @@
       "createSuccess": "Alerte enregistrée. Retrouvez-la dans votre compte.",
       "submit": "Enregistrer l'alerte"
     }
+  },
+  "deposer": {
+    "meta": { "title": "Déposer une annonce - IWOSAN" },
+    "eyebrow": "Marketplace",
+    "title": "Déposer une annonce",
+    "subtitle": "Publiez un produit, un service ou une ressource digitale avec un parcours complet, prêt pour la modération.",
+    "readiness": {
+      "title": "Profil vendeur",
+      "emailVerified": "Email vérifié",
+      "kycApproved": "KYC soumis et approuvé",
+      "profilePhoto": "Photo de profil ajoutée",
+      "phoneVerified": "Numéro de téléphone vérifié",
+      "incomplete": "Complétez les étapes manquantes pour publier une annonce."
+    },
+    "progress": { "title": "Progression" },
+    "steps": {
+      "base": "Base",
+      "location": "Localisation",
+      "media": "Médias",
+      "options": "Options",
+      "summary": "Récapitulatif"
+    },
+    "productTypes": {
+      "physical": { "label": "Physique", "desc": "Plantes, remèdes, huiles, produits à livrer." },
+      "service": { "label": "Service", "desc": "Consultation, accompagnement, préparation sur demande." },
+      "digital": { "label": "Digital", "desc": "PDF, formation, fichier ou ressource téléchargeable." }
+    },
+    "verificationRequired": {
+      "title": "Vérification requise",
+      "desc": "La publication est bloquée tant que le profil vendeur n'est pas complet."
+    },
+    "step0": {
+      "titleLabel": "Titre",
+      "productTypeLabel": "Type de produit",
+      "categoryLabel": "Catégorie",
+      "descriptionLabel": "Description longue",
+      "formatting": { "bold": "Gras", "italic": "Italique", "list": "Liste" },
+      "pricePlaceholder": "Prix",
+      "oldPricePlaceholder": "Prix barré",
+      "quantityPlaceholder": "Quantité",
+      "commissionEstimate": "Commission estimée : {{amount}} {{currency}} (10%)."
+    },
+    "step1": {
+      "cityPlaceholder": "Ville",
+      "addressPlaceholder": "Adresse précise (optionnel)",
+      "coords": "Lat {{lat}} / Lng {{lng}}",
+      "useMyLocation": "Utiliser ma position"
+    },
+    "step2": {
+      "dropzoneTitle": "Glissez vos photos ici",
+      "dropzoneHint": "Min 1, max 10. La première photo est principale.",
+      "primary": "Principale",
+      "photoN": "Photo {{n}}",
+      "watermarkPreview": "Aperçu du filigrane IWOSAN",
+      "digitalUrlPlaceholder": "URL de téléchargement ou référence du fichier"
+    },
+    "step3": {
+      "quoteRequestTitle": "Demande de devis",
+      "quoteRequestDesc": "Masque le prix fixe et invite l'acheteur à vous contacter.",
+      "tagsLabel": "Tags / mots-clés",
+      "addTagPlaceholder": "Ajouter un tag",
+      "add": "Ajouter",
+      "specialConditionsPlaceholder": "Conditions spéciales, ex: livraison dans Cotonou uniquement"
+    },
+    "step4": {
+      "summaryTitle": "Récapitulatif",
+      "titleLabel": "Titre",
+      "categoryLabel": "Catégorie",
+      "locationLabel": "Localisation",
+      "commissionLabel": "Commission",
+      "acceptTerms": "J'accepte les CGU.",
+      "acceptSalesPolicy": "J'accepte la politique de vente.",
+      "publishing": "Publication...",
+      "publish": "Publier"
+    },
+    "back": "Retour",
+    "continue": "Continuer",
+    "titlePlaceholder": "Titre de l'annonce",
+    "categoryFallback": "Catégorie",
+    "validation": {
+      "titleTooShort": "Ajoutez un titre plus descriptif.",
+      "descriptionTooShort": "Ajoutez une description plus complète.",
+      "priceRequired": "Indiquez un prix valide ou activez la demande de devis.",
+      "quantityRequired": "Indiquez une quantité disponible valide.",
+      "cityRequired": "Indiquez la ville de l'annonce.",
+      "photoRequired": "Ajoutez au moins une photo.",
+      "digitalUrlRequired": "Ajoutez l'URL ou la référence du fichier digital.",
+      "tagRequired": "Ajoutez au moins un tag.",
+      "categoryRequired": "Choisissez une catégorie pour votre annonce.",
+      "acceptPolicies": "Veuillez accepter les CGU et la politique de vente avant publication.",
+      "publishSuccess": "Votre annonce a été publiée et est soumise à modération avant d'être visible publiquement.",
+      "publishFailed": "La publication a échoué, veuillez réessayer."
+    }
+  },
+  "annuaire": {
+    "meta": {
+      "title": "Annuaire des praticiens - IWOSAN",
+      "description": "Decouvrez nos praticiens traditionnels vérifiés, documentés et évalués par la communaute."
+    },
+    "hero": {
+      "badge": "Annuaire",
+      "title": "Annuaire des praticiens",
+      "subtitle": "Praticiens, spécialités et localisations vérifiés par notre équipe éditoriale.",
+      "searchPlaceholder": "Nom, spécialité, localisation..."
+    },
+    "filters": {
+      "allSpecialties": "Toutes spécialités",
+      "allCountries": "Tous pays",
+      "verifiedOnly": "Vérifiés uniquement",
+      "reset": "Réinitialiser"
+    },
+    "results": {
+      "loading": "Chargement...",
+      "countAvailable_one": "{{count}} praticien disponible",
+      "countAvailable_other": "{{count}} praticiens disponibles",
+      "countMatching_one": "{{count}} praticien correspond à vos filtres",
+      "countMatching_other": "{{count}} praticiens correspondent à vos filtres",
+      "list": "Liste",
+      "map": "Carte",
+      "noLocation": "Aucun praticien affiché ne possède de localisation exacte pour l'instant.",
+      "notFound": "Aucun praticien trouvé",
+      "clearFilters": "Effacer les filtres",
+      "apiUnavailable": "API indisponible, données locales affichées."
+    }
+  },
+  "pharmacopee": {
+    "meta": {
+      "title": "Pharmacopée vivante — IWOSAN",
+      "description": "Monographies scientifiques des plantes médicinales africaines."
+    },
+    "hero": {
+      "exclusiveBadge": "Exclusif — Géré par l'équipe éditoriale Iwosan",
+      "title": "Pharmacopée Vivante",
+      "subtitle": "Monographies scientifiques des plantes médicinales africaines — nomenclature, principes actifs, indications thérapeutiques et modes de préparation illustrés.",
+      "searchPlaceholder": "Rechercher une plante par nom scientifique ou vernaculaire..."
+    },
+    "featured": {
+      "badge": "Plante de la semaine",
+      "indicationsLabel": "Indications",
+      "readFull": "Lire la monographie complète"
+    },
+    "browse": {
+      "label": "Parcourir",
+      "title": "Par catégorie thérapeutique"
+    },
+    "categories": {
+      "all": "Toutes",
+      "antiInfective": "Anti-infectieux",
+      "gynecology": "Gynécologie",
+      "gastrointestinal": "Gastro-intestinal",
+      "neurology": "Neurologie",
+      "dermatology": "Dermatologie",
+      "cardiovascular": "Cardio-vasculaire",
+      "pulmonary": "Pulmonaire"
+    },
+    "results": {
+      "countFound_one": "{{count}} plante trouvee",
+      "countFound_other": "{{count}} plantes trouvees",
+      "countFoundFor_one": "{{count}} plante trouvee pour \"{{query}}\"",
+      "countFoundFor_other": "{{count}} plantes trouvees pour \"{{query}}\"",
+      "notFound": "Aucune plante trouvee",
+      "clearFilters": "Effacer les filtres"
+    }
+  },
+  "agenda": {
+    "meta": { "title": "Agenda & Événements - IWOSAN" },
+    "hero": {
+      "badge": "Agenda",
+      "title": "Agenda & Événements",
+      "subtitle": "Ateliers, formations, salons et rencontres autour de la médecine traditionnelle africaine."
+    },
+    "filters": {
+      "all": "Tous",
+      "webinar": "Webinaire",
+      "formation": "Formation",
+      "salon": "Salon",
+      "portesOuvertes": "Portes ouvertes",
+      "lancementProduit": "Lancement de produit"
+    },
+    "calendarButton": "Calendrier",
+    "currentDate": "DATE ACTUELLE",
+    "calendar": {
+      "title": "Calendrier",
+      "weekdays": ["L", "M", "M", "J", "V", "S", "D"],
+      "clickADay": "Cliquez un jour"
+    },
+    "register": "S'inscrire",
+    "dateTimeSeparator": "à"
+  },
+  "formations": {
+    "meta": { "title": "Formations - IWOSAN" },
+    "hero": {
+      "badge": "Formations",
+      "title": "Formations IWOSAN",
+      "subtitle": "Cours en ligne, documents et formations presencielles encadres par des praticiens et chercheurs reconnus.",
+      "searchPlaceholder": "Cours, formateur, theme..."
+    },
+    "filters": {
+      "allLevels": "Tous",
+      "beginner": "Debutant",
+      "intermediate": "Intermediaire",
+      "advanced": "Avance",
+      "allFormats": "Tous formats",
+      "video": "Video",
+      "document": "Document",
+      "inPerson": "Presentiel",
+      "allPrices": "Tous prix",
+      "free": "Gratuit",
+      "paid": "Payant"
+    },
+    "results": {
+      "count_one": "{{count}} formation",
+      "count_other": "{{count}} formations"
+    },
+    "access": "Acceder"
+  },
+  "forum": {
+    "eyebrow": "FORUM COMMUNAUTAIRE",
+    "title": "Discutons-en",
+    "subtitle": "Questions, réponses visibles par tous, et publication sans friction pour encourager l'entraide.",
+    "askQuestion": "Poser une question",
+    "tabs": {
+      "all": "Toutes",
+      "unanswered": "Non répondues",
+      "popular": "Populaires",
+      "recent": "Récentes",
+      "mine": "Mes questions"
+    },
+    "sort": {
+      "recent": "Plus récent",
+      "votes": "Plus voté",
+      "answers": "Plus de réponses",
+      "featured": "Vedettes en tête"
+    },
+    "filters": {
+      "title": "Filtres",
+      "categories": "Catégories",
+      "severity": "Sévérité",
+      "tags": "Tags",
+      "clear": "Effacer les filtres"
+    },
+    "searchPlaceholder": "Rechercher dans le forum...",
+    "notFound": "Aucune question trouvée",
+    "severity": {
+      "Léger": "Léger",
+      "Modéré": "Modéré",
+      "Sévère": "Sévère"
+    }
   }
 }

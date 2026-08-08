@@ -1,5 +1,6 @@
 ﻿import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { PlantCard } from "@/components/shared/PlantCard";
 import { plants } from "@/data/plants";
@@ -34,6 +35,17 @@ const cats = [
 ];
 
 function Pharmacopee() {
+  const { t } = useTranslation();
+  const categoryLabels: Record<string, string> = {
+    "Toutes": t("pharmacopee.categories.all"),
+    "Anti-infectieux": t("pharmacopee.categories.antiInfective"),
+    "Gynécologie": t("pharmacopee.categories.gynecology"),
+    "Gastro-intestinal": t("pharmacopee.categories.gastrointestinal"),
+    "Neurologie": t("pharmacopee.categories.neurology"),
+    "Dermatologie": t("pharmacopee.categories.dermatology"),
+    "Cardio-vasculaire": t("pharmacopee.categories.cardiovascular"),
+    "Pulmonaire": t("pharmacopee.categories.pulmonary"),
+  };
   const { data: monographs } = useMonographs();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Toutes");
@@ -73,16 +85,15 @@ function Pharmacopee() {
         </div>
         <div className="relative container-iwosan py-20 text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-[var(--brand-gold)]/40 text-[var(--brand-gold)] px-4 py-1.5 text-[12px] font-semibold backdrop-blur-sm">
-            Exclusif — Géré par l'équipe éditoriale Iwosan
+            {t("pharmacopee.hero.exclusiveBadge")}
           </span>
-          <h1 className="mt-5 text-white text-[40px] md:text-[56px]">Pharmacopée Vivante</h1>
+          <h1 className="mt-5 text-white text-[40px] md:text-[56px]">{t("pharmacopee.hero.title")}</h1>
           <p className="mt-5 text-white/70 max-w-2xl mx-auto text-[17px] leading-[1.7]">
-            Monographies scientifiques des plantes médicinales africaines — nomenclature, principes
-            actifs, indications thérapeutiques et modes de préparation illustrés.
+            {t("pharmacopee.hero.subtitle")}
           </p>
           <div className="mt-8 max-w-2xl mx-auto">
             <SearchBar
-              placeholder="Rechercher une plante par nom scientifique ou vernaculaire..."
+              placeholder={t("pharmacopee.hero.searchPlaceholder")}
               value={search}
               onChange={setSearch}
               showFilters={false}
@@ -99,7 +110,7 @@ function Pharmacopee() {
             </div>
             <div className="p-7 md:p-10">
               <span className="inline-flex items-center gap-1.5 bg-[var(--brand-gold)] text-white text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
-                <Leaf size={12} /> Plante de la semaine
+                <Leaf size={12} /> {t("pharmacopee.featured.badge")}
               </span>
               <h2 className="mt-3 text-[28px] italic text-[var(--brand-primary)] font-semibold">
                 {featured.scientificName}
@@ -119,7 +130,7 @@ function Pharmacopee() {
               </p>
               <div className="mt-5">
                 <p className="text-[12px] uppercase tracking-wider font-semibold text-[var(--color-text-muted)] mb-2">
-                  Indications
+                  {t("pharmacopee.featured.indicationsLabel")}
                 </p>
                 <div className="flex gap-2 flex-wrap">
                   {featured.indications.map((i) => (
@@ -137,7 +148,7 @@ function Pharmacopee() {
                 params={{ slug: featured.slug }}
                 className="mt-7 h-11 px-6 rounded-full bg-[var(--brand-primary)] text-white font-semibold inline-flex items-center gap-2 hover:bg-[var(--brand-primary-dark)] transition"
               >
-                Lire la monographie complète <ArrowRight size={16} />
+                {t("pharmacopee.featured.readFull")} <ArrowRight size={16} />
               </Link>
             </div>
           </div>
@@ -146,7 +157,7 @@ function Pharmacopee() {
 
       <section className="py-20">
         <div className="container-iwosan">
-          <SectionHeader label="Parcourir" title="Par catégorie thérapeutique" />
+          <SectionHeader label={t("pharmacopee.browse.label")} title={t("pharmacopee.browse.title")} />
           <div className="flex gap-2 mb-8 flex-wrap">
             {cats.map((c, i) => (
               <button
@@ -154,13 +165,14 @@ function Pharmacopee() {
                 onClick={() => setCategory(c)}
                 className={`px-4 py-2 rounded-full text-[13px] font-semibold ${category === c || (i === 0 && category === "Toutes") ? "bg-[var(--brand-primary)] text-white" : "bg-white border border-[var(--brand-border)] hover:border-[var(--brand-primary)]"}`}
               >
-                {c}
+                {categoryLabels[c] ?? c}
               </button>
             ))}
           </div>
           <p className="mb-6 text-[14px] text-[var(--color-text-muted)]">
-            <strong className="text-[var(--color-text-primary)]">{filteredPlants.length}</strong> plantes
-            trouvees{debouncedSearch ? ` pour "${debouncedSearch}"` : ""}
+            {debouncedSearch
+              ? t("pharmacopee.results.countFoundFor", { count: filteredPlants.length, query: debouncedSearch })
+              : t("pharmacopee.results.countFound", { count: filteredPlants.length })}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredPlants.map((p) => (
@@ -169,7 +181,7 @@ function Pharmacopee() {
           </div>
           {filteredPlants.length === 0 && (
             <div className="mt-6 rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
-              <p className="font-bold">Aucune plante trouvee</p>
+              <p className="font-bold">{t("pharmacopee.results.notFound")}</p>
               <button
                 onClick={() => {
                   setSearch("");
@@ -177,7 +189,7 @@ function Pharmacopee() {
                 }}
                 className="mt-4 h-10 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white"
               >
-                Effacer les filtres
+                {t("pharmacopee.results.clearFilters")}
               </button>
             </div>
           )}

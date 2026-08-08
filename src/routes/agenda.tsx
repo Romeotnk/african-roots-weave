@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { EventCard } from "@/components/shared/EventCard";
@@ -14,13 +15,6 @@ export const Route = createFileRoute("/agenda")({
 });
 
 const filters = ["Tous", "WEBINAR", "FORMATION", "SALON", "PORTES_OUVERTES", "LANCEMENT_PRODUIT"];
-const filterLabels: Record<string, string> = {
-  WEBINAR: "Webinaire",
-  FORMATION: "Formation",
-  SALON: "Salon",
-  PORTES_OUVERTES: "Portes ouvertes",
-  LANCEMENT_PRODUIT: "Lancement de produit",
-};
 
 function monthDays(date: Date) {
   const first = new Date(date.getFullYear(), date.getMonth(), 1);
@@ -34,6 +28,15 @@ function sameDay(a: Date, b: Date) {
 }
 
 function Agenda() {
+  const { t } = useTranslation();
+  const filterLabels: Record<string, string> = {
+    WEBINAR: t("agenda.filters.webinar"),
+    FORMATION: t("agenda.filters.formation"),
+    SALON: t("agenda.filters.salon"),
+    PORTES_OUVERTES: t("agenda.filters.portesOuvertes"),
+    LANCEMENT_PRODUIT: t("agenda.filters.lancementProduit"),
+  };
+  const weekdays = t("agenda.calendar.weekdays", { returnObjects: true }) as string[];
   const eventsQuery = useEvents();
   const [filter, setFilter] = useState("Tous");
   const [month, setMonth] = useState(() => new Date());
@@ -66,29 +69,29 @@ function Agenda() {
 
   return (
     <>
-      <HeroSection image="https://images.unsplash.com/photo-1511578314322-379afb476865?w=1920&q=80" badge="Agenda" title="Agenda & Événements" subtitle="Ateliers, formations, salons et rencontres autour de la médecine traditionnelle africaine." size="md" />
+      <HeroSection image="https://images.unsplash.com/photo-1511578314322-379afb476865?w=1920&q=80" badge={t("agenda.hero.badge")} title={t("agenda.hero.title")} subtitle={t("agenda.hero.subtitle")} size="md" />
       <section className="container-iwosan py-10">
         <div className="mb-6 flex items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-2">{filters.map((item) => <button key={item} onClick={() => setFilter(item)} className={`rounded-full px-4 py-2 text-[13px] font-semibold ${filter === item ? "bg-[var(--brand-primary)] text-white" : "border border-[var(--brand-border)] bg-white"}`}>{item === "Tous" ? "Tous" : filterLabels[item]}</button>)}</div>
-          <button onClick={() => setPanelOpen(true)} className="inline-flex h-11 items-center gap-2 rounded-full border border-[var(--brand-border)] bg-white px-4 text-[13px] font-semibold"><CalendarDays size={15} /> Calendrier</button>
+          <div className="flex flex-wrap gap-2">{filters.map((item) => <button key={item} onClick={() => setFilter(item)} className={`rounded-full px-4 py-2 text-[13px] font-semibold ${filter === item ? "bg-[var(--brand-primary)] text-white" : "border border-[var(--brand-border)] bg-white"}`}>{item === "Tous" ? t("agenda.filters.all") : filterLabels[item]}</button>)}</div>
+          <button onClick={() => setPanelOpen(true)} className="inline-flex h-11 items-center gap-2 rounded-full border border-[var(--brand-border)] bg-white px-4 text-[13px] font-semibold"><CalendarDays size={15} /> {t("agenda.calendarButton")}</button>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
           <div className="space-y-7">
             <div className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-6">
-              <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--brand-terracotta)]">DATE ACTUELLE</p>
-              <h2 className="mt-2 text-[28px]">{now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} à {now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</h2>
+              <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--brand-terracotta)]">{t("agenda.currentDate")}</p>
+              <h2 className="mt-2 text-[28px]">{now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} {t("agenda.dateTimeSeparator")} {now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</h2>
             </div>
             {grouped.map(([monthLabel, items]) => (
               <section key={monthLabel}>
                 <h3 className="mb-4 text-[12px] font-bold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">{monthLabel}</h3>
-                <div className="space-y-4">{items.map((event) => <EventCard key={event.id} event={event} actionLabel="S'inscrire" />)}</div>
+                <div className="space-y-4">{items.map((event) => <EventCard key={event.id} event={event} actionLabel={t("agenda.register")} />)}</div>
               </section>
             ))}
           </div>
           <aside className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-6 lg:sticky lg:top-24 h-fit">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-bold">Calendrier</h2>
+              <h2 className="font-bold">{t("agenda.calendar.title")}</h2>
               <button onClick={() => setPanelOpen(false)} className="rounded-full p-2 text-[var(--color-text-muted)] lg:hidden"><X size={18} /></button>
             </div>
             <div className="mb-4 flex items-center justify-between">
@@ -96,7 +99,7 @@ function Agenda() {
               <p className="font-semibold capitalize">{month.toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}</p>
               <button onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))} className="grid h-9 w-9 place-items-center rounded-full border"><ChevronRight size={16} /></button>
             </div>
-            <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-[var(--color-text-muted)]">{["L","M","M","J","V","S","D"].map((d) => <div key={d}>{d}</div>)}</div>
+            <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-[var(--color-text-muted)]">{weekdays.map((d, index) => <div key={`${d}-${index}`}>{d}</div>)}</div>
             <div className="mt-2 grid grid-cols-7 gap-1">
               {days.map((day, index) => {
                 const eventsForDay = day ? filteredEvents.filter((event) => sameDay(new Date(event.date), day)) : [];
@@ -108,7 +111,7 @@ function Agenda() {
               })}
             </div>
             <div className="mt-4 rounded-2xl bg-[var(--brand-surface-alt)] p-4 text-[13px]">
-              <p className="font-semibold">{selectedDay ? selectedDay.toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) : "Cliquez un jour"}</p>
+              <p className="font-semibold">{selectedDay ? selectedDay.toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) : t("agenda.calendar.clickADay")}</p>
               {selectedDayEvents.map((event) => <p key={event.id} className="mt-2">• {event.title}</p>)}
             </div>
           </aside>
@@ -118,9 +121,9 @@ function Agenda() {
       <div className={`fixed inset-0 z-[100] ${panelOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
         <div className={`absolute inset-0 bg-black/60 transition-opacity ${panelOpen ? "opacity-100" : "opacity-0"}`} onClick={() => setPanelOpen(false)} />
         <aside className={`absolute right-0 top-0 h-full w-[300px] bg-white p-5 shadow-2xl transition-transform ${panelOpen ? "translate-x-0" : "translate-x-full"}`}>
-          <div className="mb-4 flex items-center justify-between"><h2 className="font-bold">Calendrier</h2><button onClick={() => setPanelOpen(false)}><X size={18} /></button></div>
-          <p className="mb-4 text-[13px] text-[var(--color-text-muted)]">{now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} à {now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</p>
-          <div className="space-y-3">{filteredEvents.slice(0, 6).map((event) => <EventCard key={event.id} event={event} actionLabel="S'inscrire" />)}</div>
+          <div className="mb-4 flex items-center justify-between"><h2 className="font-bold">{t("agenda.calendar.title")}</h2><button onClick={() => setPanelOpen(false)}><X size={18} /></button></div>
+          <p className="mb-4 text-[13px] text-[var(--color-text-muted)]">{now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} {t("agenda.dateTimeSeparator")} {now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</p>
+          <div className="space-y-3">{filteredEvents.slice(0, 6).map((event) => <EventCard key={event.id} event={event} actionLabel={t("agenda.register")} />)}</div>
         </aside>
       </div>
     </>

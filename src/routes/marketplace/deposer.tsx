@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   ArrowRight,
@@ -31,24 +32,30 @@ export const Route = createFileRoute("/marketplace/deposer")({
   component: DepositListing,
 });
 
-const sellerReadiness = [
-  { label: "Email vérifié", done: true },
-  { label: "KYC soumis et approuvé", done: true },
-  { label: "Photo de profil ajoutée", done: true },
-  { label: "Numéro de téléphone vérifié", done: true },
-];
-
-const productTypes = [
-  { id: "physical", label: "Physique", desc: "Plantes, remèdes, huiles, produits à livrer.", icon: Package },
-  { id: "service", label: "Service", desc: "Consultation, accompagnement, préparation sur demande.", icon: Stethoscope },
-  { id: "digital", label: "Digital", desc: "PDF, formation, fichier ou ressource téléchargeable.", icon: FileArchive },
-] as const;
-
+const productTypeIcons = { physical: Package, service: Stethoscope, digital: FileArchive } as const;
 const productTypeEnum = { physical: "PHYSICAL", service: "SERVICE", digital: "DIGITAL" } as const;
 
-const steps = ["Base", "Localisation", "Médias", "Options", "Récapitulatif"];
-
 function DepositListing() {
+  const { t } = useTranslation();
+  const sellerReadiness = [
+    { label: t("deposer.readiness.emailVerified"), done: true },
+    { label: t("deposer.readiness.kycApproved"), done: true },
+    { label: t("deposer.readiness.profilePhoto"), done: true },
+    { label: t("deposer.readiness.phoneVerified"), done: true },
+  ];
+  const productTypes = (["physical", "service", "digital"] as const).map((id) => ({
+    id,
+    label: t(`deposer.productTypes.${id}.label`),
+    desc: t(`deposer.productTypes.${id}.desc`),
+    icon: productTypeIcons[id],
+  }));
+  const steps = [
+    t("deposer.steps.base"),
+    t("deposer.steps.location"),
+    t("deposer.steps.media"),
+    t("deposer.steps.options"),
+    t("deposer.steps.summary"),
+  ];
   const [step, setStep] = useState(0);
   const [title, setTitle] = useState("Tisane digestive au kinkeliba");
   const [type, setType] = useState<(typeof productTypes)[number]["id"]>("physical");
@@ -104,9 +111,9 @@ function DepositListing() {
   const previewProduct: Product = useMemo(
     () => ({
       id: "preview",
-      title: title || "Titre de l'annonce",
+      title: title || t("deposer.titlePlaceholder"),
       category: selectedCategory?.slug ?? "",
-      categoryLabel: selectedCategory?.name ?? "Catégorie",
+      categoryLabel: selectedCategory?.name ?? t("deposer.categoryFallback"),
       type,
       price: Number(price) || 0,
       currency,
@@ -134,17 +141,17 @@ function DepositListing() {
 
   const validateStep = (targetStep = step) => {
     if (targetStep >= 0) {
-      if (title.trim().length < 8) return "Ajoutez un titre plus descriptif.";
-      if (description.trim().length < 40) return "Ajoutez une description plus complete.";
-      if (!quoteRequest && (!Number.isFinite(Number(price)) || Number(price) <= 0)) return "Indiquez un prix valide ou activez la demande de devis.";
-      if (type === "physical" && (!Number.isFinite(Number(quantity)) || Number(quantity) <= 0)) return "Indiquez une quantite disponible valide.";
+      if (title.trim().length < 8) return t("deposer.validation.titleTooShort");
+      if (description.trim().length < 40) return t("deposer.validation.descriptionTooShort");
+      if (!quoteRequest && (!Number.isFinite(Number(price)) || Number(price) <= 0)) return t("deposer.validation.priceRequired");
+      if (type === "physical" && (!Number.isFinite(Number(quantity)) || Number(quantity) <= 0)) return t("deposer.validation.quantityRequired");
     }
-    if (targetStep >= 1 && !city.trim()) return "Indiquez la ville de l'annonce.";
+    if (targetStep >= 1 && !city.trim()) return t("deposer.validation.cityRequired");
     if (targetStep >= 2) {
-      if (media.length === 0) return "Ajoutez au moins une photo.";
-      if (type === "digital" && !digitalUrl.trim()) return "Ajoutez l'URL ou la reference du fichier digital.";
+      if (media.length === 0) return t("deposer.validation.photoRequired");
+      if (type === "digital" && !digitalUrl.trim()) return t("deposer.validation.digitalUrlRequired");
     }
-    if (targetStep >= 3 && tags.length === 0) return "Ajoutez au moins un tag.";
+    if (targetStep >= 3 && tags.length === 0) return t("deposer.validation.tagRequired");
     return "";
   };
 
@@ -166,11 +173,11 @@ function DepositListing() {
     }
     setFormError("");
     if (!selectedCategory) {
-      setFormError("Choisissez une catégorie pour votre annonce.");
+      setFormError(t("deposer.validation.categoryRequired"));
       return;
     }
     if (!terms || !salesPolicy) {
-      setConfirmation("Veuillez accepter les CGU et la politique de vente avant publication.");
+      setConfirmation(t("deposer.validation.acceptPolicies"));
       return;
     }
 
@@ -190,9 +197,9 @@ function DepositListing() {
         await uploadImages.mutateAsync({ id: created.id, files: mediaFiles });
       }
 
-      setConfirmation("Votre annonce a été publiée et est soumise à modération avant d'être visible publiquement.");
+      setConfirmation(t("deposer.validation.publishSuccess"));
     } catch (error) {
-      setConfirmation(error instanceof Error ? error.message : "La publication a échoué, veuillez réessayer.");
+      setConfirmation(error instanceof Error ? error.message : t("deposer.validation.publishFailed"));
     }
   };
 
@@ -201,12 +208,11 @@ function DepositListing() {
       <section className="border-b border-[var(--brand-border-light)] bg-white">
         <div className="container-iwosan py-8">
           <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--brand-primary)]">
-            Marketplace
+            {t("deposer.eyebrow")}
           </p>
-          <h1 className="mt-2 text-[32px] md:text-[44px]">Déposer une annonce</h1>
+          <h1 className="mt-2 text-[32px] md:text-[44px]">{t("deposer.title")}</h1>
           <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[var(--color-text-secondary)]">
-            Publiez un produit, un service ou une ressource digitale avec un parcours complet,
-            prêt pour la modération.
+            {t("deposer.subtitle")}
           </p>
         </div>
       </section>
@@ -214,7 +220,7 @@ function DepositListing() {
       <section className="container-iwosan py-8 grid lg:grid-cols-[300px_1fr] gap-8">
         <aside className="space-y-5">
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="font-bold">Profil vendeur</h2>
+            <h2 className="font-bold">{t("deposer.readiness.title")}</h2>
             <div className="mt-4 space-y-3">
               {sellerReadiness.map((item) => (
                 <div key={item.label} className="flex items-center gap-3 text-[13px]">
@@ -229,13 +235,13 @@ function DepositListing() {
             </div>
             {!canAccess && (
               <div className="mt-4 rounded-lg bg-amber-50 p-3 text-[13px] text-amber-800">
-                Complétez les étapes manquantes pour publier une annonce.
+                {t("deposer.readiness.incomplete")}
               </div>
             )}
           </div>
 
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="font-bold">Progression</h2>
+            <h2 className="font-bold">{t("deposer.progress.title")}</h2>
             <ol className="mt-4 space-y-2">
               {steps.map((label, index) => (
                 <li key={label}>
@@ -258,9 +264,9 @@ function DepositListing() {
           {!canAccess ? (
             <div className="p-8 text-center">
               <ShieldCheck className="mx-auto text-[var(--brand-primary)]" size={42} />
-              <h2 className="mt-4 text-[24px]">Vérification requise</h2>
+              <h2 className="mt-4 text-[24px]">{t("deposer.verificationRequired.title")}</h2>
               <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-                La publication est bloquée tant que le profil vendeur n'est pas complet.
+                {t("deposer.verificationRequired.desc")}
               </p>
             </div>
           ) : (
@@ -268,7 +274,7 @@ function DepositListing() {
               {step === 0 && (
                 <div className="space-y-6">
                   <div>
-                    <label className="text-[13px] font-semibold">Titre</label>
+                    <label className="text-[13px] font-semibold">{t("deposer.step0.titleLabel")}</label>
                     <input
                       value={title}
                       maxLength={150}
@@ -281,7 +287,7 @@ function DepositListing() {
                   </div>
 
                   <div>
-                    <p className="text-[13px] font-semibold">Type de produit</p>
+                    <p className="text-[13px] font-semibold">{t("deposer.step0.productTypeLabel")}</p>
                     <div className="mt-3 grid md:grid-cols-3 gap-3">
                       {productTypes.map((item) => (
                         <button
@@ -298,7 +304,7 @@ function DepositListing() {
                   </div>
 
                   <div>
-                    <p className="text-[13px] font-semibold">Catégorie</p>
+                    <p className="text-[13px] font-semibold">{t("deposer.step0.categoryLabel")}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {parentCategories.map((parent) => (
                         <button
@@ -326,7 +332,7 @@ function DepositListing() {
                   </div>
 
                   <div>
-                    <label className="text-[13px] font-semibold">Description longue</label>
+                    <label className="text-[13px] font-semibold">{t("deposer.step0.descriptionLabel")}</label>
                     <textarea
                       value={description}
                       onChange={(event) => { setDescription(event.target.value); setFormError(""); }}
@@ -334,7 +340,7 @@ function DepositListing() {
                       className="mt-2 w-full rounded-lg border border-[var(--brand-border)] px-4 py-3 outline-none focus:border-[var(--brand-primary)]"
                     />
                     <div className="mt-2 flex gap-2 text-[12px]">
-                      {["Gras", "Italique", "Liste"].map((item) => (
+                      {[t("deposer.step0.formatting.bold"), t("deposer.step0.formatting.italic"), t("deposer.step0.formatting.list")].map((item) => (
                         <span key={item} className="rounded-full bg-[var(--brand-surface-alt)] px-3 py-1 font-semibold">
                           {item}
                         </span>
@@ -349,7 +355,7 @@ function DepositListing() {
                           type="number"
                           value={price}
                           onChange={(event) => setPrice(event.target.value)}
-                          placeholder="Prix"
+                          placeholder={t("deposer.step0.pricePlaceholder")}
                           className="h-11 rounded-lg border border-[var(--brand-border)] px-4"
                         />
                         <select
@@ -365,7 +371,7 @@ function DepositListing() {
                           type="number"
                           value={oldPrice}
                           onChange={(event) => setOldPrice(event.target.value)}
-                          placeholder="Prix barré"
+                          placeholder={t("deposer.step0.oldPricePlaceholder")}
                           className="h-11 rounded-lg border border-[var(--brand-border)] px-4"
                         />
                       </>
@@ -375,14 +381,14 @@ function DepositListing() {
                         type="number"
                         value={quantity}
                         onChange={(event) => setQuantity(event.target.value)}
-                        placeholder="Quantité"
+                        placeholder={t("deposer.step0.quantityPlaceholder")}
                         className="h-11 rounded-lg border border-[var(--brand-border)] px-4"
                       />
                     )}
                   </div>
                   {!quoteRequest && (
                     <p className="rounded-lg bg-[var(--brand-primary-subtle)] px-4 py-3 text-[13px] text-[var(--brand-primary)]">
-                      Commission estimée : {estimatedCommission.toLocaleString("fr-FR")} {currency} (10%).
+                      {t("deposer.step0.commissionEstimate", { amount: estimatedCommission.toLocaleString("fr-FR"), currency })}
                     </p>
                   )}
                 </div>
@@ -400,13 +406,13 @@ function DepositListing() {
                     <input
                       value={city}
                       onChange={(event) => { setCity(event.target.value); setFormError(""); }}
-                      placeholder="Ville"
+                      placeholder={t("deposer.step1.cityPlaceholder")}
                       className="h-11 rounded-lg border border-[var(--brand-border)] px-4"
                     />
                     <input
                       value={address}
                       onChange={(event) => setAddress(event.target.value)}
-                      placeholder="Adresse précise (optionnel)"
+                      placeholder={t("deposer.step1.addressPlaceholder")}
                       className="h-11 rounded-lg border border-[var(--brand-border)] px-4"
                     />
                   </div>
@@ -417,7 +423,7 @@ function DepositListing() {
                         <MapPin size={24} />
                       </div>
                       <div className="absolute bottom-3 left-3 rounded-lg bg-white/90 px-3 py-2 text-[12px]">
-                        Lat {coords.lat.toFixed(3)} / Lng {coords.lng.toFixed(3)}
+                        {t("deposer.step1.coords", { lat: coords.lat.toFixed(3), lng: coords.lng.toFixed(3) })}
                       </div>
                     </div>
                     <div className="mt-3 grid md:grid-cols-3 gap-3">
@@ -439,7 +445,7 @@ function DepositListing() {
                         onClick={() => setCoords({ lat: 6.37, lng: 2.43 })}
                         className="h-10 rounded-lg bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white"
                       >
-                        Utiliser ma position
+                        {t("deposer.step1.useMyLocation")}
                       </button>
                     </div>
                   </div>
@@ -457,8 +463,8 @@ function DepositListing() {
                     className="flex min-h-[180px] cursor-pointer flex-col items-center justify-center rounded-[12px] border-2 border-dashed border-[var(--brand-border)] bg-[var(--brand-surface-alt)] p-6 text-center"
                   >
                     <Upload className="text-[var(--brand-primary)]" size={34} />
-                    <p className="mt-3 font-bold">Glissez vos photos ici</p>
-                    <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">Min 1, max 10. La première photo est principale.</p>
+                    <p className="mt-3 font-bold">{t("deposer.step2.dropzoneTitle")}</p>
+                    <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">{t("deposer.step2.dropzoneHint")}</p>
                     <input type="file" multiple accept="image/*" className="sr-only" onChange={(event) => handleFiles(event.target.files)} />
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -466,7 +472,7 @@ function DepositListing() {
                       <div key={item} className="relative aspect-square overflow-hidden rounded-lg border border-[var(--brand-border-light)]">
                         <img src={item} alt="" className="h-full w-full object-cover" />
                         <span className="absolute left-2 top-2 rounded-full bg-white px-2 py-1 text-[11px] font-bold">
-                          {index === 0 ? "Principale" : `Photo ${index + 1}`}
+                          {index === 0 ? t("deposer.step2.primary") : t("deposer.step2.photoN", { n: index + 1 })}
                         </span>
                         <button
                           onClick={() => setMediaFiles((current) => current.filter((_, fileIndex) => fileIndex !== index))}
@@ -488,7 +494,7 @@ function DepositListing() {
                   </div>
                   <div className="rounded-lg border border-[var(--brand-border-light)] p-4">
                     <p className="flex items-center gap-2 text-[13px] font-semibold">
-                      <Sparkles size={16} className="text-[var(--brand-gold)]" /> Aperçu du filigrane IWOSAN
+                      <Sparkles size={16} className="text-[var(--brand-gold)]" /> {t("deposer.step2.watermarkPreview")}
                     </p>
                     <div className="mt-3 inline-flex rounded bg-black/70 px-4 py-2 text-[12px] font-bold tracking-[0.2em] text-white">
                       IWOSAN
@@ -498,7 +504,7 @@ function DepositListing() {
                     <input
                       value={digitalUrl}
                       onChange={(event) => { setDigitalUrl(event.target.value); setFormError(""); }}
-                      placeholder="URL de téléchargement ou référence du fichier"
+                      placeholder={t("deposer.step2.digitalUrlPlaceholder")}
                       className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4"
                     />
                   )}
@@ -510,14 +516,14 @@ function DepositListing() {
                   <div className="rounded-lg border border-[var(--brand-border-light)] p-4">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <p className="font-bold">Demande de devis</p>
-                        <p className="text-[13px] text-[var(--color-text-muted)]">Masque le prix fixe et invite l'acheteur à vous contacter.</p>
+                        <p className="font-bold">{t("deposer.step3.quoteRequestTitle")}</p>
+                        <p className="text-[13px] text-[var(--color-text-muted)]">{t("deposer.step3.quoteRequestDesc")}</p>
                       </div>
                       <Switch checked={quoteRequest} onCheckedChange={setQuoteRequest} />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[13px] font-semibold">Tags / mots-clés</label>
+                    <label className="text-[13px] font-semibold">{t("deposer.step3.tagsLabel")}</label>
                     <div className="mt-2 flex gap-2">
                       <input
                         value={tagInput}
@@ -528,11 +534,11 @@ function DepositListing() {
                             addTag();
                           }
                         }}
-                        placeholder="Ajouter un tag"
+                        placeholder={t("deposer.step3.addTagPlaceholder")}
                         className="h-10 flex-1 rounded-lg border border-[var(--brand-border)] px-3"
                       />
                       <button onClick={addTag} className="h-10 rounded-lg bg-[var(--brand-primary)] px-4 text-white">
-                        Ajouter
+                        {t("deposer.step3.add")}
                       </button>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -548,7 +554,7 @@ function DepositListing() {
                     </div>
                   </div>
                   <textarea
-                    placeholder="Conditions spéciales, ex: livraison dans Cotonou uniquement"
+                    placeholder={t("deposer.step3.specialConditionsPlaceholder")}
                     className="min-h-[120px] w-full rounded-lg border border-[var(--brand-border)] px-4 py-3"
                   />
                 </div>
@@ -558,21 +564,21 @@ function DepositListing() {
                 <div className="grid lg:grid-cols-[1fr_320px] gap-6">
                   <div className="space-y-4">
                     <div className="rounded-lg bg-[var(--brand-surface-alt)] p-4">
-                      <h2 className="font-bold">Récapitulatif</h2>
+                      <h2 className="font-bold">{t("deposer.step4.summaryTitle")}</h2>
                       <dl className="mt-3 grid sm:grid-cols-2 gap-3 text-[13px]">
-                        <div><dt className="text-[var(--color-text-muted)]">Titre</dt><dd className="font-semibold">{title}</dd></div>
-                        <div><dt className="text-[var(--color-text-muted)]">Catégorie</dt><dd className="font-semibold">{selectedCategory?.name ?? "—"}</dd></div>
-                        <div><dt className="text-[var(--color-text-muted)]">Localisation</dt><dd className="font-semibold">{city}</dd></div>
-                        <div><dt className="text-[var(--color-text-muted)]">Commission</dt><dd className="font-semibold">{estimatedCommission.toLocaleString("fr-FR")} {currency}</dd></div>
+                        <div><dt className="text-[var(--color-text-muted)]">{t("deposer.step4.titleLabel")}</dt><dd className="font-semibold">{title}</dd></div>
+                        <div><dt className="text-[var(--color-text-muted)]">{t("deposer.step4.categoryLabel")}</dt><dd className="font-semibold">{selectedCategory?.name ?? "—"}</dd></div>
+                        <div><dt className="text-[var(--color-text-muted)]">{t("deposer.step4.locationLabel")}</dt><dd className="font-semibold">{city}</dd></div>
+                        <div><dt className="text-[var(--color-text-muted)]">{t("deposer.step4.commissionLabel")}</dt><dd className="font-semibold">{estimatedCommission.toLocaleString("fr-FR")} {currency}</dd></div>
                       </dl>
                     </div>
                     <label className="flex items-center gap-3 text-[13px]">
                       <Checkbox checked={terms} onCheckedChange={(checked) => setTerms(Boolean(checked))} />
-                      J'accepte les CGU.
+                      {t("deposer.step4.acceptTerms")}
                     </label>
                     <label className="flex items-center gap-3 text-[13px]">
                       <Checkbox checked={salesPolicy} onCheckedChange={(checked) => setSalesPolicy(Boolean(checked))} />
-                      J'accepte la politique de vente.
+                      {t("deposer.step4.acceptSalesPolicy")}
                     </label>
                     {confirmation && (
                       <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-[13px] text-emerald-800">
@@ -585,7 +591,7 @@ function DepositListing() {
                         disabled={createProduct.isPending || uploadImages.isPending}
                         className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 font-semibold text-white disabled:opacity-60"
                       >
-                        <Send size={16} /> {createProduct.isPending || uploadImages.isPending ? "Publication..." : "Publier"}
+                        <Send size={16} /> {createProduct.isPending || uploadImages.isPending ? t("deposer.step4.publishing") : t("deposer.step4.publish")}
                       </button>
                     </div>
                   </div>
@@ -599,14 +605,14 @@ function DepositListing() {
                   disabled={step === 0}
                   className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold disabled:opacity-40"
                 >
-                  <ArrowLeft size={15} /> Retour
+                  <ArrowLeft size={15} /> {t("deposer.back")}
                 </button>
                 <button
                   onClick={goNext}
                   disabled={step === steps.length - 1}
                   className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-40"
                 >
-                  Continuer <ArrowRight size={15} />
+                  {t("deposer.continue")} <ArrowRight size={15} />
                 </button>
               </div>
             </>

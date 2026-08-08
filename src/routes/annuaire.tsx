@@ -1,6 +1,7 @@
 ﻿import { createFileRoute } from "@tanstack/react-router";
 import { Grid2X2, Map as MapIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { ProfessionalCard } from "@/components/shared/ProfessionalCard";
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/annuaire")({
 });
 
 function Annuaire() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<Professional[]>(fallbackProfessionals);
   const [search, setSearch] = useState("");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
@@ -116,7 +118,7 @@ function Annuaire() {
       })
       .catch(() => {
         if (!cancelled) {
-          setError("API indisponible, données locales affichées.");
+          setError(t("annuaire.results.apiUnavailable"));
           setItems(fallbackProfessionals);
         }
       })
@@ -133,14 +135,14 @@ function Annuaire() {
     <>
       <HeroSection
         image="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=1920&q=80"
-        badge="Annuaire"
-        title="Annuaire des praticiens"
-        subtitle="Praticiens, spécialités et localisations vérifiés par notre équipe éditoriale."
+        badge={t("annuaire.hero.badge")}
+        title={t("annuaire.hero.title")}
+        subtitle={t("annuaire.hero.subtitle")}
         size="md"
-        breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Annuaire" }]}
+        breadcrumb={[{ label: t("nav.home"), to: "/" }, { label: t("nav.directory") }]}
       >
         <div className="max-w-2xl mx-auto">
-          <SearchBar placeholder="Nom, spécialité, localisation..." value={search} onChange={setSearch} />
+          <SearchBar placeholder={t("annuaire.hero.searchPlaceholder")} value={search} onChange={setSearch} />
         </div>
       </HeroSection>
 
@@ -151,7 +153,7 @@ function Annuaire() {
             onChange={(event) => setSpecialty(event.target.value)}
             className="px-4 h-10 rounded-full text-[13px] font-semibold border border-[var(--brand-border)] text-[var(--color-text-secondary)] bg-white"
           >
-            <option value="">Toutes spécialités</option>
+            <option value="">{t("annuaire.filters.allSpecialties")}</option>
             {specialties.map((item) => (
               <option key={item} value={item}>
                 {item}
@@ -163,7 +165,7 @@ function Annuaire() {
             onChange={(event) => setCountry(event.target.value)}
             className="px-4 h-10 rounded-full text-[13px] font-semibold border border-[var(--brand-border)] text-[var(--color-text-secondary)] bg-white"
           >
-            <option value="">Tous pays</option>
+            <option value="">{t("annuaire.filters.allCountries")}</option>
             {countries.map((item) => (
               <option key={item} value={item}>
                 {item}
@@ -175,7 +177,7 @@ function Annuaire() {
             onClick={() => setVerifiedOnly((value) => !value)}
             className={`px-4 h-10 rounded-full text-[13px] font-semibold border ${verifiedOnly ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]" : "border-[var(--brand-border)] text-[var(--color-text-secondary)]"}`}
           >
-            Vérifiés uniquement
+            {t("annuaire.filters.verifiedOnly")}
           </button>
           {hasActiveFilters && (
             <button
@@ -183,7 +185,7 @@ function Annuaire() {
               onClick={resetFilters}
               className="h-10 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold text-[var(--color-text-secondary)]"
             >
-              Réinitialiser
+              {t("annuaire.filters.reset")}
             </button>
           )}
         </div>
@@ -194,9 +196,12 @@ function Annuaire() {
           <div className="mb-6 flex items-center justify-between gap-3">
             <p className="text-[14px] text-[var(--color-text-muted)]">
               <span className="font-bold text-[var(--color-text-primary)]">
-                {isLoading ? "Chargement..." : `${filteredItems.length} praticiens`}
+                {isLoading
+                  ? t("annuaire.results.loading")
+                  : hasActiveFilters
+                    ? t("annuaire.results.countMatching", { count: filteredItems.length })
+                    : t("annuaire.results.countAvailable", { count: filteredItems.length })}
               </span>
-              {hasActiveFilters && !isLoading ? " correspondent à vos filtres" : " disponibles"}
             </p>
             <div className="flex gap-1 rounded-full border border-[var(--brand-border)] bg-white p-1">
               <button
@@ -204,14 +209,14 @@ function Annuaire() {
                 onClick={() => setViewMode("grid")}
                 className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold ${viewMode === "grid" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-secondary)]"}`}
               >
-                <Grid2X2 size={14} /> Liste
+                <Grid2X2 size={14} /> {t("annuaire.results.list")}
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode("map")}
                 className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold ${viewMode === "map" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--color-text-secondary)]"}`}
               >
-                <MapIcon size={14} /> Carte
+                <MapIcon size={14} /> {t("annuaire.results.map")}
               </button>
             </div>
           </div>
@@ -226,7 +231,7 @@ function Annuaire() {
               <LeafletMap markers={mapMarkers} heightClassName="h-[520px]" />
             ) : (
               <div className="rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center text-[13px] text-[var(--color-text-muted)]">
-                Aucun praticien affiché ne possède de localisation exacte pour l'instant.
+                {t("annuaire.results.noLocation")}
               </div>
             )
           ) : (
@@ -238,13 +243,13 @@ function Annuaire() {
           )}
           {viewMode === "grid" && !isLoading && filteredItems.length === 0 && (
             <div className="mt-6 rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
-              <p className="font-bold">Aucun praticien trouvé</p>
+              <p className="font-bold">{t("annuaire.results.notFound")}</p>
               <button
                 type="button"
                 onClick={resetFilters}
                 className="mt-4 h-10 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white"
               >
-                Effacer les filtres
+                {t("annuaire.results.clearFilters")}
               </button>
             </div>
           )}
