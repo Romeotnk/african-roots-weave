@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { CheckCircle2, PlayCircle } from "lucide-react";
+import { useMemo, useState } from "react";
+import { CheckCircle2, CreditCard, Loader2, PlayCircle, Smartphone, Wallet } from "lucide-react";
 import { RatingStars } from "@/components/shared/RatingStars";
 import { professionals } from "@/data/professionals";
 import { trainings } from "@/data/trainings";
-import { useFormation } from "@/hooks/useEventsFormationsApi";
+import { useMeQuery } from "@/hooks/useAuthApi";
+import { useEnrollFormation, useFormation, useMyFormationEnrollment } from "@/hooks/useEventsFormationsApi";
 import { toTrainingCourse, type BackendFormation } from "@/lib/mappers/formation";
 
 export const Route = createFileRoute("/formations/$id")({
@@ -13,6 +14,110 @@ export const Route = createFileRoute("/formations/$id")({
 });
 
 const fallbackAvatar = "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=120&q=80";
+
+function EnrollmentPanel({ formationId, price, currency }: { formationId: string; price: number; currency: string }) {
+  const { data: profile } = useMeQuery();
+  const enrollmentQuery = useMyFormationEnrollment(formationId);
+  const enroll = useEnrollFormation();
+  const [method, setMethod] = useState<"wallet" | "card" | "mobile_money">("wallet");
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const isFree = price <= 0;
+
+  if (!profile) {
+    return (
+      <div className="mt-4 space-y-2">
+        <p className="text-[13px] text-[var(--color-text-muted)]">Connectez-vous pour vous inscrire à cette formation.</p>
+        <Link to="/connexion" className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[var(--brand-primary)] font-semibold text-white">
+          Se connecter
+        </Link>
+      </div>
+    );
+  }
+
+  if (enrollmentQuery.isLoading) {
+    return (
+      <div className="mt-4 flex justify-center">
+        <Loader2 className="animate-spin text-[var(--brand-primary)]" size={20} />
+      </div>
+    );
+  }
+
+  if (enrollmentQuery.data) {
+    return (
+      <Link
+        to="/formations/$id/apprendre"
+        params={{ id: formationId }}
+        className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] font-semibold text-white"
+      >
+        <CheckCircle2 size={16} /> Accéder au cours
+      </Link>
+    );
+  }
+
+  const submit = () => {
+    setFeedback(null);
+    enroll.mutate(
+      { id: formationId, method: isFree ? "free" : method },
+      {
+        onSuccess: (result) => {
+          if (result?.checkoutUrl) {
+            window.location.href = result.checkoutUrl;
+            return;
+          }
+          setFeedback({ type: "success", message: "Inscription confirmée ! Vous pouvez accéder au cours." });
+        },
+        onError: (error) =>
+          setFeedback({
+            type: "error",
+            message: error instanceof Error ? error.message : "Impossible de finaliser l'inscription.",
+          }),
+      },
+    );
+  };
+
+  return (
+    <div className="mt-4 space-y-3">
+      {!isFree && (
+        <div className="grid grid-cols-3 gap-2">
+          {(
+            [
+              { id: "wallet" as const, label: "Portefeuille", icon: Wallet },
+              { id: "card" as const, label: "Carte", icon: CreditCard },
+              { id: "mobile_money" as const, label: "Mobile Money", icon: Smartphone },
+            ]
+          ).map(({ id: methodId, label, icon: Icon }) => (
+            <button
+              key={methodId}
+              type="button"
+              onClick={() => setMethod(methodId)}
+              className={`flex h-11 items-center justify-center gap-2 rounded-lg border text-[12px] font-semibold ${
+                method === methodId
+                  ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]"
+                  : "border-[var(--brand-border)]"
+              }`}
+            >
+              <Icon size={15} /> {label}
+            </button>
+          ))}
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={submit}
+        disabled={enroll.isPending}
+        className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] font-semibold text-white disabled:opacity-60"
+      >
+        {enroll.isPending ? <Loader2 size={16} className="animate-spin" /> : null}
+        {enroll.isPending ? "Traitement..." : isFree ? "S'inscrire gratuitement" : `Acheter maintenant · ${price.toLocaleString("fr-FR")} ${currency}`}
+      </button>
+      {feedback && (
+        <p className={`text-[12px] font-semibold ${feedback.type === "success" ? "text-emerald-700" : "text-red-700"}`}>
+          {feedback.message}
+        </p>
+      )}
+    </div>
+  );
+}
 
 function TrainingDetail() {
   const { id } = Route.useParams();
@@ -40,9 +145,10 @@ function TrainingDetail() {
           <div className="rounded-[12px] bg-white p-4 text-[var(--color-text-primary)]">
             <img src={course.image} alt="" className="aspect-video w-full rounded-lg object-cover" />
             <p className="mt-4 text-[24px] font-bold">{course.price === 0 ? "Gratuit" : `${course.price.toLocaleString("fr-FR")} ${course.currency}`}</p>
-            <Link to="/pro/$id" params={{ id: instructorHref }} className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full bg-[var(--brand-primary)] font-semibold text-white">
+            <Link to="/pro/$id" params={{ id: instructorHref }} className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full border border-[var(--brand-border)] font-semibold">
               Voir le profil du formateur
             </Link>
+            {apiCourse && <EnrollmentPanel formationId={apiCourse.id} price={course.price} currency={course.currency} />}
           </div>
         </div>
       </section>

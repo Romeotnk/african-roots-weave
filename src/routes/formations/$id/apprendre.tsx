@@ -1,8 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { CheckCircle2, Download, FileText, MessageCircle, PlayCircle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { CheckCircle2, Download, FileText, Loader2, Lock, MessageCircle, PlayCircle } from "lucide-react";
 import { trainings } from "@/data/trainings";
-import { useDownloadFormation, useFormation } from "@/hooks/useEventsFormationsApi";
+import { useMeQuery } from "@/hooks/useAuthApi";
+import {
+  useDownloadFormation,
+  useFormation,
+  useMyFormationEnrollment,
+  useUpdateFormationProgress,
+} from "@/hooks/useEventsFormationsApi";
 import { toTrainingCourse, type BackendFormation } from "@/lib/mappers/formation";
 
 export const Route = createFileRoute("/formations/$id/apprendre")({
@@ -14,6 +20,9 @@ function Learn() {
   const { id } = Route.useParams();
   const formationQuery = useFormation(id);
   const downloadFormation = useDownloadFormation();
+  const { data: profile } = useMeQuery();
+  const enrollmentQuery = useMyFormationEnrollment(id);
+  const updateProgress = useUpdateFormationProgress();
   const apiCourse = useMemo(() => toTrainingCourse((formationQuery.data ?? {}) as BackendFormation), [formationQuery.data]);
   const course = apiCourse ?? trainings.find((item) => item.id === id || item.slug === id) ?? trainings[0];
   const rawFileUrl = (formationQuery.data as { fileUrl?: string } | undefined)?.fileUrl;
@@ -23,6 +32,63 @@ function Learn() {
   const [done, setDone] = useState<string[]>([]);
   const activeLesson = lessons.find((lesson) => lesson.id === activeLessonId) ?? lessons[0];
   const progress = useMemo(() => Math.round((done.length / Math.max(lessons.length, 1)) * 100), [done.length, lessons.length]);
+
+  useEffect(() => {
+    if (enrollmentQuery.data?.completedLessonIds) {
+      setDone(enrollmentQuery.data.completedLessonIds);
+    }
+  }, [enrollmentQuery.data?.completedLessonIds]);
+
+  const markDone = (lessonId: string) => {
+    setDone((current) => (current.includes(lessonId) ? current : [...current, lessonId]));
+    if (apiCourse) {
+      updateProgress.mutate({ id: apiCourse.id, lessonId, completed: true });
+    }
+  };
+
+  if (apiCourse && !profile) {
+    return (
+      <main className="min-h-screen bg-[var(--brand-bg)]">
+        <section className="container-iwosan py-16 text-center">
+          <Lock size={48} className="mx-auto text-[var(--brand-primary)]" />
+          <h1 className="mt-4 text-[24px] font-bold">Connexion requise</h1>
+          <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Connectez-vous pour accéder à cette formation.</p>
+          <Link to="/connexion" className="mt-6 inline-flex h-11 items-center rounded-full bg-[var(--brand-primary)] px-6 text-[13px] font-semibold text-white">
+            Se connecter
+          </Link>
+        </section>
+      </main>
+    );
+  }
+
+  if (apiCourse && profile && enrollmentQuery.isLoading) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[var(--brand-bg)]">
+        <Loader2 className="animate-spin text-[var(--brand-primary)]" size={28} />
+      </main>
+    );
+  }
+
+  if (apiCourse && profile && !enrollmentQuery.data) {
+    return (
+      <main className="min-h-screen bg-[var(--brand-bg)]">
+        <section className="container-iwosan py-16 text-center">
+          <Lock size={48} className="mx-auto text-[var(--brand-primary)]" />
+          <h1 className="mt-4 text-[24px] font-bold">Inscription requise</h1>
+          <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
+            Vous devez vous inscrire à cette formation pour accéder à son contenu.
+          </p>
+          <Link
+            to="/formations/$id"
+            params={{ id }}
+            className="mt-6 inline-flex h-11 items-center rounded-full bg-[var(--brand-primary)] px-6 text-[13px] font-semibold text-white"
+          >
+            Voir la formation
+          </Link>
+        </section>
+      </main>
+    );
+  }
 
   if (lessons.length === 0) {
     return (
@@ -87,10 +153,11 @@ function Learn() {
           </div>
           <div className="mt-5 flex flex-wrap gap-3">
             <button
-              onClick={() => setDone((current) => current.includes(activeLesson.id) ? current : [...current, activeLesson.id])}
-              className="h-11 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white"
+              onClick={() => markDone(activeLesson.id)}
+              disabled={done.includes(activeLesson.id)}
+              className="h-11 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white disabled:opacity-60"
             >
-              Marquer comme termine
+              {done.includes(activeLesson.id) ? "Leçon terminée" : "Marquer comme terminé"}
             </button>
             <Link to="/forum" className="inline-flex h-11 items-center gap-2 rounded-full border border-[var(--brand-border)] px-5 text-[13px] font-semibold">
               <MessageCircle size={15} /> Questions sur la lecon

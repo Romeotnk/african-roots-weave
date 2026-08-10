@@ -146,3 +146,39 @@ export async function downloadFormation(id: string) {
   });
   return response.data;
 }
+
+export type FormationEnrollment = {
+  id: string;
+  formationId: string;
+  userId: string;
+  pricePaid: number | string;
+  paymentMethod: string | null;
+  completedLessonIds: string[];
+  enrolledAt: string;
+};
+
+export async function getMyFormationEnrollment(id: string) {
+  const response = await apiRequest<FormationEnrollment | null>(`/formations/${id}/enrollment`);
+  return response.data;
+}
+
+export type EnrollFormationResult = {
+  enrollment?: FormationEnrollment | null;
+  checkoutUrl?: string | null;
+};
+
+export async function enrollFormation(id: string, method: "wallet" | "card" | "mobile_money" | "free") {
+  const response = await apiRequest<EnrollFormationResult>(`/formations/${id}/enroll`, {
+    method: "POST",
+    body: { method },
+  });
+  return response.data;
+}
+
+export async function updateFormationProgress(id: string, lessonId: string, completed: boolean) {
+  const response = await apiRequest<FormationEnrollment>(`/formations/${id}/progress`, {
+    method: "PUT",
+    body: { lessonId, completed },
+  });
+  return response.data;
+}

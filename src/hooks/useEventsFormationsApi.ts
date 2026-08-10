@@ -3,8 +3,10 @@ import {
   createEvent,
   createFormation,
   downloadFormation,
+  enrollFormation,
   getEvent,
   getFormation,
+  getMyFormationEnrollment,
   listEvents,
   listFormations,
   listMyEvents,
@@ -14,6 +16,7 @@ import {
   unregisterEvent,
   updateEvent,
   updateFormation,
+  updateFormationProgress,
   type EventPayload,
   type EventQuery,
   type FormationPayload,
@@ -148,5 +151,36 @@ export function useDownloadFormation() {
   return useMutation({
     mutationFn: downloadFormation,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["formations"] }),
+  });
+}
+
+export function useMyFormationEnrollment(id: string) {
+  return useQuery({
+    queryKey: ["formations", id, "enrollment"] as const,
+    queryFn: () => getMyFormationEnrollment(id),
+    enabled: isBrowser && Boolean(id),
+    retry: false,
+  });
+}
+
+export function useEnrollFormation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, method }: { id: string; method: "wallet" | "card" | "mobile_money" | "free" }) =>
+      enrollFormation(id, method),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["formations", variables.id, "enrollment"] });
+    },
+  });
+}
+
+export function useUpdateFormationProgress() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, lessonId, completed }: { id: string; lessonId: string; completed: boolean }) =>
+      updateFormationProgress(id, lessonId, completed),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["formations", variables.id, "enrollment"] });
+    },
   });
 }
