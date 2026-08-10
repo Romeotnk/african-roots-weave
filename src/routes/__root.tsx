@@ -63,26 +63,27 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  // Root route options.staleTime — without this, TanStack Router's default
+  // (0) reruns this loader, including the getSiteConfig() network+DB round
+  // trip, on EVERY navigation, not just the first page load. Site config
+  // (name, banners, theme colors...) rarely changes, so a minute of
+  // staleness is invisible to users but removes a full request from every
+  // single click.
+  staleTime: 60_000,
   loader: async (): Promise<{ cspNonce?: string; [key: string]: string | undefined }> => {
     // Same per-request CSP nonce server/src/app.ts generated (see
     // src/router.tsx for the full chain) — carried through loaderData so
     // both head() (client-side meta tag, auto-picked up by TanStack
     // Router's own hydration code) and RootShell (our manual theme script)
-    // can stamp it onto their inline scripts.
-    let cspNonce: string | undefined;
-    if (import.meta.env.SSR) {
-      try {
-        cspNonce = (await getCspNonce()) ?? undefined;
-      } catch {
-        // No request context available (e.g. route-tree generation at build time) — skip.
-      }
-    }
-    try {
-      const response = await getSiteConfig();
-      return { ...(response.data ?? {}), cspNonce };
-    } catch {
-      return { cspNonce };
-    }
+    // can stamp it onto their inline scripts. Runs in parallel with the
+    // site config fetch below — the two are independent.
+    const cspNoncePromise = import.meta.env.SSR
+      ? getCspNonce().catch(() => null)
+      : Promise.resolve(null);
+    const siteConfigPromise = getSiteConfig().catch(() => null);
+
+    const [cspNonce, response] = await Promise.all([cspNoncePromise, siteConfigPromise]);
+    return { ...(response?.data ?? {}), cspNonce: cspNonce ?? undefined };
   },
   head: ({ loaderData }) => {
     const siteName = loaderData?.["site.name"] || "IWOSAN";
