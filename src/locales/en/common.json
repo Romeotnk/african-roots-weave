@@ -255,7 +255,9 @@
       "cityPlaceholder": "City",
       "addressPlaceholder": "Precise address (optional)",
       "coords": "Lat {{lat}} / Lng {{lng}}",
-      "useMyLocation": "Use my location"
+      "useMyLocation": "Use my location",
+      "geoUnsupported": "Geolocation isn't available on this device.",
+      "geoDenied": "Couldn't get your position. Check your browser's location permissions."
     },
     "step2": {
       "dropzoneTitle": "Drag your photos here",

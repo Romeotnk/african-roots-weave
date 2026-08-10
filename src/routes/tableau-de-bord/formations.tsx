@@ -76,7 +76,20 @@ function TrainingsDashboard() {
     updateFormation.mutate(
       { id, payload: { isPublished: status === "published" } },
       {
-        onSuccess: () => setMessage(status === "published" ? "Formation publiée." : "Formation repassée en brouillon."),
+        onSuccess: (updated) => {
+          // The server silently keeps isPublished:false for professional/researcher
+          // accounts (only SUPER_ADMIN/ADMIN/EDITOR can truly publish) — read the
+          // record it actually persisted instead of assuming the request succeeded
+          // as-requested, so this message never claims "published" when it isn't.
+          const actuallyPublished = Boolean((updated as { isPublished?: boolean } | null)?.isPublished);
+          setMessage(
+            status === "published" && !actuallyPublished
+              ? "Formation soumise pour validation : elle sera publiée après vérification par l'équipe éditoriale."
+              : actuallyPublished
+                ? "Formation publiée."
+                : "Formation repassée en brouillon.",
+          );
+        },
         onError: (error) => setMessage(error instanceof Error ? error.message : "Action impossible."),
       },
     );

@@ -115,7 +115,12 @@ function SellerQuotesPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => declineQuote.mutate(quote.id)}
+                      onClick={() =>
+                        declineQuote.mutate(quote.id, {
+                          onSuccess: () => setMessage("Demande de devis refusée."),
+                          onError: (error) => setMessage(error instanceof Error ? error.message : "Impossible de refuser cette demande."),
+                        })
+                      }
                       disabled={declineQuote.isPending}
                       className="inline-flex h-10 items-center gap-2 rounded-full bg-red-50 px-4 text-[13px] font-semibold text-red-700 disabled:opacity-50"
                     >

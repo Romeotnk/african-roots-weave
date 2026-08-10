@@ -14,7 +14,6 @@ import {
   Star,
 } from "lucide-react";
 import { AdSlot } from "@/components/shared/AdSlot";
-import { questions } from "@/data/questions";
 import {
   useAcceptForumAnswer,
   useCreateForumAnswer,
@@ -97,17 +96,14 @@ function QuestionDetail() {
     const data = questionQuery.data as (BackendQuestion & { authorId?: string }) | undefined;
     return data ? toQuestion(data) : null;
   }, [questionQuery.data]);
-  const question = apiQuestion ?? questions.find((item) => item.id === id) ?? questions[0];
   const comments = useMemo(
     () => toComments((questionQuery.data as BackendQuestion | undefined)?.comments),
     [questionQuery.data],
   );
 
   useEffect(() => {
-    if (question?.title) document.title = `${question.title} - IWOSAN`;
-  }, [question?.title]);
-  const isRealQuestion = Boolean(apiQuestion);
-  const isAuthor = isRealQuestion && Boolean(user) && question.authorId === user?.id;
+    if (apiQuestion?.title) document.title = `${apiQuestion.title} - IWOSAN`;
+  }, [apiQuestion?.title]);
   const isModerator = roles.some((role) => moderatorRoles.includes(role));
   const isFavorited = ((favoritesQuery.data ?? []) as { id: string }[]).some((item) => item.id === id);
   const favoritedAnswerIds = new Set(
@@ -117,8 +113,8 @@ function QuestionDetail() {
     toggleFavoriteMutation.isPending && toggleFavoriteMutation.variables?.targetId === targetId;
 
   const sortedAnswers = useMemo(
-    () => [...(question.answerItems ?? [])].sort((a, b) => Number(b.accepted) - Number(a.accepted) || b.votes - a.votes),
-    [question.answerItems],
+    () => [...(apiQuestion?.answerItems ?? [])].sort((a, b) => Number(b.accepted) - Number(a.accepted) || b.votes - a.votes),
+    [apiQuestion],
   );
   const [reported, setReported] = useState(false);
   const [reportedAnswerIds, setReportedAnswerIds] = useState<string[]>([]);
@@ -134,12 +130,10 @@ function QuestionDetail() {
   const [editingCommentText, setEditingCommentText] = useState("");
 
   const voteQuestion = (value: 1 | -1) => {
-    if (!isRealQuestion) return;
     voteMutation.mutate({ targetId: id, targetType: "QUESTION", value });
   };
 
   const voteComment = (commentId: string, value: 1 | -1) => {
-    if (!isRealQuestion) return;
     voteMutation.mutate({ targetId: commentId, targetType: "COMMENT", value });
   };
 
@@ -157,28 +151,26 @@ function QuestionDetail() {
   };
 
   const voteAnswer = (answerId: string, value: 1 | -1) => {
-    if (!isRealQuestion) return;
     voteMutation.mutate({ targetId: answerId, targetType: "ANSWER", value });
   };
 
   const acceptAnswerAction = (answerId: string) => {
-    if (!isRealQuestion) return;
     acceptMutation.mutate(answerId);
   };
 
   const reportAnswer = (answerId: string) => {
-    setReportedAnswerIds((current) => (current.includes(answerId) ? current : [...current, answerId]));
-    if (isRealQuestion) reportMutation.mutate({ targetId: answerId, targetType: "ANSWER" });
+    reportMutation.mutate(
+      { targetId: answerId, targetType: "ANSWER" },
+      { onSuccess: () => setReportedAnswerIds((current) => (current.includes(answerId) ? current : [...current, answerId])) },
+    );
   };
 
   const favoriteAnswer = (answerId: string) => {
-    if (!isRealQuestion) return;
     toggleFavoriteMutation.mutate({ targetId: answerId, targetType: "ANSWER" });
   };
 
   const submitComment = () => {
     setCommentError("");
-    if (!isRealQuestion) return;
     if (commentText.trim().length < 3) {
       setCommentError("Le commentaire doit contenir au moins 3 caractères.");
       return;
@@ -190,17 +182,40 @@ function QuestionDetail() {
   };
 
   const submitAnswer = () => {
-    if (!isRealQuestion) {
-      setAnswerSubmitted(true);
-      setAnswer("");
-      setAnswerAttachments([]);
-      return;
-    }
     answerMutation.mutate(
       { questionId: id, payload: { content: answer, attachments: answerAttachments } },
       { onSuccess: () => { setAnswerSubmitted(true); setAnswer(""); setAnswerAttachments([]); } },
     );
   };
+
+  // Only render interactive question content once it's genuinely loaded from
+  // the API — never fall back to demo/mock content on a loading or error
+  // state, since every vote/answer/report action below assumes a real
+  // question id exists to act on.
+  if (questionQuery.isLoading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[var(--brand-bg)]">
+        <Loader2 className="animate-spin text-[var(--brand-primary)]" size={32} />
+      </main>
+    );
+  }
+
+  if (!apiQuestion) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[var(--brand-bg)] px-4 text-center">
+        <h1 className="text-[24px] font-bold">Question introuvable</h1>
+        <p className="max-w-md text-[14px] text-[var(--color-text-muted)]">
+          Cette question n'existe pas ou n'est plus disponible.
+        </p>
+        <Link to="/forum" className="text-[14px] font-semibold text-[var(--brand-primary)]">
+          Retour au forum
+        </Link>
+      </main>
+    );
+  }
+
+  const question = apiQuestion;
+  const isAuthor = Boolean(user) && question.authorId === user?.id;
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">
@@ -282,7 +297,7 @@ function QuestionDetail() {
               ))}
             </div>
 
-            {isRealQuestion && (
+            {(
               <div className="mt-6 border-t border-[var(--brand-border-light)] pt-5">
                 <h3 className="flex items-center gap-2 text-[15px] font-bold">
                   <MessageCircle size={16} /> {comments.length} commentaire{comments.length > 1 ? "s" : ""}
@@ -412,7 +427,7 @@ function QuestionDetail() {
                         <span>{formatDate(item.date)}</span>
                         <button
                           type="button"
-                          disabled={!isRealQuestion || isFavoriteTogglePending(item.id)}
+                          disabled={isFavoriteTogglePending(item.id)}
                           onClick={() => favoriteAnswer(item.id)}
                           className={`inline-flex items-center gap-1 font-semibold disabled:opacity-50 ${itemFavorited ? "text-[var(--brand-primary)]" : ""}`}
                         >
@@ -522,7 +537,7 @@ function QuestionDetail() {
           <div className="space-y-3 rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
           <button
             type="button"
-            disabled={!isRealQuestion || isFavoriteTogglePending(id)}
+            disabled={isFavoriteTogglePending(id)}
             onClick={() => toggleFavoriteMutation.mutate({ targetId: id })}
             className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-full text-[13px] font-semibold disabled:opacity-50 ${
               isFavorited ? "bg-[var(--brand-primary)] text-white" : "border border-[var(--brand-border)]"
@@ -533,11 +548,9 @@ function QuestionDetail() {
           </button>
           <button
             type="button"
-            onClick={() => {
-              setReported(true);
-              if (isRealQuestion) reportMutation.mutate({ targetId: id, targetType: "QUESTION" });
-            }}
-            className="h-11 w-full rounded-full border border-[var(--brand-border)] text-[13px] font-semibold"
+            disabled={reportMutation.isPending || reported}
+            onClick={() => reportMutation.mutate({ targetId: id, targetType: "QUESTION" }, { onSuccess: () => setReported(true) })}
+            className="h-11 w-full rounded-full border border-[var(--brand-border)] text-[13px] font-semibold disabled:opacity-50"
           >
             {reported ? "Signalée" : "Signaler"}
           </button>

@@ -143,6 +143,26 @@ export async function publishArticle(id: string) {
   return response.data;
 }
 
+export type ArticleComment = {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: { id: string; firstName: string; lastName: string; avatarUrl: string | null };
+};
+
+export async function listArticleComments(articleId: string) {
+  const response = await apiRequest<ArticleComment[]>(`/articles/${articleId}/comments`);
+  return response.data ?? [];
+}
+
+export async function createArticleComment(articleId: string, content: string) {
+  const response = await apiRequest<ArticleComment>(`/articles/${articleId}/comments`, {
+    method: "POST",
+    body: { content },
+  });
+  return response.data;
+}
+
 export async function listMonographs() {
   try {
     const response = await apiRequest<unknown>("/monographs");

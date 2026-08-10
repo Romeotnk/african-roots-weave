@@ -45,14 +45,24 @@ export const initiateWalletDeposit = (amount: number, method?: string) =>
     body: { amount, method },
   });
 
-export const requestWalletWithdraw = (amount: number, destination: string) =>
+export const requestWalletWithdraw = (amount: number, destination: string, pin?: string) =>
   apiRequest<unknown>("/wallet/withdraw", {
     method: "POST",
-    body: { amount, destination },
+    body: { amount, destination, pin },
   });
 
-export const transferWalletFunds = (receiver: string, amount: number) =>
+export const transferWalletFunds = (receiver: string, amount: number, pin?: string) =>
   apiRequest<{ reference: string }>("/wallet/transfer", {
     method: "POST",
-    body: receiver.includes("@") ? { receiverEmail: receiver, amount } : { receiverId: receiver, amount },
+    body: {
+      ...(receiver.includes("@") ? { receiverEmail: receiver } : { receiverId: receiver }),
+      amount,
+      pin,
+    },
+  });
+
+export const setWalletPin = (pin: string, currentPin?: string) =>
+  apiRequest<{ hasWalletPin: boolean }>("/wallet/pin", {
+    method: "PUT",
+    body: { pin, currentPin },
   });

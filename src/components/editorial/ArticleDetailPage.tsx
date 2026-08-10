@@ -4,9 +4,10 @@ import { Copy, Facebook, MessageCircle } from "lucide-react";
 import { ArticleCard } from "@/components/shared/ArticleCard";
 import { AdSlot } from "@/components/shared/AdSlot";
 import { articles } from "@/data/articles";
-import { useArticle, useArticles } from "@/hooks/useContentApi";
+import { useArticle, useArticleComments, useArticles, useCreateArticleComment } from "@/hooks/useContentApi";
 import { toArticle, type BackendArticle } from "@/components/editorial/ArticleListPage";
 import type { ArticleSpace } from "@/lib/api/content";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 export function ArticleDetailPage({ slug, fallbackSpace }: { slug: string; fallbackSpace?: string }) {
   const articleQuery = useArticle(slug);
@@ -33,10 +34,31 @@ export function ArticleDetailPage({ slug, fallbackSpace }: { slug: string; fallb
   const related = apiArticle ? apiRelated : articles.filter((item) => item.id !== article.id && item.space === article.space).slice(0, 3);
 
   const breadcrumbSpace = article.space === "Sante au quotidien" ? "Sante" : article.space;
+  const { user } = useAuth();
+  const commentsQuery = useArticleComments(apiArticle?.id ?? "");
+  const createComment = useCreateArticleComment();
   const [shareNotice, setShareNotice] = useState("");
-  const [commentName, setCommentName] = useState("");
   const [commentBody, setCommentBody] = useState("");
   const [commentNotice, setCommentNotice] = useState("");
+
+  const submitComment = () => {
+    if (!apiArticle) return;
+    const content = commentBody.trim();
+    if (content.length < 2) {
+      setCommentNotice("Ecrivez un commentaire avant de le publier.");
+      return;
+    }
+    createComment.mutate(
+      { articleId: apiArticle.id, content },
+      {
+        onSuccess: () => {
+          setCommentBody("");
+          setCommentNotice("Commentaire publie.");
+        },
+        onError: (error) => setCommentNotice(error instanceof Error ? error.message : "Impossible de publier le commentaire."),
+      },
+    );
+  };
   const shareArticle = (label: string) => {
     const url = typeof window !== "undefined" ? window.location.href : "";
     const encodedUrl = encodeURIComponent(url);
@@ -103,21 +125,45 @@ export function ArticleDetailPage({ slug, fallbackSpace }: { slug: string; fallb
           <div className="mt-8">
             <h2 className="text-[18px] font-bold">Commentaires</h2>
             <div className="mt-4 space-y-3">
-              {(article.comments ?? []).map((comment) => (
-                <div key={comment.id} className="rounded-lg bg-[var(--brand-surface-alt)] p-4 text-[13px]">
-                  <p className="font-semibold">{comment.authorName}</p>
-                  <p className="mt-1 text-[var(--color-text-secondary)]">{comment.content}</p>
-                </div>
-              ))}
-              <div className="rounded-lg border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-4">
-                <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Répondre sans compte</p>
-                <div className="mt-3 grid gap-3">
-                  <input value={commentName} onChange={(event) => setCommentName(event.target.value)} placeholder="Votre nom (optionnel)" className="h-11 rounded-full border border-[var(--brand-border)] px-4 text-[13px]" />
-                  <textarea value={commentBody} onChange={(event) => setCommentBody(event.target.value)} rows={4} placeholder="Votre commentaire" className="w-full rounded-2xl border border-[var(--brand-border)] px-4 py-3" />
-                  <button type="button" onClick={() => { setCommentNotice(commentName ? `Commentaire de ${commentName} préparé.` : "Commentaire préparé."); setCommentBody(""); }} className="h-11 rounded-full bg-[var(--brand-primary)] px-4 font-semibold text-white">Publier</button>
-                  {commentNotice && <p className="text-[13px] text-[var(--brand-primary)]">{commentNotice}</p>}
-                </div>
-              </div>
+              {apiArticle ? (
+                <>
+                  {commentsQuery.isLoading && <p className="text-[13px] text-[var(--color-text-muted)]">Chargement des commentaires...</p>}
+                  {!commentsQuery.isLoading && (commentsQuery.data ?? []).length === 0 && (
+                    <p className="text-[13px] text-[var(--color-text-muted)]">Aucun commentaire pour le moment. Soyez le premier a reagir.</p>
+                  )}
+                  {(commentsQuery.data ?? []).map((comment) => (
+                    <div key={comment.id} className="rounded-lg bg-[var(--brand-surface-alt)] p-4 text-[13px]">
+                      <p className="font-semibold">{comment.author.firstName} {comment.author.lastName}</p>
+                      <p className="mt-1 text-[var(--color-text-secondary)]">{comment.content}</p>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                (article.comments ?? []).map((comment) => (
+                  <div key={comment.id} className="rounded-lg bg-[var(--brand-surface-alt)] p-4 text-[13px]">
+                    <p className="font-semibold">{comment.authorName}</p>
+                    <p className="mt-1 text-[var(--color-text-secondary)]">{comment.content}</p>
+                  </div>
+                ))
+              )}
+              {apiArticle && (
+                user ? (
+                  <div className="rounded-lg border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-4">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Laisser un commentaire</p>
+                    <div className="mt-3 grid gap-3">
+                      <textarea value={commentBody} onChange={(event) => setCommentBody(event.target.value)} rows={4} placeholder="Votre commentaire" className="w-full rounded-2xl border border-[var(--brand-border)] px-4 py-3" />
+                      <button type="button" onClick={submitComment} disabled={createComment.isPending} className="h-11 rounded-full bg-[var(--brand-primary)] px-4 font-semibold text-white disabled:opacity-50">
+                        {createComment.isPending ? "Publication..." : "Publier"}
+                      </button>
+                      {commentNotice && <p className="text-[13px] text-[var(--brand-primary)]">{commentNotice}</p>}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-dashed border-[var(--brand-border)] bg-[var(--brand-surface-alt)] p-4 text-center text-[13px] text-[var(--color-text-muted)]">
+                    <Link to="/connexion" className="font-semibold text-[var(--brand-primary)]">Connectez-vous</Link> pour laisser un commentaire.
+                  </div>
+                )
+              )}
             </div>
           </div>
         </article>

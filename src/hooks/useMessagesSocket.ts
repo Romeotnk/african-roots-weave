@@ -9,6 +9,7 @@ type BackendMessage = {
   content: string;
   createdAt: string;
   isRead?: boolean;
+  attachments?: string[];
 };
 
 type UseMessagesSocketOptions = {
@@ -85,14 +86,14 @@ export function useMessagesSocket(options: UseMessagesSocketOptions = {}) {
     };
   }, [token]);
 
-  const sendMessage = useCallback((receiverId: string, content: string) => {
+  const sendMessage = useCallback((receiverId: string, content: string, attachments?: string[]) => {
     const socket = socketRef.current;
-    if (!socket || !receiverId || !content.trim()) return Promise.resolve(null);
+    if (!socket || !receiverId || (!content.trim() && !attachments?.length)) return Promise.resolve(null);
 
     return new Promise<{ message: BackendMessage; contactInfoRedacted: boolean } | null>((resolve) => {
       socket.emit(
         "message:send",
-        { receiverId, content: content.trim() },
+        { receiverId, content: content.trim(), attachments },
         (payload: { success?: boolean; data?: BackendMessage; contactInfoRedacted?: boolean }) => {
           resolve(payload?.success && payload.data ? { message: payload.data, contactInfoRedacted: Boolean(payload.contactInfoRedacted) } : null);
         },

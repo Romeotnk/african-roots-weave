@@ -98,6 +98,7 @@ function DepositListing() {
   const [quoteRequest, setQuoteRequest] = useState(false);
   const [tags, setTags] = useState(["kinkeliba", "digestion"]);
   const [tagInput, setTagInput] = useState("");
+  const [specialConditions, setSpecialConditions] = useState("");
   const [terms, setTerms] = useState(false);
   const [salesPolicy, setSalesPolicy] = useState(false);
   const [confirmation, setConfirmation] = useState("");
@@ -137,6 +138,21 @@ function DepositListing() {
     if (!next || tags.includes(next)) return;
     setTags((current) => [...current, next]);
     setTagInput("");
+  };
+
+  const useMyLocation = () => {
+    if (!navigator.geolocation) {
+      setFormError(t("deposer.step1.geoUnsupported"));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setFormError("");
+        setCoords({ lat: position.coords.latitude, lng: position.coords.longitude });
+      },
+      () => setFormError(t("deposer.step1.geoDenied")),
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
   };
 
   const validateStep = (targetStep = step) => {
@@ -182,9 +198,17 @@ function DepositListing() {
     }
 
     try {
+      // Product has no dedicated tags/specialConditions columns — fold them
+      // into the description (clearly labeled) instead of silently
+      // discarding data the form already required and validated.
+      const descriptionParts = [
+        description.trim(),
+        tags.length > 0 ? `\n\nTags : ${tags.map((tag) => `#${tag}`).join(" ")}` : "",
+        specialConditions.trim() ? `\n\nConditions particulières : ${specialConditions.trim()}` : "",
+      ];
       const created = await createProduct.mutateAsync({
         title,
-        description,
+        description: descriptionParts.join(""),
         price: quoteRequest ? 0 : Number(price),
         category: selectedCategory?.slug ?? "",
         type: productTypeEnum[type],
@@ -442,7 +466,8 @@ function DepositListing() {
                         className="h-10 rounded-lg border border-[var(--brand-border)] px-3"
                       />
                       <button
-                        onClick={() => setCoords({ lat: 6.37, lng: 2.43 })}
+                        type="button"
+                        onClick={useMyLocation}
                         className="h-10 rounded-lg bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white"
                       >
                         {t("deposer.step1.useMyLocation")}
@@ -554,6 +579,8 @@ function DepositListing() {
                     </div>
                   </div>
                   <textarea
+                    value={specialConditions}
+                    onChange={(event) => setSpecialConditions(event.target.value)}
                     placeholder={t("deposer.step3.specialConditionsPlaceholder")}
                     className="min-h-[120px] w-full rounded-lg border border-[var(--brand-border)] px-4 py-3"
                   />

@@ -17,6 +17,7 @@ type BackendConversation = {
     content: string;
     isRead: boolean;
     createdAt: string;
+    attachments?: string[];
   }[];
 };
 
@@ -38,6 +39,7 @@ export const listConversations = async () => {
         content: message.content,
         createdAt: message.createdAt,
         read: message.isRead,
+        attachment: message.attachments?.[0],
       })),
     }),
   );
@@ -45,3 +47,13 @@ export const listConversations = async () => {
 
 export const markConversationRead = (participantId: string) =>
   apiRequest<null>(`/messages/conversations/${participantId}/read`, { method: "PUT" });
+
+export const uploadMessageAttachments = async (files: File[]) => {
+  const body = new FormData();
+  files.forEach((file) => body.append("files", file));
+  const response = await apiRequest<{ urls: string[] }>("/messages/attachments", {
+    method: "POST",
+    body,
+  });
+  return response.data?.urls ?? [];
+};

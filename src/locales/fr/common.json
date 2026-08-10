@@ -255,7 +255,9 @@
       "cityPlaceholder": "Ville",
       "addressPlaceholder": "Adresse précise (optionnel)",
       "coords": "Lat {{lat}} / Lng {{lng}}",
-      "useMyLocation": "Utiliser ma position"
+      "useMyLocation": "Utiliser ma position",
+      "geoUnsupported": "La géolocalisation n'est pas disponible sur cet appareil.",
+      "geoDenied": "Impossible d'obtenir votre position. Vérifiez les autorisations de localisation de votre navigateur."
     },
     "step2": {
       "dropzoneTitle": "Glissez vos photos ici",

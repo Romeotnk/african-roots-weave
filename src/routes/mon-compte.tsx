@@ -24,10 +24,13 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { isProfessionalAccount, USER_ACCOUNT_ROLES } from "@/lib/auth/roles";
 import { useMyBookings } from "@/hooks/useBookingsApi";
+import { useMyOrders } from "@/hooks/useOrdersApi";
+import { listConversations } from "@/lib/api/messages";
 
 export const Route = createFileRoute("/mon-compte")({
   head: () => ({ meta: [{ title: "Mon compte - IWOSAN" }] }),
@@ -171,13 +174,35 @@ function PersonalAccountGrid() {
   );
 }
 
+type BackendOrder = { totalAmount: string | number; status: string; createdAt: string };
+
 function ProAccountGrid() {
+  const ordersQuery = useMyOrders("seller");
+  const conversationsQuery = useQuery({
+    queryKey: ["messages", "conversations"],
+    queryFn: listConversations,
+    retry: false,
+  });
+
+  const orders = (ordersQuery.data?.data ?? []) as BackendOrder[];
+  const conversations = conversationsQuery.data ?? [];
+
+  const monthlyRevenue = (() => {
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    return orders
+      .filter((order) => new Date(order.createdAt) >= startOfMonth && !["CANCELLED", "REFUNDED"].includes(order.status))
+      .reduce((sum, order) => sum + Number(order.totalAmount), 0);
+  })();
+  const activeOrdersCount = orders.filter((order) => !["DELIVERED", "CANCELLED", "REFUNDED"].includes(order.status)).length;
+  const unreadMessagesCount = conversations.reduce((sum, conversation) => sum + conversation.unreadCount, 0);
+  const isLoading = ordersQuery.isLoading || conversationsQuery.isLoading;
+
   return (
     <div className="space-y-8">
       <div className="grid gap-4 md:grid-cols-3">
-        <Metric label="Commandes actives" value="14" />
-        <Metric label="Revenus estimes" value="248 500 FCFA" />
-        <Metric label="Messages non lus" value="8" />
+        <Metric label="Commandes actives" value={isLoading ? "-" : String(activeOrdersCount)} />
+        <Metric label="Revenus du mois" value={isLoading ? "-" : `${monthlyRevenue.toLocaleString("fr-FR")} FCFA`} />
+        <Metric label="Messages non lus" value={isLoading ? "-" : String(unreadMessagesCount)} />
       </div>
       <div>
         <h2 className="text-[22px] font-extrabold">Modules professionnels</h2>

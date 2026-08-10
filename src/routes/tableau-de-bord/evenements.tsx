@@ -95,8 +95,20 @@ function EventsDashboard() {
     updateEventMutation.mutate(
       { id, payload: { isPublished: status === "confirmed" } },
       {
-        onSuccess: () =>
-          setMessage(status === "confirmed" ? "Événement publié." : "Événement dépublié."),
+        onSuccess: (updated) => {
+          // The server silently keeps isPublished:false for professional/researcher
+          // accounts (only SUPER_ADMIN/ADMIN/EDITOR can truly publish) — read the
+          // record it actually persisted instead of assuming the request succeeded
+          // as-requested, so this message never claims "published" when it isn't.
+          const actuallyPublished = Boolean((updated as { isPublished?: boolean } | null)?.isPublished);
+          setMessage(
+            status === "confirmed" && !actuallyPublished
+              ? "Événement soumis pour validation : il sera publié après vérification par l'équipe éditoriale."
+              : actuallyPublished
+                ? "Événement publié."
+                : "Événement dépublié.",
+          );
+        },
         onError: (error) => setMessage(error instanceof Error ? error.message : "Action impossible."),
       },
     );

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createArticle,
+  createArticleComment,
   createMonograph,
   deleteArticle,
   deleteMonograph,
@@ -8,6 +9,7 @@ import {
   getMonograph,
   getMyArticles,
   listAllMonographsForAdmin,
+  listArticleComments,
   listArticles,
   listArticlesForAdmin,
   listMonographs,
@@ -30,7 +32,27 @@ export const contentKeys = {
   monograph: (id: string) => ["content", "monograph", id] as const,
   monographsAdmin: ["content", "monographs", "admin"] as const,
   articlesAdmin: (space?: ArticleSpace) => ["content", "articles", "admin", space ?? "all"] as const,
+  articleComments: (articleId: string) => ["content", "article", articleId, "comments"] as const,
 };
+
+export function useArticleComments(articleId: string) {
+  return useQuery({
+    queryKey: contentKeys.articleComments(articleId),
+    queryFn: () => listArticleComments(articleId),
+    enabled: Boolean(articleId),
+    retry: false,
+  });
+}
+
+export function useCreateArticleComment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ articleId, content }: { articleId: string; content: string }) => createArticleComment(articleId, content),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: contentKeys.articleComments(variables.articleId) });
+    },
+  });
+}
 
 export function useMyArticles() {
   return useQuery({

@@ -4,6 +4,7 @@ import {
   getWalletTransactions,
   initiateWalletDeposit,
   requestWalletWithdraw,
+  setWalletPin,
   transferWalletFunds,
 } from "@/lib/api/wallet";
 
@@ -44,7 +45,8 @@ export function useWalletDeposit() {
 export function useWalletWithdraw() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ amount, destination }: { amount: number; destination: string }) => requestWalletWithdraw(amount, destination),
+    mutationFn: ({ amount, destination, pin }: { amount: number; destination: string; pin?: string }) =>
+      requestWalletWithdraw(amount, destination, pin),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wallet"] }),
   });
 }
@@ -52,7 +54,16 @@ export function useWalletWithdraw() {
 export function useWalletTransfer() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ receiver, amount }: { receiver: string; amount: number }) => transferWalletFunds(receiver, amount),
+    mutationFn: ({ receiver, amount, pin }: { receiver: string; amount: number; pin?: string }) =>
+      transferWalletFunds(receiver, amount, pin),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wallet"] }),
+  });
+}
+
+export function useSetWalletPin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ pin, currentPin }: { pin: string; currentPin?: string }) => setWalletPin(pin, currentPin),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["auth", "me"] }),
   });
 }

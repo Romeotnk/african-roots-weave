@@ -17,6 +17,7 @@ export type AuthUser = {
   isBanned?: boolean;
   lastLoginAt?: string;
   createdAt?: string;
+  hasWalletPin?: boolean;
 };
 
 const BACKEND_USER_STORAGE_KEY = "iwosan.user";

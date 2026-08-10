@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { conversations as initialConversations } from "@/data/messages";
 import { useMessagesSocket } from "@/hooks/useMessagesSocket";
 import { useProfessional } from "@/hooks/useApiCatalog";
-import { listConversations, markConversationRead } from "@/lib/api/messages";
+import { listConversations, markConversationRead, uploadMessageAttachments } from "@/lib/api/messages";
 import { authTokenStore } from "@/lib/api/client";
 import type { ChatMessage, Conversation } from "@/types";
 
@@ -26,6 +26,7 @@ function MessagesPage() {
   const [actionMessage, setActionMessage] = useState("");
   const attachmentInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
   const conversationsQuery = useQuery({
     queryKey: ["messages", "conversations"],
     queryFn: listConversations,
@@ -80,13 +81,14 @@ function MessagesPage() {
     setDraft(startText);
     setMobileConversationOpen(true);
   }, [hasBackendAuth, startTo, startText, alreadyHasStartConversation, startProfileQuery.data]);
-  const handleIncomingMessage = useCallback((message: { id: string; senderId: string; content: string; createdAt: string; isRead?: boolean }) => {
+  const handleIncomingMessage = useCallback((message: { id: string; senderId: string; content: string; createdAt: string; isRead?: boolean; attachments?: string[] }) => {
     const nextMessage: ChatMessage = {
       id: message.id,
       sender: "them",
       content: message.content,
       createdAt: message.createdAt,
       read: Boolean(message.isRead),
+      attachment: message.attachments?.[0],
     };
 
     setConversations((current) => {
@@ -154,13 +156,13 @@ function MessagesPage() {
 
   const active = conversations.find((conversation) => conversation.id === activeId) ?? conversations[0];
 
-  const sendMessage = async () => {
+  const sendMessage = async (attachmentUrl?: string) => {
     const content = draft.trim();
     if (!active) {
       setActionMessage("Sélectionnez une conversation avant d'envoyer un message.");
       return;
     }
-    if (!content) {
+    if (!content && !attachmentUrl) {
       setActionMessage("Écrivez un message avant de l'envoyer.");
       return;
     }
@@ -168,9 +170,10 @@ function MessagesPage() {
     const nextMessage: ChatMessage = {
       id: `local-${Date.now()}`,
       sender: "me",
-      content,
+      content: content || attachmentUrl!.split("/").pop() || "Pièce jointe",
       createdAt: new Date().toISOString(),
       read: false,
+      attachment: attachmentUrl,
     };
     setConversations((current) =>
       current.map((conversation) =>
@@ -184,7 +187,7 @@ function MessagesPage() {
 
     if (authenticated && !active.id.startsWith("conv")) {
       try {
-        const result = await sendSocketMessage(active.id, content);
+        const result = await sendSocketMessage(active.id, nextMessage.content, attachmentUrl ? [attachmentUrl] : undefined);
         if (result?.message?.id) {
           const { message: sent, contactInfoRedacted } = result;
           setConversations((current) =>
@@ -194,7 +197,7 @@ function MessagesPage() {
                     ...conversation,
                     messages: conversation.messages.map((message) =>
                       message.id === nextMessage.id
-                        ? { ...message, id: sent.id, content: sent.content, read: Boolean(sent.isRead) }
+                        ? { ...message, id: sent.id, content: sent.content, read: Boolean(sent.isRead), attachment: sent.attachments?.[0] ?? message.attachment }
                         : message,
                     ),
                   }
@@ -211,6 +214,24 @@ function MessagesPage() {
     }
   };
 
+  const sendFile = async (file: File) => {
+    if (!active) {
+      setActionMessage("Sélectionnez une conversation avant d'envoyer une pièce jointe.");
+      return;
+    }
+    setIsUploadingAttachment(true);
+    setActionMessage("Envoi de la pièce jointe...");
+    try {
+      const [url] = await uploadMessageAttachments([file]);
+      if (!url) throw new Error("Upload failed");
+      await sendMessage(url);
+    } catch {
+      setActionMessage("Impossible d'envoyer cette pièce jointe. Réessayez.");
+    } finally {
+      setIsUploadingAttachment(false);
+    }
+  };
+
   const handleComposerAction = (action: "emoji" | "attachment" | "photo") => {
     if (action === "emoji") {
       setDraft((current) => `${current} :)`.trimStart());
@@ -223,7 +244,8 @@ function MessagesPage() {
       return;
     }
 
-    photoInputRef.current?.click();  };
+    photoInputRef.current?.click();
+  };
 
   return (
     <main className="min-h-[calc(100vh-72px)] bg-[var(--brand-bg)]">
@@ -334,6 +356,15 @@ function MessagesPage() {
                   {active.messages.map((message) => (
                     <div key={message.id} className={`flex ${message.sender === "me" ? "justify-end" : "justify-start"}`}>
                       <div className={`max-w-[78%] rounded-[16px] px-4 py-3 text-[14px] shadow-iwosan-sm ${message.sender === "me" ? "bg-[var(--brand-primary)] text-white" : "bg-white text-[var(--color-text-primary)]"}`}>
+                        {message.attachment && /\.(png|jpe?g|gif|webp)$/i.test(message.attachment) ? (
+                          <a href={message.attachment} target="_blank" rel="noreferrer">
+                            <img src={message.attachment} alt="" className="mb-2 max-h-48 rounded-lg object-cover" />
+                          </a>
+                        ) : message.attachment ? (
+                          <a href={message.attachment} target="_blank" rel="noreferrer" className={`mb-2 flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-semibold underline ${message.sender === "me" ? "bg-white/10" : "bg-[var(--brand-surface-alt)]"}`}>
+                            <Paperclip size={14} /> Voir la pièce jointe
+                          </a>
+                        ) : null}
                         <p>{message.content}</p>
                         <p className={`mt-1 text-right text-[10px] ${message.sender === "me" ? "text-white/70" : "text-[var(--color-text-muted)]"}`}>
                           {new Date(message.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
@@ -350,11 +381,13 @@ function MessagesPage() {
                   <input
                     ref={attachmentInputRef}
                     type="file"
+                    accept="image/*,.pdf"
                     className="hidden"
                     onChange={(event) => {
                       const file = event.target.files?.[0];
+                      event.target.value = "";
                       if (!file) return;
-                      setActionMessage(`Pièce jointe ajoutée : ${file.name}.`);
+                      void sendFile(file);
                     }}
                   />
                   <input
@@ -364,16 +397,18 @@ function MessagesPage() {
                     className="hidden"
                     onChange={(event) => {
                       const file = event.target.files?.[0];
+                      event.target.value = "";
                       if (!file) return;
-                      setActionMessage(`Photo ajoutée : ${file.name}.`);
+                      void sendFile(file);
                     }}
-                  />                  <button type="button" onClick={() => handleComposerAction("emoji")} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Emoji">
+                  />
+                  <button type="button" onClick={() => handleComposerAction("emoji")} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Emoji">
                     <Laugh size={17} />
                   </button>
-                  <button type="button" onClick={() => handleComposerAction("attachment")} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Pièce jointe">
+                  <button type="button" onClick={() => handleComposerAction("attachment")} disabled={isUploadingAttachment} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)] disabled:opacity-50" aria-label="Pièce jointe">
                     <Paperclip size={17} />
                   </button>
-                  <button type="button" onClick={() => handleComposerAction("photo")} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Photo">
+                  <button type="button" onClick={() => handleComposerAction("photo")} disabled={isUploadingAttachment} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)] disabled:opacity-50" aria-label="Photo">
                     <Image size={17} />
                   </button>
                   <textarea
@@ -395,7 +430,8 @@ function MessagesPage() {
                     className="max-h-28 min-h-10 flex-1 resize-none rounded-[14px] border border-[var(--brand-border)] px-4 py-2 text-[14px] outline-none focus:border-[var(--brand-primary)]"
                   />
                   <button
-                    onClick={sendMessage}
+                    type="button"
+                    onClick={() => sendMessage()}
                     className="grid h-10 w-10 place-items-center rounded-full bg-[var(--brand-primary)] text-white"
                     aria-label="Envoyer"
                   >

@@ -1,28 +1,30 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CalendarDays, Download, XCircle } from "lucide-react";
+import { CalendarDays, Download, Loader2, XCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { RouteRedirect } from "@/components/RouteRedirect";
 import { AccountLayout } from "@/components/account/AccountLayout";
-import { events } from "@/data/events";
+import { useMeQuery } from "@/hooks/useAuthApi";
 import { useMyRegistrations, useUnregisterEvent } from "@/hooks/useEventsFormationsApi";
 import { toEventItem, type BackendEvent } from "@/lib/eventMappers";
+import type { EventItem } from "@/types";
 
 export const Route = createFileRoute("/dashboard/inscriptions")({
   head: () => ({ meta: [{ title: "Mes inscriptions - IWOSAN" }] }),
   component: () => <RouteRedirect to="/mon-compte/inscriptions" label="Ouverture de vos inscriptions..." />,
 });
 
-type Registration = (typeof events)[number] & { localStatus: "confirmed" | "pending" | "cancelled" };
+type Registration = EventItem & { localStatus: "confirmed" | "pending" | "cancelled" };
 
 type BackendRegistration = { eventId?: string; event?: BackendEvent };
 
 export function Registrations() {
   const registrationsQuery = useMyRegistrations();
   const unregister = useUnregisterEvent();
+  const { data: profile } = useMeQuery();
   const [cancelledIds, setCancelledIds] = useState<string[]>([]);
   const [actionMessage, setActionMessage] = useState("");
 
-  const apiRegistrations = useMemo(
+  const registrations = useMemo(
     () =>
       ((registrationsQuery.data ?? []) as BackendRegistration[])
         .map((registration) => (registration.event ? toEventItem(registration.event) : null))
@@ -30,13 +32,6 @@ export function Registrations() {
         .map((event): Registration => ({ ...event, localStatus: cancelledIds.includes(event.id) ? "cancelled" : "confirmed" })),
     [registrationsQuery.data, cancelledIds],
   );
-
-  const fallbackRegistrations: Registration[] = events.slice(0, 3).map((event) => ({
-    ...event,
-    localStatus: event.status === "cancelled" ? "cancelled" : event.status === "pending" ? "pending" : "confirmed",
-  }));
-
-  const registrations = registrationsQuery.isSuccess ? apiRegistrations : fallbackRegistrations;
 
   const cancelRegistration = (id: string) => {
     unregister.mutate(id, {
@@ -50,8 +45,24 @@ export function Registrations() {
     });
   };
 
-  const downloadTicket = (title: string) => {
-    setActionMessage(`Billet préparé pour ${title}. Vous pouvez le présenter depuis cet espace.`);
+  const downloadTicket = (event: Registration) => {
+    const lines = [
+      "IWOSAN - Confirmation d'inscription",
+      "",
+      `Evenement : ${event.title}`,
+      `Date : ${new Intl.DateTimeFormat("fr-FR", { dateStyle: "full", timeStyle: "short" }).format(new Date(event.date))}`,
+      `Lieu : ${event.online ? "En ligne" : (event.address ?? event.location)}`,
+      `Participant : ${profile ? `${profile.firstName} ${profile.lastName}` : "Compte Iwosan"}`,
+      `Reference : ${event.id}`,
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `billet-${event.id}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setActionMessage(`Billet telecharge pour ${event.title}.`);
   };
 
   return (
@@ -66,7 +77,15 @@ export function Registrations() {
         )}
 
         <div className="mt-8 space-y-4">
-          {registrations.length === 0 && (
+          {registrationsQuery.isLoading ? (
+            <div className="flex items-center justify-center rounded-[12px] border border-[var(--brand-border-light)] bg-white p-10">
+              <Loader2 className="animate-spin text-[var(--brand-primary)]" size={28} />
+            </div>
+          ) : registrationsQuery.isError ? (
+            <div className="rounded-[12px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
+              Impossible de charger vos inscriptions pour le moment.
+            </div>
+          ) : registrations.length === 0 ? (
             <div className="rounded-[12px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
               <CalendarDays className="mx-auto text-[var(--brand-primary)]" size={28} />
               <h2 className="mt-3 text-[20px] font-bold">Aucune inscription</h2>
@@ -74,9 +93,8 @@ export function Registrations() {
                 Vos prochaines inscriptions apparaîtront ici après réservation.
               </p>
             </div>
-          )}
-
-          {registrations.map((event) => {
+          ) : (
+          registrations.map((event) => {
             const isCancelled = event.localStatus === "cancelled";
             return (
               <article key={event.id} className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
@@ -101,7 +119,7 @@ export function Registrations() {
                   </Link>
                   <button
                     type="button"
-                    onClick={() => downloadTicket(event.title)}
+                    onClick={() => downloadTicket(event)}
                     disabled={isCancelled}
                     className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50"
                   >
@@ -118,7 +136,8 @@ export function Registrations() {
                 </div>
               </article>
             );
-          })}
+          })
+          )}
         </div>
 
         <Link to="/agenda" className="mt-6 inline-flex h-10 items-center rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">

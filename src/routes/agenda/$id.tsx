@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { CalendarDays, Clock3, MapPin } from "lucide-react";
+import { useMemo, useState } from "react";
+import { CalendarDays, CheckCircle2, Clock3, MapPin } from "lucide-react";
 import { EventCard } from "@/components/shared/EventCard";
 import { events } from "@/data/events";
-import { useEvent, useEvents } from "@/hooks/useEventsFormationsApi";
+import { useEvent, useEvents, useMyRegistrations, useRegisterEvent, useUnregisterEvent } from "@/hooks/useEventsFormationsApi";
 import { toEventItem, type BackendEvent } from "@/lib/eventMappers";
+import { useAuth } from "@/lib/auth/AuthContext";
 import type { EventItem } from "@/types";
 
 export const Route = createFileRoute("/agenda/$id")({
@@ -12,13 +13,39 @@ export const Route = createFileRoute("/agenda/$id")({
   component: EventDetail,
 });
 
+type BackendRegistration = { eventId?: string; event?: { id?: string } };
+
 function EventDetail() {
   const { id } = Route.useParams();
+  const { user } = useAuth();
   const eventQuery = useEvent(id);
   const eventsQuery = useEvents();
+  const registrationsQuery = useMyRegistrations();
+  const registerEvent = useRegisterEvent();
+  const unregisterEvent = useUnregisterEvent();
+  const [registrationMessage, setRegistrationMessage] = useState("");
 
   const apiEvent = useMemo(() => toEventItem((eventQuery.data ?? {}) as BackendEvent), [eventQuery.data]);
   const event = apiEvent ?? events.find((item) => item.id === id) ?? events[0];
+
+  const isRegistered = ((registrationsQuery.data ?? []) as BackendRegistration[]).some(
+    (registration) => registration.eventId === id || registration.event?.id === id,
+  );
+
+  const toggleRegistration = () => {
+    setRegistrationMessage("");
+    if (isRegistered) {
+      unregisterEvent.mutate(id, {
+        onSuccess: () => setRegistrationMessage("Inscription annulee."),
+        onError: (error) => setRegistrationMessage(error instanceof Error ? error.message : "Impossible d'annuler l'inscription."),
+      });
+      return;
+    }
+    registerEvent.mutate(id, {
+      onSuccess: () => setRegistrationMessage("Inscription confirmee. Retrouvez-la dans « Mes inscriptions »."),
+      onError: (error) => setRegistrationMessage(error instanceof Error ? error.message : "Impossible de vous inscrire."),
+    });
+  };
   const d = new Date(event.date);
   const end = event.endDate ? new Date(event.endDate) : null;
 
@@ -51,6 +78,28 @@ function EventDetail() {
               <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/70">Accès rapide</p>
               <p className="mt-2 text-[20px] font-bold">Réserver votre place</p>
               <div className="mt-4 space-y-3">
+                {apiEvent && (
+                  user ? (
+                    <button
+                      type="button"
+                      onClick={toggleRegistration}
+                      disabled={registerEvent.isPending || unregisterEvent.isPending}
+                      className={`flex w-full items-center justify-center gap-2 rounded-full px-4 py-3 text-center font-semibold disabled:opacity-60 ${isRegistered ? "border border-white/30 text-white" : "bg-white text-[var(--brand-primary-dark)]"}`}
+                    >
+                      {isRegistered && <CheckCircle2 size={17} />}
+                      {registerEvent.isPending || unregisterEvent.isPending
+                        ? "Traitement..."
+                        : isRegistered
+                          ? "Inscrit — se desinscrire"
+                          : "S'inscrire a cet evenement"}
+                    </button>
+                  ) : (
+                    <Link to="/connexion" className="block rounded-full bg-white px-4 py-3 text-center font-semibold text-[var(--brand-primary-dark)]">
+                      Se connecter pour s'inscrire
+                    </Link>
+                  )
+                )}
+                {registrationMessage && <p className="rounded-lg bg-white/10 px-3 py-2 text-center text-[12px] text-white">{registrationMessage}</p>}
                 {event.online && event.meetingUrl && (
                   <a href={event.meetingUrl} target="_blank" rel="noreferrer" className="block rounded-full bg-[var(--brand-gold)] px-4 py-3 text-center font-semibold text-white">Rejoindre la visioconférence</a>
                 )}

@@ -75,7 +75,7 @@ function OrdersPage() {
   const [actionMessage, setActionMessage] = useState("");
   const [reviewOrderId, setReviewOrderId] = useState("");
   const [orderReviews, setOrderReviews] = useState<Record<string, ReviewDraft>>({});
-  const [buyerRatings, setBuyerRatings] = useState<Record<string, { rating: number; comment: string }>>({});
+  const [buyerRatings, setBuyerRatings] = useState<Record<string, { rating: number; comment: string; submitted?: boolean }>>({});
   const filtered = localOrders.filter((order) => order.role === tab);
 
   const confirmReception = (orderId: string) => {
@@ -104,28 +104,64 @@ function OrdersPage() {
       return;
     }
 
-    const productId = rawOrders.find((order) => order.id === orderId)?.product?.id;
-    if (isRealData && productId) {
-      createReview.mutate(
-        { targetId: productId, targetType: "PRODUCT", rating: review.rating, comment: review.comment || undefined },
-        {
-          onSuccess: () => {
-            setOrderReviews((current) => ({ ...current, [orderId]: { ...review, submitted: true } }));
-            setReviewOrderId("");
-            setActionMessage(`Avis enregistre pour la commande ${orderId}.`);
-          },
-          onError: (error) => setActionMessage(error instanceof Error ? error.message : "Impossible d'enregistrer l'avis."),
-        },
-      );
+    if (!isRealData) {
+      setOrderReviews((current) => ({
+        ...current,
+        [orderId]: { ...review, submitted: true },
+      }));
+      setReviewOrderId("");
+      setActionMessage(`Avis enregistre pour la commande ${orderId}.`);
       return;
     }
 
-    setOrderReviews((current) => ({
-      ...current,
-      [orderId]: { ...review, submitted: true },
-    }));
-    setReviewOrderId("");
-    setActionMessage(`Avis enregistre pour la commande ${orderId}.`);
+    const productId = rawOrders.find((order) => order.id === orderId)?.product?.id;
+    if (!productId) {
+      setActionMessage("Impossible d'identifier le produit de cette commande pour enregistrer l'avis.");
+      return;
+    }
+
+    createReview.mutate(
+      { targetId: productId, targetType: "PRODUCT", rating: review.rating, comment: review.comment || undefined },
+      {
+        onSuccess: () => {
+          setOrderReviews((current) => ({ ...current, [orderId]: { ...review, submitted: true } }));
+          setReviewOrderId("");
+          setActionMessage(`Avis enregistre pour la commande ${orderId}.`);
+        },
+        onError: (error) => setActionMessage(error instanceof Error ? error.message : "Impossible d'enregistrer l'avis."),
+      },
+    );
+  };
+
+  const submitBuyerRating = (orderId: string) => {
+    const draft = buyerRatings[orderId];
+    if (!draft?.rating) {
+      setActionMessage("Choisissez une note avant d'envoyer l'evaluation.");
+      return;
+    }
+
+    if (!isRealData) {
+      setBuyerRatings((current) => ({ ...current, [orderId]: { ...draft, submitted: true } }));
+      setActionMessage(`Evaluation enregistree pour la commande ${orderId}.`);
+      return;
+    }
+
+    const buyerId = rawOrders.find((order) => order.id === orderId)?.buyerId;
+    if (!buyerId) {
+      setActionMessage("Impossible d'identifier l'acheteur de cette commande pour enregistrer l'evaluation.");
+      return;
+    }
+
+    createReview.mutate(
+      { targetId: buyerId, targetType: "BUYER", rating: draft.rating, comment: draft.comment || undefined },
+      {
+        onSuccess: () => {
+          setBuyerRatings((current) => ({ ...current, [orderId]: { ...draft, submitted: true } }));
+          setActionMessage(`Evaluation enregistree pour la commande ${orderId}.`);
+        },
+        onError: (error) => setActionMessage(error instanceof Error ? error.message : "Impossible d'enregistrer l'evaluation."),
+      },
+    );
   };
 
   return (
@@ -282,7 +318,7 @@ function OrdersPage() {
                 </div>
               )}
 
-              {!isRealData && tab === "seller" && ["delivered", "completed"].includes(order.status) && (
+              {tab === "seller" && ["delivered", "completed"].includes(order.status) && (
                 <div className="mt-5 rounded-lg border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -291,7 +327,7 @@ function OrdersPage() {
                         Score de fiabilite visible sur son profil vendeur.
                       </p>
                     </div>
-                    {buyerRatings[order.id] && (
+                    {buyerRatings[order.id]?.submitted && (
                       <span className="rounded-full bg-emerald-50 px-3 py-1 text-[12px] font-bold text-emerald-700">
                         Note envoyee : {buyerRatings[order.id].rating}/5
                       </span>
@@ -316,6 +352,14 @@ function OrdersPage() {
                     placeholder="Commentaire optionnel"
                     className="mt-3 min-h-20 w-full rounded-lg border border-[var(--brand-border)] bg-white px-3 py-2 text-[13px]"
                   />
+                  <button
+                    type="button"
+                    onClick={() => submitBuyerRating(order.id)}
+                    disabled={createReview.isPending || buyerRatings[order.id]?.submitted}
+                    className="mt-3 h-10 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-50"
+                  >
+                    {createReview.isPending ? "Envoi..." : buyerRatings[order.id]?.submitted ? "Evaluation envoyee" : "Envoyer l'evaluation"}
+                  </button>
                 </div>
               )}
             </article>
