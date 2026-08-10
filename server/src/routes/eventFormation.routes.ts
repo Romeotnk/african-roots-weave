@@ -3,8 +3,10 @@ import {
   createEvent,
   createFormation,
   downloadFormation,
+  enrollFormation,
   getEvent,
   getFormation,
+  getMyFormationEnrollment,
   listEvents,
   listFormations,
   listMyEvents,
@@ -14,6 +16,7 @@ import {
   unregisterEvent,
   updateEvent,
   updateFormation,
+  updateFormationProgress,
 } from "../controllers/eventFormation.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { checkPermission, requireEmailVerified } from "../middlewares/role.middleware.js";
@@ -56,3 +59,6 @@ formationRouter.put(
   updateFormation,
 );
 formationRouter.post("/:id/download", downloadFormation);
+formationRouter.get("/:id/enrollment", authMiddleware, getMyFormationEnrollment);
+formationRouter.post("/:id/enroll", authMiddleware, requireEmailVerified, enrollFormation);
+formationRouter.put("/:id/progress", authMiddleware, requireEmailVerified, updateFormationProgress);

@@ -204,6 +204,72 @@ export const monerooWebhook = asyncHandler(async (req, res) => {
       }
       // Duplicate webhook delivery for an already-credited deposit — no-op.
     }
+  } else if (metadata?.type === "formation_purchase" && metadata?.formationId && metadata?.userId && isPaid) {
+    // Idempotent on webhook replay: FormationEnrollment has a unique
+    // (formationId, userId) constraint, so a duplicate delivery hits a
+    // P2002 conflict on the create below (caught and ignored).
+    try {
+      await prisma.$transaction(async (tx) => {
+        const formation = await tx.formation.findUniqueOrThrow({
+          where: { id: metadata.formationId },
+          select: { id: true, price: true, createdById: true, title: true },
+        });
+
+        const enrollment = await tx.formationEnrollment.create({
+          data: {
+            formationId: formation.id,
+            userId: metadata.userId,
+            pricePaid: formation.price,
+            paymentMethod: "moneroo",
+            monerooTransactionId: reference ?? orderId ?? null,
+          },
+        });
+
+        await tx.user.update({
+          where: { id: formation.createdById },
+          data: { walletBalance: { increment: formation.price } },
+        });
+        const creatorBalance = await tx.user.findUniqueOrThrow({
+          where: { id: formation.createdById },
+          select: { walletBalance: true },
+        });
+        await tx.walletTransaction.create({
+          data: {
+            userId: formation.createdById,
+            amount: formation.price,
+            type: "TRANSFER",
+            reference: `formation:${formation.id}:${enrollment.id}:creator`,
+            description: `Vente formation: ${formation.title}`,
+            balanceBefore: creatorBalance.walletBalance.minus(formation.price),
+            balanceAfter: creatorBalance.walletBalance,
+          },
+        });
+
+        await tx.notification.createMany({
+          data: [
+            {
+              userId: metadata.userId,
+              type: "FORMATION_ENROLLED",
+              title: "Inscription confirmee",
+              message: `Votre paiement pour "${formation.title}" a ete confirme.`,
+              link: `/formations/${formation.id}/apprendre`,
+            },
+            {
+              userId: formation.createdById,
+              type: "FORMATION_SOLD",
+              title: "Formation vendue",
+              message: `"${formation.title}" vient d'etre achetee.`,
+              link: `/tableau-de-bord/formations`,
+            },
+          ],
+        });
+      });
+    } catch (error) {
+      if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") {
+        throw error;
+      }
+      // Duplicate webhook delivery for an already-created enrollment — no-op.
+    }
   }
 
   res.json(apiResponse(true, null, "Webhook processed"));

@@ -1,5 +1,6 @@
-import { Role } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import { prisma } from "../config/db.js";
+import { initiateMonerooPayment } from "../services/moneroo.service.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
@@ -266,4 +267,134 @@ export const downloadFormation = asyncHandler(async (req, res) => {
   res.json(
     apiResponse(true, { ...formation, signedUrl: formation.fileUrl }, "Formation download ready"),
   );
+});
+
+export const getMyFormationEnrollment = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  const enrollment = await prisma.formationEnrollment.findUnique({
+    where: { formationId_userId: { formationId: req.params.id, userId: req.user.id } },
+  });
+  res.json(apiResponse(true, enrollment, "Enrollment status retrieved"));
+});
+
+export const enrollFormation = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  const formation = await prisma.formation.findUnique({
+    where: { id: req.params.id },
+    select: { id: true, price: true, currency: true, createdById: true, title: true },
+  });
+  if (!formation) throw new ApiError(404, "Formation not found");
+  if (formation.createdById === req.user.id) throw new ApiError(400, "Vous ne pouvez pas vous inscrire a votre propre formation");
+
+  const existing = await prisma.formationEnrollment.findUnique({
+    where: { formationId_userId: { formationId: formation.id, userId: req.user.id } },
+  });
+  if (existing) throw new ApiError(409, "Vous etes deja inscrit a cette formation");
+
+  if (formation.price.lte(0)) {
+    const enrollment = await prisma.formationEnrollment.create({
+      data: { formationId: formation.id, userId: req.user.id, pricePaid: 0, paymentMethod: "free" },
+    });
+    res.status(201).json(apiResponse(true, { enrollment, checkoutUrl: null }, "Inscription confirmee"));
+    return;
+  }
+
+  if (req.body.method === "wallet") {
+    const enrollment = await prisma.$transaction(async (tx) => {
+      // Same conditional-atomic-decrement pattern as order/wallet payments
+      // (payment.controller.ts) — the WHERE clause is evaluated atomically
+      // by Postgres, so two concurrent purchases can't both pass a stale
+      // balance check.
+      const decremented = await tx.user.updateMany({
+        where: { id: req.user!.id, walletBalance: { gte: formation.price } },
+        data: { walletBalance: { decrement: formation.price } },
+      });
+      if (decremented.count === 0) throw new ApiError(400, "Solde du portefeuille insuffisant");
+
+      const buyer = await tx.user.findUnique({ where: { id: req.user!.id }, select: { walletBalance: true } });
+      const buyerBalanceAfter = buyer?.walletBalance ?? new Prisma.Decimal(0);
+
+      const createdEnrollment = await tx.formationEnrollment.create({
+        data: {
+          formationId: formation.id,
+          userId: req.user!.id,
+          pricePaid: formation.price,
+          paymentMethod: "wallet",
+        },
+      });
+
+      const reference = `formation:${formation.id}:${createdEnrollment.id}`;
+      await tx.walletTransaction.create({
+        data: {
+          userId: req.user!.id,
+          amount: formation.price.neg(),
+          type: "TRANSFER",
+          reference: `${reference}:buyer`,
+          description: `Achat formation "${formation.title}"`,
+          balanceBefore: buyerBalanceAfter.plus(formation.price),
+          balanceAfter: buyerBalanceAfter,
+        },
+      });
+
+      // Formations have no MLM/affiliate downline the way marketplace
+      // products do — the full price goes to the course creator, no
+      // platform commission taken in this first version.
+      const creator = await tx.user.update({
+        where: { id: formation.createdById },
+        data: { walletBalance: { increment: formation.price } },
+        select: { walletBalance: true },
+      });
+      await tx.walletTransaction.create({
+        data: {
+          userId: formation.createdById,
+          amount: formation.price,
+          type: "TRANSFER",
+          reference: `${reference}:creator`,
+          description: `Vente formation "${formation.title}"`,
+          balanceBefore: creator.walletBalance.minus(formation.price),
+          balanceAfter: creator.walletBalance,
+        },
+      });
+
+      return createdEnrollment;
+    }, { timeout: 20000, maxWait: 10000 });
+
+    res.status(201).json(apiResponse(true, { enrollment, checkoutUrl: null }, "Inscription et paiement confirmes"));
+    return;
+  }
+
+  const reference = `formation_${formation.id}_${req.user.id}_${Date.now()}`;
+  const payment = await initiateMonerooPayment({
+    amount: formation.price.toString(),
+    currency: formation.currency,
+    description: `Iwosan formation: ${formation.title}`,
+    customerEmail: req.user.email,
+    reference,
+    metadata: { type: "formation_purchase", formationId: formation.id, userId: req.user.id },
+  });
+
+  res.json(apiResponse(true, payment, "Payment initialized"));
+});
+
+export const updateFormationProgress = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  const lessonId = String(req.body.lessonId ?? "");
+  if (!lessonId) throw new ApiError(400, "lessonId is required");
+  const completed = Boolean(req.body.completed);
+
+  const enrollment = await prisma.formationEnrollment.findUnique({
+    where: { formationId_userId: { formationId: req.params.id, userId: req.user.id } },
+  });
+  if (!enrollment) throw new ApiError(403, "Vous devez etre inscrit a cette formation");
+
+  const nextLessonIds = completed
+    ? Array.from(new Set([...enrollment.completedLessonIds, lessonId]))
+    : enrollment.completedLessonIds.filter((id) => id !== lessonId);
+
+  const updated = await prisma.formationEnrollment.update({
+    where: { id: enrollment.id },
+    data: { completedLessonIds: nextLessonIds },
+  });
+
+  res.json(apiResponse(true, updated, "Progression mise a jour"));
 });
