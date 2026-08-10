@@ -24,11 +24,21 @@ export const listMyEvents = asyncHandler(async (req, res) => {
   const where = { createdById: req.user.id };
 
   const [events, total] = await prisma.$transaction([
-    prisma.event.findMany({ where, skip, take: limit, orderBy: { startDate: "asc" } }),
+    prisma.event.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { startDate: "asc" },
+      include: { _count: { select: { registrations: true } } },
+    }),
     prisma.event.count({ where }),
   ]);
+  const eventsWithRegistrationCount = events.map(({ _count, ...event }) => ({
+    ...event,
+    registrations: Array.from({ length: _count.registrations }),
+  }));
 
-  res.json(apiResponse(true, events, "My events retrieved", paginationMeta(page, limit, total)));
+  res.json(apiResponse(true, eventsWithRegistrationCount, "My events retrieved", paginationMeta(page, limit, total)));
 });
 
 export const getEvent = asyncHandler(async (req, res) => {
@@ -133,12 +143,33 @@ export const listMyFormations = asyncHandler(async (req, res) => {
   const where = { createdById: req.user.id };
 
   const [formations, total] = await prisma.$transaction([
-    prisma.formation.findMany({ where, skip, take: limit, orderBy: { createdAt: "desc" } }),
+    prisma.formation.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: { _count: { select: { enrollments: true } } },
+    }),
     prisma.formation.count({ where }),
   ]);
 
+  const revenueByFormation = formations.length
+    ? await prisma.formationEnrollment.groupBy({
+        by: ["formationId"],
+        where: { formationId: { in: formations.map((formation) => formation.id) } },
+        _sum: { pricePaid: true },
+      })
+    : [];
+  const revenueByFormationId = new Map(revenueByFormation.map((row) => [row.formationId, row._sum.pricePaid ?? 0]));
+
+  const formationsWithSales = formations.map(({ _count, ...formation }) => ({
+    ...formation,
+    enrollmentCount: _count.enrollments,
+    revenue: revenueByFormationId.get(formation.id) ?? 0,
+  }));
+
   res.json(
-    apiResponse(true, formations, "My formations retrieved", paginationMeta(page, limit, total)),
+    apiResponse(true, formationsWithSales, "My formations retrieved", paginationMeta(page, limit, total)),
   );
 });
 
@@ -259,6 +290,24 @@ export const updateFormation = asyncHandler(async (req, res) => {
 });
 
 export const downloadFormation = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+
+  const existing = await prisma.formation.findUnique({
+    where: { id: req.params.id },
+    select: { id: true, price: true, createdById: true },
+  });
+  if (!existing) throw new ApiError(404, "Formation not found");
+
+  const isOwner = existing.createdById === req.user.id;
+  const isFree = existing.price.lte(0);
+  const isStaff = req.user.role === "SUPER_ADMIN" || req.user.role === "ADMIN";
+  if (!isOwner && !isFree && !isStaff) {
+    const enrollment = await prisma.formationEnrollment.findUnique({
+      where: { formationId_userId: { formationId: existing.id, userId: req.user.id } },
+    });
+    if (!enrollment) throw new ApiError(403, "Vous devez etre inscrit a cette formation pour la telecharger");
+  }
+
   const formation = await prisma.formation.update({
     where: { id: req.params.id },
     data: { downloadCount: { increment: 1 } },

@@ -174,11 +174,18 @@ export const upsertMyProfile = asyncHandler(async (req, res) => {
     socialLinks: socialLinks ?? Prisma.JsonNull,
   };
 
-  const profile = await prisma.professionalProfile.upsert({
-    where: { userId: req.user.id },
-    create: data,
-    update: data,
-  });
+  const [profile] = await prisma.$transaction([
+    prisma.professionalProfile.upsert({
+      where: { userId: req.user.id },
+      create: data,
+      update: data,
+    }),
+    // Submitting a professional profile is literally "devenir professionnel" —
+    // grant the role so the pro dashboard/selling routes unlock immediately.
+    // Only USER is promoted: RESEARCHER/ADMIN/etc already have a role they
+    // were deliberately given and shouldn't be silently downgraded to it.
+    prisma.user.updateMany({ where: { id: req.user.id, role: "USER" }, data: { role: "PROFESSIONAL" } }),
+  ]);
 
   res.json(apiResponse(true, profile, "Professional profile saved"));
 });

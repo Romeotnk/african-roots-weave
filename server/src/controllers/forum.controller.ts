@@ -66,7 +66,13 @@ export const listMyQuestions = asyncHandler(async (req, res) => {
 
   const where = { authorId: req.user.id };
   const [questions, total] = await prisma.$transaction([
-    prisma.question.findMany({ where, skip, take: limit, orderBy: { createdAt: "desc" } }),
+    prisma.question.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: { _count: { select: { answers: true } } },
+    }),
     prisma.question.count({ where }),
   ]);
 

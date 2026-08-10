@@ -52,6 +52,9 @@ export const subscribeNewsletter = asyncHandler(async (req, res) => {
 });
 
 export const unsubscribeNewsletter = asyncHandler(async (req, res) => {
+  const subscriber = await prisma.newsletterSubscriber.findUnique({ where: { unsubscribeToken: req.params.token } });
+  if (!subscriber) throw new ApiError(404, "Lien de désabonnement invalide ou déjà utilisé");
+
   await prisma.newsletterSubscriber.update({
     where: { unsubscribeToken: req.params.token },
     data: { isActive: false, unsubscribedAt: new Date() },

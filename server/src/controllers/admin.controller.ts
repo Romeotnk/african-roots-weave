@@ -762,9 +762,25 @@ export const updateTicketStatus = asyncHandler(async (req, res) => {
 });
 
 export const replyTicket = asyncHandler(async (req, res) => {
+  const ticket = await prisma.ticket.findUnique({ where: { id: req.params.id }, select: { authorId: true, subject: true } });
+  if (!ticket) throw new ApiError(404, "Ticket not found");
+
   const message = await prisma.ticketMessage.create({
     data: { ticketId: req.params.id, authorId: req.user!.id, content: req.body.content },
   });
+
+  if (ticket.authorId !== req.user!.id) {
+    await prisma.notification.create({
+      data: {
+        userId: ticket.authorId,
+        type: "TICKET_REPLY",
+        title: "Réponse à votre ticket",
+        message: `L'équipe support a répondu à votre ticket « ${ticket.subject} ».`,
+        link: "/mon-compte/tickets",
+      },
+    });
+  }
+
   res.status(201).json(apiResponse(true, message, "Ticket reply created"));
 });
 

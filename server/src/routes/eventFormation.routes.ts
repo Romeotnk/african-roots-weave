@@ -58,7 +58,7 @@ formationRouter.put(
   checkPermission("content.author"),
   updateFormation,
 );
-formationRouter.post("/:id/download", downloadFormation);
+formationRouter.post("/:id/download", authMiddleware, downloadFormation);
 formationRouter.get("/:id/enrollment", authMiddleware, getMyFormationEnrollment);
 formationRouter.post("/:id/enroll", authMiddleware, requireEmailVerified, enrollFormation);
 formationRouter.put("/:id/progress", authMiddleware, requireEmailVerified, updateFormationProgress);
