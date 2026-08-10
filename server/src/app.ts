@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import compression from "compression";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -41,6 +42,21 @@ export const app = express();
 
 app.set("trust proxy", 1);
 
+// TanStack Start injects several inline <script> tags per request (hydration
+// stream barrier, scroll restoration, ...) whose exact content is dynamic —
+// a fixed content hash can never allowlist all of them. Generate a fresh
+// nonce per request instead: helmet uses it to build the CSP header below,
+// and it's forwarded as a request header so the frontend SSR render (see
+// src/router.tsx / src/routes/__root.tsx) can read it back and stamp the
+// same nonce onto every inline script it renders, including our own
+// theme-flash-prevention script in __root.tsx's RootShell.
+app.use((req, res, next) => {
+  const nonce = randomBytes(16).toString("base64");
+  res.locals.cspNonce = nonce;
+  req.headers["x-csp-nonce"] = nonce;
+  next();
+});
+
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -53,12 +69,7 @@ app.use(
         frameAncestors: ["'self'"],
         imgSrc: ["'self'", "data:", "https:"],
         objectSrc: ["'none'"],
-        // Only the theme-flash-prevention inline script in __root.tsx is
-        // allowed to run inline, by exact content hash — if that script's
-        // content ever changes, this hash must be regenerated
-        // (`printf '%s' '<script content>' | openssl dgst -sha256 -binary | openssl base64`)
-        // or the page will silently stop applying the saved theme on load.
-        scriptSrc: ["'self'", "'sha256-q7ZySqaw8UDlcrox6HQ+Ga52atnhu+TK+beXP+vQiRE='"],
+        scriptSrc: ["'self'", (_req, res) => `'nonce-${(res as express.Response).locals.cspNonce}'`],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       },
     },

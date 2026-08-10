@@ -19,6 +19,7 @@ import { LanguageProvider } from "@/components/LanguageProvider";
 import { AuthProvider } from "@/lib/auth/AuthContext";
 import { siteConfig } from "@/data/siteConfig";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { getCspNonce } from "@/lib/api/cspNonce.functions";
 import { getSiteConfig } from "@/lib/api/site";
 import { AFFILIATE_CODE_STORAGE_KEY, trackAffiliateClick } from "@/lib/api/affiliate";
 
@@ -62,12 +63,25 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  loader: async () => {
+  loader: async (): Promise<{ cspNonce?: string; [key: string]: string | undefined }> => {
+    // Same per-request CSP nonce server/src/app.ts generated (see
+    // src/router.tsx for the full chain) — carried through loaderData so
+    // both head() (client-side meta tag, auto-picked up by TanStack
+    // Router's own hydration code) and RootShell (our manual theme script)
+    // can stamp it onto their inline scripts.
+    let cspNonce: string | undefined;
+    if (import.meta.env.SSR) {
+      try {
+        cspNonce = (await getCspNonce()) ?? undefined;
+      } catch {
+        // No request context available (e.g. route-tree generation at build time) — skip.
+      }
+    }
     try {
       const response = await getSiteConfig();
-      return response.data ?? {};
+      return { ...(response.data ?? {}), cspNonce };
     } catch {
-      return {};
+      return { cspNonce };
     }
   },
   head: ({ loaderData }) => {
@@ -91,6 +105,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { name: "twitter:description", content: description },
         { property: "og:image", content: faviconUrl },
         { name: "twitter:image", content: faviconUrl },
+        // TanStack Router's client-side hydration reads this to reapply the
+        // same nonce to any inline script it injects after hydration.
+        ...(loaderData?.cspNonce ? [{ property: "csp-nonce", content: loaderData.cspNonce }] : []),
       ],
       links: [
         { rel: "icon", href: faviconUrl },
@@ -109,10 +126,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const loaderData = Route.useLoaderData();
   return (
     <html lang="fr">
       <head>
-        <script dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('iwosan_theme');document.documentElement.classList.toggle('dark',t==='dark');document.documentElement.style.colorScheme=t==='dark'?'dark':'light'}catch(e){}" }} />
+        <script
+          nonce={loaderData?.cspNonce}
+          dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('iwosan_theme');document.documentElement.classList.toggle('dark',t==='dark');document.documentElement.style.colorScheme=t==='dark'?'dark':'light'}catch(e){}" }}
+        />
         <HeadContent />
       </head>
       <body>
