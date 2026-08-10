@@ -20,6 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth, type AppRole } from "@/lib/auth/AuthContext";
+import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 
 type NavLink = { to: string; label: string; icon: typeof LayoutDashboard; roles?: AppRole[] };
 type NavGroup = { label: string; roles?: AppRole[]; links: NavLink[] };
@@ -149,7 +150,7 @@ export function AdminLayout({ title, description, children }: { title: string; d
         <section className="min-w-0 flex-1">
           <header className="sticky top-0 z-40 border-b border-white/10 bg-[#1a1a2e]/95 px-5 py-4 backdrop-blur">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
+              <div key={title} className="hero-fade-up">
                 <h1 className="text-[26px] font-bold text-white">{title}</h1>
                 {description && <p className="mt-1 text-[13px] text-slate-400">{description}</p>}
               </div>
@@ -208,11 +209,13 @@ export function AdminHubPage({
   return (
     <AdminLayout title={title} description={description}>
       <div className="grid gap-4 md:grid-cols-2">
-        {links.map((link) => (
-          <Link key={link.to} to={link.to} className="block rounded-[12px] border border-white/10 bg-white/[0.04] p-5 transition hover:border-emerald-400/40 hover:bg-white/[0.07]">
-            <p className="text-[16px] font-bold text-white">{link.label}</p>
-            <p className="mt-2 text-[13px] text-slate-400">{link.description}</p>
-          </Link>
+        {links.map((link, index) => (
+          <Reveal key={link.to} delayMs={staggerDelay(index % 8, 45, 320)}>
+            <Link to={link.to} className="block rounded-[12px] border border-white/10 bg-white/[0.04] p-5 transition hover:-translate-y-0.5 hover:border-emerald-400/40 hover:bg-white/[0.07]">
+              <p className="text-[16px] font-bold text-white">{link.label}</p>
+              <p className="mt-2 text-[13px] text-slate-400">{link.description}</p>
+            </Link>
+          </Reveal>
         ))}
       </div>
     </AdminLayout>

@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminDashboard, usePendingArticles, usePendingEvents, usePendingFormations, usePendingProducts, usePendingProfessionals } from "@/hooks/useAdminApi";
+import { Reveal, staggerDelay } from "@/components/shared/Reveal";
+import { cn } from "@/lib/utils";
 
 export function AdminDashboard() {
   const dashboardQuery = useAdminDashboard();
@@ -46,16 +48,19 @@ export function AdminDashboard() {
       {stats && (
         <>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {kpis.map((kpi) => (
-              <AdminCard key={kpi.label}>
-                <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-400">{kpi.label}</p>
-                <p className="mt-3 text-[28px] font-black text-white">{kpi.value}</p>
-                {"urgent" in kpi && (
-                  <span className={`mt-2 inline-flex rounded-full px-2 py-1 text-[11px] font-bold ${kpi.urgent ? "bg-red-500/20 text-red-300" : "bg-emerald-500/20 text-emerald-300"}`}>
-                    {kpi.urgent ? "À traiter" : "OK"}
-                  </span>
-                )}
-              </AdminCard>
+            {kpis.map((kpi, index) => (
+              <Reveal key={kpi.label} delayMs={staggerDelay(index, 60, 240)}>
+                <AdminCard className="relative overflow-hidden">
+                  <span className={cn("absolute inset-x-0 top-0 h-[3px]", "urgent" in kpi && kpi.urgent ? "bg-red-400" : "bg-emerald-400")} />
+                  <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-400">{kpi.label}</p>
+                  <p className="mt-3 text-[28px] font-black text-white">{kpi.value}</p>
+                  {"urgent" in kpi && (
+                    <span className={`mt-2 inline-flex rounded-full px-2 py-1 text-[11px] font-bold ${kpi.urgent ? "bg-red-500/20 text-red-300" : "bg-emerald-500/20 text-emerald-300"}`}>
+                      {kpi.urgent ? "À traiter" : "OK"}
+                    </span>
+                  )}
+                </AdminCard>
+              </Reveal>
             ))}
           </div>
 
