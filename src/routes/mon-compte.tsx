@@ -54,6 +54,7 @@ const personalSections = [
   { title: "Devis", desc: "Demandes de devis et propositions recues.", to: "/mon-compte/devis", icon: FileText },
   { title: "Alertes", desc: "Recherches sauvegardees marketplace.", to: "/mon-compte/alertes", icon: BookOpen },
   { title: "Favoris", desc: "Questions du forum enregistrees.", to: "/mon-compte/favoris", icon: Sparkles },
+  { title: "Parrainage", desc: "Votre reseau de filleuls et vos commissions.", to: "/mon-compte/affiliation", icon: Users },
   { title: "Tickets", desc: "Conversations avec le support.", to: "/mon-compte/tickets", icon: HelpCircle },
   { title: "Parametres", desc: "Langue, securite et preferences.", to: "/mon-compte/parametres", icon: Settings },
 ];
