@@ -30,6 +30,11 @@ model User {
   kycStatus       KycStatus @default(PENDING)
   kycDocuments    Json?
   walletBalance   Decimal   @default(0) @db.Decimal(10, 2)
+  // Optional extra confirmation step before a withdrawal/transfer moves money
+  // out of the wallet — null means the user hasn't opted in yet, in which
+  // case those actions proceed without a PIN (backward compatible with
+  // accounts that existed before this feature).
+  walletPinHash   String?
   reputationScore Int       @default(0)
   referralCode    String    @unique
   referredById    String?

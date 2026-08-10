@@ -2,9 +2,41 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../config/db.js";
 import { initiateMonerooPayment, verifyMonerooSignature } from "../services/moneroo.service.js";
 import { calculateOrderCommissions } from "../services/mlm.service.js";
+import { hashPassword, verifyPassword } from "../services/auth.service.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
+
+const PIN_PATTERN = /^\d{4,6}$/;
+
+// Only enforced once the user opts in by setting a PIN (walletPinHash is
+// null for every account by default) — throws if one is configured and
+// either missing from the request or doesn't match.
+const assertWalletPin = async (userId: string, suppliedPin: unknown) => {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { walletPinHash: true } });
+  if (!user?.walletPinHash) return;
+  if (typeof suppliedPin !== "string" || !(await verifyPassword(suppliedPin, user.walletPinHash))) {
+    throw new ApiError(403, "PIN incorrect");
+  }
+};
+
+export const setWalletPin = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  const pin = String(req.body.pin ?? "");
+  if (!PIN_PATTERN.test(pin)) throw new ApiError(400, "Le PIN doit contenir entre 4 et 6 chiffres");
+
+  const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { walletPinHash: true } });
+  if (user?.walletPinHash) {
+    const currentPin = String(req.body.currentPin ?? "");
+    if (!(await verifyPassword(currentPin, user.walletPinHash))) {
+      throw new ApiError(403, "PIN actuel incorrect");
+    }
+  }
+
+  const walletPinHash = await hashPassword(pin);
+  await prisma.user.update({ where: { id: req.user.id }, data: { walletPinHash } });
+  res.json(apiResponse(true, { hasWalletPin: true }, "PIN portefeuille enregistre"));
+});
 
 export const initiatePayment = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
@@ -217,6 +249,7 @@ export const walletWithdraw = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
   const amount = new Prisma.Decimal(req.body.amount);
   if (amount.lte(0)) throw new ApiError(400, "Invalid withdrawal amount");
+  await assertWalletPin(req.user.id, req.body.pin);
 
   // Reserve the funds immediately (same conditional-update pattern as the
   // other debit paths above) instead of only checking the balance: without
@@ -270,6 +303,7 @@ export const walletWithdraw = asyncHandler(async (req, res) => {
 export const walletTransfer = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
   const amount = new Prisma.Decimal(req.body.amount);
+  await assertWalletPin(req.user.id, req.body.pin);
   const receiverWhere = req.body.receiverEmail
     ? { email: req.body.receiverEmail }
     : { id: req.body.receiverId };

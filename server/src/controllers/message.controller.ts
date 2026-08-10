@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../config/db.js";
+import { uploadBufferToCloudinary } from "../services/cloudinary.service.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
@@ -84,6 +85,17 @@ export const listConversations = asyncHandler(async (req, res) => {
     .sort((left, right) => new Date(right.lastMessageAt).getTime() - new Date(left.lastMessageAt).getTime());
 
   res.json(apiResponse(true, conversations, "Conversations retrieved"));
+});
+
+export const uploadMessageAttachments = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+  if (files.length === 0) throw new ApiError(400, "Aucun fichier fourni");
+
+  const urls = await Promise.all(
+    files.map((file) => uploadBufferToCloudinary(file.buffer, "iwosan/message-attachments", "auto")),
+  );
+  res.json(apiResponse(true, { urls }, "Attachments uploaded"));
 });
 
 export const markConversationRead = asyncHandler(async (req, res) => {

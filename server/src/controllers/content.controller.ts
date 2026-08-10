@@ -96,6 +96,34 @@ export const getArticle = asyncHandler(async (req, res) => {
   res.json(apiResponse(true, article, "Article retrieved"));
 });
 
+// Article comments reuse the generic ForumComment model (targetId/targetType
+// polymorphic design, already used for forum questions/answers) rather than
+// forum-specific routes/access gates that don't semantically fit "commenting
+// on a blog post" — this is its own dedicated pair of endpoints.
+export const listArticleComments = asyncHandler(async (req, res) => {
+  const comments = await prisma.forumComment.findMany({
+    where: { targetId: req.params.id, targetType: "ARTICLE", isHidden: false },
+    orderBy: { createdAt: "asc" },
+    include: { author: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } },
+  });
+  res.json(apiResponse(true, comments, "Article comments retrieved"));
+});
+
+export const createArticleComment = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  const content = String(req.body.content ?? "").trim();
+  if (content.length < 2) throw new ApiError(400, "Comment content is required");
+
+  const article = await prisma.article.findUnique({ where: { id: req.params.id }, select: { id: true } });
+  if (!article) throw new ApiError(404, "Article not found");
+
+  const comment = await prisma.forumComment.create({
+    data: { authorId: req.user.id, targetId: article.id, targetType: "ARTICLE", content },
+    include: { author: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } },
+  });
+  res.status(201).json(apiResponse(true, comment, "Comment created"));
+});
+
 export const createArticle = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
   const space = req.body.space as ArticleSpace;

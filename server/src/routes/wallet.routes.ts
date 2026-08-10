@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  setWalletPin,
   walletBalance,
   walletDeposit,
   walletTransactions,
@@ -24,3 +25,4 @@ walletRouter.post("/deposit", sensitiveActionRateLimit, depositValidator, valida
 walletRouter.post("/withdraw", sensitiveActionRateLimit, withdrawValidator, validateRequest, walletWithdraw);
 walletRouter.post("/transfer", sensitiveActionRateLimit, transferValidator, validateRequest, walletTransfer);
 walletRouter.get("/transactions", walletTransactions);
+walletRouter.put("/pin", sensitiveActionRateLimit, setWalletPin);

@@ -1,12 +1,14 @@
 import { Router } from "express";
 import {
   createArticle,
+  createArticleComment,
   createMonograph,
   deleteArticle,
   deleteMonograph,
   getArticle,
   getMonograph,
   listAllMonographsForAdmin,
+  listArticleComments,
   listArticles,
   listArticlesForAdmin,
   listMyArticles,
@@ -32,6 +34,8 @@ articleRouter.get(
   listArticlesForAdmin,
 );
 articleRouter.get("/:slug", getArticle);
+articleRouter.get("/:id/comments", listArticleComments);
+articleRouter.post("/:id/comments", authMiddleware, requireEmailVerified, createArticleComment);
 articleRouter.post(
   "/",
   authMiddleware,

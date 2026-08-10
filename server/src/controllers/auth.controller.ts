@@ -500,6 +500,7 @@ export const me = asyncHandler(async (req, res) => {
       banExpiresAt: true,
       lastLoginAt: true,
       createdAt: true,
+      walletPinHash: true,
     },
   });
 
@@ -507,7 +508,10 @@ export const me = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Account unavailable");
   }
 
-  res.json(apiResponse(true, user, "Profile loaded"));
+  // Never send the hash itself to the client — only whether one is set, so
+  // the wallet UI knows whether to prompt for a PIN on withdraw/transfer.
+  const { walletPinHash, ...publicUser } = user;
+  res.json(apiResponse(true, { ...publicUser, hasWalletPin: Boolean(walletPinHash) }, "Profile loaded"));
 });
 
 export const updateMe = asyncHandler(async (req, res) => {
