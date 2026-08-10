@@ -4,6 +4,7 @@ import { Loader2, MessageSquare, Package } from "lucide-react";
 import { useMemo } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
+import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { useMeQuery } from "@/hooks/useAuthApi";
 import { useMyOrders } from "@/hooks/useOrdersApi";
 import { useMyProducts } from "@/hooks/useApiCatalog";
@@ -142,11 +143,14 @@ function Dashboard() {
         </section>
 
         <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {stats.map((stat) => (
-            <div key={stat.label} className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-              <p className="text-[12px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">{stat.label}</p>
-              <p className="mt-2 text-[24px] font-extrabold text-[var(--color-text-primary)]">{isLoading ? "-" : stat.value}</p>
-            </div>
+          {stats.map((stat, index) => (
+            <Reveal key={stat.label} delayMs={staggerDelay(index, 60, 240)}>
+              <div className="relative overflow-hidden rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
+                <span className="absolute inset-x-0 top-0 h-[3px] bg-[var(--brand-primary)]" />
+                <p className="text-[12px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">{stat.label}</p>
+                <p className="mt-2 text-[24px] font-extrabold text-[var(--color-text-primary)]">{isLoading ? "-" : stat.value}</p>
+              </div>
+            </Reveal>
           ))}
         </section>
 

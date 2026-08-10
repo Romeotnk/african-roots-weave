@@ -26,6 +26,7 @@ import {
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { isProfessionalAccount, USER_ACCOUNT_ROLES } from "@/lib/auth/roles";
 import { useMyBookings } from "@/hooks/useBookingsApi";
@@ -170,7 +171,11 @@ function AccountHome() {
 function PersonalAccountGrid() {
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      {personalSections.map((section) => <SectionCard key={section.title} section={section} />)}
+      {personalSections.map((section, index) => (
+        <Reveal key={section.title} delayMs={staggerDelay(index % 12, 40, 280)}>
+          <SectionCard section={section} />
+        </Reveal>
+      ))}
     </div>
   );
 }
@@ -208,13 +213,21 @@ function ProAccountGrid() {
       <div>
         <h2 className="text-[22px] font-extrabold">Modules professionnels</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {proSections.map((section) => <SectionCard key={section.title} section={section} featured />)}
+          {proSections.map((section, index) => (
+            <Reveal key={section.title} delayMs={staggerDelay(index % 12, 40, 280)}>
+              <SectionCard section={section} featured />
+            </Reveal>
+          ))}
         </div>
       </div>
       <div>
         <h2 className="text-[22px] font-extrabold">Raccourcis du compte</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {personalSections.slice(0, 6).map((section) => <SectionCard key={section.title} section={section} />)}
+          {personalSections.slice(0, 6).map((section, index) => (
+            <Reveal key={section.title} delayMs={staggerDelay(index % 12, 40, 280)}>
+              <SectionCard section={section} />
+            </Reveal>
+          ))}
         </div>
       </div>
     </div>
@@ -241,11 +254,13 @@ function SectionCard({
   return (
     <Link
       to={section.to as never}
-      className={`group rounded-[8px] border bg-white p-5 transition hover:border-[var(--brand-primary)] ${
+      className={`group rounded-[8px] border bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[var(--brand-primary)] hover:shadow-iwosan-md ${
         featured ? "border-[var(--brand-primary)] shadow-iwosan-sm" : "border-[var(--brand-border-light)]"
       }`}
     >
-      <Icon size={22} className="text-[var(--brand-primary)]" />
+      <div className="inline-flex rounded-lg bg-[var(--brand-primary-subtle)] p-2.5 transition group-hover:bg-[var(--brand-primary)]">
+        <Icon size={20} className="text-[var(--brand-primary)] transition group-hover:text-white" />
+      </div>
       <h3 className="mt-4 text-[18px] font-bold">{section.title}</h3>
       <p className="mt-1 text-[13px] leading-6 text-[var(--color-text-muted)]">{section.desc}</p>
     </Link>

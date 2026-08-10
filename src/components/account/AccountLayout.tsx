@@ -60,7 +60,7 @@ export function AccountLayout({
         <span className="text-[20px] font-extrabold text-[var(--brand-primary)]">IWOSAN</span>
       </Link>
       <div className="flex items-center gap-3 border-b border-[var(--brand-border-light)] p-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--brand-primary-subtle)] text-[14px] font-bold text-[var(--brand-primary)]">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--brand-primary-subtle)] text-[14px] font-bold text-[var(--brand-primary)] ring-2 ring-[var(--brand-primary)]/15">
           {displayName.charAt(0).toUpperCase()}
         </div>
         <div className="min-w-0 flex-1">
@@ -88,7 +88,10 @@ export function AccountLayout({
                       : "text-[var(--color-text-secondary)] hover:bg-[var(--brand-surface-alt)]",
                 );
                 return (
-                  <li key={item.label}>
+                  <li key={item.label} className="relative">
+                    {active && (
+                      <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-[var(--brand-primary)]" />
+                    )}
                     {item.isLogout ? (
                       <button type="button" onClick={handleLogout} className={className}>
                         <item.icon size={16} /> {item.label}
@@ -143,7 +146,7 @@ export function AccountLayout({
         {(title || description) && (
           <header className="border-b border-[var(--brand-border-light)] bg-white px-5 py-6 md:px-8">
             <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
+              <div key={title} className="hero-fade-up">
                 {title && <h1 className="text-[26px] font-bold md:text-[32px]">{title}</h1>}
                 {description && <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">{description}</p>}
               </div>
