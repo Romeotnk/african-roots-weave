@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Filter, Plus, RotateCcw } from "lucide-react";
 import { QuestionCard } from "@/components/shared/QuestionCard";
+import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { SimplePager } from "@/components/shared/SimplePager";
 import { questions } from "@/data/questions";
@@ -144,7 +145,13 @@ export function ForumListPage() {
                 <select value={sortBy} onChange={(event) => setSortBy(event.target.value)} className="h-12 rounded-full border border-[var(--brand-border)] bg-white px-4 text-[13px] font-semibold">{sortOptions.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}</select>
               </div>
             </div>
-            <div className="space-y-4">{filteredQuestions.map((question) => <QuestionCard key={question.id} question={question} />)}</div>
+            <div className="space-y-4">
+              {filteredQuestions.map((question, index) => (
+                <Reveal key={question.id} delayMs={staggerDelay(index % 8, 45, 320)}>
+                  <QuestionCard question={question} />
+                </Reveal>
+              ))}
+            </div>
             {filteredQuestions.length === 0 && <div className="rounded-[20px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center"><p className="font-bold">{t("forum.notFound")}</p></div>}
             {!hasFilters && pagination && (
               <SimplePager page={pagination.page} totalPages={pagination.totalPages} onChange={setPage} />

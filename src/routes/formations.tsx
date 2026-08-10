@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BarChart3, Clock, Video } from "lucide-react";
 import { HeroSection } from "@/components/shared/HeroSection";
+import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { RatingStars } from "@/components/shared/RatingStars";
 import { trainings } from "@/data/trainings";
@@ -90,8 +91,9 @@ function Formations() {
           </div>
           <p className="mb-5 text-[14px] text-[var(--color-text-muted)]">{t("formations.results.count", { count: filtered.length })}</p>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((course) => (
-              <article key={course.id} className="flex flex-col overflow-hidden rounded-[20px] border border-[var(--brand-border-light)] bg-white shadow-iwosan-sm card-hover">
+            {filtered.map((course, index) => (
+              <Reveal key={course.id} delayMs={staggerDelay(index % 9)} className="flex">
+              <article className="flex flex-col overflow-hidden rounded-[20px] border border-[var(--brand-border-light)] bg-white shadow-iwosan-sm card-hover">
                 <div className="relative h-[180px] overflow-hidden bg-[var(--brand-surface-alt)]">
                   <img src={course.image} className="h-full w-full object-cover" alt="" loading="lazy" decoding="async" />
                   <span className="absolute left-3 top-3 rounded bg-white/95 px-2 py-1 text-[11px] font-bold uppercase tracking-wider">{course.level}</span>
@@ -118,6 +120,7 @@ function Formations() {
                   </div>
                 </div>
               </article>
+              </Reveal>
             ))}
           </div>
         </div>

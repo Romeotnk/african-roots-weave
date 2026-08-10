@@ -3,6 +3,7 @@ import { Grid2X2, Map as MapIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HeroSection } from "@/components/shared/HeroSection";
+import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { ProfessionalCard } from "@/components/shared/ProfessionalCard";
 import { ProfessionalCardSkeleton } from "@/components/shared/ProfessionalCardSkeleton";
@@ -238,7 +239,11 @@ function Annuaire() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {isLoading
                 ? Array.from({ length: 8 }).map((_, index) => <ProfessionalCardSkeleton key={index} />)
-                : filteredItems.map((professional) => <ProfessionalCard key={professional.id} pro={professional} />)}
+                : filteredItems.map((professional, index) => (
+                    <Reveal key={professional.id} delayMs={staggerDelay(index % 12)}>
+                      <ProfessionalCard pro={professional} />
+                    </Reveal>
+                  ))}
             </div>
           )}
           {viewMode === "grid" && !isLoading && filteredItems.length === 0 && (

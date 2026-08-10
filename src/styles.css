@@ -262,6 +262,31 @@
   box-shadow: var(--shadow-xl);
 }
 
+@keyframes hero-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes hero-image-drift {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.06);
+  }
+}
+@utility hero-fade-up {
+  animation: hero-fade-up 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@utility hero-image-drift {
+  animation: hero-image-drift 16s ease-out forwards;
+}
+
 @utility line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;

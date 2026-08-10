@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ChefHat, Clock, Coffee, Leaf, Soup } from "lucide-react";
 import { HeroSection } from "@/components/shared/HeroSection";
+import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { SimplePager } from "@/components/shared/SimplePager";
 import { recipes } from "@/data/recipes";
@@ -120,22 +121,26 @@ export function RecipeListPage() {
                 {debouncedSearch ? ` pour "${debouncedSearch}"` : ""}
               </p>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                {filteredRecipes.map((recipe) => (
-                  <article key={recipe.id} className="overflow-hidden rounded-[12px] border border-[var(--brand-border-light)] bg-white">
-                    <img src={recipe.image} alt={recipe.title} loading="lazy" decoding="async" className="h-48 w-full object-cover" />
-                    <div className="p-5">
-                      <div className="mb-3 flex flex-wrap items-center gap-2 text-[12px]">
-                        <span className="rounded-full bg-[var(--brand-primary-subtle)] px-3 py-1 font-semibold text-[var(--brand-primary)]">{recipe.type}</span>
-                        <span>{recipe.difficulty}</span>
-                        <span className="inline-flex items-center gap-1"><Clock size={13} /> {recipe.prepTime}</span>
+                {filteredRecipes.map((recipe, index) => (
+                  <Reveal key={recipe.id} delayMs={staggerDelay(index % 6)}>
+                    <article className="group overflow-hidden rounded-[12px] border border-[var(--brand-border-light)] bg-white shadow-iwosan-sm transition hover:-translate-y-1 hover:border-[var(--brand-primary)] hover:shadow-iwosan-lg">
+                      <div className="overflow-hidden">
+                        <img src={recipe.image} alt={recipe.title} loading="lazy" decoding="async" className="h-48 w-full object-cover transition duration-500 group-hover:scale-105" />
                       </div>
-                      <h3 className="text-[18px] font-bold">{recipe.title}</h3>
-                      <p className="mt-2 line-clamp-2 text-[14px] text-[var(--color-text-secondary)]">{recipe.excerpt}</p>
-                      <Link to="/recettes-sante/$slug" params={{ slug: recipe.slug }} className="mt-4 inline-flex text-[13px] font-semibold text-[var(--brand-primary)]">
-                        Voir la recette
-                      </Link>
-                    </div>
-                  </article>
+                      <div className="p-5">
+                        <div className="mb-3 flex flex-wrap items-center gap-2 text-[12px]">
+                          <span className="rounded-full bg-[var(--brand-primary-subtle)] px-3 py-1 font-semibold text-[var(--brand-primary)]">{recipe.type}</span>
+                          <span>{recipe.difficulty}</span>
+                          <span className="inline-flex items-center gap-1"><Clock size={13} /> {recipe.prepTime}</span>
+                        </div>
+                        <h3 className="text-[18px] font-bold">{recipe.title}</h3>
+                        <p className="mt-2 line-clamp-2 text-[14px] text-[var(--color-text-secondary)]">{recipe.excerpt}</p>
+                        <Link to="/recettes-sante/$slug" params={{ slug: recipe.slug }} className="mt-4 inline-flex text-[13px] font-semibold text-[var(--brand-primary)]">
+                          Voir la recette
+                        </Link>
+                      </div>
+                    </article>
+                  </Reveal>
                 ))}
               </div>
               {isUnfiltered && pagination && (

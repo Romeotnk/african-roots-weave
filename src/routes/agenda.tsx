@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { EventCard } from "@/components/shared/EventCard";
+import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { events } from "@/data/events";
 import { useEvents } from "@/hooks/useEventsFormationsApi";
 import { toEventItem, type BackendEvent } from "@/lib/eventMappers";
@@ -85,7 +86,13 @@ function Agenda() {
             {grouped.map(([monthLabel, items]) => (
               <section key={monthLabel}>
                 <h3 className="mb-4 text-[12px] font-bold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">{monthLabel}</h3>
-                <div className="space-y-4">{items.map((event) => <EventCard key={event.id} event={event} actionLabel={t("agenda.register")} />)}</div>
+                <div className="space-y-4">
+                  {items.map((event, index) => (
+                    <Reveal key={event.id} delayMs={staggerDelay(index % 8, 45, 320)}>
+                      <EventCard event={event} actionLabel={t("agenda.register")} />
+                    </Reveal>
+                  ))}
+                </div>
               </section>
             ))}
           </div>

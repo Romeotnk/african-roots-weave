@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { ArticleCard, articlePath } from "@/components/shared/ArticleCard";
+import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { SimplePager } from "@/components/shared/SimplePager";
@@ -157,8 +158,10 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
             </p>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {filteredArticles.map((article) => (
-                <ArticleCard key={article.id} article={article} />
+              {filteredArticles.map((article, index) => (
+                <Reveal key={article.id} delayMs={staggerDelay(index % 6)}>
+                  <ArticleCard article={article} />
+                </Reveal>
               ))}
             </div>
 

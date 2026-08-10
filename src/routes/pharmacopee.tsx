@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { PlantCard } from "@/components/shared/PlantCard";
+import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { plants } from "@/data/plants";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { ArrowRight, Leaf } from "lucide-react";
@@ -175,8 +176,10 @@ function Pharmacopee() {
               : t("pharmacopee.results.countFound", { count: filteredPlants.length })}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredPlants.map((p) => (
-              <PlantCard key={p.id} plant={p} />
+            {filteredPlants.map((p, index) => (
+              <Reveal key={p.id} delayMs={staggerDelay(index % 12)}>
+                <PlantCard plant={p} />
+              </Reveal>
             ))}
           </div>
           {filteredPlants.length === 0 && (

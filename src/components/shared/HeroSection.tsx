@@ -26,8 +26,8 @@ export function HeroSection({
         size === "lg" ? "min-h-[88vh]" : "min-h-[44vh] md:min-h-[55vh]",
       )}
     >
-      <div className="absolute inset-0">
-        <img src={image} alt="" className="w-full h-full object-cover" />
+      <div className="absolute inset-0 overflow-hidden">
+        <img src={image} alt="" className="hero-image-drift h-full w-full object-cover" />
         <div
           className="absolute inset-0"
           style={{
@@ -37,7 +37,7 @@ export function HeroSection({
       </div>
       <div className="relative container-iwosan py-20 md:py-28 text-white">
         {breadcrumb && (
-          <nav className="mb-6 flex items-center gap-1.5 text-[13px] text-white/80">
+          <nav className="hero-fade-up mb-6 flex items-center gap-1.5 text-[13px] text-white/80">
             {breadcrumb.map((b, i) => (
               <span key={i} className="inline-flex items-center gap-1.5">
                 {i > 0 && <ChevronRight size={14} />}
@@ -52,24 +52,32 @@ export function HeroSection({
         )}
         <div className={cn(size === "lg" && "max-w-3xl mx-auto text-center")}>
           {badge && (
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-1.5 text-[12px] font-semibold tracking-wide text-white mb-6 backdrop-blur-sm">
+            <span
+              className="hero-fade-up inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-1.5 text-[12px] font-semibold tracking-wide text-white mb-6 backdrop-blur-sm"
+              style={{ animationDelay: "80ms" }}
+            >
               {badge}
             </span>
           )}
           <h1
             className={cn(
-              "text-white",
+              "hero-fade-up text-white",
               size === "lg" ? "text-[36px] md:text-[56px]" : "text-[32px] md:text-[44px]",
             )}
+            style={{ animationDelay: "150ms" }}
           >
             {title}
           </h1>
           {subtitle && (
-            <p className="mt-5 text-[16px] md:text-[18px] leading-[1.7] text-white/80">
+            <p className="hero-fade-up mt-5 text-[16px] md:text-[18px] leading-[1.7] text-white/80" style={{ animationDelay: "260ms" }}>
               {subtitle}
             </p>
           )}
-          {children && <div className="mt-8">{children}</div>}
+          {children && (
+            <div className="hero-fade-up mt-8" style={{ animationDelay: "360ms" }}>
+              {children}
+            </div>
+          )}
         </div>
       </div>
     </section>

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Bell, ChevronDown, Grid2X2, List, Map as MapIcon, MapPin, Navigation, Star, X } from "lucide-react";
 import { HeroSection } from "@/components/shared/HeroSection";
+import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { ProductCardSkeleton } from "@/components/shared/ProductCardSkeleton";
@@ -644,7 +645,11 @@ function Marketplace() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {isLoading
                   ? Array.from({ length: 6 }).map((_, index) => <ProductCardSkeleton key={index} />)
-                  : filteredItems.map((product) => <ProductCard key={product.id} product={product} />)}
+                  : filteredItems.map((product, index) => (
+                      <Reveal key={product.id} delayMs={staggerDelay(index % 9)}>
+                        <ProductCard product={product} />
+                      </Reveal>
+                    ))}
               </div>
             ) : viewMode === "list" ? (
               <div className="space-y-3">
