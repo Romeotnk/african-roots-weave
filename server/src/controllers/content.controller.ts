@@ -2,6 +2,7 @@ import { ArticleSpace, Role } from "@prisma/client";
 import { prisma } from "../config/db.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { demoOwnerFilter, isDemoHidden } from "../utils/demoMode.js";
 import { ApiError } from "../utils/errors.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
 import { sanitizeRichText } from "../utils/sanitizeRichText.js";
@@ -27,6 +28,7 @@ export const listArticles = asyncHandler(async (req, res) => {
     category: req.query.category as string | undefined,
     authorId: req.query.author as string | undefined,
     tags: req.query.tag ? { has: String(req.query.tag) } : undefined,
+    ...(await demoOwnerFilter("author")),
   };
   const [articles, total] = await prisma.$transaction([
     prisma.article.findMany({
@@ -82,9 +84,14 @@ export const listMyArticles = asyncHandler(async (req, res) => {
 export const getArticle = asyncHandler(async (req, res) => {
   const existing = await prisma.article.findUnique({
     where: { slug: req.params.slug },
-    select: { id: true, isPublished: true, isApproved: true },
+    select: { id: true, isPublished: true, isApproved: true, author: { select: { isDemoAccount: true } } },
   });
-  if (!existing || !existing.isPublished || !existing.isApproved) {
+  if (
+    !existing ||
+    !existing.isPublished ||
+    !existing.isApproved ||
+    (existing.author.isDemoAccount && (await isDemoHidden()))
+  ) {
     throw new ApiError(404, "Article not found");
   }
 
@@ -212,7 +219,7 @@ export const publishArticle = asyncHandler(async (req, res) => {
 
 export const listMonographs = asyncHandler(async (_req, res) => {
   const monographs = await prisma.plantMonograph.findMany({
-    where: { isPublished: true },
+    where: { isPublished: true, ...(await demoOwnerFilter("createdBy")) },
     orderBy: { scientificName: "asc" },
   });
   res.json(apiResponse(true, monographs, "Monographs retrieved"));
@@ -228,7 +235,7 @@ export const listAllMonographsForAdmin = asyncHandler(async (_req, res) => {
 
 export const getMonograph = asyncHandler(async (req, res) => {
   const monograph = await prisma.plantMonograph.findFirst({
-    where: { OR: [{ id: req.params.id }, { slug: req.params.id }] },
+    where: { OR: [{ id: req.params.id }, { slug: req.params.id }], ...(await demoOwnerFilter("createdBy")) },
   });
   if (!monograph) throw new ApiError(404, "Monograph not found");
   res.json(apiResponse(true, monograph, "Monograph retrieved"));

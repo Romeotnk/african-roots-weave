@@ -44,6 +44,11 @@ model User {
   banReason       String?
   banExpiresAt    DateTime?
   lastLoginAt     DateTime?
+  // Marks accounts created by prisma/seed.ts (sample professionals, products,
+  // articles...) so an admin can hide all of it from public listings with one
+  // toggle (SiteConfig "demo.hidden") without deleting anything — see
+  // server/src/utils/demoMode.ts. Never set for real registrations.
+  isDemoAccount   Boolean   @default(false)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

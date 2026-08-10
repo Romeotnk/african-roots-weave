@@ -19,6 +19,7 @@ const defaults = {
   "maintenance.enabled": "false",
   "maintenance.message": "Le site est actuellement en maintenance. Merci de revenir bientôt.",
   "maintenance.returnAt": "",
+  "demo.hidden": "false",
 };
 
 function AdminIdentite() {
@@ -127,6 +128,26 @@ function AdminIdentite() {
             Retour estimé (texte libre)
             <input {...field("maintenance.returnAt")} placeholder="Ex : dans quelques heures" className="mt-1 h-10 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none" />
           </label>
+        </AdminCard>
+
+        <AdminCard>
+          <h2 className="mb-4 text-[18px] font-bold text-white">Mode démo</h2>
+          <label className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-3 text-[13px] text-slate-300">
+            Masquer les comptes et contenus de démonstration (site public)
+            <input
+              type="checkbox"
+              checked={form["demo.hidden"] === "true"}
+              onChange={(event) => setForm((current) => ({ ...current, "demo.hidden": String(event.target.checked) }))}
+              className="h-5 w-5 accent-emerald-400"
+            />
+          </label>
+          <p className="mt-3 text-[12px] text-slate-500">
+            Coche cette case pour cacher instantanément les professionnels, produits, articles,
+            monographies, questions du forum, événements et formations de démonstration (créés par
+            prisma/seed.ts) — comme si tout était supprimé. Décoche pour tout faire réapparaître.
+            Rien n'est jamais réellement supprimé, les vrais comptes et contenus ne sont jamais
+            concernés. Le changement peut prendre jusqu'à 15 secondes pour s'appliquer partout.
+          </p>
         </AdminCard>
       </div>
 

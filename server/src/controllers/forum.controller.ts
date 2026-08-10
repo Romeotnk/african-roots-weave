@@ -3,6 +3,7 @@ import { prisma } from "../config/db.js";
 import { uploadBufferToCloudinary } from "../services/cloudinary.service.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { demoOwnerFilter, isDemoHidden } from "../utils/demoMode.js";
 import { ApiError } from "../utils/errors.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
 import { sanitizeRichText } from "../utils/sanitizeRichText.js";
@@ -30,6 +31,7 @@ export const listQuestions = asyncHandler(async (req, res) => {
       req.query.status === "closed" ? true : req.query.status === "open" ? false : undefined,
     isHidden: false,
     ...(customFieldFilters.length > 0 ? { AND: customFieldFilters } : {}),
+    ...(await demoOwnerFilter("author")),
   };
   const [questions, total] = await prisma.$transaction([
     prisma.question.findMany({
@@ -89,16 +91,20 @@ export const getQuestion = asyncHandler(async (req, res) => {
         orderBy: [{ isAccepted: "desc" }, { voteCount: "desc" }],
         include: { author: { select: { id: true, firstName: true, lastName: true, reputationScore: true, avatarUrl: true } } },
       },
-      author: { select: { id: true, firstName: true, lastName: true, reputationScore: true, avatarUrl: true } },
+      author: { select: { id: true, firstName: true, lastName: true, reputationScore: true, avatarUrl: true, isDemoAccount: true } },
       categoryRef: { include: { parent: true } },
     },
   });
+  if (question.author.isDemoAccount && (await isDemoHidden())) {
+    throw new ApiError(404, "Question not found");
+  }
   const comments = await prisma.forumComment.findMany({
     where: { targetId: question.id, targetType: "QUESTION", isHidden: false },
     include: { author: { select: { id: true, firstName: true, lastName: true } } },
     orderBy: { createdAt: "asc" },
   });
-  res.json(apiResponse(true, { ...question, comments }, "Question retrieved"));
+  const { isDemoAccount: _isDemoAccount, ...author } = question.author;
+  res.json(apiResponse(true, { ...question, author, comments }, "Question retrieved"));
 });
 
 // A categoryId always wins over a free-text category name: the flat `category`

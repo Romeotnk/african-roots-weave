@@ -3,6 +3,7 @@ import { prisma } from "../config/db.js";
 import { initiateMonerooPayment } from "../services/moneroo.service.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { demoOwnerFilter, isDemoHidden } from "../utils/demoMode.js";
 import { ApiError } from "../utils/errors.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
 
@@ -10,7 +11,7 @@ const canPublishProgramming = (role: Role) => role === Role.SUPER_ADMIN || role 
 
 export const listEvents = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
-  const where = { isPublished: true, type: req.query.type as never };
+  const where = { isPublished: true, type: req.query.type as never, ...(await demoOwnerFilter("createdBy")) };
   const [events, total] = await prisma.$transaction([
     prisma.event.findMany({ where, skip, take: limit, orderBy: { startDate: "asc" } }),
     prisma.event.count({ where }),
@@ -44,10 +45,13 @@ export const listMyEvents = asyncHandler(async (req, res) => {
 export const getEvent = asyncHandler(async (req, res) => {
   const event = await prisma.event.findUnique({
     where: { id: req.params.id },
-    include: { registrations: true },
+    include: { registrations: true, createdBy: { select: { isDemoAccount: true } } },
   });
-  if (!event) throw new ApiError(404, "Event not found");
-  res.json(apiResponse(true, event, "Event retrieved"));
+  if (!event || (event.createdBy.isDemoAccount && (await isDemoHidden()))) {
+    throw new ApiError(404, "Event not found");
+  }
+  const { createdBy: _createdBy, ...eventData } = event;
+  res.json(apiResponse(true, eventData, "Event retrieved"));
 });
 
 export const createEvent = asyncHandler(async (req, res) => {
@@ -127,6 +131,7 @@ export const listFormations = asyncHandler(async (req, res) => {
     category: req.query.category as string | undefined,
     tags: req.query.tag ? { has: String(req.query.tag) } : undefined,
     createdById: typeof req.query.createdById === "string" ? req.query.createdById : undefined,
+    ...(await demoOwnerFilter("createdBy")),
   };
   const [formations, total] = await prisma.$transaction([
     prisma.formation.findMany({ where, skip, take: limit, orderBy: { createdAt: "desc" } }),
@@ -183,12 +188,16 @@ export const getFormation = asyncHandler(async (req, res) => {
           id: true,
           firstName: true,
           lastName: true,
+          isDemoAccount: true,
           professionalProfile: { select: { id: true, displayName: true, photos: true } },
         },
       },
     },
   });
-  if (!formation) throw new ApiError(404, "Formation not found");
+  if (!formation || (formation.createdBy.isDemoAccount && (await isDemoHidden()))) {
+    throw new ApiError(404, "Formation not found");
+  }
+  const { isDemoAccount: _isDemoAccount, ...createdBy } = formation.createdBy;
 
   const [reviews, reviewAgg] = await Promise.all([
     prisma.review.findMany({
@@ -207,7 +216,7 @@ export const getFormation = asyncHandler(async (req, res) => {
   res.json(
     apiResponse(
       true,
-      { ...formation, reviews, rating: reviewAgg._avg.rating ?? 0, reviewCount: reviewAgg._count.id },
+      { ...formation, createdBy, reviews, rating: reviewAgg._avg.rating ?? 0, reviewCount: reviewAgg._count.id },
       "Formation retrieved",
     ),
   );

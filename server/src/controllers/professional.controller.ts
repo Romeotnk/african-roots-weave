@@ -3,6 +3,7 @@ import { prisma } from "../config/db.js";
 import { uploadBufferToCloudinary } from "../services/cloudinary.service.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { isDemoHidden } from "../utils/demoMode.js";
 import { ApiError } from "../utils/errors.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
 
@@ -14,6 +15,7 @@ export const listProfessionals = asyncHandler(async (req, res) => {
   const verifiedOnly = req.query.verified === "true";
   const portraitOfWeekOnly = req.query.portraitOfWeek === "true";
   const now = new Date();
+  const hideDemo = await isDemoHidden();
 
   const where = {
     isVerified: verifiedOnly ? true : undefined,
@@ -26,7 +28,7 @@ export const listProfessionals = asyncHandler(async (req, res) => {
           { location: { contains: search, mode: "insensitive" as const } },
         ]
       : undefined,
-    user: { isActive: true, isBanned: false },
+    user: { isActive: true, isBanned: false, ...(hideDemo ? { isDemoAccount: false } : {}) },
     ...(portraitOfWeekOnly
       ? {
           isPortraitOfWeek: true,
@@ -74,16 +76,18 @@ export const getProfessional = asyncHandler(async (req, res) => {
           country: true,
           role: true,
           createdAt: true,
+          isDemoAccount: true,
         },
       },
     },
   });
 
-  if (!professional) {
+  if (!professional || (professional.user.isDemoAccount && (await isDemoHidden()))) {
     throw new ApiError(404, "Professional not found");
   }
 
-  res.json(apiResponse(true, professional, "Professional retrieved"));
+  const { isDemoAccount: _isDemoAccount, ...user } = professional.user;
+  res.json(apiResponse(true, { ...professional, user }, "Professional retrieved"));
 });
 
 export const listReceivedReviews = asyncHandler(async (req, res) => {

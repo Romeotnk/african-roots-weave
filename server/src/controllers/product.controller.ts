@@ -4,6 +4,7 @@ import { uploadBufferToCloudinary } from "../services/cloudinary.service.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
+import { demoOwnerFilter } from "../utils/demoMode.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
 import { makeSlug } from "../utils/slug.js";
 import { SUBSCRIPTION_PLANS } from "../utils/subscriptionPlans.js";
@@ -109,6 +110,8 @@ export const listProducts = asyncHandler(async (req, res) => {
         ? [req.query.category]
         : undefined;
 
+  const demoFilter = await demoOwnerFilter("seller");
+
   const where: Prisma.ProductWhereInput = {
     isActive: true,
     isApproved: true,
@@ -120,11 +123,12 @@ export const listProducts = asyncHandler(async (req, res) => {
     sellerId: typeof req.query.sellerId === "string" ? req.query.sellerId : undefined,
     price: minPrice || maxPrice ? { gte: minPrice, lte: maxPrice } : undefined,
     seller:
-      typeof req.query.location === "string"
+      typeof req.query.location === "string" || demoFilter.seller
         ? {
-            professionalProfile: {
-              location: { contains: req.query.location, mode: "insensitive" },
-            },
+            ...(typeof req.query.location === "string"
+              ? { professionalProfile: { location: { contains: req.query.location, mode: "insensitive" as const } } }
+              : {}),
+            ...(demoFilter.seller as object),
           }
         : undefined,
   };
@@ -169,8 +173,9 @@ export const listMyProducts = asyncHandler(async (req, res) => {
 });
 
 export const getProductBySlug = asyncHandler(async (req, res) => {
+  const demoFilter = await demoOwnerFilter("seller");
   const product = await prisma.product.findFirst({
-    where: { slug: req.params.slug, isActive: true, isApproved: true, ...notExpired() },
+    where: { slug: req.params.slug, isActive: true, isApproved: true, ...notExpired(), ...demoFilter },
     select: productSelect,
   });
   if (!product) throw new ApiError(404, "Product not found");
