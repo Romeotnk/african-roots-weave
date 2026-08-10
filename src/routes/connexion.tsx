@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { SocialAuthButtons } from "@/components/shared/SocialAuthButtons";
 import { login, resendVerificationEmail } from "@/lib/api/auth";
 import { consumePendingSocialAccountType, signInWithSocialProvider, type SocialAuthProvider } from "@/lib/auth/social";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -150,14 +151,7 @@ function Connexion() {
           <div className="my-6 flex items-center gap-3 text-[12px] text-[var(--color-text-muted)]">
             <div className="h-px flex-1 bg-[var(--brand-border-light)]" /> {t("auth.orContinueWith")} <div className="h-px flex-1 bg-[var(--brand-border-light)]" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <button type="button" onClick={() => handleSocialSignIn("google")} disabled={isSocialSubmitting !== null} className="h-11 rounded-[8px] border border-[var(--brand-border)] text-[14px] font-semibold hover:bg-[var(--brand-surface-alt)] disabled:opacity-70">
-              {isSocialSubmitting === "google" ? t("auth.opening") : "Google"}
-            </button>
-            <button type="button" onClick={() => handleSocialSignIn("facebook")} disabled={isSocialSubmitting !== null} className="h-11 rounded-[8px] bg-[#1877F2] text-[14px] font-semibold text-white disabled:opacity-70">
-              {isSocialSubmitting === "facebook" ? t("auth.opening") : "Facebook"}
-            </button>
-          </div>
+          <SocialAuthButtons pending={isSocialSubmitting} onSelect={handleSocialSignIn} openingLabel={t("auth.opening")} />
 
           <p className="mt-6 text-center text-[14px] text-[var(--color-text-muted)]">
             {t("auth.login.noAccount")}{" "}
