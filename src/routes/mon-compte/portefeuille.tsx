@@ -63,7 +63,6 @@ type WalletDialog = "deposit" | "withdraw" | "transfer" | "pin" | null;
 function WalletPage() {
   const [dialog, setDialog] = useState<WalletDialog>(null);
   const [typeFilter, setTypeFilter] = useState<WalletTransactionType | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<WalletTransactionStatus | "all">("all");
   const [periodFilter, setPeriodFilter] = useState("all");
   const [pin, setPin] = useState("");
   const [currentPin, setCurrentPin] = useState("");
@@ -107,7 +106,6 @@ function WalletPage() {
     () =>
       displayedTransactions.filter((transaction) => {
         const matchesType = typeFilter === "all" || transaction.type === typeFilter;
-        const matchesStatus = statusFilter === "all" || transaction.status === statusFilter;
         const txDate = new Date(transaction.date).getTime();
         const now = Date.now();
         const matchesPeriod =
@@ -116,9 +114,9 @@ function WalletPage() {
             : periodFilter === "month"
               ? now - txDate <= 31 * 24 * 60 * 60 * 1000
               : true;
-        return matchesType && matchesStatus && matchesPeriod;
+        return matchesType && matchesPeriod;
       }),
-    [displayedTransactions, periodFilter, statusFilter, typeFilter],
+    [displayedTransactions, periodFilter, typeFilter],
   );
 
   const closeDialog = (message?: string) => {
@@ -253,14 +251,8 @@ function WalletPage() {
                   <option value="week">7 jours</option>
                   <option value="month">30 jours</option>
                 </select>
-                <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as WalletTransactionStatus | "all")} className="h-10 rounded-full border border-[var(--brand-border)] bg-white px-3 text-[13px]">
-                  <option value="all">Tous statuts</option>
-                  {Object.entries(statusLabels).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
-                {(typeFilter !== "all" || periodFilter !== "all" || statusFilter !== "all") && (
-                  <button onClick={() => { setTypeFilter("all"); setPeriodFilter("all"); setStatusFilter("all"); }} className="h-10 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">Reinitialiser</button>
+                {(typeFilter !== "all" || periodFilter !== "all") && (
+                  <button onClick={() => { setTypeFilter("all"); setPeriodFilter("all"); }} className="h-10 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">Reinitialiser</button>
                 )}
                 <button onClick={exportCsv} className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white">
                   <Download size={15} /> CSV

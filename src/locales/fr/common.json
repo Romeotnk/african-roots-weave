@@ -220,13 +220,11 @@
       "emailVerified": "Email vérifié",
       "kycApproved": "KYC soumis et approuvé",
       "profilePhoto": "Photo de profil ajoutée",
-      "phoneVerified": "Numéro de téléphone vérifié",
       "incomplete": "Complétez les étapes manquantes pour publier une annonce."
     },
     "progress": { "title": "Progression" },
     "steps": {
       "base": "Base",
-      "location": "Localisation",
       "media": "Médias",
       "options": "Options",
       "summary": "Récapitulatif"
@@ -247,17 +245,8 @@
       "descriptionLabel": "Description longue",
       "formatting": { "bold": "Gras", "italic": "Italique", "list": "Liste" },
       "pricePlaceholder": "Prix",
-      "oldPricePlaceholder": "Prix barré",
       "quantityPlaceholder": "Quantité",
       "commissionEstimate": "Commission estimée : {{amount}} {{currency}} (10%)."
-    },
-    "step1": {
-      "cityPlaceholder": "Ville",
-      "addressPlaceholder": "Adresse précise (optionnel)",
-      "coords": "Lat {{lat}} / Lng {{lng}}",
-      "useMyLocation": "Utiliser ma position",
-      "geoUnsupported": "La géolocalisation n'est pas disponible sur cet appareil.",
-      "geoDenied": "Impossible d'obtenir votre position. Vérifiez les autorisations de localisation de votre navigateur."
     },
     "step2": {
       "dropzoneTitle": "Glissez vos photos ici",
@@ -279,7 +268,6 @@
       "summaryTitle": "Récapitulatif",
       "titleLabel": "Titre",
       "categoryLabel": "Catégorie",
-      "locationLabel": "Localisation",
       "commissionLabel": "Commission",
       "acceptTerms": "J'accepte les CGU.",
       "acceptSalesPolicy": "J'accepte la politique de vente.",

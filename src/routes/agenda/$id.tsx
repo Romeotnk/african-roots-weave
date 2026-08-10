@@ -103,7 +103,7 @@ function EventDetail() {
                 {event.online && event.meetingUrl && (
                   <a href={event.meetingUrl} target="_blank" rel="noreferrer" className="block rounded-full bg-[var(--brand-gold)] px-4 py-3 text-center font-semibold text-white">Rejoindre la visioconférence</a>
                 )}
-                <a href={`https://wa.me/22900000000?text=${encodeURIComponent(`Bonjour, je souhaite réserver une place pour ${event.title}`)}`} target="_blank" rel="noreferrer" className="block rounded-full bg-[#25D366] px-4 py-3 text-center font-semibold text-white">WhatsApp</a>
+                <a href={`https://wa.me/221770000000?text=${encodeURIComponent(`Bonjour, je souhaite réserver une place pour ${event.title}`)}`} target="_blank" rel="noreferrer" className="block rounded-full bg-[#25D366] px-4 py-3 text-center font-semibold text-white">WhatsApp</a>
                 <Link to="/agenda" className="block rounded-full border border-white/20 px-4 py-3 text-center font-semibold text-white">Voir les autres événements</Link>
               </div>
             </div>

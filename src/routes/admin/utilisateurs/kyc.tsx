@@ -61,7 +61,12 @@ function AdminKycQueue() {
                       <button
                         type="button"
                         disabled={approve.isPending}
-                        onClick={() => approve.mutate(user.id, { onSuccess: () => setNotice(`KYC approuvé pour ${user.firstName} ${user.lastName}.`) })}
+                        onClick={() =>
+                          approve.mutate(user.id, {
+                            onSuccess: () => setNotice(`KYC approuvé pour ${user.firstName} ${user.lastName}.`),
+                            onError: (error) => setNotice(error instanceof Error ? error.message : "Impossible d'approuver ce KYC."),
+                          })
+                        }
                         className="rounded-full bg-emerald-400 px-3 py-1 text-[12px] font-bold text-[#111827] disabled:opacity-50"
                       >
                         Approuver
@@ -69,7 +74,12 @@ function AdminKycQueue() {
                       <button
                         type="button"
                         disabled={reject.isPending}
-                        onClick={() => reject.mutate(user.id, { onSuccess: () => setNotice(`KYC rejeté pour ${user.firstName} ${user.lastName}.`) })}
+                        onClick={() =>
+                          reject.mutate(user.id, {
+                            onSuccess: () => setNotice(`KYC rejeté pour ${user.firstName} ${user.lastName}.`),
+                            onError: (error) => setNotice(error instanceof Error ? error.message : "Impossible de rejeter ce KYC."),
+                          })
+                        }
                         className="rounded-full bg-red-500/80 px-3 py-1 text-[12px] font-bold text-white disabled:opacity-50"
                       >
                         Rejeter
@@ -109,7 +119,12 @@ function AdminKycQueue() {
                       <button
                         type="button"
                         disabled={verifyProfessional.isPending}
-                        onClick={() => verifyProfessional.mutate(profile.id, { onSuccess: () => setNotice(`Profil « ${profile.displayName} » vérifié.`) })}
+                        onClick={() =>
+                          verifyProfessional.mutate(profile.id, {
+                            onSuccess: () => setNotice(`Profil « ${profile.displayName} » vérifié.`),
+                            onError: (error) => setNotice(error instanceof Error ? error.message : "Impossible de vérifier ce profil."),
+                          })
+                        }
                         className="rounded-full bg-emerald-400 px-3 py-1 text-[12px] font-bold text-[#111827] disabled:opacity-50"
                       >
                         Vérifier
@@ -140,7 +155,10 @@ function AdminKycQueue() {
           if (!rejectTarget || !reason) return;
           rejectProfessional.mutate(
             { id: rejectTarget.id, reason },
-            { onSuccess: () => { setNotice(`Profil « ${rejectTarget.displayName} » rejeté.`); setRejectTarget(null); } },
+            {
+              onSuccess: () => { setNotice(`Profil « ${rejectTarget.displayName} » rejeté.`); setRejectTarget(null); },
+              onError: (error) => setNotice(error instanceof Error ? error.message : "Impossible de rejeter ce profil."),
+            },
           );
         }}
       />

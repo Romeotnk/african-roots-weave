@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Eye, GraduationCap, Loader2, PlayCircle, Plus, Search, Upload } from "lucide-react";
+import { Eye, GraduationCap, Loader2, PlayCircle, Plus, Search, Upload, Users, Wallet } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/tableau-de-bord/formations")({
 });
 
 type CourseStatus = "published" | "draft";
-type LocalCourse = TrainingCourse & { status: CourseStatus };
+type LocalCourse = TrainingCourse & { status: CourseStatus; enrollmentCount: number; revenue: number };
 
 type CourseForm = {
   title: string;
@@ -46,10 +46,16 @@ function TrainingsDashboard() {
   const updateFormation = useUpdateFormation();
 
   const courses: LocalCourse[] = useMemo(() => {
-    const raw = (myFormationsQuery.data?.formations ?? []) as { isPublished?: boolean }[];
+    const raw = (myFormationsQuery.data?.formations ?? []) as {
+      isPublished?: boolean;
+      enrollmentCount?: number;
+      revenue?: number | string;
+    }[];
     return toTrainingCourses(raw).map((course, index) => ({
       ...course,
       status: raw[index]?.isPublished ? "published" : "draft",
+      enrollmentCount: raw[index]?.enrollmentCount ?? 0,
+      revenue: Number(raw[index]?.revenue ?? 0),
     }));
   }, [myFormationsQuery.data]);
 
@@ -145,10 +151,16 @@ function TrainingsDashboard() {
         </button>
       }
     >
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <StatCard label="Formations" value={courses.length} icon={GraduationCap} />
           <StatCard label="Publiées" value={courses.filter((course) => course.status === "published").length} icon={Upload} />
-          <StatCard label="Téléchargements" value={courses.reduce((sum, course) => sum + course.students, 0)} icon={PlayCircle} />
+          <StatCard label="Inscrits" value={courses.reduce((sum, course) => sum + course.enrollmentCount, 0)} icon={Users} />
+          <StatCard
+            label="Revenus"
+            value={courses.reduce((sum, course) => sum + course.revenue, 0)}
+            icon={Wallet}
+            suffix=" FCFA"
+          />
         </div>
 
         {showForm && (
@@ -223,6 +235,9 @@ function TrainingsDashboard() {
                       <span className="rounded-full bg-[var(--brand-surface-alt)] px-3 py-1 text-[12px] font-semibold text-[var(--color-text-secondary)]">{statusLabels[course.status]}</span>
                       <h2 className="mt-3 text-[18px] font-bold">{course.title}</h2>
                       <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">{course.category} - {course.level} - {course.duration}</p>
+                      <p className="mt-1 text-[13px] font-semibold text-[var(--brand-primary)]">
+                        {course.enrollmentCount} inscrit{course.enrollmentCount > 1 ? "s" : ""} · {course.revenue.toLocaleString("fr-FR")} FCFA
+                      </p>
                     </div>
                     <p className="rounded-full bg-[var(--brand-primary-subtle)] px-3 py-1 text-[12px] font-bold text-[var(--brand-primary)]">
                       {course.price === 0 ? "Gratuit" : `${course.price.toLocaleString("fr-FR")} ${course.currency}`}
@@ -255,12 +270,12 @@ function TrainingsDashboard() {
   );
 }
 
-function StatCard({ label, value, icon: Icon }: { label: string; value: number; icon: typeof GraduationCap }) {
+function StatCard({ label, value, icon: Icon, suffix }: { label: string; value: number; icon: typeof GraduationCap; suffix?: string }) {
   return (
     <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
       <Icon size={22} className="text-[var(--brand-primary)]" />
       <p className="mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">{label}</p>
-      <p className="mt-1 text-[28px] font-extrabold">{value.toLocaleString("fr-FR")}</p>
+      <p className="mt-1 text-[28px] font-extrabold">{value.toLocaleString("fr-FR")}{suffix}</p>
     </div>
   );
 }

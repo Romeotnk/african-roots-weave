@@ -67,6 +67,11 @@ function KycPage() {
   const [expiresAt, setExpiresAt] = useState("");
   const [files, setFiles] = useState<{ front: File | null; back: File | null; selfie: File | null }>({ front: null, back: null, selfie: null });
   const [accepted, setAccepted] = useState(false);
+  // "Modifier mon dossier" only swaps which form is shown locally — it does
+  // not cancel the pending submission server-side. Track it separately so we
+  // can tell the user their original submission still stands until they
+  // actually resubmit, instead of letting them think they cancelled it.
+  const [isEditingPending, setIsEditingPending] = useState(false);
   const [message, setMessage] = useState("");
   const submitKyc = useSubmitKycMutation();
   const meta = statusMeta[status];
@@ -105,6 +110,7 @@ function KycPage() {
         },
       });
       setStatus(backendStatusToKycStatus(response.data?.kycStatus));
+      setIsEditingPending(false);
       setMessage("Dossier KYC soumis. Vous recevrez une notification apres vérification.");
     } catch {
       setStatus("pending");
@@ -154,12 +160,21 @@ function KycPage() {
                 <h2 className="mt-4 text-[24px] font-bold">Dossier en attente</h2>
                 <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Delai indicatif : 24 a 72 heures.</p>
                 {message && <p className="mx-auto mt-4 max-w-lg rounded-lg bg-amber-50 p-3 text-[13px] text-amber-800">{message}</p>}
-                <button type="button" onClick={() => setStatus("not_submitted")} className="mt-5 h-10 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
+                <button
+                  type="button"
+                  onClick={() => { setIsEditingPending(true); setStatus("not_submitted"); }}
+                  className="mt-5 h-10 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold"
+                >
                   Modifier mon dossier
                 </button>
               </div>
             ) : (
               <div className="space-y-5">
+                {isEditingPending && (
+                  <p className="rounded-lg bg-amber-50 p-3 text-[13px] text-amber-800">
+                    Votre dossier précédemment soumis reste en attente d'examen tant que vous n'envoyez pas ce nouveau formulaire.
+                  </p>
+                )}
                 <div className="grid gap-3 md:grid-cols-2">
                   <select value={docType} onChange={(event) => setDocType(event.target.value)} className="h-11 rounded-lg border border-[var(--brand-border)] bg-white px-4">
                     {docTypes.map((item) => <option key={item}>{item}</option>)}

@@ -21,22 +21,27 @@ export function Registrations() {
   const registrationsQuery = useMyRegistrations();
   const unregister = useUnregisterEvent();
   const { data: profile } = useMeQuery();
-  const [cancelledIds, setCancelledIds] = useState<string[]>([]);
+  // Cancelling actually deletes the EventRegistration server-side, so the
+  // refetch this mutation triggers makes the row vanish from the API
+  // response entirely — keep a local copy of what was just cancelled so it
+  // stays visible with an "Annulé" badge instead of silently disappearing.
+  const [cancelledEvents, setCancelledEvents] = useState<Registration[]>([]);
   const [actionMessage, setActionMessage] = useState("");
 
-  const registrations = useMemo(
-    () =>
-      ((registrationsQuery.data ?? []) as BackendRegistration[])
-        .map((registration) => (registration.event ? toEventItem(registration.event) : null))
-        .filter((item): item is NonNullable<typeof item> => Boolean(item))
-        .map((event): Registration => ({ ...event, localStatus: cancelledIds.includes(event.id) ? "cancelled" : "confirmed" })),
-    [registrationsQuery.data, cancelledIds],
-  );
+  const registrations = useMemo(() => {
+    const fromApi = ((registrationsQuery.data ?? []) as BackendRegistration[])
+      .map((registration) => (registration.event ? toEventItem(registration.event) : null))
+      .filter((item): item is NonNullable<typeof item> => Boolean(item))
+      .map((event): Registration => ({ ...event, localStatus: "confirmed" }));
+    const cancelledIds = new Set(cancelledEvents.map((event) => event.id));
+    return [...fromApi.filter((event) => !cancelledIds.has(event.id)), ...cancelledEvents];
+  }, [registrationsQuery.data, cancelledEvents]);
 
   const cancelRegistration = (id: string) => {
+    const target = registrations.find((event) => event.id === id);
     unregister.mutate(id, {
       onSuccess: () => {
-        setCancelledIds((current) => [...current, id]);
+        if (target) setCancelledEvents((current) => [...current, { ...target, localStatus: "cancelled" }]);
         setActionMessage("Inscription annulée. Une confirmation sera visible dans vos notifications.");
       },
       onError: (error) => {
@@ -45,9 +50,13 @@ export function Registrations() {
     });
   };
 
-  const downloadTicket = (event: Registration) => {
+  // This generates a plain-text summary from data already in memory — not an
+  // official, server-issued ticket (no verification, no QR code) — so the
+  // label calls it an "attestation" rather than a "billet" to avoid implying
+  // otherwise.
+  const downloadAttestation = (event: Registration) => {
     const lines = [
-      "IWOSAN - Confirmation d'inscription",
+      "IWOSAN - Attestation d'inscription",
       "",
       `Evenement : ${event.title}`,
       `Date : ${new Intl.DateTimeFormat("fr-FR", { dateStyle: "full", timeStyle: "short" }).format(new Date(event.date))}`,
@@ -59,10 +68,10 @@ export function Registrations() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `billet-${event.id}.txt`;
+    link.download = `attestation-${event.id}.txt`;
     link.click();
     URL.revokeObjectURL(url);
-    setActionMessage(`Billet telecharge pour ${event.title}.`);
+    setActionMessage(`Attestation telechargee pour ${event.title}.`);
   };
 
   return (
@@ -119,11 +128,11 @@ export function Registrations() {
                   </Link>
                   <button
                     type="button"
-                    onClick={() => downloadTicket(event)}
+                    onClick={() => downloadAttestation(event)}
                     disabled={isCancelled}
                     className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <Download size={15} /> Billet
+                    <Download size={15} /> Attestation
                   </button>
                   <button
                     type="button"
@@ -131,7 +140,7 @@ export function Registrations() {
                     disabled={isCancelled}
                     className="inline-flex h-10 items-center gap-2 rounded-full border border-rose-200 px-4 text-[13px] font-semibold text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <XCircle size={15} /> Annulér
+                    <XCircle size={15} /> Annuler
                   </button>
                 </div>
               </article>

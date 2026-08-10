@@ -28,6 +28,9 @@ export function getAccessTokenClaims(): AccessTokenClaims | null {
   }
 }
 
+const ADMIN_AREA_ROLES = new Set(["SUPER_ADMIN", "ADMIN", "MODERATOR", "EDITOR"]);
+
 export function isAdminToken() {
-  return getAccessTokenClaims()?.role === "ADMIN";
+  const role = getAccessTokenClaims()?.role;
+  return Boolean(role && ADMIN_AREA_ROLES.has(role));
 }

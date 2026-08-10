@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2, MessageSquare, PackageCheck, Star } from "lucide-react";
+import { CheckCircle2, Loader2, MessageSquare, PackageCheck, Star } from "lucide-react";
 import { useMemo, useState } from "react";
-import { orders } from "@/data/orders";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useConfirmOrderDelivery, useMyOrders } from "@/hooks/useOrdersApi";
 import { useCreateReview } from "@/hooks/useReviewsApi";
@@ -20,6 +19,7 @@ export const Route = createFileRoute("/mes-commandes")({
 const timeline: { id: OrderStatus; label: string }[] = [
   { id: "confirmed", label: "Confirmee" },
   { id: "paid", label: "Payee" },
+  { id: "shipped", label: "Expediee" },
   { id: "delivered", label: "Livree" },
 ];
 
@@ -70,19 +70,13 @@ function OrdersPage() {
   }, [ordersQuery.data, user?.id]);
   const rawOrders = (ordersQuery.data?.data ?? []) as (BackendOrder & { productId?: string })[];
 
-  const isRealData = ordersQuery.isSuccess;
-  const localOrders = isRealData ? apiOrders : orders;
   const [actionMessage, setActionMessage] = useState("");
   const [reviewOrderId, setReviewOrderId] = useState("");
   const [orderReviews, setOrderReviews] = useState<Record<string, ReviewDraft>>({});
   const [buyerRatings, setBuyerRatings] = useState<Record<string, { rating: number; comment: string; submitted?: boolean }>>({});
-  const filtered = localOrders.filter((order) => order.role === tab);
+  const filtered = apiOrders.filter((order) => order.role === tab);
 
   const confirmReception = (orderId: string) => {
-    if (!isRealData) {
-      setActionMessage(`Reception confirmee pour la commande ${orderId}.`);
-      return;
-    }
     confirmDelivery.mutate(orderId, {
       onSuccess: () => setActionMessage(`Reception confirmee pour la commande ${orderId}.`),
       onError: (error) => setActionMessage(error instanceof Error ? error.message : "Confirmation impossible."),
@@ -101,16 +95,6 @@ function OrdersPage() {
     const review = orderReviews[orderId];
     if (!review?.rating) {
       setActionMessage("Choisissez une note avant d'envoyer l'avis.");
-      return;
-    }
-
-    if (!isRealData) {
-      setOrderReviews((current) => ({
-        ...current,
-        [orderId]: { ...review, submitted: true },
-      }));
-      setReviewOrderId("");
-      setActionMessage(`Avis enregistre pour la commande ${orderId}.`);
       return;
     }
 
@@ -137,12 +121,6 @@ function OrdersPage() {
     const draft = buyerRatings[orderId];
     if (!draft?.rating) {
       setActionMessage("Choisissez une note avant d'envoyer l'evaluation.");
-      return;
-    }
-
-    if (!isRealData) {
-      setBuyerRatings((current) => ({ ...current, [orderId]: { ...draft, submitted: true } }));
-      setActionMessage(`Evaluation enregistree pour la commande ${orderId}.`);
       return;
     }
 
@@ -194,18 +172,26 @@ function OrdersPage() {
           </p>
         )}
 
-        {filtered.length === 0 && (
+        {ordersQuery.isLoading ? (
+          <div className="flex items-center justify-center rounded-[12px] border border-[var(--brand-border-light)] bg-white p-10">
+            <Loader2 className="animate-spin text-[var(--brand-primary)]" size={28} />
+          </div>
+        ) : ordersQuery.isError ? (
+          <div className="rounded-[12px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
+            Impossible de charger vos commandes pour le moment.
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="rounded-[12px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
             <h2 className="text-[20px] font-bold">Aucune commande pour ce role</h2>
             <p className="mt-2 text-[13px] text-[var(--color-text-muted)]">
               Les nouvelles commandes apparaitront ici des qu'elles seront creees.
             </p>
           </div>
-        )}
+        ) : null}
 
-        {filtered.map((order) => {
+        {!ordersQuery.isLoading && !ordersQuery.isError && filtered.map((order) => {
           const statusIndex = timeline.findIndex((step) => step.id === order.status);
-          const canConfirmReception = tab === "buyer" && order.status === "paid";
+          const canConfirmReception = tab === "buyer" && (order.status === "paid" || order.status === "shipped");
           const receptionConfirmed = order.status === "delivered" || order.status === "completed";
           const review = orderReviews[order.id];
 
@@ -223,7 +209,7 @@ function OrdersPage() {
                 </span>
               </div>
 
-              <div className="mt-5 grid grid-cols-3 gap-3">
+              <div className="mt-5 grid grid-cols-4 gap-3">
                 {timeline.map((step, index) => (
                   <div key={step.id} className="text-center">
                     <div className={`mx-auto grid h-8 w-8 place-items-center rounded-full ${index <= statusIndex ? "bg-[var(--brand-primary)] text-white" : "bg-[var(--brand-surface-alt)] text-[var(--color-text-muted)]"}`}>

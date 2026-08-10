@@ -4,6 +4,7 @@ import { Camera, CheckCircle2, Compass, FileUp, MapPin, Plus, Sparkles, Stethosc
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CountrySelect } from "@/components/shared/CountrySelect";
 import { Switch } from "@/components/ui/switch";
+import { backendAuthUserStore, getMe } from "@/lib/api/auth";
 import {
   useMyProfessionalProfile,
   useUploadMyProfilePhotos,
@@ -181,6 +182,12 @@ function BecomePro() {
       const photoFiles = [avatarFile, ...galleryFiles].filter((file): file is File => Boolean(file));
       if (photoFiles.length > 0) await uploadPhotos.mutateAsync(photoFiles);
       if (documentFiles.length > 0) await uploadDocs.mutateAsync(documentFiles);
+
+      // Submitting the profile may have just upgraded this account to
+      // PROFESSIONAL server-side — resync so the pro dashboard unlocks
+      // immediately instead of requiring a logout/login.
+      const me = await getMe();
+      if (me.data) backendAuthUserStore.set(me.data);
 
       setSubmitted(true);
       setFormMessage("Profil soumis en moderation. L'equipe verifiera les documents avant publication.");

@@ -30,6 +30,8 @@ function Learn() {
   const lessons = course.modules.flatMap((module) => module.lessons.map((lesson) => ({ ...lesson, module: module.title })));
   const [activeLessonId, setActiveLessonId] = useState(lessons[0]?.id);
   const [done, setDone] = useState<string[]>([]);
+  const [progressError, setProgressError] = useState("");
+  const [downloadError, setDownloadError] = useState("");
   const activeLesson = lessons.find((lesson) => lesson.id === activeLessonId) ?? lessons[0];
   const progress = useMemo(() => Math.round((done.length / Math.max(lessons.length, 1)) * 100), [done.length, lessons.length]);
 
@@ -40,9 +42,21 @@ function Learn() {
   }, [enrollmentQuery.data?.completedLessonIds]);
 
   const markDone = (lessonId: string) => {
+    setProgressError("");
     setDone((current) => (current.includes(lessonId) ? current : [...current, lessonId]));
     if (apiCourse) {
-      updateProgress.mutate({ id: apiCourse.id, lessonId, completed: true });
+      updateProgress.mutate(
+        { id: apiCourse.id, lessonId, completed: true },
+        {
+          // The optimistic update above can drift from the server if this
+          // fails (expired session, network) — roll it back and say so
+          // instead of leaving a phantom "done" state that isn't persisted.
+          onError: (error) => {
+            setDone((current) => current.filter((item) => item !== lessonId));
+            setProgressError(error instanceof Error ? error.message : "La progression n'a pas pu etre enregistree.");
+          },
+        },
+      );
     }
   };
 
@@ -103,12 +117,20 @@ function Learn() {
             </p>
             <button
               type="button"
-              onClick={() => rawFileUrl && downloadFormation.mutate(course.id, { onSuccess: () => window.open(rawFileUrl, "_blank", "noopener,noreferrer") })}
+              onClick={() => {
+                setDownloadError("");
+                if (!rawFileUrl) return;
+                downloadFormation.mutate(course.id, {
+                  onSuccess: () => window.open(rawFileUrl, "_blank", "noopener,noreferrer"),
+                  onError: (error) => setDownloadError(error instanceof Error ? error.message : "Telechargement impossible."),
+                });
+              }}
               disabled={downloadFormation.isPending}
               className="mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-6 text-[13px] font-semibold text-white disabled:opacity-50"
             >
               <Download size={16} /> {downloadFormation.isPending ? "Préparation..." : "Télécharger la ressource"}
             </button>
+            {downloadError && <p className="mt-3 text-[13px] font-semibold text-red-700">{downloadError}</p>}
           </div>
         </section>
       </main>
@@ -163,6 +185,7 @@ function Learn() {
               <MessageCircle size={15} /> Questions sur la lecon
             </Link>
           </div>
+          {progressError && <p className="mt-3 text-[13px] font-semibold text-red-700">{progressError}</p>}
         </section>
       </section>
     </main>

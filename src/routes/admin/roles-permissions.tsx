@@ -46,7 +46,11 @@ function AdminRolesPermissions() {
   const saveRole = (role: string) => {
     updateRolePermissions.mutate(
       { role, permissions: [...(draft[role] ?? [])] },
-      { onSuccess: () => setNotice(`Permissions de « ${roleLabels[role]} » mises à jour.`) },
+      {
+        onSuccess: () => setNotice(`Permissions de « ${roleLabels[role]} » mises à jour.`),
+        onError: (error) =>
+          setNotice(error instanceof Error ? error.message : `Impossible de mettre à jour « ${roleLabels[role]} ».`),
+      },
     );
   };
 
@@ -57,8 +61,13 @@ function AdminRolesPermissions() {
     >
       {notice && <div className="mb-4 rounded-lg bg-emerald-500/15 p-3 text-[13px] text-emerald-200">{notice}</div>}
       {permissionsQuery.isLoading && <p className="text-[13px] text-slate-400">Chargement...</p>}
+      {permissionsQuery.isError && (
+        <p className="text-[13px] text-red-300">
+          Cette page est réservée au rôle Super Admin. Vous n'avez pas les droits pour consulter ou modifier les permissions.
+        </p>
+      )}
 
-      {!permissionsQuery.isLoading && (
+      {!permissionsQuery.isLoading && !permissionsQuery.isError && (
         <div className="space-y-6">
           {ROLES.filter((role) => role !== "SUPER_ADMIN").map((role) => (
             <AdminCard key={role}>

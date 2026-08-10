@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Bell, Loader2, Plus, Trash2 } from "lucide-react";
+import { Bell, Loader2, Trash2 } from "lucide-react";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { Switch } from "@/components/ui/switch";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -33,7 +33,7 @@ function toMarketplaceAlert(search: BackendSavedSearch): MarketplaceAlert | null
 
 function AlertsPage() {
   const savedSearchesQuery = useMySavedSearches();
-  const { create, update, remove } = useSavedSearchActions();
+  const { update, remove } = useSavedSearchActions();
   const [actionMessage, setActionMessage] = useState("");
 
   const alerts = useMemo(
@@ -52,34 +52,18 @@ function AlertsPage() {
     remove.mutate(alert.id, { onSuccess: () => setActionMessage(`Alerte supprimée : ${alert.name}.`) });
   };
 
-  const addAlert = () => {
-    create.mutate(
-      { name: "Recherche marketplace sauvegardée", summary: "Produits vérifiés, prix sous 20 000 FCFA, livraison locale." },
-      { onSuccess: () => setActionMessage("Alerte créée. Ajustez-la depuis vos filtres marketplace.") },
-    );
-  };
-
   return (
     <ProtectedRoute>
       <AccountLayout
         title="Alertes marketplace"
         description="Activez, désactivez ou supprimez vos recherches sauvegardées."
         actions={
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={addAlert}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] px-5 text-[14px] font-semibold"
-            >
-              <Plus size={16} /> Créer une alerte
-            </button>
-            <Link
-              to="/marketplace"
-              className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white"
-            >
-              Créer depuis la marketplace
-            </Link>
-          </div>
+          <Link
+            to="/marketplace"
+            className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white"
+          >
+            Créer depuis la marketplace
+          </Link>
         }
       >
           {actionMessage && (

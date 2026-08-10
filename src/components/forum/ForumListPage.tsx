@@ -34,6 +34,7 @@ export function ForumListPage() {
   const [page, setPage] = useState(1);
   const questionsQuery = useForumQuestions({
     ...(selectedCategory ? { category: selectedCategory } : {}),
+    ...(selectedTag ? { tag: selectedTag } : {}),
     ...(selectedSeverity ? { customFields: { severite: selectedSeverity } } : {}),
     page,
   });
@@ -73,7 +74,7 @@ export function ForumListPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [selectedCategory, selectedSeverity]);
+  }, [selectedCategory, selectedTag, selectedSeverity]);
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">
@@ -92,7 +93,7 @@ export function ForumListPage() {
       <section className="container-iwosan py-8">
         <div className="mb-6 flex flex-wrap gap-2">{tabs.map((tab) => <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`h-10 rounded-full px-4 text-[13px] font-semibold ${activeTab === tab.id ? "bg-[var(--brand-primary)] text-white" : "border border-[var(--brand-border)] bg-white text-[var(--color-text-secondary)]"}`}>{tab.label}</button>)}</div>
         <div className="grid gap-8 lg:grid-cols-[300px_1fr]">
-          <aside className="space-y-5">
+          <aside data-filter-panel className="space-y-5">
             <div className="rounded-[20px] border border-[var(--brand-border-light)] bg-white p-5">
               <h2 className="mb-4 flex items-center gap-2 text-[15px] font-bold"><Filter size={16} /> {t("forum.filters.title")}</h2>
               <div className="space-y-4">

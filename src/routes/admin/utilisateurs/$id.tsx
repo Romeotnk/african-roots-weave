@@ -10,6 +10,7 @@ import {
   useAdminUserActions,
   useUpdateUserPermissionOverrides,
 } from "@/hooks/useAdminApi";
+import { useAuth } from "@/lib/auth/AuthContext";
 import type { AdminUser } from "@/lib/api/admin";
 
 export const Route = createFileRoute("/admin/utilisateurs/$id")({
@@ -17,7 +18,11 @@ export const Route = createFileRoute("/admin/utilisateurs/$id")({
   component: AdminUserDetail,
 });
 
-const assignableRoles = ["USER", "PROFESSIONAL", "RESEARCHER", "MODERATOR", "EDITOR", "ADMIN", "SUPER_ADMIN"];
+const allRoles = ["USER", "PROFESSIONAL", "RESEARCHER", "MODERATOR", "EDITOR", "ADMIN", "SUPER_ADMIN"];
+// Mirrors adminAssignableRoles in server/src/controllers/admin.controller.ts:
+// a non-SUPER_ADMIN admin may only assign these three roles — anything else
+// 403s. Filtering the options here avoids offering choices that silently fail.
+const adminAssignableRoles = ["MODERATOR", "EDITOR", "RESEARCHER"];
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -30,6 +35,8 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 function AdminUserDetail() {
   const { id } = Route.useParams();
+  const { roles: actorRoles } = useAuth();
+  const assignableRoles = actorRoles.includes("super_admin") ? allRoles : adminAssignableRoles;
   const userQuery = useAdminUser(id);
   const { ban, unban, updateRole, updateCommissionRate } = useAdminUserActions();
   const [commissionRateDraft, setCommissionRateDraft] = useState("");
@@ -100,14 +107,22 @@ function AdminUserDetail() {
               <button
                 type="button"
                 disabled={!roleDraft || updateRole.isPending}
-                onClick={() => updateRole.mutate({ id: user.id, role: roleDraft }, { onSuccess: () => setNotice("Rôle mis à jour.") })}
+                onClick={() =>
+                  updateRole.mutate(
+                    { id: user.id, role: roleDraft },
+                    {
+                      onSuccess: () => setNotice("Rôle mis à jour."),
+                      onError: (error) => setNotice(error instanceof Error ? error.message : "Impossible de changer ce rôle."),
+                    },
+                  )
+                }
                 className="rounded-lg bg-emerald-400 px-4 text-[13px] font-bold text-[#111827] disabled:opacity-50"
               >
                 Appliquer
               </button>
             </div>
 
-            {user.professionalProfile && (
+            {user.professionalProfile && actorRoles.includes("super_admin") && (
               <div className="flex gap-2">
                 <input
                   type="number"
@@ -128,7 +143,10 @@ function AdminUserDetail() {
                         userId: user.id,
                         defaultCommissionRate: commissionRateDraft.trim() === "" ? null : Number(commissionRateDraft),
                       },
-                      { onSuccess: () => setNotice("Taux de commission négocié mis à jour.") },
+                      {
+                        onSuccess: () => setNotice("Taux de commission négocié mis à jour."),
+                        onError: (error) => setNotice(error instanceof Error ? error.message : "Impossible de mettre à jour le taux de commission."),
+                      },
                     )
                   }
                   className="rounded-lg bg-emerald-400 px-4 text-[13px] font-bold text-[#111827] disabled:opacity-50"
@@ -244,7 +262,7 @@ function AdminUserDetail() {
             </AdminCard>
           )}
 
-          <UserPermissionsPanel user={user} />
+          <UserPermissionsPanel user={user} canEdit={actorRoles.includes("super_admin")} />
         </div>
       </div>
 
@@ -267,7 +285,7 @@ function AdminUserDetail() {
   );
 }
 
-function UserPermissionsPanel({ user }: { user: AdminUser }) {
+function UserPermissionsPanel({ user, canEdit }: { user: AdminUser; canEdit: boolean }) {
   const permissionsQuery = useAdminPermissions();
   const updateOverrides = useUpdateUserPermissionOverrides();
   const [effective, setEffective] = useState<Set<string>>(new Set());
@@ -296,6 +314,18 @@ function UserPermissionsPanel({ user }: { user: AdminUser }) {
     );
   }
 
+  // This endpoint is hardcoded to SUPER_ADMIN server-side (not a configurable
+  // permission), unlike most other admin actions — show it read-only instead
+  // of offering controls that would 403 for any other admin role.
+  if (!canEdit) {
+    return (
+      <AdminCard>
+        <h2 className="mb-2 text-[18px] font-bold text-white">Permissions individuelles</h2>
+        <p className="text-[13px] text-slate-400">Réservé au rôle Super admin.</p>
+      </AdminCard>
+    );
+  }
+
   const toggle = (permission: string) => {
     setEffective((current) => {
       const next = new Set(current);
@@ -310,7 +340,10 @@ function UserPermissionsPanel({ user }: { user: AdminUser }) {
     const revoke = catalog.filter((entry) => !effective.has(entry.key) && roleDefaults.has(entry.key)).map((entry) => entry.key);
     updateOverrides.mutate(
       { id: user.id, grant, revoke },
-      { onSuccess: () => setNotice("Permissions individuelles mises à jour.") },
+      {
+        onSuccess: () => setNotice("Permissions individuelles mises à jour."),
+        onError: (error) => setNotice(error instanceof Error ? error.message : "Impossible de mettre à jour les permissions."),
+      },
     );
   };
 

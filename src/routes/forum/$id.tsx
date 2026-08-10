@@ -27,8 +27,17 @@ import {
   useUploadForumAttachments,
 } from "@/hooks/useForumApi";
 import { useAuth } from "@/lib/auth/AuthContext";
+import type { ReportReasonCategory } from "@/lib/api/forum";
 import { toComments, toQuestion, type BackendQuestion } from "@/lib/forumMappers";
 import type { ForumAttachment } from "@/types";
+
+const REPORT_REASON_OPTIONS: { value: ReportReasonCategory; label: string }[] = [
+  { value: "FRAUDULENT_CONTENT", label: "Contenu frauduleux" },
+  { value: "SCAM", label: "Arnaque / escroquerie" },
+  { value: "INAPPROPRIATE_CONTENT", label: "Contenu inapproprié" },
+  { value: "SPAM", label: "Spam" },
+  { value: "OTHER", label: "Autre" },
+];
 
 function AttachmentGallery({ attachments }: { attachments?: ForumAttachment[] }) {
   if (!attachments || attachments.length === 0) return null;
@@ -118,6 +127,10 @@ function QuestionDetail() {
   );
   const [reported, setReported] = useState(false);
   const [reportedAnswerIds, setReportedAnswerIds] = useState<string[]>([]);
+  const [reportPanelTarget, setReportPanelTarget] = useState<{ id: string; type: "QUESTION" | "ANSWER" } | null>(null);
+  const [reportReasonCategory, setReportReasonCategory] = useState<ReportReasonCategory | "">("");
+  const [reportDetail, setReportDetail] = useState("");
+  const [reportNotice, setReportNotice] = useState("");
   const [answer, setAnswer] = useState("");
   const [answerAttachments, setAnswerAttachments] = useState<string[]>([]);
   const [answerAttachmentNotice, setAnswerAttachmentNotice] = useState("");
@@ -158,10 +171,31 @@ function QuestionDetail() {
     acceptMutation.mutate(answerId);
   };
 
-  const reportAnswer = (answerId: string) => {
+  const openReportPanel = (id: string, type: "QUESTION" | "ANSWER") => {
+    setReportNotice("");
+    setReportReasonCategory("");
+    setReportDetail("");
+    setReportPanelTarget((current) => (current?.id === id ? null : { id, type }));
+  };
+
+  const submitReport = () => {
+    if (!reportPanelTarget) return;
+    if (!reportReasonCategory) {
+      setReportNotice("Choisissez un motif de signalement.");
+      return;
+    }
     reportMutation.mutate(
-      { targetId: answerId, targetType: "ANSWER" },
-      { onSuccess: () => setReportedAnswerIds((current) => (current.includes(answerId) ? current : [...current, answerId])) },
+      { targetId: reportPanelTarget.id, targetType: reportPanelTarget.type, reasonCategory: reportReasonCategory, reason: reportDetail.trim() },
+      {
+        onSuccess: () => {
+          if (reportPanelTarget.type === "QUESTION") setReported(true);
+          else setReportedAnswerIds((current) => (current.includes(reportPanelTarget.id) ? current : [...current, reportPanelTarget.id]));
+          setReportPanelTarget(null);
+          setReportReasonCategory("");
+          setReportDetail("");
+        },
+        onError: (error) => setReportNotice(error instanceof Error ? error.message : "Le signalement n'a pas pu être envoyé."),
+      },
     );
   };
 
@@ -433,7 +467,12 @@ function QuestionDetail() {
                         >
                           <Bookmark size={13} className={itemFavorited ? "fill-current" : undefined} /> {itemFavorited ? "Dans mes favoris" : "Favori"}
                         </button>
-                        <button type="button" onClick={() => reportAnswer(item.id)} className="inline-flex items-center gap-1 font-semibold">
+                        <button
+                          type="button"
+                          disabled={itemReported}
+                          onClick={() => openReportPanel(item.id, "ANSWER")}
+                          className="inline-flex items-center gap-1 font-semibold disabled:opacity-50"
+                        >
                           <Flag size={13} /> {itemReported ? "Signalée" : "Signaler"}
                         </button>
                         {isAuthor && !accepted && (
@@ -446,6 +485,36 @@ function QuestionDetail() {
                           </button>
                         )}
                       </div>
+                      {reportPanelTarget?.id === item.id && reportPanelTarget.type === "ANSWER" && (
+                        <div className="mt-3 space-y-2 rounded-lg border border-[var(--brand-border-light)] p-3">
+                          <select
+                            value={reportReasonCategory}
+                            onChange={(event) => setReportReasonCategory(event.target.value as ReportReasonCategory)}
+                            className="h-10 w-full rounded-lg border border-[var(--brand-border)] px-3 text-[13px]"
+                          >
+                            <option value="">Choisir un motif...</option>
+                            {REPORT_REASON_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
+                          </select>
+                          <textarea
+                            rows={2}
+                            value={reportDetail}
+                            onChange={(event) => setReportDetail(event.target.value)}
+                            placeholder="Détail (facultatif)"
+                            className="w-full rounded-lg border border-[var(--brand-border)] px-3 py-2 text-[13px]"
+                          />
+                          <button
+                            type="button"
+                            disabled={reportMutation.isPending}
+                            onClick={submitReport}
+                            className="inline-flex h-9 items-center gap-2 rounded-full bg-red-600 px-4 text-[12px] font-semibold text-white disabled:opacity-60"
+                          >
+                            {reportMutation.isPending ? "Envoi..." : "Envoyer le signalement"}
+                          </button>
+                          {reportNotice && <p className="text-[12px] text-amber-800">{reportNotice}</p>}
+                        </div>
+                      )}
                       {itemReported && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">Signalement de la réponse enregistré.</p>}
                     </div>
                   </div>
@@ -548,13 +617,43 @@ function QuestionDetail() {
           </button>
           <button
             type="button"
-            disabled={reportMutation.isPending || reported}
-            onClick={() => reportMutation.mutate({ targetId: id, targetType: "QUESTION" }, { onSuccess: () => setReported(true) })}
+            disabled={reported}
+            onClick={() => openReportPanel(id, "QUESTION")}
             className="h-11 w-full rounded-full border border-[var(--brand-border)] text-[13px] font-semibold disabled:opacity-50"
           >
-            {reported ? "Signalée" : "Signaler"}
+            <Flag size={15} className="mr-2 inline" /> {reported ? "Signalée" : "Signaler"}
           </button>
+          {reportPanelTarget?.id === id && reportPanelTarget.type === "QUESTION" && (
+            <div className="space-y-2 rounded-lg border border-[var(--brand-border-light)] p-3">
+              <select
+                value={reportReasonCategory}
+                onChange={(event) => setReportReasonCategory(event.target.value as ReportReasonCategory)}
+                className="h-10 w-full rounded-lg border border-[var(--brand-border)] px-3 text-[13px]"
+              >
+                <option value="">Choisir un motif...</option>
+                {REPORT_REASON_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+              <textarea
+                rows={3}
+                value={reportDetail}
+                onChange={(event) => setReportDetail(event.target.value)}
+                placeholder="Détail (facultatif)"
+                className="w-full rounded-lg border border-[var(--brand-border)] px-3 py-2 text-[13px]"
+              />
+              <button
+                type="button"
+                disabled={reportMutation.isPending}
+                onClick={submitReport}
+                className="inline-flex h-9 items-center gap-2 rounded-full bg-red-600 px-4 text-[12px] font-semibold text-white disabled:opacity-60"
+              >
+                {reportMutation.isPending ? "Envoi..." : "Envoyer le signalement"}
+              </button>
+            </div>
+          )}
           {reported && <p className="rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">Signalement enregistré.</p>}
+          {reportNotice && <p className="rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">{reportNotice}</p>}
           <div className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[12px] text-[var(--color-text-muted)]">
             Les actions de modération avancées seront disponibles selon vos droits.
           </div>

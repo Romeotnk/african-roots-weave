@@ -10,7 +10,6 @@ import {
   ImagePlus,
   Info,
   Leaf,
-  MapPin,
   Package,
   Send,
   ShieldCheck,
@@ -21,9 +20,10 @@ import {
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { CountrySelect } from "@/components/shared/CountrySelect";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { useCreateProduct, useUploadProductImages } from "@/hooks/useApiCatalog";
+import { useMeQuery } from "@/hooks/useAuthApi";
+import { useMyProfessionalProfile } from "@/hooks/useProfessionalApi";
 import { useTaxonomy } from "@/hooks/useTaxonomyApi";
 import type { Product } from "@/types";
 
@@ -37,11 +37,12 @@ const productTypeEnum = { physical: "PHYSICAL", service: "SERVICE", digital: "DI
 
 function DepositListing() {
   const { t } = useTranslation();
+  const { data: profile } = useMeQuery();
+  const proProfileQuery = useMyProfessionalProfile();
   const sellerReadiness = [
-    { label: t("deposer.readiness.emailVerified"), done: true },
-    { label: t("deposer.readiness.kycApproved"), done: true },
-    { label: t("deposer.readiness.profilePhoto"), done: true },
-    { label: t("deposer.readiness.phoneVerified"), done: true },
+    { label: t("deposer.readiness.emailVerified"), done: Boolean(profile?.isEmailVerified) },
+    { label: t("deposer.readiness.kycApproved"), done: profile?.kycStatus === "VERIFIED" },
+    { label: t("deposer.readiness.profilePhoto"), done: Boolean(proProfileQuery.data?.data?.photos?.length) },
   ];
   const productTypes = (["physical", "service", "digital"] as const).map((id) => ({
     id,
@@ -51,7 +52,6 @@ function DepositListing() {
   }));
   const steps = [
     t("deposer.steps.base"),
-    t("deposer.steps.location"),
     t("deposer.steps.media"),
     t("deposer.steps.options"),
     t("deposer.steps.summary"),
@@ -86,12 +86,7 @@ function DepositListing() {
   );
   const [price, setPrice] = useState("8500");
   const [currency, setCurrency] = useState("XOF");
-  const [oldPrice, setOldPrice] = useState("");
   const [quantity, setQuantity] = useState("25");
-  const [country, setCountry] = useState("BJ");
-  const [city, setCity] = useState("Cotonou");
-  const [address, setAddress] = useState("");
-  const [coords, setCoords] = useState({ lat: 6.37, lng: 2.43 });
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const media = useMemo(() => mediaFiles.map((file) => URL.createObjectURL(file)), [mediaFiles]);
   const [digitalUrl, setDigitalUrl] = useState("");
@@ -102,6 +97,7 @@ function DepositListing() {
   const [terms, setTerms] = useState(false);
   const [salesPolicy, setSalesPolicy] = useState(false);
   const [confirmation, setConfirmation] = useState("");
+  const [confirmationSuccess, setConfirmationSuccess] = useState(false);
   const [formError, setFormError] = useState("");
   const createProduct = useCreateProduct();
   const uploadImages = useUploadProductImages();
@@ -140,21 +136,6 @@ function DepositListing() {
     setTagInput("");
   };
 
-  const useMyLocation = () => {
-    if (!navigator.geolocation) {
-      setFormError(t("deposer.step1.geoUnsupported"));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setFormError("");
-        setCoords({ lat: position.coords.latitude, lng: position.coords.longitude });
-      },
-      () => setFormError(t("deposer.step1.geoDenied")),
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
-  };
-
   const validateStep = (targetStep = step) => {
     if (targetStep >= 0) {
       if (title.trim().length < 8) return t("deposer.validation.titleTooShort");
@@ -162,12 +143,11 @@ function DepositListing() {
       if (!quoteRequest && (!Number.isFinite(Number(price)) || Number(price) <= 0)) return t("deposer.validation.priceRequired");
       if (type === "physical" && (!Number.isFinite(Number(quantity)) || Number(quantity) <= 0)) return t("deposer.validation.quantityRequired");
     }
-    if (targetStep >= 1 && !city.trim()) return t("deposer.validation.cityRequired");
-    if (targetStep >= 2) {
+    if (targetStep >= 1) {
       if (media.length === 0) return t("deposer.validation.photoRequired");
       if (type === "digital" && !digitalUrl.trim()) return t("deposer.validation.digitalUrlRequired");
     }
-    if (targetStep >= 3 && tags.length === 0) return t("deposer.validation.tagRequired");
+    if (targetStep >= 2 && tags.length === 0) return t("deposer.validation.tagRequired");
     return "";
   };
 
@@ -182,7 +162,7 @@ function DepositListing() {
   };
 
   const publish = async () => {
-    const validationMessage = validateStep(3);
+    const validationMessage = validateStep(2);
     if (validationMessage) {
       setFormError(validationMessage);
       return;
@@ -193,6 +173,7 @@ function DepositListing() {
       return;
     }
     if (!terms || !salesPolicy) {
+      setConfirmationSuccess(false);
       setConfirmation(t("deposer.validation.acceptPolicies"));
       return;
     }
@@ -221,8 +202,10 @@ function DepositListing() {
         await uploadImages.mutateAsync({ id: created.id, files: mediaFiles });
       }
 
+      setConfirmationSuccess(true);
       setConfirmation(t("deposer.validation.publishSuccess"));
     } catch (error) {
+      setConfirmationSuccess(false);
       setConfirmation(error instanceof Error ? error.message : t("deposer.validation.publishFailed"));
     }
   };
@@ -391,13 +374,6 @@ function DepositListing() {
                           <option>EUR</option>
                           <option>USD</option>
                         </select>
-                        <input
-                          type="number"
-                          value={oldPrice}
-                          onChange={(event) => setOldPrice(event.target.value)}
-                          placeholder={t("deposer.step0.oldPricePlaceholder")}
-                          className="h-11 rounded-lg border border-[var(--brand-border)] px-4"
-                        />
                       </>
                     )}
                     {type === "physical" && (
@@ -419,65 +395,6 @@ function DepositListing() {
               )}
 
               {step === 1 && (
-                <div className="space-y-5">
-                  <CountrySelect
-                    value={country}
-                    onChange={setCountry}
-                    className="w-full h-11 rounded-lg border border-[var(--brand-border)] px-4 bg-white"
-                    required
-                  />
-                  <div className="grid md:grid-cols-2 gap-3">
-                    <input
-                      value={city}
-                      onChange={(event) => { setCity(event.target.value); setFormError(""); }}
-                      placeholder={t("deposer.step1.cityPlaceholder")}
-                      className="h-11 rounded-lg border border-[var(--brand-border)] px-4"
-                    />
-                    <input
-                      value={address}
-                      onChange={(event) => setAddress(event.target.value)}
-                      placeholder={t("deposer.step1.addressPlaceholder")}
-                      className="h-11 rounded-lg border border-[var(--brand-border)] px-4"
-                    />
-                  </div>
-                  <div className="rounded-[12px] border border-[var(--brand-border)] bg-[var(--brand-surface-alt)] p-4">
-                    <div className="relative h-[280px] overflow-hidden rounded-lg bg-[linear-gradient(135deg,#dff1e7,#f8f3d4)]">
-                      <div className="absolute inset-0 opacity-50 [background-image:linear-gradient(#ffffff_1px,transparent_1px),linear-gradient(90deg,#ffffff_1px,transparent_1px)] [background-size:32px_32px]" />
-                      <div className="absolute left-[52%] top-[44%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--brand-primary)] p-3 text-white shadow-iwosan-md">
-                        <MapPin size={24} />
-                      </div>
-                      <div className="absolute bottom-3 left-3 rounded-lg bg-white/90 px-3 py-2 text-[12px]">
-                        {t("deposer.step1.coords", { lat: coords.lat.toFixed(3), lng: coords.lng.toFixed(3) })}
-                      </div>
-                    </div>
-                    <div className="mt-3 grid md:grid-cols-3 gap-3">
-                      <input
-                        type="number"
-                        step="0.001"
-                        value={coords.lat}
-                        onChange={(event) => setCoords((current) => ({ ...current, lat: Number(event.target.value) }))}
-                        className="h-10 rounded-lg border border-[var(--brand-border)] px-3"
-                      />
-                      <input
-                        type="number"
-                        step="0.001"
-                        value={coords.lng}
-                        onChange={(event) => setCoords((current) => ({ ...current, lng: Number(event.target.value) }))}
-                        className="h-10 rounded-lg border border-[var(--brand-border)] px-3"
-                      />
-                      <button
-                        type="button"
-                        onClick={useMyLocation}
-                        className="h-10 rounded-lg bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white"
-                      >
-                        {t("deposer.step1.useMyLocation")}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {step === 2 && (
                 <div className="space-y-5">
                   <label
                     onDragOver={(event) => event.preventDefault()}
@@ -536,7 +453,7 @@ function DepositListing() {
                 </div>
               )}
 
-              {step === 3 && (
+              {step === 2 && (
                 <div className="space-y-5">
                   <div className="rounded-lg border border-[var(--brand-border-light)] p-4">
                     <div className="flex items-center justify-between gap-4">
@@ -587,7 +504,7 @@ function DepositListing() {
                 </div>
               )}
 
-              {step === 4 && (
+              {step === 3 && (
                 <div className="grid lg:grid-cols-[1fr_320px] gap-6">
                   <div className="space-y-4">
                     <div className="rounded-lg bg-[var(--brand-surface-alt)] p-4">
@@ -595,7 +512,6 @@ function DepositListing() {
                       <dl className="mt-3 grid sm:grid-cols-2 gap-3 text-[13px]">
                         <div><dt className="text-[var(--color-text-muted)]">{t("deposer.step4.titleLabel")}</dt><dd className="font-semibold">{title}</dd></div>
                         <div><dt className="text-[var(--color-text-muted)]">{t("deposer.step4.categoryLabel")}</dt><dd className="font-semibold">{selectedCategory?.name ?? "—"}</dd></div>
-                        <div><dt className="text-[var(--color-text-muted)]">{t("deposer.step4.locationLabel")}</dt><dd className="font-semibold">{city}</dd></div>
                         <div><dt className="text-[var(--color-text-muted)]">{t("deposer.step4.commissionLabel")}</dt><dd className="font-semibold">{estimatedCommission.toLocaleString("fr-FR")} {currency}</dd></div>
                       </dl>
                     </div>
@@ -608,7 +524,13 @@ function DepositListing() {
                       {t("deposer.step4.acceptSalesPolicy")}
                     </label>
                     {confirmation && (
-                      <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-[13px] text-emerald-800">
+                      <p
+                        className={`rounded-lg border px-4 py-3 text-[13px] ${
+                          confirmationSuccess
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                            : "border-red-200 bg-red-50 text-red-700"
+                        }`}
+                      >
                         {confirmation}
                       </p>
                     )}
