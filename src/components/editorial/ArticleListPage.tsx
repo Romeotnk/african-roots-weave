@@ -6,7 +6,6 @@ import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { SimplePager } from "@/components/shared/SimplePager";
-import { articles } from "@/data/articles";
 import { useArticles } from "@/hooks/useContentApi";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { ArticleSpace } from "@/lib/api/content";
@@ -101,7 +100,7 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
     () => ((articlesQuery.data?.articles ?? []) as BackendArticle[]).map((article) => toArticle(article, space)).filter(Boolean) as Article[],
     [articlesQuery.data, space],
   );
-  const spaceArticles = useMemo(() => (apiArticles.length > 0 ? apiArticles : articles.filter((article) => article.space === space)), [apiArticles, space]);
+  const spaceArticles = apiArticles;
   const categories = ["Toutes", ...Array.from(new Set(spaceArticles.map((article) => article.category ?? article.space)))];
 
   const filteredArticles = useMemo(() => {

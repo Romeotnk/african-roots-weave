@@ -3,7 +3,6 @@ import { useMemo, useState } from "react";
 import { Copy, Facebook, MessageCircle } from "lucide-react";
 import { ArticleCard } from "@/components/shared/ArticleCard";
 import { AdSlot } from "@/components/shared/AdSlot";
-import { articles } from "@/data/articles";
 import { useArticle, useArticleComments, useArticles, useCreateArticleComment } from "@/hooks/useContentApi";
 import { toArticle, type BackendArticle } from "@/components/editorial/ArticleListPage";
 import type { ArticleSpace } from "@/lib/api/content";
@@ -26,20 +25,37 @@ export function ArticleDetailPage({ slug, fallbackSpace }: { slug: string; fallb
     [relatedQuery.data, apiArticle],
   );
 
-  const fallbackArticle = useMemo(
-    () => articles.find((item) => item.slug === slug) ?? articles.find((item) => item.space === fallbackSpace) ?? articles[0],
-    [slug, fallbackSpace],
-  );
-  const article = apiArticle ?? fallbackArticle;
-  const related = apiArticle ? apiRelated : articles.filter((item) => item.id !== article.id && item.space === article.space).slice(0, 3);
-
-  const breadcrumbSpace = article.space === "Sante au quotidien" ? "Sante" : article.space;
   const { user } = useAuth();
   const commentsQuery = useArticleComments(apiArticle?.id ?? "");
   const createComment = useCreateArticleComment();
   const [shareNotice, setShareNotice] = useState("");
   const [commentBody, setCommentBody] = useState("");
   const [commentNotice, setCommentNotice] = useState("");
+
+  if (articleQuery.isLoading) {
+    return (
+      <main className="grid min-h-[60vh] place-items-center bg-[var(--brand-bg)] px-6 text-center">
+        <p className="text-[14px] text-[var(--color-text-muted)]">Chargement...</p>
+      </main>
+    );
+  }
+
+  if (!apiArticle) {
+    return (
+      <main className="grid min-h-[60vh] place-items-center bg-[var(--brand-bg)] px-6 text-center">
+        <div>
+          <h1 className="text-[28px] font-bold">Article introuvable</h1>
+          <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
+            Cet article n'existe pas ou n'est plus disponible sur Iwosan.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  const article = apiArticle;
+  const related = apiRelated;
+  const breadcrumbSpace = article.space === "Sante au quotidien" ? "Sante" : article.space;
 
   const submitComment = () => {
     if (!apiArticle) return;

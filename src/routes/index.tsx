@@ -8,9 +8,6 @@ import { ProductCard } from "@/components/shared/ProductCard";
 import { ProfessionalCard } from "@/components/shared/ProfessionalCard";
 import { EventCard } from "@/components/shared/EventCard";
 import { PartnerLogosBar } from "@/components/shared/PartnerLogosBar";
-import { products } from "@/data/products";
-import { professionals } from "@/data/professionals";
-import { events } from "@/data/events";
 import { getSiteConfig } from "@/lib/api/site";
 import { useHomeBanners, useSiteConfig } from "@/hooks/useSiteConfig";
 import { parseHomepageSections, type HomepageSectionKey } from "@/lib/homepageSections";
@@ -277,9 +274,9 @@ function Home() {
 
   const apiProducts = productsQuery.data?.products ?? [];
   const apiProfessionals = professionalsQuery.data?.professionals ?? [];
-  const featuredProducts = (apiProducts.length > 0 ? apiProducts : products).slice(0, 4);
-  const featuredProfessionals = (apiProfessionals.length > 0 ? apiProfessionals : professionals).slice(0, 4);
-  const featuredEvents = (apiEvents.length > 0 ? apiEvents : events).slice(0, 3);
+  const featuredProducts = apiProducts.slice(0, 4);
+  const featuredProfessionals = apiProfessionals.slice(0, 4);
+  const featuredEvents = apiEvents.slice(0, 3);
   const portraitOfWeek = portraitQuery.data?.professionals?.[0] ?? featuredProfessionals[0];
 
   const sectionRenderers: Record<HomepageSectionKey, () => ReactNode> = {
@@ -291,7 +288,7 @@ function Home() {
         </div>
       </section>
     ),
-    portrait: () => (
+    portrait: () => !portraitOfWeek ? null : (
       <section key="portrait" className="py-20 md:py-24">
         <div className="container-iwosan">
           <SectionHeader label="Mise en lumière" title="Portrait de la semaine" />
@@ -314,7 +311,7 @@ function Home() {
         </div>
       </section>
     ),
-    products: () => (
+    products: () => featuredProducts.length === 0 ? null : (
       <section key="products" className="py-20 md:py-24 bg-[var(--brand-surface-alt)]">
         <div className="container-iwosan">
           <SectionHeader label="Marketplace" title="Produits en avant" align="center" />
@@ -322,7 +319,7 @@ function Home() {
         </div>
       </section>
     ),
-    professionals: () => (
+    professionals: () => featuredProfessionals.length === 0 ? null : (
       <section key="professionals" className="py-20 md:py-24">
         <div className="container-iwosan">
           <SectionHeader label="Annuaire" title="Praticiens en vedette" align="center" />
@@ -330,7 +327,7 @@ function Home() {
         </div>
       </section>
     ),
-    events: () => (
+    events: () => featuredEvents.length === 0 ? null : (
       <section key="events" className="py-20 md:py-24 bg-[var(--brand-surface-alt)]">
         <div className="container-iwosan">
           <SectionHeader label="Agenda" title="Événements à venir" align="center" />

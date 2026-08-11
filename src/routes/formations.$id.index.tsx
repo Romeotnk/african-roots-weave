@@ -2,13 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { CheckCircle2, CreditCard, Loader2, PlayCircle, Smartphone, Wallet } from "lucide-react";
 import { RatingStars } from "@/components/shared/RatingStars";
-import { professionals } from "@/data/professionals";
-import { trainings } from "@/data/trainings";
 import { useMeQuery } from "@/hooks/useAuthApi";
 import { useEnrollFormation, useFormation, useMyFormationEnrollment } from "@/hooks/useEventsFormationsApi";
 import { toTrainingCourse, type BackendFormation } from "@/lib/mappers/formation";
 
-export const Route = createFileRoute("/formations/$id")({
+export const Route = createFileRoute("/formations/$id/")({
   head: () => ({ meta: [{ title: "Detail formation - IWOSAN" }] }),
   component: TrainingDetail,
 });
@@ -123,13 +121,33 @@ function TrainingDetail() {
   const { id } = Route.useParams();
   const formationQuery = useFormation(id);
   const apiCourse = useMemo(() => toTrainingCourse((formationQuery.data ?? {}) as BackendFormation), [formationQuery.data]);
-  const course = apiCourse ?? trainings.find((item) => item.id === id || item.slug === id) ?? trainings[0];
 
-  const fallbackInstructor =
-    professionals.find((item) => item.id === course.instructorProfileId) ??
-    professionals.find((item) => item.name === course.instructor) ??
-    professionals[0];
-  const instructorHref = course.instructorProfileId ?? fallbackInstructor.id;
+  if (formationQuery.isLoading) {
+    return (
+      <main className="grid min-h-[60vh] place-items-center bg-[var(--brand-bg)] px-6 text-center">
+        <p className="text-[14px] text-[var(--color-text-muted)]">Chargement...</p>
+      </main>
+    );
+  }
+
+  if (!apiCourse) {
+    return (
+      <main className="grid min-h-[60vh] place-items-center bg-[var(--brand-bg)] px-6 text-center">
+        <div>
+          <h1 className="text-[28px] font-bold">Formation introuvable</h1>
+          <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
+            Cette formation n'existe pas ou n'est plus disponible sur Iwosan.
+          </p>
+          <Link to="/formations" className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white">
+            Retour aux formations
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  const course = apiCourse;
+  const instructorHref = course.instructorProfileId;
   const instructorAvatar = course.instructorAvatar || fallbackAvatar;
 
   return (
@@ -145,10 +163,12 @@ function TrainingDetail() {
           <div className="rounded-[12px] bg-white p-4 text-[var(--color-text-primary)]">
             <img src={course.image} alt="" className="aspect-video w-full rounded-lg object-cover" />
             <p className="mt-4 text-[24px] font-bold">{course.price === 0 ? "Gratuit" : `${course.price.toLocaleString("fr-FR")} ${course.currency}`}</p>
-            <Link to="/pro/$id" params={{ id: instructorHref }} className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full border border-[var(--brand-border)] font-semibold">
-              Voir le profil du formateur
-            </Link>
-            {apiCourse && <EnrollmentPanel formationId={apiCourse.id} price={course.price} currency={course.currency} />}
+            {instructorHref && (
+              <Link to="/pro/$id" params={{ id: instructorHref }} className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full border border-[var(--brand-border)] font-semibold">
+                Voir le profil du formateur
+              </Link>
+            )}
+            <EnrollmentPanel formationId={apiCourse.id} price={course.price} currency={course.currency} />
           </div>
         </div>
       </section>

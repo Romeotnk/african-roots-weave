@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Download, FileText, Loader2, Lock, MessageCircle, PlayCircle } from "lucide-react";
-import { trainings } from "@/data/trainings";
 import { useMeQuery } from "@/hooks/useAuthApi";
 import {
   useDownloadFormation,
@@ -24,10 +23,9 @@ function Learn() {
   const enrollmentQuery = useMyFormationEnrollment(id);
   const updateProgress = useUpdateFormationProgress();
   const apiCourse = useMemo(() => toTrainingCourse((formationQuery.data ?? {}) as BackendFormation), [formationQuery.data]);
-  const course = apiCourse ?? trainings.find((item) => item.id === id || item.slug === id) ?? trainings[0];
   const rawFileUrl = (formationQuery.data as { fileUrl?: string } | undefined)?.fileUrl;
 
-  const lessons = course.modules.flatMap((module) => module.lessons.map((lesson) => ({ ...lesson, module: module.title })));
+  const lessons = (apiCourse?.modules ?? []).flatMap((module) => module.lessons.map((lesson) => ({ ...lesson, module: module.title })));
   const [activeLessonId, setActiveLessonId] = useState(lessons[0]?.id);
   const [done, setDone] = useState<string[]>([]);
   const [progressError, setProgressError] = useState("");
@@ -60,7 +58,34 @@ function Learn() {
     }
   };
 
-  if (apiCourse && !profile) {
+  if (formationQuery.isLoading) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[var(--brand-bg)]">
+        <Loader2 className="animate-spin text-[var(--brand-primary)]" size={28} />
+      </main>
+    );
+  }
+
+  if (!apiCourse) {
+    return (
+      <main className="min-h-screen bg-[var(--brand-bg)]">
+        <section className="container-iwosan py-16 text-center">
+          <FileText size={48} className="mx-auto text-[var(--brand-primary)]" />
+          <h1 className="mt-4 text-[24px] font-bold">Formation introuvable</h1>
+          <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
+            Cette formation n'existe pas ou n'est plus disponible sur Iwosan.
+          </p>
+          <Link to="/formations" className="mt-6 inline-flex h-11 items-center rounded-full bg-[var(--brand-primary)] px-6 text-[13px] font-semibold text-white">
+            Retour aux formations
+          </Link>
+        </section>
+      </main>
+    );
+  }
+
+  const course = apiCourse;
+
+  if (!profile) {
     return (
       <main className="min-h-screen bg-[var(--brand-bg)]">
         <section className="container-iwosan py-16 text-center">
@@ -75,7 +100,7 @@ function Learn() {
     );
   }
 
-  if (apiCourse && profile && enrollmentQuery.isLoading) {
+  if (enrollmentQuery.isLoading) {
     return (
       <main className="grid min-h-screen place-items-center bg-[var(--brand-bg)]">
         <Loader2 className="animate-spin text-[var(--brand-primary)]" size={28} />
@@ -83,7 +108,7 @@ function Learn() {
     );
   }
 
-  if (apiCourse && profile && !enrollmentQuery.data) {
+  if (!enrollmentQuery.data) {
     return (
       <main className="min-h-screen bg-[var(--brand-bg)]">
         <section className="container-iwosan py-16 text-center">

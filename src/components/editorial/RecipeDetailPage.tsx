@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { AlertTriangle, Clock, Leaf } from "lucide-react";
-import { recipes } from "@/data/recipes";
 import { useArticle } from "@/hooks/useContentApi";
 import { toRecipe } from "@/components/editorial/RecipeListPage";
 import type { BackendArticle } from "@/components/editorial/ArticleListPage";
@@ -13,7 +12,31 @@ export function RecipeDetailPage({ slug }: { slug: string }) {
     return data ? toRecipe(data) : null;
   }, [articleQuery.data]);
 
-  const recipe = apiRecipe ?? recipes.find((item) => item.slug === slug) ?? recipes[0];
+  if (articleQuery.isLoading) {
+    return (
+      <main className="grid min-h-[60vh] place-items-center bg-[var(--brand-bg)] px-6 text-center">
+        <p className="text-[14px] text-[var(--color-text-muted)]">Chargement...</p>
+      </main>
+    );
+  }
+
+  if (!apiRecipe) {
+    return (
+      <main className="grid min-h-[60vh] place-items-center bg-[var(--brand-bg)] px-6 text-center">
+        <div>
+          <h1 className="text-[28px] font-bold">Recette introuvable</h1>
+          <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
+            Cette recette n'existe pas ou n'est plus disponible sur Iwosan.
+          </p>
+          <Link to="/recettes-sante" className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white">
+            Retour aux recettes
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  const recipe = apiRecipe;
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">

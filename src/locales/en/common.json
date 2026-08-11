@@ -386,7 +386,8 @@
       "clickADay": "Click a day"
     },
     "register": "Register",
-    "dateTimeSeparator": "at"
+    "dateTimeSeparator": "at",
+    "empty": "No upcoming events at the moment."
   },
   "formations": {
     "meta": { "title": "Trainings - IWOSAN" },
@@ -411,7 +412,8 @@
     },
     "results": {
       "count_one": "{{count}} training",
-      "count_other": "{{count}} trainings"
+      "count_other": "{{count}} trainings",
+      "notFound": "No training matches your search."
     },
     "access": "Access"
   },

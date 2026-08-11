@@ -2,7 +2,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Bug, Lightbulb, X } from "lucide-react";
 import { AdSlot } from "@/components/shared/AdSlot";
-import { plants } from "@/data/plants";
 import { useMonograph } from "@/hooks/useContentApi";
 import { useCreateTicket } from "@/hooks/useTicketsApi";
 import { mapMonographToPlant } from "@/lib/mappers/plantMonograph";
@@ -14,11 +13,9 @@ export const Route = createFileRoute("/pharmacopee/$slug")({
 
 function PlantMonograph() {
   const { slug } = Route.useParams();
-  const { data: monograph } = useMonograph(slug);
+  const { data: monograph, isLoading } = useMonograph(slug);
   const apiPlant = useMemo(() => mapMonographToPlant(monograph), [monograph]);
-  const staticPlant = plants.find((item) => item.slug === slug);
-  const plant = apiPlant ?? staticPlant ?? plants[0];
-  const gallery = useMemo(() => plant.gallery ?? [plant.image], [plant.gallery, plant.image]);
+  const gallery = useMemo(() => apiPlant?.gallery ?? (apiPlant ? [apiPlant.image] : []), [apiPlant]);
   const [activeImage, setActiveImage] = useState(gallery[0]);
   const createTicket = useCreateTicket();
   const [feedback, setFeedback] = useState<"error" | "improve" | null>(null);
@@ -27,12 +24,38 @@ function PlantMonograph() {
   const [feedbackError, setFeedbackError] = useState("");
 
   useEffect(() => {
-    if (plant?.scientificName) document.title = `${plant.scientificName} - IWOSAN`;
-  }, [plant?.scientificName]);
+    if (apiPlant?.scientificName) document.title = `${apiPlant.scientificName} - IWOSAN`;
+  }, [apiPlant?.scientificName]);
 
   useEffect(() => {
     setActiveImage(gallery[0]);
   }, [gallery]);
+
+  if (isLoading) {
+    return (
+      <main className="grid min-h-[60vh] place-items-center bg-[var(--brand-bg)] px-6 text-center">
+        <p className="text-[14px] text-[var(--color-text-muted)]">Chargement...</p>
+      </main>
+    );
+  }
+
+  if (!apiPlant) {
+    return (
+      <main className="grid min-h-[60vh] place-items-center bg-[var(--brand-bg)] px-6 text-center">
+        <div>
+          <h1 className="text-[28px] font-bold">Monographie introuvable</h1>
+          <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
+            Cette plante n'existe pas ou n'est plus disponible sur Iwosan.
+          </p>
+          <Link to="/pharmacopee" className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white">
+            Retour aux monographies
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  const plant = apiPlant;
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">

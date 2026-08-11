@@ -6,7 +6,6 @@ import { QuestionCard } from "@/components/shared/QuestionCard";
 import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { SimplePager } from "@/components/shared/SimplePager";
-import { questions } from "@/data/questions";
 import { useForumCategories, useForumQuestions } from "@/hooks/useForumApi";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -44,7 +43,7 @@ export function ForumListPage() {
     () => ((questionsQuery.data?.questions ?? []) as BackendQuestion[]).map(toQuestion).filter((item): item is NonNullable<typeof item> => Boolean(item)),
     [questionsQuery.data],
   );
-  const allQuestions = apiQuestions.length > 0 ? apiQuestions : questions;
+  const allQuestions = apiQuestions;
   const allTags = useMemo(() => Array.from(new Set(allQuestions.flatMap((question) => question.tags))).sort((a, b) => a.localeCompare(b, "fr")), [allQuestions]);
 
   const filteredQuestions = useMemo(() => {

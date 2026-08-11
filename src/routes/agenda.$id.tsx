@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { CalendarDays, CheckCircle2, Clock3, MapPin } from "lucide-react";
 import { EventCard } from "@/components/shared/EventCard";
-import { events } from "@/data/events";
 import { useEvent, useEvents, useMyRegistrations, useRegisterEvent, useUnregisterEvent } from "@/hooks/useEventsFormationsApi";
 import { toEventItem, type BackendEvent } from "@/lib/eventMappers";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -26,7 +25,6 @@ function EventDetail() {
   const [registrationMessage, setRegistrationMessage] = useState("");
 
   const apiEvent = useMemo(() => toEventItem((eventQuery.data ?? {}) as BackendEvent), [eventQuery.data]);
-  const event = apiEvent ?? events.find((item) => item.id === id) ?? events[0];
 
   const isRegistered = ((registrationsQuery.data ?? []) as BackendRegistration[]).some(
     (registration) => registration.eventId === id || registration.event?.id === id,
@@ -46,15 +44,39 @@ function EventDetail() {
       onError: (error) => setRegistrationMessage(error instanceof Error ? error.message : "Impossible de vous inscrire."),
     });
   };
-  const d = new Date(event.date);
-  const end = event.endDate ? new Date(event.endDate) : null;
-
   const apiEvents = useMemo(
     () => ((eventsQuery.data?.events ?? []) as BackendEvent[]).map(toEventItem).filter((item): item is EventItem => Boolean(item)),
     [eventsQuery.data],
   );
-  const relatedPool = apiEvent ? apiEvents : events;
-  const related = relatedPool.filter((item) => item.id !== event.id && item.type === event.type).slice(0, 3);
+
+  if (eventQuery.isLoading) {
+    return (
+      <main className="grid min-h-[60vh] place-items-center bg-[var(--brand-bg)] px-6 text-center">
+        <p className="text-[14px] text-[var(--color-text-muted)]">Chargement...</p>
+      </main>
+    );
+  }
+
+  if (!apiEvent) {
+    return (
+      <main className="grid min-h-[60vh] place-items-center bg-[var(--brand-bg)] px-6 text-center">
+        <div>
+          <h1 className="text-[28px] font-bold">Événement introuvable</h1>
+          <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
+            Cet événement n'existe pas ou n'est plus disponible sur Iwosan.
+          </p>
+          <Link to="/agenda" className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white">
+            Retour à l'agenda
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  const event = apiEvent;
+  const d = new Date(event.date);
+  const end = event.endDate ? new Date(event.endDate) : null;
+  const related = apiEvents.filter((item) => item.id !== event.id && item.type === event.type).slice(0, 3);
 
   return (
     <main className="min-h-screen bg-[var(--brand-bg)]">

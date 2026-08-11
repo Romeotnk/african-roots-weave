@@ -386,7 +386,8 @@
       "clickADay": "Cliquez un jour"
     },
     "register": "S'inscrire",
-    "dateTimeSeparator": "à"
+    "dateTimeSeparator": "à",
+    "empty": "Aucun événement à venir pour le moment."
   },
   "formations": {
     "meta": { "title": "Formations - IWOSAN" },
@@ -411,7 +412,8 @@
     },
     "results": {
       "count_one": "{{count}} formation",
-      "count_other": "{{count}} formations"
+      "count_other": "{{count}} formations",
+      "notFound": "Aucune formation ne correspond à votre recherche."
     },
     "access": "Acceder"
   },

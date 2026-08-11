@@ -36,6 +36,17 @@ import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SanteQuotidienIndexRouteImport } from './routes/sante-quotidien.index'
+import { Route as SanteAuQuotidienIndexRouteImport } from './routes/sante-au-quotidien.index'
+import { Route as RitesCulturesIndexRouteImport } from './routes/rites-cultures.index'
+import { Route as RecettesIndexRouteImport } from './routes/recettes.index'
+import { Route as RecettesSanteIndexRouteImport } from './routes/recettes-sante.index'
+import { Route as PharmacopeeIndexRouteImport } from './routes/pharmacopee.index'
+import { Route as MarketplaceIndexRouteImport } from './routes/marketplace.index'
+import { Route as ForumIndexRouteImport } from './routes/forum.index'
+import { Route as FormationsIndexRouteImport } from './routes/formations.index'
+import { Route as AnnuaireIndexRouteImport } from './routes/annuaire.index'
+import { Route as AgendaIndexRouteImport } from './routes/agenda.index'
 import { Route as VerifyEmailTokenRouteImport } from './routes/verify-email/$token'
 import { Route as TableauDeBordSupportRouteImport } from './routes/tableau-de-bord/support'
 import { Route as TableauDeBordReservationsRouteImport } from './routes/tableau-de-bord/reservations'
@@ -56,15 +67,15 @@ import { Route as TableauDeBordBlogRouteImport } from './routes/tableau-de-bord/
 import { Route as TableauDeBordAvisRouteImport } from './routes/tableau-de-bord/avis'
 import { Route as TableauDeBordAffiliationRouteImport } from './routes/tableau-de-bord/affiliation'
 import { Route as TableauDeBordAbonnementRouteImport } from './routes/tableau-de-bord/abonnement'
-import { Route as SanteQuotidienSlugRouteImport } from './routes/sante-quotidien/$slug'
-import { Route as SanteAuQuotidienSlugRouteImport } from './routes/sante-au-quotidien/$slug'
-import { Route as RitesCulturesSlugRouteImport } from './routes/rites-cultures/$slug'
+import { Route as SanteQuotidienSlugRouteImport } from './routes/sante-quotidien.$slug'
+import { Route as SanteAuQuotidienSlugRouteImport } from './routes/sante-au-quotidien.$slug'
+import { Route as RitesCulturesSlugRouteImport } from './routes/rites-cultures.$slug'
 import { Route as ResetPasswordTokenRouteImport } from './routes/reset-password/$token'
-import { Route as RecettesSlugRouteImport } from './routes/recettes/$slug'
-import { Route as RecettesSanteSlugRouteImport } from './routes/recettes-sante/$slug'
+import { Route as RecettesSlugRouteImport } from './routes/recettes.$slug'
+import { Route as RecettesSanteSlugRouteImport } from './routes/recettes-sante.$slug'
 import { Route as ProfilUsernameRouteImport } from './routes/profil/$username'
 import { Route as ProIdRouteImport } from './routes/pro/$id'
-import { Route as PharmacopeeSlugRouteImport } from './routes/pharmacopee/$slug'
+import { Route as PharmacopeeSlugRouteImport } from './routes/pharmacopee.$slug'
 import { Route as MonCompteTicketsRouteImport } from './routes/mon-compte/tickets'
 import { Route as MonCompteReservationsRouteImport } from './routes/mon-compte/reservations'
 import { Route as MonCompteQuestionsRouteImport } from './routes/mon-compte/questions'
@@ -78,15 +89,15 @@ import { Route as MonCompteFavorisRouteImport } from './routes/mon-compte/favori
 import { Route as MonCompteDevisRouteImport } from './routes/mon-compte/devis'
 import { Route as MonCompteAlertesRouteImport } from './routes/mon-compte/alertes'
 import { Route as MonCompteAffiliationRouteImport } from './routes/mon-compte/affiliation'
-import { Route as MarketplaceDeposerRouteImport } from './routes/marketplace/deposer'
-import { Route as ForumNouvelleQuestionRouteImport } from './routes/forum/nouvelle-question'
-import { Route as ForumIdRouteImport } from './routes/forum/$id'
-import { Route as FormationsIdRouteImport } from './routes/formations/$id'
+import { Route as MarketplaceDeposerRouteImport } from './routes/marketplace.deposer'
+import { Route as ForumNouvelleQuestionRouteImport } from './routes/forum.nouvelle-question'
+import { Route as ForumIdRouteImport } from './routes/forum.$id'
+import { Route as FormationsIdRouteImport } from './routes/formations.$id'
 import { Route as DashboardProRouteImport } from './routes/dashboard/pro'
 import { Route as DashboardInscriptionsRouteImport } from './routes/dashboard/inscriptions'
 import { Route as DashboardAnnoncesRouteImport } from './routes/dashboard/annonces'
-import { Route as AnnuaireIdRouteImport } from './routes/annuaire/$id'
-import { Route as AgendaIdRouteImport } from './routes/agenda/$id'
+import { Route as AnnuaireIdRouteImport } from './routes/annuaire.$id'
+import { Route as AgendaIdRouteImport } from './routes/agenda.$id'
 import { Route as AdminUtilisateursRouteImport } from './routes/admin/utilisateurs'
 import { Route as AdminRolesPermissionsRouteImport } from './routes/admin/roles-permissions'
 import { Route as AdminNewsletterRouteImport } from './routes/admin/newsletter'
@@ -97,9 +108,10 @@ import { Route as AdminContenusRouteImport } from './routes/admin/contenus'
 import { Route as AdminCommunicationRouteImport } from './routes/admin/communication'
 import { Route as AdminCommunauteRouteImport } from './routes/admin/communaute'
 import { Route as AdminAffiliationRouteImport } from './routes/admin/affiliation'
+import { Route as FormationsIdIndexRouteImport } from './routes/formations.$id.index'
 import { Route as NewsletterDesabonnementTokenRouteImport } from './routes/newsletter/desabonnement/$token'
 import { Route as MesCommandesIdLitigeRouteImport } from './routes/mes-commandes/$id/litige'
-import { Route as FormationsIdApprendreRouteImport } from './routes/formations/$id/apprendre'
+import { Route as FormationsIdApprendreRouteImport } from './routes/formations.$id.apprendre'
 import { Route as AdminUtilisateursKycRouteImport } from './routes/admin/utilisateurs/kyc'
 import { Route as AdminUtilisateursIdRouteImport } from './routes/admin/utilisateurs/$id'
 import { Route as AdminSitePublicitesRouteImport } from './routes/admin/site/publicites'
@@ -253,6 +265,61 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SanteQuotidienIndexRoute = SanteQuotidienIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SanteQuotidienRoute,
+} as any)
+const SanteAuQuotidienIndexRoute = SanteAuQuotidienIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SanteAuQuotidienRoute,
+} as any)
+const RitesCulturesIndexRoute = RitesCulturesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RitesCulturesRoute,
+} as any)
+const RecettesIndexRoute = RecettesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RecettesRoute,
+} as any)
+const RecettesSanteIndexRoute = RecettesSanteIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RecettesSanteRoute,
+} as any)
+const PharmacopeeIndexRoute = PharmacopeeIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PharmacopeeRoute,
+} as any)
+const MarketplaceIndexRoute = MarketplaceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MarketplaceRoute,
+} as any)
+const ForumIndexRoute = ForumIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ForumRoute,
+} as any)
+const FormationsIndexRoute = FormationsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => FormationsRoute,
+} as any)
+const AnnuaireIndexRoute = AnnuaireIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AnnuaireRoute,
+} as any)
+const AgendaIndexRoute = AgendaIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AgendaRoute,
 } as any)
 const VerifyEmailTokenRoute = VerifyEmailTokenRouteImport.update({
   id: '/verify-email/$token',
@@ -564,6 +631,11 @@ const AdminAffiliationRoute = AdminAffiliationRouteImport.update({
   path: '/affiliation',
   getParentRoute: () => AdminRoute,
 } as any)
+const FormationsIdIndexRoute = FormationsIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => FormationsIdRoute,
+} as any)
 const NewsletterDesabonnementTokenRoute =
   NewsletterDesabonnementTokenRouteImport.update({
     id: '/newsletter/desabonnement/$token',
@@ -768,6 +840,17 @@ export interface FileRoutesByFullPath {
   '/tableau-de-bord/reservations': typeof TableauDeBordReservationsRoute
   '/tableau-de-bord/support': typeof TableauDeBordSupportRoute
   '/verify-email/$token': typeof VerifyEmailTokenRoute
+  '/agenda/': typeof AgendaIndexRoute
+  '/annuaire/': typeof AnnuaireIndexRoute
+  '/formations/': typeof FormationsIndexRoute
+  '/forum/': typeof ForumIndexRoute
+  '/marketplace/': typeof MarketplaceIndexRoute
+  '/pharmacopee/': typeof PharmacopeeIndexRoute
+  '/recettes-sante/': typeof RecettesSanteIndexRoute
+  '/recettes/': typeof RecettesIndexRoute
+  '/rites-cultures/': typeof RitesCulturesIndexRoute
+  '/sante-au-quotidien/': typeof SanteAuQuotidienIndexRoute
+  '/sante-quotidien/': typeof SanteQuotidienIndexRoute
   '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
   '/admin/communaute/forum': typeof AdminCommunauteForumRoute
   '/admin/communaute/signalements': typeof AdminCommunauteSignalementsRoute
@@ -789,34 +872,24 @@ export interface FileRoutesByFullPath {
   '/formations/$id/apprendre': typeof FormationsIdApprendreRoute
   '/mes-commandes/$id/litige': typeof MesCommandesIdLitigeRoute
   '/newsletter/desabonnement/$token': typeof NewsletterDesabonnementTokenRoute
+  '/formations/$id/': typeof FormationsIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/admin': typeof AdminRouteWithChildren
-  '/agenda': typeof AgendaRouteWithChildren
   '/aide': typeof AideRoute
-  '/annuaire': typeof AnnuaireRouteWithChildren
   '/connexion': typeof ConnexionRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/devenir-pro': typeof DevenirProRoute
   '/discutons-en': typeof DiscutonsEnRoute
-  '/formations': typeof FormationsRouteWithChildren
-  '/forum': typeof ForumRouteWithChildren
   '/inscription': typeof InscriptionRoute
-  '/marketplace': typeof MarketplaceRouteWithChildren
   '/mes-commandes': typeof MesCommandesRouteWithChildren
   '/messages': typeof MessagesRoute
   '/mon-compte': typeof MonCompteRouteWithChildren
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
-  '/pharmacopee': typeof PharmacopeeRouteWithChildren
-  '/recettes': typeof RecettesRouteWithChildren
-  '/recettes-sante': typeof RecettesSanteRouteWithChildren
   '/reset-password': typeof ResetPasswordRouteWithChildren
-  '/rites-cultures': typeof RitesCulturesRouteWithChildren
-  '/sante-au-quotidien': typeof SanteAuQuotidienRouteWithChildren
-  '/sante-quotidien': typeof SanteQuotidienRouteWithChildren
   '/tableau-de-bord': typeof TableauDeBordRouteWithChildren
   '/admin/affiliation': typeof AdminAffiliationRoute
   '/admin/communaute': typeof AdminCommunauteRouteWithChildren
@@ -833,7 +906,6 @@ export interface FileRoutesByTo {
   '/dashboard/annonces': typeof DashboardAnnoncesRoute
   '/dashboard/inscriptions': typeof DashboardInscriptionsRoute
   '/dashboard/pro': typeof DashboardProRoute
-  '/formations/$id': typeof FormationsIdRouteWithChildren
   '/forum/$id': typeof ForumIdRoute
   '/forum/nouvelle-question': typeof ForumNouvelleQuestionRoute
   '/marketplace/deposer': typeof MarketplaceDeposerRoute
@@ -879,6 +951,17 @@ export interface FileRoutesByTo {
   '/tableau-de-bord/reservations': typeof TableauDeBordReservationsRoute
   '/tableau-de-bord/support': typeof TableauDeBordSupportRoute
   '/verify-email/$token': typeof VerifyEmailTokenRoute
+  '/agenda': typeof AgendaIndexRoute
+  '/annuaire': typeof AnnuaireIndexRoute
+  '/formations': typeof FormationsIndexRoute
+  '/forum': typeof ForumIndexRoute
+  '/marketplace': typeof MarketplaceIndexRoute
+  '/pharmacopee': typeof PharmacopeeIndexRoute
+  '/recettes-sante': typeof RecettesSanteIndexRoute
+  '/recettes': typeof RecettesIndexRoute
+  '/rites-cultures': typeof RitesCulturesIndexRoute
+  '/sante-au-quotidien': typeof SanteAuQuotidienIndexRoute
+  '/sante-quotidien': typeof SanteQuotidienIndexRoute
   '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
   '/admin/communaute/forum': typeof AdminCommunauteForumRoute
   '/admin/communaute/signalements': typeof AdminCommunauteSignalementsRoute
@@ -900,6 +983,7 @@ export interface FileRoutesByTo {
   '/formations/$id/apprendre': typeof FormationsIdApprendreRoute
   '/mes-commandes/$id/litige': typeof MesCommandesIdLitigeRoute
   '/newsletter/desabonnement/$token': typeof NewsletterDesabonnementTokenRoute
+  '/formations/$id': typeof FormationsIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -991,6 +1075,17 @@ export interface FileRoutesById {
   '/tableau-de-bord/reservations': typeof TableauDeBordReservationsRoute
   '/tableau-de-bord/support': typeof TableauDeBordSupportRoute
   '/verify-email/$token': typeof VerifyEmailTokenRoute
+  '/agenda/': typeof AgendaIndexRoute
+  '/annuaire/': typeof AnnuaireIndexRoute
+  '/formations/': typeof FormationsIndexRoute
+  '/forum/': typeof ForumIndexRoute
+  '/marketplace/': typeof MarketplaceIndexRoute
+  '/pharmacopee/': typeof PharmacopeeIndexRoute
+  '/recettes-sante/': typeof RecettesSanteIndexRoute
+  '/recettes/': typeof RecettesIndexRoute
+  '/rites-cultures/': typeof RitesCulturesIndexRoute
+  '/sante-au-quotidien/': typeof SanteAuQuotidienIndexRoute
+  '/sante-quotidien/': typeof SanteQuotidienIndexRoute
   '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
   '/admin/communaute/forum': typeof AdminCommunauteForumRoute
   '/admin/communaute/signalements': typeof AdminCommunauteSignalementsRoute
@@ -1012,6 +1107,7 @@ export interface FileRoutesById {
   '/formations/$id/apprendre': typeof FormationsIdApprendreRoute
   '/mes-commandes/$id/litige': typeof MesCommandesIdLitigeRoute
   '/newsletter/desabonnement/$token': typeof NewsletterDesabonnementTokenRoute
+  '/formations/$id/': typeof FormationsIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1104,6 +1200,17 @@ export interface FileRouteTypes {
     | '/tableau-de-bord/reservations'
     | '/tableau-de-bord/support'
     | '/verify-email/$token'
+    | '/agenda/'
+    | '/annuaire/'
+    | '/formations/'
+    | '/forum/'
+    | '/marketplace/'
+    | '/pharmacopee/'
+    | '/recettes-sante/'
+    | '/recettes/'
+    | '/rites-cultures/'
+    | '/sante-au-quotidien/'
+    | '/sante-quotidien/'
     | '/admin/communaute/avis'
     | '/admin/communaute/forum'
     | '/admin/communaute/signalements'
@@ -1125,34 +1232,24 @@ export interface FileRouteTypes {
     | '/formations/$id/apprendre'
     | '/mes-commandes/$id/litige'
     | '/newsletter/desabonnement/$token'
+    | '/formations/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/$slug'
     | '/admin'
-    | '/agenda'
     | '/aide'
-    | '/annuaire'
     | '/connexion'
     | '/contact'
     | '/dashboard'
     | '/devenir-pro'
     | '/discutons-en'
-    | '/formations'
-    | '/forum'
     | '/inscription'
-    | '/marketplace'
     | '/mes-commandes'
     | '/messages'
     | '/mon-compte'
     | '/mot-de-passe-oublie'
-    | '/pharmacopee'
-    | '/recettes'
-    | '/recettes-sante'
     | '/reset-password'
-    | '/rites-cultures'
-    | '/sante-au-quotidien'
-    | '/sante-quotidien'
     | '/tableau-de-bord'
     | '/admin/affiliation'
     | '/admin/communaute'
@@ -1169,7 +1266,6 @@ export interface FileRouteTypes {
     | '/dashboard/annonces'
     | '/dashboard/inscriptions'
     | '/dashboard/pro'
-    | '/formations/$id'
     | '/forum/$id'
     | '/forum/nouvelle-question'
     | '/marketplace/deposer'
@@ -1215,6 +1311,17 @@ export interface FileRouteTypes {
     | '/tableau-de-bord/reservations'
     | '/tableau-de-bord/support'
     | '/verify-email/$token'
+    | '/agenda'
+    | '/annuaire'
+    | '/formations'
+    | '/forum'
+    | '/marketplace'
+    | '/pharmacopee'
+    | '/recettes-sante'
+    | '/recettes'
+    | '/rites-cultures'
+    | '/sante-au-quotidien'
+    | '/sante-quotidien'
     | '/admin/communaute/avis'
     | '/admin/communaute/forum'
     | '/admin/communaute/signalements'
@@ -1236,6 +1343,7 @@ export interface FileRouteTypes {
     | '/formations/$id/apprendre'
     | '/mes-commandes/$id/litige'
     | '/newsletter/desabonnement/$token'
+    | '/formations/$id'
   id:
     | '__root__'
     | '/'
@@ -1326,6 +1434,17 @@ export interface FileRouteTypes {
     | '/tableau-de-bord/reservations'
     | '/tableau-de-bord/support'
     | '/verify-email/$token'
+    | '/agenda/'
+    | '/annuaire/'
+    | '/formations/'
+    | '/forum/'
+    | '/marketplace/'
+    | '/pharmacopee/'
+    | '/recettes-sante/'
+    | '/recettes/'
+    | '/rites-cultures/'
+    | '/sante-au-quotidien/'
+    | '/sante-quotidien/'
     | '/admin/communaute/avis'
     | '/admin/communaute/forum'
     | '/admin/communaute/signalements'
@@ -1347,6 +1466,7 @@ export interface FileRouteTypes {
     | '/formations/$id/apprendre'
     | '/mes-commandes/$id/litige'
     | '/newsletter/desabonnement/$token'
+    | '/formations/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1573,6 +1693,83 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/sante-quotidien/': {
+      id: '/sante-quotidien/'
+      path: '/'
+      fullPath: '/sante-quotidien/'
+      preLoaderRoute: typeof SanteQuotidienIndexRouteImport
+      parentRoute: typeof SanteQuotidienRoute
+    }
+    '/sante-au-quotidien/': {
+      id: '/sante-au-quotidien/'
+      path: '/'
+      fullPath: '/sante-au-quotidien/'
+      preLoaderRoute: typeof SanteAuQuotidienIndexRouteImport
+      parentRoute: typeof SanteAuQuotidienRoute
+    }
+    '/rites-cultures/': {
+      id: '/rites-cultures/'
+      path: '/'
+      fullPath: '/rites-cultures/'
+      preLoaderRoute: typeof RitesCulturesIndexRouteImport
+      parentRoute: typeof RitesCulturesRoute
+    }
+    '/recettes/': {
+      id: '/recettes/'
+      path: '/'
+      fullPath: '/recettes/'
+      preLoaderRoute: typeof RecettesIndexRouteImport
+      parentRoute: typeof RecettesRoute
+    }
+    '/recettes-sante/': {
+      id: '/recettes-sante/'
+      path: '/'
+      fullPath: '/recettes-sante/'
+      preLoaderRoute: typeof RecettesSanteIndexRouteImport
+      parentRoute: typeof RecettesSanteRoute
+    }
+    '/pharmacopee/': {
+      id: '/pharmacopee/'
+      path: '/'
+      fullPath: '/pharmacopee/'
+      preLoaderRoute: typeof PharmacopeeIndexRouteImport
+      parentRoute: typeof PharmacopeeRoute
+    }
+    '/marketplace/': {
+      id: '/marketplace/'
+      path: '/'
+      fullPath: '/marketplace/'
+      preLoaderRoute: typeof MarketplaceIndexRouteImport
+      parentRoute: typeof MarketplaceRoute
+    }
+    '/forum/': {
+      id: '/forum/'
+      path: '/'
+      fullPath: '/forum/'
+      preLoaderRoute: typeof ForumIndexRouteImport
+      parentRoute: typeof ForumRoute
+    }
+    '/formations/': {
+      id: '/formations/'
+      path: '/'
+      fullPath: '/formations/'
+      preLoaderRoute: typeof FormationsIndexRouteImport
+      parentRoute: typeof FormationsRoute
+    }
+    '/annuaire/': {
+      id: '/annuaire/'
+      path: '/'
+      fullPath: '/annuaire/'
+      preLoaderRoute: typeof AnnuaireIndexRouteImport
+      parentRoute: typeof AnnuaireRoute
+    }
+    '/agenda/': {
+      id: '/agenda/'
+      path: '/'
+      fullPath: '/agenda/'
+      preLoaderRoute: typeof AgendaIndexRouteImport
+      parentRoute: typeof AgendaRoute
     }
     '/verify-email/$token': {
       id: '/verify-email/$token'
@@ -2001,6 +2198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAffiliationRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/formations/$id/': {
+      id: '/formations/$id/'
+      path: '/'
+      fullPath: '/formations/$id/'
+      preLoaderRoute: typeof FormationsIdIndexRouteImport
+      parentRoute: typeof FormationsIdRoute
+    }
     '/newsletter/desabonnement/$token': {
       id: '/newsletter/desabonnement/$token'
       path: '/newsletter/desabonnement/$token'
@@ -2255,10 +2459,12 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface AgendaRouteChildren {
   AgendaIdRoute: typeof AgendaIdRoute
+  AgendaIndexRoute: typeof AgendaIndexRoute
 }
 
 const AgendaRouteChildren: AgendaRouteChildren = {
   AgendaIdRoute: AgendaIdRoute,
+  AgendaIndexRoute: AgendaIndexRoute,
 }
 
 const AgendaRouteWithChildren =
@@ -2266,10 +2472,12 @@ const AgendaRouteWithChildren =
 
 interface AnnuaireRouteChildren {
   AnnuaireIdRoute: typeof AnnuaireIdRoute
+  AnnuaireIndexRoute: typeof AnnuaireIndexRoute
 }
 
 const AnnuaireRouteChildren: AnnuaireRouteChildren = {
   AnnuaireIdRoute: AnnuaireIdRoute,
+  AnnuaireIndexRoute: AnnuaireIndexRoute,
 }
 
 const AnnuaireRouteWithChildren = AnnuaireRoute._addFileChildren(
@@ -2294,10 +2502,12 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 
 interface FormationsIdRouteChildren {
   FormationsIdApprendreRoute: typeof FormationsIdApprendreRoute
+  FormationsIdIndexRoute: typeof FormationsIdIndexRoute
 }
 
 const FormationsIdRouteChildren: FormationsIdRouteChildren = {
   FormationsIdApprendreRoute: FormationsIdApprendreRoute,
+  FormationsIdIndexRoute: FormationsIdIndexRoute,
 }
 
 const FormationsIdRouteWithChildren = FormationsIdRoute._addFileChildren(
@@ -2306,10 +2516,12 @@ const FormationsIdRouteWithChildren = FormationsIdRoute._addFileChildren(
 
 interface FormationsRouteChildren {
   FormationsIdRoute: typeof FormationsIdRouteWithChildren
+  FormationsIndexRoute: typeof FormationsIndexRoute
 }
 
 const FormationsRouteChildren: FormationsRouteChildren = {
   FormationsIdRoute: FormationsIdRouteWithChildren,
+  FormationsIndexRoute: FormationsIndexRoute,
 }
 
 const FormationsRouteWithChildren = FormationsRoute._addFileChildren(
@@ -2319,21 +2531,25 @@ const FormationsRouteWithChildren = FormationsRoute._addFileChildren(
 interface ForumRouteChildren {
   ForumIdRoute: typeof ForumIdRoute
   ForumNouvelleQuestionRoute: typeof ForumNouvelleQuestionRoute
+  ForumIndexRoute: typeof ForumIndexRoute
 }
 
 const ForumRouteChildren: ForumRouteChildren = {
   ForumIdRoute: ForumIdRoute,
   ForumNouvelleQuestionRoute: ForumNouvelleQuestionRoute,
+  ForumIndexRoute: ForumIndexRoute,
 }
 
 const ForumRouteWithChildren = ForumRoute._addFileChildren(ForumRouteChildren)
 
 interface MarketplaceRouteChildren {
   MarketplaceDeposerRoute: typeof MarketplaceDeposerRoute
+  MarketplaceIndexRoute: typeof MarketplaceIndexRoute
 }
 
 const MarketplaceRouteChildren: MarketplaceRouteChildren = {
   MarketplaceDeposerRoute: MarketplaceDeposerRoute,
+  MarketplaceIndexRoute: MarketplaceIndexRoute,
 }
 
 const MarketplaceRouteWithChildren = MarketplaceRoute._addFileChildren(
@@ -2390,10 +2606,12 @@ const MonCompteRouteWithChildren = MonCompteRoute._addFileChildren(
 
 interface PharmacopeeRouteChildren {
   PharmacopeeSlugRoute: typeof PharmacopeeSlugRoute
+  PharmacopeeIndexRoute: typeof PharmacopeeIndexRoute
 }
 
 const PharmacopeeRouteChildren: PharmacopeeRouteChildren = {
   PharmacopeeSlugRoute: PharmacopeeSlugRoute,
+  PharmacopeeIndexRoute: PharmacopeeIndexRoute,
 }
 
 const PharmacopeeRouteWithChildren = PharmacopeeRoute._addFileChildren(
@@ -2402,10 +2620,12 @@ const PharmacopeeRouteWithChildren = PharmacopeeRoute._addFileChildren(
 
 interface RecettesRouteChildren {
   RecettesSlugRoute: typeof RecettesSlugRoute
+  RecettesIndexRoute: typeof RecettesIndexRoute
 }
 
 const RecettesRouteChildren: RecettesRouteChildren = {
   RecettesSlugRoute: RecettesSlugRoute,
+  RecettesIndexRoute: RecettesIndexRoute,
 }
 
 const RecettesRouteWithChildren = RecettesRoute._addFileChildren(
@@ -2414,10 +2634,12 @@ const RecettesRouteWithChildren = RecettesRoute._addFileChildren(
 
 interface RecettesSanteRouteChildren {
   RecettesSanteSlugRoute: typeof RecettesSanteSlugRoute
+  RecettesSanteIndexRoute: typeof RecettesSanteIndexRoute
 }
 
 const RecettesSanteRouteChildren: RecettesSanteRouteChildren = {
   RecettesSanteSlugRoute: RecettesSanteSlugRoute,
+  RecettesSanteIndexRoute: RecettesSanteIndexRoute,
 }
 
 const RecettesSanteRouteWithChildren = RecettesSanteRoute._addFileChildren(
@@ -2438,10 +2660,12 @@ const ResetPasswordRouteWithChildren = ResetPasswordRoute._addFileChildren(
 
 interface RitesCulturesRouteChildren {
   RitesCulturesSlugRoute: typeof RitesCulturesSlugRoute
+  RitesCulturesIndexRoute: typeof RitesCulturesIndexRoute
 }
 
 const RitesCulturesRouteChildren: RitesCulturesRouteChildren = {
   RitesCulturesSlugRoute: RitesCulturesSlugRoute,
+  RitesCulturesIndexRoute: RitesCulturesIndexRoute,
 }
 
 const RitesCulturesRouteWithChildren = RitesCulturesRoute._addFileChildren(
@@ -2450,10 +2674,12 @@ const RitesCulturesRouteWithChildren = RitesCulturesRoute._addFileChildren(
 
 interface SanteAuQuotidienRouteChildren {
   SanteAuQuotidienSlugRoute: typeof SanteAuQuotidienSlugRoute
+  SanteAuQuotidienIndexRoute: typeof SanteAuQuotidienIndexRoute
 }
 
 const SanteAuQuotidienRouteChildren: SanteAuQuotidienRouteChildren = {
   SanteAuQuotidienSlugRoute: SanteAuQuotidienSlugRoute,
+  SanteAuQuotidienIndexRoute: SanteAuQuotidienIndexRoute,
 }
 
 const SanteAuQuotidienRouteWithChildren =
@@ -2461,10 +2687,12 @@ const SanteAuQuotidienRouteWithChildren =
 
 interface SanteQuotidienRouteChildren {
   SanteQuotidienSlugRoute: typeof SanteQuotidienSlugRoute
+  SanteQuotidienIndexRoute: typeof SanteQuotidienIndexRoute
 }
 
 const SanteQuotidienRouteChildren: SanteQuotidienRouteChildren = {
   SanteQuotidienSlugRoute: SanteQuotidienSlugRoute,
+  SanteQuotidienIndexRoute: SanteQuotidienIndexRoute,
 }
 
 const SanteQuotidienRouteWithChildren = SanteQuotidienRoute._addFileChildren(

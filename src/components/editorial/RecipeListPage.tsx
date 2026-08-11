@@ -5,7 +5,6 @@ import { HeroSection } from "@/components/shared/HeroSection";
 import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { SimplePager } from "@/components/shared/SimplePager";
-import { recipes } from "@/data/recipes";
 import { useArticles } from "@/hooks/useContentApi";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { BackendArticle } from "@/components/editorial/ArticleListPage";
@@ -57,7 +56,7 @@ export function RecipeListPage() {
     () => ((articlesQuery.data?.articles ?? []) as BackendArticle[]).map(toRecipe).filter((item): item is Recipe => Boolean(item)),
     [articlesQuery.data],
   );
-  const allRecipes = apiRecipes.length > 0 ? apiRecipes : recipes;
+  const allRecipes = apiRecipes;
 
   // Hide themes with no recipes yet instead of advertising a "0 recettes" dead end.
   const populatedThemes = useMemo(
@@ -143,6 +142,11 @@ export function RecipeListPage() {
                   </Reveal>
                 ))}
               </div>
+              {filteredRecipes.length === 0 && (
+                <div className="rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
+                  <p className="font-bold">Aucune recette ne correspond a votre recherche.</p>
+                </div>
+              )}
               {isUnfiltered && pagination && (
                 <SimplePager page={pagination.page} totalPages={pagination.totalPages} onChange={setPage} />
               )}
