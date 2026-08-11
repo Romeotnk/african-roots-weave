@@ -36,17 +36,23 @@ import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TableauDeBordIndexRouteImport } from './routes/tableau-de-bord.index'
 import { Route as SanteQuotidienIndexRouteImport } from './routes/sante-quotidien.index'
 import { Route as SanteAuQuotidienIndexRouteImport } from './routes/sante-au-quotidien.index'
 import { Route as RitesCulturesIndexRouteImport } from './routes/rites-cultures.index'
+import { Route as ResetPasswordIndexRouteImport } from './routes/reset-password.index'
 import { Route as RecettesIndexRouteImport } from './routes/recettes.index'
 import { Route as RecettesSanteIndexRouteImport } from './routes/recettes-sante.index'
 import { Route as PharmacopeeIndexRouteImport } from './routes/pharmacopee.index'
+import { Route as MonCompteIndexRouteImport } from './routes/mon-compte.index'
+import { Route as MesCommandesIndexRouteImport } from './routes/mes-commandes.index'
 import { Route as MarketplaceIndexRouteImport } from './routes/marketplace.index'
 import { Route as ForumIndexRouteImport } from './routes/forum.index'
 import { Route as FormationsIndexRouteImport } from './routes/formations.index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as AnnuaireIndexRouteImport } from './routes/annuaire.index'
 import { Route as AgendaIndexRouteImport } from './routes/agenda.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as VerifyEmailTokenRouteImport } from './routes/verify-email/$token'
 import { Route as TableauDeBordSupportRouteImport } from './routes/tableau-de-bord/support'
 import { Route as TableauDeBordReservationsRouteImport } from './routes/tableau-de-bord/reservations'
@@ -109,6 +115,10 @@ import { Route as AdminCommunicationRouteImport } from './routes/admin/communica
 import { Route as AdminCommunauteRouteImport } from './routes/admin/communaute'
 import { Route as AdminAffiliationRouteImport } from './routes/admin/affiliation'
 import { Route as FormationsIdIndexRouteImport } from './routes/formations.$id.index'
+import { Route as AdminUtilisateursIndexRouteImport } from './routes/admin/utilisateurs.index'
+import { Route as AdminFinancesIndexRouteImport } from './routes/admin/finances.index'
+import { Route as AdminCommunicationIndexRouteImport } from './routes/admin/communication.index'
+import { Route as AdminCommunauteIndexRouteImport } from './routes/admin/communaute.index'
 import { Route as NewsletterDesabonnementTokenRouteImport } from './routes/newsletter/desabonnement/$token'
 import { Route as MesCommandesIdLitigeRouteImport } from './routes/mes-commandes/$id/litige'
 import { Route as FormationsIdApprendreRouteImport } from './routes/formations.$id.apprendre'
@@ -266,6 +276,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TableauDeBordIndexRoute = TableauDeBordIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TableauDeBordRoute,
+} as any)
 const SanteQuotidienIndexRoute = SanteQuotidienIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -280,6 +295,11 @@ const RitesCulturesIndexRoute = RitesCulturesIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => RitesCulturesRoute,
+} as any)
+const ResetPasswordIndexRoute = ResetPasswordIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ResetPasswordRoute,
 } as any)
 const RecettesIndexRoute = RecettesIndexRouteImport.update({
   id: '/',
@@ -296,6 +316,16 @@ const PharmacopeeIndexRoute = PharmacopeeIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PharmacopeeRoute,
 } as any)
+const MonCompteIndexRoute = MonCompteIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MonCompteRoute,
+} as any)
+const MesCommandesIndexRoute = MesCommandesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MesCommandesRoute,
+} as any)
 const MarketplaceIndexRoute = MarketplaceIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -311,6 +341,11 @@ const FormationsIndexRoute = FormationsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => FormationsRoute,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const AnnuaireIndexRoute = AnnuaireIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -320,6 +355,11 @@ const AgendaIndexRoute = AgendaIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AgendaRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const VerifyEmailTokenRoute = VerifyEmailTokenRouteImport.update({
   id: '/verify-email/$token',
@@ -636,6 +676,26 @@ const FormationsIdIndexRoute = FormationsIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => FormationsIdRoute,
 } as any)
+const AdminUtilisateursIndexRoute = AdminUtilisateursIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminUtilisateursRoute,
+} as any)
+const AdminFinancesIndexRoute = AdminFinancesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminFinancesRoute,
+} as any)
+const AdminCommunicationIndexRoute = AdminCommunicationIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminCommunicationRoute,
+} as any)
+const AdminCommunauteIndexRoute = AdminCommunauteIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminCommunauteRoute,
+} as any)
 const NewsletterDesabonnementTokenRoute =
   NewsletterDesabonnementTokenRouteImport.update({
     id: '/newsletter/desabonnement/$token',
@@ -840,17 +900,23 @@ export interface FileRoutesByFullPath {
   '/tableau-de-bord/reservations': typeof TableauDeBordReservationsRoute
   '/tableau-de-bord/support': typeof TableauDeBordSupportRoute
   '/verify-email/$token': typeof VerifyEmailTokenRoute
+  '/admin/': typeof AdminIndexRoute
   '/agenda/': typeof AgendaIndexRoute
   '/annuaire/': typeof AnnuaireIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/formations/': typeof FormationsIndexRoute
   '/forum/': typeof ForumIndexRoute
   '/marketplace/': typeof MarketplaceIndexRoute
+  '/mes-commandes/': typeof MesCommandesIndexRoute
+  '/mon-compte/': typeof MonCompteIndexRoute
   '/pharmacopee/': typeof PharmacopeeIndexRoute
   '/recettes-sante/': typeof RecettesSanteIndexRoute
   '/recettes/': typeof RecettesIndexRoute
+  '/reset-password/': typeof ResetPasswordIndexRoute
   '/rites-cultures/': typeof RitesCulturesIndexRoute
   '/sante-au-quotidien/': typeof SanteAuQuotidienIndexRoute
   '/sante-quotidien/': typeof SanteQuotidienIndexRoute
+  '/tableau-de-bord/': typeof TableauDeBordIndexRoute
   '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
   '/admin/communaute/forum': typeof AdminCommunauteForumRoute
   '/admin/communaute/signalements': typeof AdminCommunauteSignalementsRoute
@@ -872,35 +938,29 @@ export interface FileRoutesByFullPath {
   '/formations/$id/apprendre': typeof FormationsIdApprendreRoute
   '/mes-commandes/$id/litige': typeof MesCommandesIdLitigeRoute
   '/newsletter/desabonnement/$token': typeof NewsletterDesabonnementTokenRoute
+  '/admin/communaute/': typeof AdminCommunauteIndexRoute
+  '/admin/communication/': typeof AdminCommunicationIndexRoute
+  '/admin/finances/': typeof AdminFinancesIndexRoute
+  '/admin/utilisateurs/': typeof AdminUtilisateursIndexRoute
   '/formations/$id/': typeof FormationsIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
-  '/admin': typeof AdminRouteWithChildren
   '/aide': typeof AideRoute
   '/connexion': typeof ConnexionRoute
   '/contact': typeof ContactRoute
-  '/dashboard': typeof DashboardRouteWithChildren
   '/devenir-pro': typeof DevenirProRoute
   '/discutons-en': typeof DiscutonsEnRoute
   '/inscription': typeof InscriptionRoute
-  '/mes-commandes': typeof MesCommandesRouteWithChildren
   '/messages': typeof MessagesRoute
-  '/mon-compte': typeof MonCompteRouteWithChildren
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
-  '/reset-password': typeof ResetPasswordRouteWithChildren
-  '/tableau-de-bord': typeof TableauDeBordRouteWithChildren
   '/admin/affiliation': typeof AdminAffiliationRoute
-  '/admin/communaute': typeof AdminCommunauteRouteWithChildren
-  '/admin/communication': typeof AdminCommunicationRouteWithChildren
   '/admin/contenus': typeof AdminContenusRoute
-  '/admin/finances': typeof AdminFinancesRouteWithChildren
   '/admin/logs': typeof AdminLogsRoute
   '/admin/marketplace': typeof AdminMarketplaceRoute
   '/admin/newsletter': typeof AdminNewsletterRoute
   '/admin/roles-permissions': typeof AdminRolesPermissionsRoute
-  '/admin/utilisateurs': typeof AdminUtilisateursRouteWithChildren
   '/agenda/$id': typeof AgendaIdRoute
   '/annuaire/$id': typeof AnnuaireIdRoute
   '/dashboard/annonces': typeof DashboardAnnoncesRoute
@@ -951,17 +1011,23 @@ export interface FileRoutesByTo {
   '/tableau-de-bord/reservations': typeof TableauDeBordReservationsRoute
   '/tableau-de-bord/support': typeof TableauDeBordSupportRoute
   '/verify-email/$token': typeof VerifyEmailTokenRoute
+  '/admin': typeof AdminIndexRoute
   '/agenda': typeof AgendaIndexRoute
   '/annuaire': typeof AnnuaireIndexRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/formations': typeof FormationsIndexRoute
   '/forum': typeof ForumIndexRoute
   '/marketplace': typeof MarketplaceIndexRoute
+  '/mes-commandes': typeof MesCommandesIndexRoute
+  '/mon-compte': typeof MonCompteIndexRoute
   '/pharmacopee': typeof PharmacopeeIndexRoute
   '/recettes-sante': typeof RecettesSanteIndexRoute
   '/recettes': typeof RecettesIndexRoute
+  '/reset-password': typeof ResetPasswordIndexRoute
   '/rites-cultures': typeof RitesCulturesIndexRoute
   '/sante-au-quotidien': typeof SanteAuQuotidienIndexRoute
   '/sante-quotidien': typeof SanteQuotidienIndexRoute
+  '/tableau-de-bord': typeof TableauDeBordIndexRoute
   '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
   '/admin/communaute/forum': typeof AdminCommunauteForumRoute
   '/admin/communaute/signalements': typeof AdminCommunauteSignalementsRoute
@@ -983,6 +1049,10 @@ export interface FileRoutesByTo {
   '/formations/$id/apprendre': typeof FormationsIdApprendreRoute
   '/mes-commandes/$id/litige': typeof MesCommandesIdLitigeRoute
   '/newsletter/desabonnement/$token': typeof NewsletterDesabonnementTokenRoute
+  '/admin/communaute': typeof AdminCommunauteIndexRoute
+  '/admin/communication': typeof AdminCommunicationIndexRoute
+  '/admin/finances': typeof AdminFinancesIndexRoute
+  '/admin/utilisateurs': typeof AdminUtilisateursIndexRoute
   '/formations/$id': typeof FormationsIdIndexRoute
 }
 export interface FileRoutesById {
@@ -1075,17 +1145,23 @@ export interface FileRoutesById {
   '/tableau-de-bord/reservations': typeof TableauDeBordReservationsRoute
   '/tableau-de-bord/support': typeof TableauDeBordSupportRoute
   '/verify-email/$token': typeof VerifyEmailTokenRoute
+  '/admin/': typeof AdminIndexRoute
   '/agenda/': typeof AgendaIndexRoute
   '/annuaire/': typeof AnnuaireIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/formations/': typeof FormationsIndexRoute
   '/forum/': typeof ForumIndexRoute
   '/marketplace/': typeof MarketplaceIndexRoute
+  '/mes-commandes/': typeof MesCommandesIndexRoute
+  '/mon-compte/': typeof MonCompteIndexRoute
   '/pharmacopee/': typeof PharmacopeeIndexRoute
   '/recettes-sante/': typeof RecettesSanteIndexRoute
   '/recettes/': typeof RecettesIndexRoute
+  '/reset-password/': typeof ResetPasswordIndexRoute
   '/rites-cultures/': typeof RitesCulturesIndexRoute
   '/sante-au-quotidien/': typeof SanteAuQuotidienIndexRoute
   '/sante-quotidien/': typeof SanteQuotidienIndexRoute
+  '/tableau-de-bord/': typeof TableauDeBordIndexRoute
   '/admin/communaute/avis': typeof AdminCommunauteAvisRoute
   '/admin/communaute/forum': typeof AdminCommunauteForumRoute
   '/admin/communaute/signalements': typeof AdminCommunauteSignalementsRoute
@@ -1107,6 +1183,10 @@ export interface FileRoutesById {
   '/formations/$id/apprendre': typeof FormationsIdApprendreRoute
   '/mes-commandes/$id/litige': typeof MesCommandesIdLitigeRoute
   '/newsletter/desabonnement/$token': typeof NewsletterDesabonnementTokenRoute
+  '/admin/communaute/': typeof AdminCommunauteIndexRoute
+  '/admin/communication/': typeof AdminCommunicationIndexRoute
+  '/admin/finances/': typeof AdminFinancesIndexRoute
+  '/admin/utilisateurs/': typeof AdminUtilisateursIndexRoute
   '/formations/$id/': typeof FormationsIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -1200,17 +1280,23 @@ export interface FileRouteTypes {
     | '/tableau-de-bord/reservations'
     | '/tableau-de-bord/support'
     | '/verify-email/$token'
+    | '/admin/'
     | '/agenda/'
     | '/annuaire/'
+    | '/dashboard/'
     | '/formations/'
     | '/forum/'
     | '/marketplace/'
+    | '/mes-commandes/'
+    | '/mon-compte/'
     | '/pharmacopee/'
     | '/recettes-sante/'
     | '/recettes/'
+    | '/reset-password/'
     | '/rites-cultures/'
     | '/sante-au-quotidien/'
     | '/sante-quotidien/'
+    | '/tableau-de-bord/'
     | '/admin/communaute/avis'
     | '/admin/communaute/forum'
     | '/admin/communaute/signalements'
@@ -1232,35 +1318,29 @@ export interface FileRouteTypes {
     | '/formations/$id/apprendre'
     | '/mes-commandes/$id/litige'
     | '/newsletter/desabonnement/$token'
+    | '/admin/communaute/'
+    | '/admin/communication/'
+    | '/admin/finances/'
+    | '/admin/utilisateurs/'
     | '/formations/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/$slug'
-    | '/admin'
     | '/aide'
     | '/connexion'
     | '/contact'
-    | '/dashboard'
     | '/devenir-pro'
     | '/discutons-en'
     | '/inscription'
-    | '/mes-commandes'
     | '/messages'
-    | '/mon-compte'
     | '/mot-de-passe-oublie'
-    | '/reset-password'
-    | '/tableau-de-bord'
     | '/admin/affiliation'
-    | '/admin/communaute'
-    | '/admin/communication'
     | '/admin/contenus'
-    | '/admin/finances'
     | '/admin/logs'
     | '/admin/marketplace'
     | '/admin/newsletter'
     | '/admin/roles-permissions'
-    | '/admin/utilisateurs'
     | '/agenda/$id'
     | '/annuaire/$id'
     | '/dashboard/annonces'
@@ -1311,17 +1391,23 @@ export interface FileRouteTypes {
     | '/tableau-de-bord/reservations'
     | '/tableau-de-bord/support'
     | '/verify-email/$token'
+    | '/admin'
     | '/agenda'
     | '/annuaire'
+    | '/dashboard'
     | '/formations'
     | '/forum'
     | '/marketplace'
+    | '/mes-commandes'
+    | '/mon-compte'
     | '/pharmacopee'
     | '/recettes-sante'
     | '/recettes'
+    | '/reset-password'
     | '/rites-cultures'
     | '/sante-au-quotidien'
     | '/sante-quotidien'
+    | '/tableau-de-bord'
     | '/admin/communaute/avis'
     | '/admin/communaute/forum'
     | '/admin/communaute/signalements'
@@ -1343,6 +1429,10 @@ export interface FileRouteTypes {
     | '/formations/$id/apprendre'
     | '/mes-commandes/$id/litige'
     | '/newsletter/desabonnement/$token'
+    | '/admin/communaute'
+    | '/admin/communication'
+    | '/admin/finances'
+    | '/admin/utilisateurs'
     | '/formations/$id'
   id:
     | '__root__'
@@ -1434,17 +1524,23 @@ export interface FileRouteTypes {
     | '/tableau-de-bord/reservations'
     | '/tableau-de-bord/support'
     | '/verify-email/$token'
+    | '/admin/'
     | '/agenda/'
     | '/annuaire/'
+    | '/dashboard/'
     | '/formations/'
     | '/forum/'
     | '/marketplace/'
+    | '/mes-commandes/'
+    | '/mon-compte/'
     | '/pharmacopee/'
     | '/recettes-sante/'
     | '/recettes/'
+    | '/reset-password/'
     | '/rites-cultures/'
     | '/sante-au-quotidien/'
     | '/sante-quotidien/'
+    | '/tableau-de-bord/'
     | '/admin/communaute/avis'
     | '/admin/communaute/forum'
     | '/admin/communaute/signalements'
@@ -1466,6 +1562,10 @@ export interface FileRouteTypes {
     | '/formations/$id/apprendre'
     | '/mes-commandes/$id/litige'
     | '/newsletter/desabonnement/$token'
+    | '/admin/communaute/'
+    | '/admin/communication/'
+    | '/admin/finances/'
+    | '/admin/utilisateurs/'
     | '/formations/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -1694,6 +1794,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tableau-de-bord/': {
+      id: '/tableau-de-bord/'
+      path: '/'
+      fullPath: '/tableau-de-bord/'
+      preLoaderRoute: typeof TableauDeBordIndexRouteImport
+      parentRoute: typeof TableauDeBordRoute
+    }
     '/sante-quotidien/': {
       id: '/sante-quotidien/'
       path: '/'
@@ -1714,6 +1821,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/rites-cultures/'
       preLoaderRoute: typeof RitesCulturesIndexRouteImport
       parentRoute: typeof RitesCulturesRoute
+    }
+    '/reset-password/': {
+      id: '/reset-password/'
+      path: '/'
+      fullPath: '/reset-password/'
+      preLoaderRoute: typeof ResetPasswordIndexRouteImport
+      parentRoute: typeof ResetPasswordRoute
     }
     '/recettes/': {
       id: '/recettes/'
@@ -1736,6 +1850,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PharmacopeeIndexRouteImport
       parentRoute: typeof PharmacopeeRoute
     }
+    '/mon-compte/': {
+      id: '/mon-compte/'
+      path: '/'
+      fullPath: '/mon-compte/'
+      preLoaderRoute: typeof MonCompteIndexRouteImport
+      parentRoute: typeof MonCompteRoute
+    }
+    '/mes-commandes/': {
+      id: '/mes-commandes/'
+      path: '/'
+      fullPath: '/mes-commandes/'
+      preLoaderRoute: typeof MesCommandesIndexRouteImport
+      parentRoute: typeof MesCommandesRoute
+    }
     '/marketplace/': {
       id: '/marketplace/'
       path: '/'
@@ -1757,6 +1885,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FormationsIndexRouteImport
       parentRoute: typeof FormationsRoute
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/annuaire/': {
       id: '/annuaire/'
       path: '/'
@@ -1770,6 +1905,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/agenda/'
       preLoaderRoute: typeof AgendaIndexRouteImport
       parentRoute: typeof AgendaRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/verify-email/$token': {
       id: '/verify-email/$token'
@@ -2205,6 +2347,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FormationsIdIndexRouteImport
       parentRoute: typeof FormationsIdRoute
     }
+    '/admin/utilisateurs/': {
+      id: '/admin/utilisateurs/'
+      path: '/'
+      fullPath: '/admin/utilisateurs/'
+      preLoaderRoute: typeof AdminUtilisateursIndexRouteImport
+      parentRoute: typeof AdminUtilisateursRoute
+    }
+    '/admin/finances/': {
+      id: '/admin/finances/'
+      path: '/'
+      fullPath: '/admin/finances/'
+      preLoaderRoute: typeof AdminFinancesIndexRouteImport
+      parentRoute: typeof AdminFinancesRoute
+    }
+    '/admin/communication/': {
+      id: '/admin/communication/'
+      path: '/'
+      fullPath: '/admin/communication/'
+      preLoaderRoute: typeof AdminCommunicationIndexRouteImport
+      parentRoute: typeof AdminCommunicationRoute
+    }
+    '/admin/communaute/': {
+      id: '/admin/communaute/'
+      path: '/'
+      fullPath: '/admin/communaute/'
+      preLoaderRoute: typeof AdminCommunauteIndexRouteImport
+      parentRoute: typeof AdminCommunauteRoute
+    }
     '/newsletter/desabonnement/$token': {
       id: '/newsletter/desabonnement/$token'
       path: '/newsletter/desabonnement/$token'
@@ -2359,12 +2529,14 @@ interface AdminCommunauteRouteChildren {
   AdminCommunauteAvisRoute: typeof AdminCommunauteAvisRoute
   AdminCommunauteForumRoute: typeof AdminCommunauteForumRoute
   AdminCommunauteSignalementsRoute: typeof AdminCommunauteSignalementsRoute
+  AdminCommunauteIndexRoute: typeof AdminCommunauteIndexRoute
 }
 
 const AdminCommunauteRouteChildren: AdminCommunauteRouteChildren = {
   AdminCommunauteAvisRoute: AdminCommunauteAvisRoute,
   AdminCommunauteForumRoute: AdminCommunauteForumRoute,
   AdminCommunauteSignalementsRoute: AdminCommunauteSignalementsRoute,
+  AdminCommunauteIndexRoute: AdminCommunauteIndexRoute,
 }
 
 const AdminCommunauteRouteWithChildren = AdminCommunauteRoute._addFileChildren(
@@ -2375,12 +2547,14 @@ interface AdminCommunicationRouteChildren {
   AdminCommunicationNewsletterRoute: typeof AdminCommunicationNewsletterRoute
   AdminCommunicationNotificationsRoute: typeof AdminCommunicationNotificationsRoute
   AdminCommunicationTicketsRoute: typeof AdminCommunicationTicketsRoute
+  AdminCommunicationIndexRoute: typeof AdminCommunicationIndexRoute
 }
 
 const AdminCommunicationRouteChildren: AdminCommunicationRouteChildren = {
   AdminCommunicationNewsletterRoute: AdminCommunicationNewsletterRoute,
   AdminCommunicationNotificationsRoute: AdminCommunicationNotificationsRoute,
   AdminCommunicationTicketsRoute: AdminCommunicationTicketsRoute,
+  AdminCommunicationIndexRoute: AdminCommunicationIndexRoute,
 }
 
 const AdminCommunicationRouteWithChildren =
@@ -2392,6 +2566,7 @@ interface AdminFinancesRouteChildren {
   AdminFinancesLitigesRoute: typeof AdminFinancesLitigesRoute
   AdminFinancesRemboursementsRoute: typeof AdminFinancesRemboursementsRoute
   AdminFinancesTransactionsRoute: typeof AdminFinancesTransactionsRoute
+  AdminFinancesIndexRoute: typeof AdminFinancesIndexRoute
 }
 
 const AdminFinancesRouteChildren: AdminFinancesRouteChildren = {
@@ -2400,6 +2575,7 @@ const AdminFinancesRouteChildren: AdminFinancesRouteChildren = {
   AdminFinancesLitigesRoute: AdminFinancesLitigesRoute,
   AdminFinancesRemboursementsRoute: AdminFinancesRemboursementsRoute,
   AdminFinancesTransactionsRoute: AdminFinancesTransactionsRoute,
+  AdminFinancesIndexRoute: AdminFinancesIndexRoute,
 }
 
 const AdminFinancesRouteWithChildren = AdminFinancesRoute._addFileChildren(
@@ -2409,11 +2585,13 @@ const AdminFinancesRouteWithChildren = AdminFinancesRoute._addFileChildren(
 interface AdminUtilisateursRouteChildren {
   AdminUtilisateursIdRoute: typeof AdminUtilisateursIdRoute
   AdminUtilisateursKycRoute: typeof AdminUtilisateursKycRoute
+  AdminUtilisateursIndexRoute: typeof AdminUtilisateursIndexRoute
 }
 
 const AdminUtilisateursRouteChildren: AdminUtilisateursRouteChildren = {
   AdminUtilisateursIdRoute: AdminUtilisateursIdRoute,
   AdminUtilisateursKycRoute: AdminUtilisateursKycRoute,
+  AdminUtilisateursIndexRoute: AdminUtilisateursIndexRoute,
 }
 
 const AdminUtilisateursRouteWithChildren =
@@ -2430,6 +2608,7 @@ interface AdminRouteChildren {
   AdminNewsletterRoute: typeof AdminNewsletterRoute
   AdminRolesPermissionsRoute: typeof AdminRolesPermissionsRoute
   AdminUtilisateursRoute: typeof AdminUtilisateursRouteWithChildren
+  AdminIndexRoute: typeof AdminIndexRoute
   AdminSiteAccueilRoute: typeof AdminSiteAccueilRoute
   AdminSiteIdentiteRoute: typeof AdminSiteIdentiteRoute
   AdminSiteMenusRoute: typeof AdminSiteMenusRoute
@@ -2448,6 +2627,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminNewsletterRoute: AdminNewsletterRoute,
   AdminRolesPermissionsRoute: AdminRolesPermissionsRoute,
   AdminUtilisateursRoute: AdminUtilisateursRouteWithChildren,
+  AdminIndexRoute: AdminIndexRoute,
   AdminSiteAccueilRoute: AdminSiteAccueilRoute,
   AdminSiteIdentiteRoute: AdminSiteIdentiteRoute,
   AdminSiteMenusRoute: AdminSiteMenusRoute,
@@ -2488,12 +2668,14 @@ interface DashboardRouteChildren {
   DashboardAnnoncesRoute: typeof DashboardAnnoncesRoute
   DashboardInscriptionsRoute: typeof DashboardInscriptionsRoute
   DashboardProRoute: typeof DashboardProRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAnnoncesRoute: DashboardAnnoncesRoute,
   DashboardInscriptionsRoute: DashboardInscriptionsRoute,
   DashboardProRoute: DashboardProRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
@@ -2557,10 +2739,12 @@ const MarketplaceRouteWithChildren = MarketplaceRoute._addFileChildren(
 )
 
 interface MesCommandesRouteChildren {
+  MesCommandesIndexRoute: typeof MesCommandesIndexRoute
   MesCommandesIdLitigeRoute: typeof MesCommandesIdLitigeRoute
 }
 
 const MesCommandesRouteChildren: MesCommandesRouteChildren = {
+  MesCommandesIndexRoute: MesCommandesIndexRoute,
   MesCommandesIdLitigeRoute: MesCommandesIdLitigeRoute,
 }
 
@@ -2582,6 +2766,7 @@ interface MonCompteRouteChildren {
   MonCompteQuestionsRoute: typeof MonCompteQuestionsRoute
   MonCompteReservationsRoute: typeof MonCompteReservationsRoute
   MonCompteTicketsRoute: typeof MonCompteTicketsRoute
+  MonCompteIndexRoute: typeof MonCompteIndexRoute
 }
 
 const MonCompteRouteChildren: MonCompteRouteChildren = {
@@ -2598,6 +2783,7 @@ const MonCompteRouteChildren: MonCompteRouteChildren = {
   MonCompteQuestionsRoute: MonCompteQuestionsRoute,
   MonCompteReservationsRoute: MonCompteReservationsRoute,
   MonCompteTicketsRoute: MonCompteTicketsRoute,
+  MonCompteIndexRoute: MonCompteIndexRoute,
 }
 
 const MonCompteRouteWithChildren = MonCompteRoute._addFileChildren(
@@ -2648,10 +2834,12 @@ const RecettesSanteRouteWithChildren = RecettesSanteRoute._addFileChildren(
 
 interface ResetPasswordRouteChildren {
   ResetPasswordTokenRoute: typeof ResetPasswordTokenRoute
+  ResetPasswordIndexRoute: typeof ResetPasswordIndexRoute
 }
 
 const ResetPasswordRouteChildren: ResetPasswordRouteChildren = {
   ResetPasswordTokenRoute: ResetPasswordTokenRoute,
+  ResetPasswordIndexRoute: ResetPasswordIndexRoute,
 }
 
 const ResetPasswordRouteWithChildren = ResetPasswordRoute._addFileChildren(
@@ -2719,6 +2907,7 @@ interface TableauDeBordRouteChildren {
   TableauDeBordReseauRoute: typeof TableauDeBordReseauRoute
   TableauDeBordReservationsRoute: typeof TableauDeBordReservationsRoute
   TableauDeBordSupportRoute: typeof TableauDeBordSupportRoute
+  TableauDeBordIndexRoute: typeof TableauDeBordIndexRoute
 }
 
 const TableauDeBordRouteChildren: TableauDeBordRouteChildren = {
@@ -2741,6 +2930,7 @@ const TableauDeBordRouteChildren: TableauDeBordRouteChildren = {
   TableauDeBordReseauRoute: TableauDeBordReseauRoute,
   TableauDeBordReservationsRoute: TableauDeBordReservationsRoute,
   TableauDeBordSupportRoute: TableauDeBordSupportRoute,
+  TableauDeBordIndexRoute: TableauDeBordIndexRoute,
 }
 
 const TableauDeBordRouteWithChildren = TableauDeBordRoute._addFileChildren(
