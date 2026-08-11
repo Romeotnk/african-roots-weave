@@ -37,7 +37,7 @@ function AlertsPage() {
   const [actionMessage, setActionMessage] = useState("");
 
   const alerts = useMemo(
-    () => ((savedSearchesQuery.data ?? []) as BackendSavedSearch[]).map(toMarketplaceAlert).filter((item): item is MarketplaceAlert => Boolean(item)),
+    () => ((savedSearchesQuery.data?.data ?? []) as BackendSavedSearch[]).map(toMarketplaceAlert).filter((item): item is MarketplaceAlert => Boolean(item)),
     [savedSearchesQuery.data],
   );
 
