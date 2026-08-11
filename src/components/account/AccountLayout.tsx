@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Bell, Leaf, Menu, X } from "lucide-react";
+import { ArrowLeft, Bell, Leaf, Menu, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -51,8 +51,11 @@ export function AccountLayout({
     }))
     .filter((group) => group.items.length > 0);
 
+  const hubPath = pathname.startsWith("/tableau-de-bord") ? "/tableau-de-bord" : "/mon-compte";
+  const isHubPage = pathname === hubPath;
+
   const sidebar = (
-    <aside className="flex h-full w-[270px] shrink-0 flex-col overflow-y-auto border-r border-[var(--brand-border-light)] bg-white">
+    <aside className="sticky top-0 flex h-screen w-[270px] shrink-0 flex-col overflow-y-auto border-r border-[var(--brand-border-light)] bg-white">
       <Link to="/" className="flex h-[72px] shrink-0 items-center gap-2 border-b border-[var(--brand-border-light)] px-5">
         <div className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-[var(--brand-primary)] text-white">
           <Leaf size={18} />
@@ -145,6 +148,14 @@ export function AccountLayout({
       <div className="min-w-0 flex-1">
         {(title || description) && (
           <header className="border-b border-[var(--brand-border-light)] bg-white px-5 py-6 md:px-8">
+            {!isHubPage && (
+              <Link
+                to={hubPath}
+                className="mb-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--color-text-muted)] transition hover:text-[var(--brand-primary)]"
+              >
+                <ArrowLeft size={15} /> Retour
+              </Link>
+            )}
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div key={title} className="hero-fade-up">
                 {title && <h1 className="text-[26px] font-bold md:text-[32px]">{title}</h1>}

@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
+  ArrowLeft,
   BarChart3,
   Bell,
   CreditCard,
@@ -83,7 +84,7 @@ export function AdminLayout({ title, description, children }: { title: string; d
   };
 
   const sidebar = (
-    <aside className="flex h-full w-[270px] shrink-0 flex-col bg-[#151529] text-white">
+    <aside className="sticky top-0 flex h-screen w-[270px] shrink-0 flex-col bg-[#151529] text-white">
       <div className="flex h-16 items-center justify-between border-b border-white/10 px-5">
         <div>
           <p className="text-[18px] font-black tracking-wide">IWOSAN</p>
@@ -149,6 +150,14 @@ export function AdminLayout({ title, description, children }: { title: string; d
         <div className="hidden lg:block">{sidebar}</div>
         <section className="min-w-0 flex-1">
           <header className="sticky top-0 z-40 border-b border-white/10 bg-[#1a1a2e]/95 px-5 py-4 backdrop-blur">
+            {pathname !== "/admin" && (
+              <Link
+                to="/admin"
+                className="mb-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-white/60 transition hover:text-white"
+              >
+                <ArrowLeft size={15} /> Retour
+              </Link>
+            )}
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div key={title} className="hero-fade-up">
                 <h1 className="text-[26px] font-bold text-white">{title}</h1>
