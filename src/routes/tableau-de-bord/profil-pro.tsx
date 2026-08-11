@@ -38,7 +38,7 @@ function ProfessionalShowcasePage() {
 
   if (profileQuery.isLoading) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
         <AccountLayout>
           <p className="py-16 text-center text-[14px] text-[var(--color-text-muted)]">Chargement de votre vitrine...</p>
         </AccountLayout>
@@ -48,7 +48,7 @@ function ProfessionalShowcasePage() {
 
   if (!profile) {
     return (
-      <ProtectedRoute>
+      <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
         <AccountLayout>
           <div className="py-16 text-center">
             <p className="text-[16px] font-semibold">Aucun profil professionnel trouvé.</p>
@@ -65,7 +65,7 @@ function ProfessionalShowcasePage() {
   const cover = profile.photos[1] ?? profile.photos[0] ?? "https://images.unsplash.com/photo-1532634922-8fe0b757fb13?w=1600&q=80";
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
       <AccountLayout>
         <section className="relative -m-5 mb-8 overflow-hidden rounded-[24px] bg-[var(--brand-primary-dark)] text-white md:-m-8 md:mb-8">
           <div className="absolute inset-0">
