@@ -9,10 +9,8 @@ const password = process.env.RBAC_TEST_PASSWORD || "Iwosan@2026!";
 const accounts = [
   { email: "super.admin@iwosan.com", expectRole: "SUPER_ADMIN" },
   { email: "admin1@iwosan.com", expectRole: "ADMIN" },
-  { email: "moderator@iwosan.com", expectRole: "MODERATOR" },
-  { email: "editor@iwosan.com", expectRole: "EDITOR" },
   { email: "pro1@iwosan.com", expectRole: "PROFESSIONAL" },
-  { email: "researcher@iwosan.com", expectRole: "RESEARCHER" },
+  { email: "researcher@iwosan.com", expectRole: "PROFESSIONAL" },
   { email: "user1@iwosan.com", expectRole: "USER" },
 ];
 
@@ -55,7 +53,7 @@ for (const account of accounts) {
     checks.orders = (await request<unknown[]>("/orders/mine", { headers })).length;
   }
 
-  if (account.expectRole === "USER" || account.expectRole === "RESEARCHER") {
+  if (account.expectRole === "USER") {
     checks.orders = (await request<unknown[]>("/orders/mine", { headers })).length;
     checks.questions = (await request<unknown[]>("/forum/questions/mine", { headers })).length;
   }

@@ -10,7 +10,7 @@ import type { TrainingCourse } from "@/types";
 export const Route = createFileRoute("/tableau-de-bord/formations")({
   head: () => ({ meta: [{ title: "Mes formations - IWOSAN" }] }),
   component: () => (
-    <ProtectedRoute requireAnyRole={["researcher", "professional", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
       <TrainingsDashboard />
     </ProtectedRoute>
   ),
@@ -83,8 +83,8 @@ function TrainingsDashboard() {
       { id, payload: { isPublished: status === "published" } },
       {
         onSuccess: (updated) => {
-          // The server silently keeps isPublished:false for professional/researcher
-          // accounts (only SUPER_ADMIN/ADMIN/EDITOR can truly publish) — read the
+          // The server silently keeps isPublished:false for professional
+          // accounts (only SUPER_ADMIN/ADMIN can truly publish) — read the
           // record it actually persisted instead of assuming the request succeeded
           // as-requested, so this message never claims "published" when it isn't.
           const actuallyPublished = Boolean((updated as { isPublished?: boolean } | null)?.isPublished);

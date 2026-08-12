@@ -70,7 +70,7 @@ function AttachmentGallery({ attachments }: { attachments?: ForumAttachment[] })
   );
 }
 
-const moderatorRoles = ["admin", "super_admin", "moderator"];
+const moderatorRoles = ["admin", "super_admin"];
 
 export const Route = createFileRoute("/forum/$id")({
   head: () => ({ meta: [{ title: "Question forum - IWOSAN" }] }),

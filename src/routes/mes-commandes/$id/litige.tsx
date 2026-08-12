@@ -6,7 +6,7 @@ import { useMyOrders, useOpenOrderDispute, useRequestOrderRefund } from "@/hooks
 export const Route = createFileRoute("/mes-commandes/$id/litige")({
   head: () => ({ meta: [{ title: "Litige - IWOSAN" }] }),
   component: () => (
-    <ProtectedRoute requireAnyRole={["user", "researcher", "professional", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["user", "professional", "admin", "super_admin"]}>
       <DisputePage />
     </ProtectedRoute>
   ),

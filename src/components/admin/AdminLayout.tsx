@@ -50,9 +50,9 @@ const navGroups: NavGroup[] = [
   {
     label: "Opérations",
     links: [
-      { to: "/admin/contenus", label: "Contenus", icon: FileText, roles: ["super_admin", "admin", "editor"] },
+      { to: "/admin/contenus", label: "Contenus", icon: FileText, roles: ["super_admin", "admin"] },
       { to: "/admin/marketplace", label: "Marketplace", icon: Store, roles: ["super_admin", "admin"] },
-      { to: "/admin/utilisateurs", label: "Utilisateurs", icon: Users, roles: ["super_admin", "admin", "moderator"] },
+      { to: "/admin/utilisateurs", label: "Utilisateurs", icon: Users, roles: ["super_admin", "admin"] },
       { to: "/admin/finances", label: "Finances", icon: CreditCard, roles: ["super_admin", "admin"] },
     ],
   },
@@ -60,7 +60,7 @@ const navGroups: NavGroup[] = [
     label: "Communication",
     links: [
       { to: "/admin/communication", label: "Communication", icon: MessageSquare },
-      { to: "/admin/communaute", label: "Communauté", icon: ShieldCheck, roles: ["super_admin", "admin", "moderator"] },
+      { to: "/admin/communaute", label: "Communauté", icon: ShieldCheck, roles: ["super_admin", "admin"] },
       { to: "/admin/affiliation", label: "Affiliation", icon: BarChart3, roles: ["super_admin", "admin"] },
       { to: "/admin/logs", label: "Logs", icon: FileText, roles: ["super_admin"] },
     ],
@@ -72,7 +72,7 @@ export function AdminLayout({ title, description, children }: { title: string; d
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const navigate = useNavigate();
   const { roles, signOut, user } = useAuth();
-  const adminState = roles.some((role) => ["super_admin", "admin", "moderator", "editor"].includes(role))
+  const adminState = roles.some((role) => ["super_admin", "admin"].includes(role))
     ? "admin"
     : "forbidden";
 
@@ -128,7 +128,7 @@ export function AdminLayout({ title, description, children }: { title: string; d
   );
 
   return (
-    <ProtectedRoute requireAnyRole={["super_admin", "admin", "moderator", "editor"]}>
+    <ProtectedRoute requireAnyRole={["super_admin", "admin"]}>
     <main className="min-h-screen bg-[#0f1020] text-slate-100">
       <div className="lg:hidden">
         <button

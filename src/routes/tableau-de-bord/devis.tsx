@@ -9,7 +9,7 @@ import type { QuoteStatus } from "@/lib/api/quotes";
 export const Route = createFileRoute("/tableau-de-bord/devis")({
   head: () => ({ meta: [{ title: "Demandes de devis - IWOSAN" }] }),
   component: () => (
-    <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
       <SellerQuotesPage />
     </ProtectedRoute>
   ),

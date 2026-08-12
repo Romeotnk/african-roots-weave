@@ -48,7 +48,7 @@ function Connexion() {
     try {
       const response = await login(email, password);
       const backendRole = response.data?.user.role;
-      const backendIsPro = ["PROFESSIONAL", "RESEARCHER", "ADMIN", "SUPER_ADMIN"].includes(backendRole ?? "");
+      const backendIsPro = ["PROFESSIONAL", "ADMIN", "SUPER_ADMIN"].includes(backendRole ?? "");
       navigate({ to: backendIsPro ? "/tableau-de-bord" : "/mon-compte" });
     } catch (apiError) {
       const message = apiError instanceof Error ? apiError.message : t("auth.login.genericError");

@@ -5,7 +5,7 @@ import { AdminDashboard } from "@/components/admin/AdminDashboard";
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Admin - IWOSAN" }] }),
   component: () => (
-    <ProtectedRoute requireAnyRole={["super_admin", "admin", "moderator", "editor"]}>
+    <ProtectedRoute requireAnyRole={["super_admin", "admin"]}>
       <AdminDashboard />
     </ProtectedRoute>
   ),

@@ -8,14 +8,11 @@ export const Route = createFileRoute("/admin/roles-permissions")({
   component: AdminRolesPermissions,
 });
 
-const ROLES = ["SUPER_ADMIN", "ADMIN", "MODERATOR", "EDITOR", "PROFESSIONAL", "RESEARCHER", "USER"] as const;
+const ROLES = ["SUPER_ADMIN", "ADMIN", "PROFESSIONAL", "USER"] as const;
 const roleLabels: Record<string, string> = {
   SUPER_ADMIN: "Super admin",
   ADMIN: "Admin",
-  MODERATOR: "Modérateur",
-  EDITOR: "Éditeur",
   PROFESSIONAL: "Professionnel",
-  RESEARCHER: "Chercheur",
   USER: "Utilisateur",
 };
 

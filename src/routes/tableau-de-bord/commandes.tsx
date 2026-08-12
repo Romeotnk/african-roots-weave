@@ -102,7 +102,7 @@ function CommandesPage() {
   };
 
   return (
-    <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
       <AccountLayout
         title="Commandes"
         description="Traitez les commandes recues, informez les clients et suivez les expeditions."

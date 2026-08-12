@@ -31,14 +31,14 @@ export const PERMISSION_CATALOG: { key: string; label: string; group: string }[]
 export const PERMISSION_KEYS = PERMISSION_CATALOG.map((entry) => entry.key);
 
 export const DEFAULT_ROLE_PERMISSIONS: Record<string, Role[]> = {
-  "users.ban": [Role.SUPER_ADMIN, Role.ADMIN, Role.MODERATOR],
+  "users.ban": [Role.SUPER_ADMIN, Role.ADMIN],
   "users.role.update": [Role.SUPER_ADMIN, Role.ADMIN],
   "kyc.review": [Role.SUPER_ADMIN, Role.ADMIN],
   "professionals.verify": [Role.SUPER_ADMIN, Role.ADMIN],
-  "content.author": [Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR, Role.PROFESSIONAL, Role.RESEARCHER],
-  "content.review": [Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR],
+  "content.author": [Role.SUPER_ADMIN, Role.ADMIN, Role.PROFESSIONAL],
+  "content.review": [Role.SUPER_ADMIN, Role.ADMIN],
   "product.moderate": [Role.SUPER_ADMIN, Role.ADMIN],
-  "forum.moderate": [Role.SUPER_ADMIN, Role.ADMIN, Role.MODERATOR],
+  "forum.moderate": [Role.SUPER_ADMIN, Role.ADMIN],
   "forum.feature": [Role.SUPER_ADMIN, Role.ADMIN],
   "finance.refund.approve": [Role.SUPER_ADMIN, Role.ADMIN],
   "finance.dispute.resolve": [Role.SUPER_ADMIN, Role.ADMIN],
@@ -48,11 +48,11 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<string, Role[]> = {
   // Pharmacopée monographs are deliberately kept exclusive to the principal
   // administrator (see the same superAdminOnlySpaces rule for Pharmacopée
   // articles in content.controller.ts) — unlike content.review, this is not
-  // opened up to ADMIN/EDITOR by default.
+  // opened up to ADMIN by default.
   "content.monographs.manage": [Role.SUPER_ADMIN],
   "system.config": [Role.SUPER_ADMIN],
   "marketing.newsletter.send": [Role.SUPER_ADMIN, Role.ADMIN],
-  "support.triage": [Role.SUPER_ADMIN, Role.ADMIN, Role.MODERATOR, Role.EDITOR, Role.PROFESSIONAL],
+  "support.triage": [Role.SUPER_ADMIN, Role.ADMIN, Role.PROFESSIONAL],
   "audit.read": [Role.SUPER_ADMIN],
 };
 

@@ -10,7 +10,7 @@ import type { Order, OrderStatus } from "@/types";
 export const Route = createFileRoute("/mes-commandes/")({
   head: () => ({ meta: [{ title: "Mes commandes - IWOSAN" }] }),
   component: () => (
-    <ProtectedRoute requireAnyRole={["user", "researcher", "professional", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["user", "professional", "admin", "super_admin"]}>
       <OrdersPage />
     </ProtectedRoute>
   ),

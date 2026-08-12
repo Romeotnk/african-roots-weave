@@ -10,7 +10,7 @@ export const Route = createFileRoute("/admin/utilisateurs/")({
   component: AdminUsersPage,
 });
 
-const roleOptions = ["", "USER", "PROFESSIONAL", "RESEARCHER", "MODERATOR", "EDITOR", "ADMIN", "SUPER_ADMIN"];
+const roleOptions = ["", "USER", "PROFESSIONAL", "ADMIN", "SUPER_ADMIN"];
 
 function AdminUsersPage() {
   const [search, setSearch] = useState("");

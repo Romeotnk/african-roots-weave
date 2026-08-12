@@ -6,8 +6,6 @@ const prisma = new PrismaClient();
 const emails = [
   "super.admin@iwosan.com",
   "admin1@iwosan.com",
-  "moderator@iwosan.com",
-  "editor@iwosan.com",
   "pro1@iwosan.com",
   "researcher@iwosan.com",
   "user1@iwosan.com",
@@ -18,8 +16,6 @@ const users = await prisma.user.findMany({
   select: {
     email: true,
     role: true,
-    adminSubRole: true,
-    isResearcher: true,
     isEmailVerified: true,
     kycStatus: true,
     _count: {

@@ -9,7 +9,7 @@ import { useMyReceivedReviews, useReplyToReview } from "@/hooks/useReviewsApi";
 export const Route = createFileRoute("/tableau-de-bord/avis")({
   head: () => ({ meta: [{ title: "Avis reçus - IWOSAN" }] }),
   component: () => (
-    <ProtectedRoute requireAnyRole={["researcher", "professional", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
       <ReviewsPage />
     </ProtectedRoute>
   ),

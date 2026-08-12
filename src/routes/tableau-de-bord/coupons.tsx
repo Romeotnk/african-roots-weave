@@ -105,11 +105,6 @@ function CouponsPage() {
   };
 
   return (
-    // "researcher" is deliberately excluded here: the backend's coupon routes
-    // (server/src/routes/coupon.routes.ts) only grant PROFESSIONAL/ADMIN/
-    // SUPER_ADMIN — researchers can author content but don't run a shop, so
-    // letting them onto this page would 403 on every request, including the
-    // initial list load.
     <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
       <AccountLayout title="Coupons" description="Creez, activez et surveillez les codes promotionnels de votre boutique.">
           <div className="grid gap-4 md:grid-cols-3">

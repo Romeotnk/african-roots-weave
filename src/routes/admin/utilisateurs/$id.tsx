@@ -18,11 +18,12 @@ export const Route = createFileRoute("/admin/utilisateurs/$id")({
   component: AdminUserDetail,
 });
 
-const allRoles = ["USER", "PROFESSIONAL", "RESEARCHER", "MODERATOR", "EDITOR", "ADMIN", "SUPER_ADMIN"];
+const allRoles = ["USER", "PROFESSIONAL", "ADMIN", "SUPER_ADMIN"];
 // Mirrors adminAssignableRoles in server/src/controllers/admin.controller.ts:
-// a non-SUPER_ADMIN admin may only assign these three roles — anything else
-// 403s. Filtering the options here avoids offering choices that silently fail.
-const adminAssignableRoles = ["MODERATOR", "EDITOR", "RESEARCHER"];
+// a non-SUPER_ADMIN admin may only move an account between USER and
+// PROFESSIONAL — promoting to ADMIN/SUPER_ADMIN 403s. Filtering the options
+// here avoids offering choices that silently fail.
+const adminAssignableRoles = ["USER", "PROFESSIONAL"];
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -90,7 +91,7 @@ function AdminUserDetail() {
           </div>
 
           <div className="mt-6 space-y-3 text-[13px]">
-            <InfoRow label="Rôle" value={user.adminSubRole ? `${user.role} (${user.adminSubRole})` : user.role} />
+            <InfoRow label="Rôle" value={user.role} />
             <InfoRow label="Pays" value={user.country} />
             <InfoRow label="Statut" value={user.isBanned ? `Banni${user.banReason ? ` — ${user.banReason}` : ""}` : "Actif"} />
             <InfoRow label="Inscription" value={new Date(user.createdAt).toLocaleDateString("fr-FR")} />

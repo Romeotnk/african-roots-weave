@@ -9,7 +9,7 @@ import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications 
 export const Route = createFileRoute("/mon-compte/notifications")({
   head: () => ({ meta: [{ title: "Notifications - IWOSAN" }] }),
   component: () => (
-    <ProtectedRoute requireAnyRole={["user", "researcher", "professional", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["user", "professional", "admin", "super_admin"]}>
       <NotificationsPage />
     </ProtectedRoute>
   ),

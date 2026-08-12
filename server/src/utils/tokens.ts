@@ -1,12 +1,10 @@
 import jwt, { type JwtPayload } from "jsonwebtoken";
-import type { AdminSubRole, Role } from "@prisma/client";
+import type { Role } from "@prisma/client";
 import { env } from "../config/env.js";
 
 export type AccessTokenPayload = JwtPayload & {
   sub: string;
   role: Role;
-  adminSubRole?: AdminSubRole | null;
-  isResearcher?: boolean;
   isEmailVerified?: boolean;
   email: string;
   language: string;
@@ -16,8 +14,6 @@ export type AccessTokenPayload = JwtPayload & {
 type SignAccessPayload = {
   userId: string;
   role: Role;
-  adminSubRole?: AdminSubRole | null;
-  isResearcher?: boolean;
   isEmailVerified?: boolean;
   email: string;
   language: string;
@@ -28,8 +24,6 @@ export const signAccessToken = (payload: SignAccessPayload) =>
   jwt.sign(
     {
       role: payload.role,
-      adminSubRole: payload.adminSubRole,
-      isResearcher: payload.isResearcher,
       isEmailVerified: payload.isEmailVerified,
       email: payload.email,
       language: payload.language,

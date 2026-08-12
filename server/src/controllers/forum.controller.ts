@@ -8,7 +8,7 @@ import { ApiError } from "../utils/errors.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
 import { sanitizeRichText } from "../utils/sanitizeRichText.js";
 
-const moderatorRoles: Role[] = [Role.SUPER_ADMIN, Role.ADMIN, Role.MODERATOR];
+const moderatorRoles: Role[] = [Role.SUPER_ADMIN, Role.ADMIN];
 
 // Custom fields are stored as a flat JSON object on Question (e.g. {difficulty: "Facile"}).
 // Filtering on them arrives as repeated `cf_<key>=<value>` query params and is translated

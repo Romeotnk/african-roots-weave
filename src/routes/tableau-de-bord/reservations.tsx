@@ -58,7 +58,7 @@ function ReservationsPage() {
   };
 
   return (
-    <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
       <AccountLayout
         title="Réservations"
         description={'Confirmez, annulez ou clôturez les demandes de réservation de vos services. Configurez vos disponibilités depuis "Devenir professionnel".'}

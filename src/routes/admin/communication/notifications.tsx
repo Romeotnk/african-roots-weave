@@ -12,7 +12,6 @@ const audiences = [
   { value: "all", label: "Tous les utilisateurs" },
   { value: "users", label: "Utilisateurs (compte standard)" },
   { value: "professionals", label: "Professionnels" },
-  { value: "researchers", label: "Chercheurs" },
 ];
 
 function AdminNotifications() {

@@ -1,7 +1,6 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import {
-  AdminSubRole,
   EscrowStatus,
   KycStatus,
   MedCategory,
@@ -22,8 +21,6 @@ type RbacAccount = {
   firstName: string;
   lastName: string;
   role: Role;
-  adminSubRole?: AdminSubRole | null;
-  isResearcher?: boolean;
   country?: string;
   avatarUrl?: string;
 };
@@ -37,20 +34,6 @@ const accounts: RbacAccount[] = [
   },
   { email: "admin1@iwosan.com", firstName: "Amina", lastName: "Admin", role: Role.ADMIN },
   { email: "admin2@iwosan.com", firstName: "Koffi", lastName: "Admin", role: Role.ADMIN },
-  {
-    email: "moderator@iwosan.com",
-    firstName: "Mariam",
-    lastName: "Moderation",
-    role: Role.MODERATOR,
-    adminSubRole: AdminSubRole.MODERATOR,
-  },
-  {
-    email: "editor@iwosan.com",
-    firstName: "Nadine",
-    lastName: "Edition",
-    role: Role.EDITOR,
-    adminSubRole: AdminSubRole.EDITOR,
-  },
   { email: "pro1@iwosan.com", firstName: "Fatou", lastName: "Therapeute", role: Role.PROFESSIONAL, country: "SN" },
   { email: "pro2@iwosan.com", firstName: "Jean", lastName: "Praticien", role: Role.PROFESSIONAL, country: "BJ" },
   { email: "pro3@iwosan.com", firstName: "Akosua", lastName: "Naturopathe", role: Role.PROFESSIONAL, country: "GH" },
@@ -58,8 +41,7 @@ const accounts: RbacAccount[] = [
     email: "researcher@iwosan.com",
     firstName: "Cheikh",
     lastName: "Recherche",
-    role: Role.RESEARCHER,
-    isResearcher: true,
+    role: Role.PROFESSIONAL,
   },
   { email: "user1@iwosan.com", firstName: "Awa", lastName: "Client", role: Role.USER },
   { email: "user2@iwosan.com", firstName: "Marc", lastName: "Client", role: Role.USER },
@@ -90,14 +72,12 @@ const ensureAccount = async (account: RbacAccount, passwordHash: string) => {
     update: {
       passwordHash,
       role: account.role,
-      adminSubRole: account.adminSubRole ?? null,
-      isResearcher: account.isResearcher ?? account.role === Role.RESEARCHER,
       firstName: account.firstName,
       lastName: account.lastName,
       avatarUrl,
       country: account.country ?? "BJ",
       isEmailVerified: true,
-      kycStatus: account.role === Role.USER || account.role === Role.RESEARCHER ? KycStatus.PENDING : KycStatus.VERIFIED,
+      kycStatus: account.role === Role.USER ? KycStatus.PENDING : KycStatus.VERIFIED,
       isActive: true,
       isBanned: false,
       banReason: null,
@@ -107,15 +87,13 @@ const ensureAccount = async (account: RbacAccount, passwordHash: string) => {
       email: account.email,
       passwordHash,
       role: account.role,
-      adminSubRole: account.adminSubRole ?? null,
-      isResearcher: account.isResearcher ?? account.role === Role.RESEARCHER,
       firstName: account.firstName,
       lastName: account.lastName,
       avatarUrl,
       country: account.country ?? "BJ",
       language: "fr",
       isEmailVerified: true,
-      kycStatus: account.role === Role.USER || account.role === Role.RESEARCHER ? KycStatus.PENDING : KycStatus.VERIFIED,
+      kycStatus: account.role === Role.USER ? KycStatus.PENDING : KycStatus.VERIFIED,
       referralCode: referralCodeFor(account.email),
     },
   });

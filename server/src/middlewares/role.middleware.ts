@@ -29,7 +29,7 @@ export const checkAdminAccess: RequestHandler = (req, _res, next) => {
     return;
   }
 
-  if (!["SUPER_ADMIN", "ADMIN", "MODERATOR", "EDITOR"].includes(req.user.role)) {
+  if (!["SUPER_ADMIN", "ADMIN"].includes(req.user.role)) {
     next(unauthorized());
     return;
   }

@@ -10,7 +10,7 @@ import type { SupportTicket, SupportTicketStatus } from "@/types";
 export const Route = createFileRoute("/mon-compte/tickets")({
   head: () => ({ meta: [{ title: "Mes tickets - IWOSAN" }] }),
   component: () => (
-    <ProtectedRoute requireAnyRole={["user", "researcher", "professional", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["user", "professional", "admin", "super_admin"]}>
       <TicketsPage />
     </ProtectedRoute>
   ),

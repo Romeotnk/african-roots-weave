@@ -18,7 +18,7 @@ export const Route = createFileRoute("/admin/communaute/forum")({
   component: AdminForum,
 });
 
-const ROLE_OPTIONS = ["USER", "PROFESSIONAL", "RESEARCHER", "EDITOR", "MODERATOR", "ADMIN", "SUPER_ADMIN"];
+const ROLE_OPTIONS = ["USER", "PROFESSIONAL", "ADMIN", "SUPER_ADMIN"];
 
 type Question = {
   id: string;

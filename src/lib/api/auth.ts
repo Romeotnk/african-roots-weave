@@ -4,8 +4,6 @@ export type AuthUser = {
   id: string;
   email: string;
   role: string;
-  adminSubRole?: string | null;
-  isResearcher?: boolean;
   isEmailVerified?: boolean;
   firstName: string;
   lastName: string;

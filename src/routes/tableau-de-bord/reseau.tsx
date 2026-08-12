@@ -101,7 +101,7 @@ function ReseauPage() {
   };
 
   return (
-    <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
       <AccountLayout
         title="Mon reseau"
         description="Visualisez votre reseau de filleuls sur 3 niveaux et partagez votre lien pour en inviter de nouveaux."

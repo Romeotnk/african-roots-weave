@@ -114,7 +114,7 @@ function BlogPage() {
   };
 
   return (
-    <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
       <AccountLayout
         title="Mon blog"
         description="Publiez vos articles pour Sante au quotidien et Recettes sante. Chaque article est relu par l'equipe editoriale avant publication."

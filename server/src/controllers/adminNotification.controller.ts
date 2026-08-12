@@ -9,7 +9,6 @@ const audienceWhere = (audience: string) => {
   if (audience === "all") return {};
   if (audience === "professionals") return { role: Role.PROFESSIONAL };
   if (audience === "users") return { role: Role.USER };
-  if (audience === "researchers") return { role: Role.RESEARCHER };
   throw new ApiError(400, `Unsupported audience: ${audience}`);
 };
 

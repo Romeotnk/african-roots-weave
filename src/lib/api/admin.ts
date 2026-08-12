@@ -16,7 +16,6 @@ export type AdminUser = {
   id: string;
   email: string;
   role: string;
-  adminSubRole: string | null;
   firstName: string;
   lastName: string;
   avatarUrl: string | null;

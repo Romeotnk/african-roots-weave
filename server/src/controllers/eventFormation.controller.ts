@@ -7,7 +7,7 @@ import { demoOwnerFilter, isDemoHidden } from "../utils/demoMode.js";
 import { ApiError } from "../utils/errors.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
 
-const canPublishProgramming = (role: Role) => role === Role.SUPER_ADMIN || role === Role.ADMIN || role === Role.EDITOR;
+const canPublishProgramming = (role: Role) => role === Role.SUPER_ADMIN || role === Role.ADMIN;
 
 export const listEvents = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);

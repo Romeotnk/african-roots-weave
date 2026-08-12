@@ -766,13 +766,13 @@ async function main() {
   });
   console.log(`✅ Admin créé : ${admin.email}`);
 
-  // ─── RESEARCHER ───
-  console.log("🔬 Création du chercheur...");
+  // ─── Compte auteur de contenu (fusionné dans PROFESSIONAL) ───
+  console.log("🔬 Création du compte auteur...");
   const researcher = await prisma.user.create({
     data: {
       email: "researcher@iwosan.com",
       passwordHash,
-      role: Role.RESEARCHER,
+      role: Role.PROFESSIONAL,
       firstName: "Amina",
       lastName: "Diop",
       country: "Sénégal",
@@ -799,7 +799,7 @@ async function main() {
       },
     },
   });
-  console.log(`✅ Chercheur créé : ${researcher.email}`);
+  console.log(`✅ Compte auteur créé : ${researcher.email}`);
 
   // ─── UTILISATEURS ───
   console.log("👥 Création des utilisateurs...");
@@ -1497,7 +1497,7 @@ async function main() {
   console.log("═══════════════════════════════════════");
   console.log(`
   👑 Admin         : admin@iwosan.com / Admin@123
-  🔬 Chercheur     : researcher@iwosan.com / Admin@123
+  👨‍⚕️ Auteur pro    : researcher@iwosan.com / Admin@123
   👥 Utilisateurs  : user1@iwosan.com à user12@iwosan.com / Admin@123
   👨‍⚕️ Professionnels : pro1@iwosan.com à pro5@iwosan.com / Admin@123
   

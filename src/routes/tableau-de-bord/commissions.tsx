@@ -78,7 +78,7 @@ function CommissionsPage() {
   };
 
   return (
-    <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
       <AccountLayout
         title="Commissions"
         description="Suivez vos gains de vente directe, d'affiliation et de reseau."

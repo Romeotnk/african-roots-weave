@@ -28,7 +28,7 @@ export function getAccessTokenClaims(): AccessTokenClaims | null {
   }
 }
 
-const ADMIN_AREA_ROLES = new Set(["SUPER_ADMIN", "ADMIN", "MODERATOR", "EDITOR"]);
+const ADMIN_AREA_ROLES = new Set(["SUPER_ADMIN", "ADMIN"]);
 
 export function isAdminToken() {
   const role = getAccessTokenClaims()?.role;

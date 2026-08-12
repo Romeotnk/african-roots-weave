@@ -8,13 +8,13 @@ import { getPagination, paginationMeta } from "../utils/pagination.js";
 import { sanitizeRichText } from "../utils/sanitizeRichText.js";
 import { makeSlug } from "../utils/slug.js";
 
-const editorialRoles: Role[] = [Role.SUPER_ADMIN, Role.ADMIN, Role.EDITOR];
+const editorialRoles: Role[] = [Role.SUPER_ADMIN, Role.ADMIN];
 
 const canPublishContent = (role: Role) => editorialRoles.includes(role);
 
 // Pharmacopée and Rites & Cultures are "exclusivement gérés par
 // l'administrateur principal" per the cahier des charges — unlike the other
-// editorial spaces (Santé au quotidien, Recettes santé), ADMIN/EDITOR do not
+// editorial spaces (Santé au quotidien, Recettes santé), ADMIN does not
 // get authoring rights here, only SUPER_ADMIN.
 export const superAdminOnlySpaces: ArticleSpace[] = ["PHARMACOPEE", "RITES_CULTURES"];
 export const isSuperAdmin = (role: Role) => role === Role.SUPER_ADMIN;

@@ -9,7 +9,7 @@ import { useMyAffiliateCommissions, useMyAffiliateLink } from "@/hooks/useAffili
 export const Route = createFileRoute("/tableau-de-bord/affiliation")({
   head: () => ({ meta: [{ title: "Programme d'affiliation - IWOSAN" }] }),
   component: () => (
-    <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
       <AffiliationPage />
     </ProtectedRoute>
   ),

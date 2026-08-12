@@ -13,8 +13,6 @@ model User {
   email           String    @unique
   passwordHash    String
   role            Role      @default(USER)
-  adminSubRole    AdminSubRole?
-  isResearcher    Boolean   @default(false)
   // Per-user permission adjustments on top of the role's default grants (see
   // RolePermission): { grant: string[], revoke: string[] }. Lets an admin
   // compose a custom permission set for one person without inventing a new
@@ -99,8 +97,6 @@ model User {
 
   @@index([email])
   @@index([role])
-  @@index([adminSubRole])
-  @@index([isResearcher])
   @@index([kycStatus])
   @@index([country])
   @@index([createdAt(sort: Desc)])
@@ -1033,10 +1029,7 @@ model AuditLog {
 enum Role {
   SUPER_ADMIN
   ADMIN
-  MODERATOR
-  EDITOR
   PROFESSIONAL
-  RESEARCHER
   USER
 }
 
@@ -1052,11 +1045,6 @@ model RolePermission {
 
   @@unique([role, permission])
   @@index([role])
-}
-
-enum AdminSubRole {
-  MODERATOR
-  EDITOR
 }
 
 enum KycStatus {

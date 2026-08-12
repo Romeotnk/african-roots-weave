@@ -4,7 +4,7 @@ import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 import { authTokenStore } from "@/lib/api/client";
 import { backendAuthUserStore, loginWithSupabaseAccessToken, logout as backendLogout, type AuthUser } from "@/lib/api/auth";
 
-export type AppRole = "user" | "professional" | "researcher" | "moderator" | "editor" | "admin" | "super_admin";
+export type AppRole = "user" | "professional" | "admin" | "super_admin";
 
 interface AuthCtx {
   user: User | null;
@@ -22,9 +22,6 @@ const Ctx = createContext<AuthCtx | null>(null);
 const roleMap: Record<string, AppRole> = {
   USER: "user",
   PROFESSIONAL: "professional",
-  RESEARCHER: "researcher",
-  MODERATOR: "moderator",
-  EDITOR: "editor",
   ADMIN: "admin",
   SUPER_ADMIN: "super_admin",
 };
@@ -34,13 +31,6 @@ const rolesFromBackendUser = (backendUser: AuthUser): AppRole[] => {
   const roles = new Set<AppRole>([role]);
   if (backendUser.role === "SUPER_ADMIN") roles.add("admin");
   if (backendUser.role === "PROFESSIONAL") roles.add("user");
-  if (backendUser.role === "RESEARCHER" || backendUser.isResearcher) {
-    roles.add("researcher");
-    roles.add("professional");
-    roles.add("user");
-  }
-  if (backendUser.adminSubRole === "MODERATOR") roles.add("moderator");
-  if (backendUser.adminSubRole === "EDITOR") roles.add("editor");
   return [...roles];
 };
 
@@ -95,12 +85,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     try {
       const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
-      const mappedRoles = new Set<AppRole>((data ?? []).map((r) => r.role as AppRole));
+      const mappedRoles = new Set<AppRole>(
+        (data ?? [])
+          .map((r) => r.role as string)
+          .filter((role): role is AppRole => ["user", "professional", "admin", "super_admin"].includes(role)),
+      );
       if (mappedRoles.size === 0) mappedRoles.add("user");
-      if (mappedRoles.has("researcher")) {
-        mappedRoles.add("professional");
-        mappedRoles.add("user");
-      }
       if (mappedRoles.has("professional")) mappedRoles.add("user");
       setRoles([...mappedRoles]);
     } catch (error) {

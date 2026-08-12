@@ -1,4 +1,4 @@
-import { AdminSubRole, Role } from "@prisma/client";
+import { Role } from "@prisma/client";
 import type { Request } from "express";
 import { prisma } from "../config/db.js";
 import { env } from "../config/env.js";
@@ -17,18 +17,16 @@ import { PERMISSION_CATALOG, PERMISSION_KEYS } from "../utils/permissions.js";
 import { sanitizeRichText } from "../utils/sanitizeRichText.js";
 import { isSubscriptionPlanKey } from "../utils/subscriptionPlans.js";
 
-const adminAssignableRoles: Role[] = [Role.MODERATOR, Role.EDITOR, Role.RESEARCHER];
+// A plain ADMIN may only move an account between USER and PROFESSIONAL —
+// promoting someone to ADMIN or SUPER_ADMIN is reserved to SUPER_ADMIN,
+// which bypasses this list entirely (see updateRole below).
+const adminAssignableRoles: Role[] = [Role.USER, Role.PROFESSIONAL];
 
 // Higher rank = more authority. SUPER_ADMIN always bypasses this check.
-// Anyone else may only act on a target strictly below their own rank, so a
-// MODERATOR can never ban/promote/demote another MODERATOR, an ADMIN, or a
-// SUPER_ADMIN.
+// Anyone else may only act on a target strictly below their own rank.
 const roleRank: Record<Role, number> = {
   [Role.SUPER_ADMIN]: 4,
   [Role.ADMIN]: 3,
-  [Role.MODERATOR]: 2,
-  [Role.EDITOR]: 2,
-  [Role.RESEARCHER]: 1,
   [Role.PROFESSIONAL]: 1,
   [Role.USER]: 0,
 };
@@ -124,15 +122,11 @@ export const listUsers = asyncHandler(async (req, res) => {
 
 export const getUser = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
-  // EDITOR is an editorial role with no need to see ban reasons or wallet
-  // balances — only the roles that actually act on moderation/finance see them.
-  const canViewSensitive: boolean = ([Role.SUPER_ADMIN, Role.ADMIN, Role.MODERATOR] as Role[]).includes(req.user.role);
   const user = await prisma.user.findUnique({
     where: { id: req.params.id },
     omit: {
       passwordHash: true,
       kycDocuments: true,
-      ...(canViewSensitive ? {} : { banReason: true, walletBalance: true }),
     },
     include: { professionalProfile: true, subscription: true, mlmNode: true },
   });
@@ -163,13 +157,9 @@ export const updateRole = asyncHandler(async (req, res) => {
   await assertCanTouchUser(req.user.role, req.params.id);
 
   const nextRole = req.body.role as Role;
-  const nextSubRole = req.body.subRole as AdminSubRole | undefined;
 
   if (!Object.values(Role).includes(nextRole)) {
     throw new ApiError(400, "Invalid role");
-  }
-  if (nextSubRole !== undefined && !Object.values(AdminSubRole).includes(nextSubRole)) {
-    throw new ApiError(400, "Invalid sub-role");
   }
 
   if (req.user.role !== Role.SUPER_ADMIN && !adminAssignableRoles.includes(nextRole)) {
@@ -178,17 +168,13 @@ export const updateRole = asyncHandler(async (req, res) => {
 
   const user = await prisma.user.update({
     where: { id: req.params.id },
-    data: {
-      role: nextRole,
-      adminSubRole: nextSubRole ?? (nextRole === Role.MODERATOR ? "MODERATOR" : nextRole === Role.EDITOR ? "EDITOR" : null),
-      isResearcher: nextRole === Role.RESEARCHER || Boolean(req.body.isResearcher),
-    },
+    data: { role: nextRole },
   });
   await writeAuditLog(req, {
     action: "USER_ROLE_UPDATED",
     targetId: user.id,
     targetType: "User",
-    metadata: { role: nextRole, subRole: nextSubRole },
+    metadata: { role: nextRole },
   });
   res.json(apiResponse(true, user, "User role updated"));
 });
@@ -347,7 +333,7 @@ export const pendingArticles = asyncHandler(async (req, res) => {
     rejectedAt: null,
     // Pharmacopée/Rites & Cultures moderation is exclusive to the principal
     // administrator — don't even surface these in the generic queue for
-    // ADMIN/EDITOR/MODERATOR, since the approve/reject actions below reject them anyway.
+    // ADMIN, since the approve/reject actions below reject them anyway.
     space: req.user && isSuperAdmin(req.user.role) ? undefined : { notIn: superAdminOnlySpaces },
   };
   const [articles, total] = await prisma.$transaction([

@@ -109,7 +109,7 @@ function MesProduitsPage() {
   };
 
   return (
-    <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
       <AccountLayout
         title="Mes produits"
         description="Suivez vos produits, leur statut de publication, leur prix et leur stock."

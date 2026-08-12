@@ -10,7 +10,7 @@ import type { SubscriptionPlanKey } from "@/lib/api/subscriptions";
 export const Route = createFileRoute("/tableau-de-bord/abonnement")({
   head: () => ({ meta: [{ title: "Mon abonnement - IWOSAN" }] }),
   component: () => (
-    <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
       <SubscriptionPage />
     </ProtectedRoute>
   ),

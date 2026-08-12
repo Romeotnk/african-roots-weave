@@ -8,7 +8,7 @@ import { useStaffTicketActions, useStaffTickets } from "@/hooks/useTicketsApi";
 export const Route = createFileRoute("/tableau-de-bord/support")({
   head: () => ({ meta: [{ title: "Support - IWOSAN" }] }),
   component: () => (
-    <ProtectedRoute requireAnyRole={["professional", "researcher", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
       <SupportPage />
     </ProtectedRoute>
   ),

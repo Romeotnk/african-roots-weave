@@ -9,7 +9,7 @@ import type { AffiliateEarning, AffiliateNode } from "@/types";
 export const Route = createFileRoute("/mon-compte/affiliation")({
   head: () => ({ meta: [{ title: "Parrainage - IWOSAN" }] }),
   component: () => (
-    <ProtectedRoute requireAnyRole={["user", "researcher", "professional", "admin", "super_admin"]}>
+    <ProtectedRoute requireAnyRole={["user", "professional", "admin", "super_admin"]}>
       <AffiliationPage />
     </ProtectedRoute>
   ),
