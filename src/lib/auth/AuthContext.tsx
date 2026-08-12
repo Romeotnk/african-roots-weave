@@ -140,68 +140,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     };
 
+    // Always listen for backend-login changes, regardless of which branch
+    // below ends up driving the initial state. A plain email/password
+    // login always goes through backendAuthUserStore and must be picked
+    // up even while Supabase's own OAuth listeners are also active —
+    // previously these listeners were only attached on the
+    // already-authenticated-at-mount and no-Supabase branches, so logging
+    // in from a logged-out /connexion (the normal case, with Supabase
+    // configured) silently dispatched "iwosan.auth.changed" to no one:
+    // the URL would navigate away but roles/user state never updated,
+    // and the next ProtectedRoute check bounced the user straight back.
+    window.addEventListener("iwosan.auth.changed", loadBackendUser);
+    window.addEventListener("storage", loadBackendUser);
+
     const backendAuthenticated = loadBackendUser();
-    if (backendAuthenticated) {
-      window.addEventListener("iwosan.auth.changed", loadBackendUser);
-      window.addEventListener("storage", loadBackendUser);
-      return () => {
-        window.clearTimeout(loadingSafetyTimeout);
-        window.removeEventListener("iwosan.auth.changed", loadBackendUser);
-        window.removeEventListener("storage", loadBackendUser);
-      };
-    }
-
-    if (!isSupabaseConfigured) {
-      window.addEventListener("iwosan.auth.changed", loadBackendUser);
-      window.addEventListener("storage", loadBackendUser);
-      return () => {
-        window.clearTimeout(loadingSafetyTimeout);
-        window.removeEventListener("iwosan.auth.changed", loadBackendUser);
-        window.removeEventListener("storage", loadBackendUser);
-      };
-    }
-
-    // Listener first (synchronous state set), then fetch session
     let sub: { subscription: { unsubscribe: () => void } } | null = null;
-    try {
-      const listener = supabase.auth.onAuthStateChange((_event, s) => {
-        setLoading(true);
-        // Defer Supabase calls to avoid deadlocks
-        setTimeout(() => {
-          if (!s) {
-            loadBackendUser();
-            return;
-          }
-          hydrateFromSupabaseSession(s).finally(() => setLoading(false));
-        }, 0);
-      });
-      sub = listener.data;
 
-      supabase.auth
-        .getSession()
-        .then(({ data }) => {
-          if (data.session?.user) {
-            hydrateFromSupabaseSession(data.session).finally(() => setLoading(false));
-            return;
-          }
-
-          if (!loadBackendUser()) {
-            setLoading(false);
-          }
-        })
-        .catch((error) => {
-          console.warn("Supabase session unavailable, falling back to backend auth.", error);
-          loadBackendUser();
-          setLoading(false);
+    if (!backendAuthenticated && isSupabaseConfigured) {
+      try {
+        const listener = supabase.auth.onAuthStateChange((_event, s) => {
+          setLoading(true);
+          // Defer Supabase calls to avoid deadlocks
+          setTimeout(() => {
+            if (!s) {
+              loadBackendUser();
+              return;
+            }
+            hydrateFromSupabaseSession(s).finally(() => setLoading(false));
+          }, 0);
         });
-    } catch (error) {
-      console.warn("Supabase auth unavailable, falling back to backend auth.", error);
-      loadBackendUser();
-      setLoading(false);
+        sub = listener.data;
+
+        supabase.auth
+          .getSession()
+          .then(({ data }) => {
+            if (data.session?.user) {
+              hydrateFromSupabaseSession(data.session).finally(() => setLoading(false));
+              return;
+            }
+
+            if (!loadBackendUser()) {
+              setLoading(false);
+            }
+          })
+          .catch((error) => {
+            console.warn("Supabase session unavailable, falling back to backend auth.", error);
+            loadBackendUser();
+            setLoading(false);
+          });
+      } catch (error) {
+        console.warn("Supabase auth unavailable, falling back to backend auth.", error);
+        loadBackendUser();
+        setLoading(false);
+      }
     }
 
     return () => {
       window.clearTimeout(loadingSafetyTimeout);
+      window.removeEventListener("iwosan.auth.changed", loadBackendUser);
+      window.removeEventListener("storage", loadBackendUser);
       sub?.subscription.unsubscribe();
     };
   }, []);
