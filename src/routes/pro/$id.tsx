@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { BadgeCheck, Facebook, Instagram, Linkedin, MapPin, MessageCircle, Smartphone, Star } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Facebook, Instagram, Linkedin, MapPin, MessageCircle, Smartphone, Star } from "lucide-react";
 import { useProducts, useProfessional } from "@/hooks/useApiCatalog";
 import { useFormations } from "@/hooks/useEventsFormationsApi";
 import { useCreateReview, useTargetReviews } from "@/hooks/useReviewsApi";
@@ -126,6 +126,9 @@ function ProfessionalShowcase() {
           <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
             Ce professionnel n'existe pas ou n'est plus disponible sur Iwosan.
           </p>
+          <Link to="/annuaire" className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white">
+            Retour à l'annuaire
+          </Link>
         </div>
       </main>
     );
@@ -140,6 +143,12 @@ function ProfessionalShowcase() {
         </div>
         <div className="relative container-iwosan py-16 md:py-20">
           <div className="max-w-5xl">
+            <Link
+              to="/annuaire"
+              className="mb-4 inline-flex items-center gap-1.5 text-[13px] font-semibold text-white/75 transition hover:text-white"
+            >
+              <ArrowLeft size={15} /> Retour à l'annuaire
+            </Link>
             <span className="font-mono text-[12px] tracking-[0.22em] text-[var(--brand-gold)]">VITRINE PROFESSIONNELLE</span>
             <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="flex flex-col gap-5 md:flex-row md:items-end">

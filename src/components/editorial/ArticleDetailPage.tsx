@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Copy, Facebook, MessageCircle } from "lucide-react";
+import { ArrowLeft, Copy, Facebook, MessageCircle } from "lucide-react";
 import { ArticleCard } from "@/components/shared/ArticleCard";
 import { AdSlot } from "@/components/shared/AdSlot";
 import { useArticle, useArticleComments, useArticles, useCreateArticleComment } from "@/hooks/useContentApi";
@@ -8,7 +8,7 @@ import { toArticle, type BackendArticle } from "@/components/editorial/ArticleLi
 import type { ArticleSpace } from "@/lib/api/content";
 import { useAuth } from "@/lib/auth/AuthContext";
 
-export function ArticleDetailPage({ slug, fallbackSpace }: { slug: string; fallbackSpace?: string }) {
+export function ArticleDetailPage({ slug, fallbackSpace, backTo }: { slug: string; fallbackSpace?: string; backTo: string }) {
   const articleQuery = useArticle(slug);
   const apiArticle = useMemo(() => {
     const data = articleQuery.data as BackendArticle | undefined;
@@ -48,6 +48,9 @@ export function ArticleDetailPage({ slug, fallbackSpace }: { slug: string; fallb
           <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
             Cet article n'existe pas ou n'est plus disponible sur Iwosan.
           </p>
+          <Link to={backTo as never} className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white">
+            Retour
+          </Link>
         </div>
       </main>
     );
@@ -94,6 +97,12 @@ export function ArticleDetailPage({ slug, fallbackSpace }: { slug: string; fallb
       <section className="relative min-h-[440px] bg-[var(--brand-primary-dark)] text-white">
         <img src={article.cover} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
         <div className="relative container-iwosan py-12 md:py-20">
+          <Link
+            to={backTo as never}
+            className="mb-4 inline-flex items-center gap-1.5 text-[13px] font-semibold text-white/75 transition hover:text-white"
+          >
+            <ArrowLeft size={15} /> Retour
+          </Link>
           <nav className="flex flex-wrap gap-2 text-[13px] text-white/75">
             <Link to="/">Accueil</Link>
             <span>&gt;</span>

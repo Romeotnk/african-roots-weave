@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Image, Laugh, Paperclip, Search, Send } from "lucide-react";
@@ -253,6 +253,12 @@ function MessagesPage() {
         <div className="overflow-hidden rounded-[16px] border border-[var(--brand-border-light)] bg-white shadow-iwosan-sm lg:grid lg:h-[760px] lg:grid-cols-[340px_1fr]">
           <aside className={`${mobileConversationOpen ? "hidden lg:flex" : "flex"} flex-col border-r border-[var(--brand-border-light)]`}>
             <div className="border-b border-[var(--brand-border-light)] p-4">
+              <Link
+                to="/mon-compte"
+                className="mb-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--color-text-muted)] transition hover:text-[var(--brand-primary)]"
+              >
+                <ArrowLeft size={15} /> Retour
+              </Link>
               <h1 className="text-[24px] font-bold">Messages</h1>
               <div className="mt-4 flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-3">
                 <Search size={16} className="text-[var(--color-text-muted)]" />
