@@ -2,18 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { Archive, Eye, Flame, Loader2, PackageCheck, Plus, RefreshCw, Search, ShoppingBag, Sparkles, ToggleLeft, ToggleRight } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { useBoostProduct, useMarkProductUrgent, useMyProducts, useRenewProduct, useUpdateProduct } from "@/hooks/useApiCatalog";
 import type { MyProduct } from "@/lib/api/catalog";
 
 type DisplayStatus = "published" | "review" | "paused";
-
-const statusLabels: Record<DisplayStatus, string> = {
-  published: "Publie",
-  review: "En validation",
-  paused: "Pause",
-};
 
 const statusClasses: Record<DisplayStatus, string> = {
   published: "bg-emerald-50 text-emerald-700 border-emerald-100",
@@ -37,6 +32,12 @@ const isExpiringSoon = (expiresAt: string | null) => {
 };
 
 function MesProduitsPage() {
+  const { t } = useTranslation();
+  const statusLabels: Record<DisplayStatus, string> = {
+    published: t("dashboard.myProducts.statusPublished"),
+    review: t("dashboard.myProducts.statusReview"),
+    paused: t("dashboard.myProducts.statusPaused"),
+  };
   const { data: products, isLoading, isError } = useMyProducts();
   const updateProduct = useUpdateProduct();
   const renewProduct = useRenewProduct();
@@ -65,8 +66,8 @@ function MesProduitsPage() {
     updateProduct.mutate(
       { id: product.id, payload: { isActive: !product.isActive } },
       {
-        onSuccess: () => setMessage(product.isActive ? "Annonce mise en pause." : "Annonce publiee."),
-        onError: () => setMessage("Une erreur est survenue, reessayez."),
+        onSuccess: () => setMessage(product.isActive ? t("dashboard.myProducts.paused") : t("dashboard.myProducts.published")),
+        onError: () => setMessage(t("dashboard.myProducts.genericError")),
       },
     );
   };
@@ -76,8 +77,8 @@ function MesProduitsPage() {
     updateProduct.mutate(
       { id: product.id, payload: { stock: nextStock } },
       {
-        onSuccess: () => setMessage("Stock mis a jour."),
-        onError: () => setMessage("Une erreur est survenue, reessayez."),
+        onSuccess: () => setMessage(t("dashboard.myProducts.stockUpdated")),
+        onError: () => setMessage(t("dashboard.myProducts.genericError")),
       },
     );
   };
@@ -85,44 +86,44 @@ function MesProduitsPage() {
   const renew = (product: MyProduct) => {
     renewProduct.mutate(product.id, {
       onSuccess: (renewed) =>
-        setMessage(renewed?.expiresAt ? `Annonce renouvelee jusqu'au ${formatDate(renewed.expiresAt)}.` : "Annonce renouvelee."),
-      onError: () => setMessage("Une erreur est survenue, reessayez."),
+        setMessage(renewed?.expiresAt ? t("dashboard.myProducts.renewedUntil", { date: formatDate(renewed.expiresAt) }) : t("dashboard.myProducts.renewed")),
+      onError: () => setMessage(t("dashboard.myProducts.genericError")),
     });
   };
 
   const boost = (product: MyProduct) => {
-    if (!window.confirm("Mettre cette annonce en avant pour 7 jours (2 000 FCFA preleves sur votre portefeuille) ?")) return;
+    if (!window.confirm(t("dashboard.myProducts.confirmBoost"))) return;
     boostProduct.mutate(product.id, {
       onSuccess: (updated) =>
-        setMessage(updated?.featuredUntil ? `Annonce mise en avant jusqu'au ${formatDate(updated.featuredUntil)}.` : "Annonce mise en avant."),
-      onError: (error) => setMessage(error instanceof Error ? error.message : "Une erreur est survenue, reessayez."),
+        setMessage(updated?.featuredUntil ? t("dashboard.myProducts.boostedUntil", { date: formatDate(updated.featuredUntil) }) : t("dashboard.myProducts.boosted")),
+      onError: (error) => setMessage(error instanceof Error ? error.message : t("dashboard.myProducts.genericError")),
     });
   };
 
   const markAsUrgent = (product: MyProduct) => {
-    if (!window.confirm("Ajouter le badge urgent pour 3 jours (1 000 FCFA preleves sur votre portefeuille) ?")) return;
+    if (!window.confirm(t("dashboard.myProducts.confirmUrgent"))) return;
     markUrgent.mutate(product.id, {
       onSuccess: (updated) =>
-        setMessage(updated?.urgentUntil ? `Badge urgent actif jusqu'au ${formatDate(updated.urgentUntil)}.` : "Badge urgent active."),
-      onError: (error) => setMessage(error instanceof Error ? error.message : "Une erreur est survenue, reessayez."),
+        setMessage(updated?.urgentUntil ? t("dashboard.myProducts.urgentUntil", { date: formatDate(updated.urgentUntil) }) : t("dashboard.myProducts.urgentActivated")),
+      onError: (error) => setMessage(error instanceof Error ? error.message : t("dashboard.myProducts.genericError")),
     });
   };
 
   return (
     <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
       <AccountLayout
-        title="Mes produits"
-        description="Suivez vos produits, leur statut de publication, leur prix et leur stock."
+        title={t("dashboard.myProducts.title")}
+        description={t("dashboard.myProducts.description")}
         actions={
           <Link to="/marketplace/deposer" className="btn-primary h-11 px-5 text-[14px]">
-            <Plus size={17} /> Ajouter un produit
+            <Plus size={17} /> {t("dashboard.myProducts.addProduct")}
           </Link>
         }
       >
           <div className="grid gap-4 md:grid-cols-3">
-            <StatCard icon={PackageCheck} label="Publies" value={String(publishedCount)} />
-            <StatCard icon={Archive} label="Stock faible" value={String(lowStockCount)} />
-            <StatCard icon={Eye} label="Vues totales" value={String(totalViews)} />
+            <StatCard icon={PackageCheck} label={t("dashboard.myProducts.statPublished")} value={String(publishedCount)} />
+            <StatCard icon={Archive} label={t("dashboard.myProducts.statLowStock")} value={String(lowStockCount)} />
+            <StatCard icon={Eye} label={t("dashboard.myProducts.statTotalViews")} value={String(totalViews)} />
           </div>
 
           <div className="mt-6 rounded-[8px] border border-[var(--brand-border-light)] bg-white p-4">
@@ -132,7 +133,7 @@ function MesProduitsPage() {
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Rechercher un produit"
+                  placeholder={t("dashboard.myProducts.searchPlaceholder")}
                   className="h-11 w-full rounded-[8px] border border-[var(--brand-border-light)] bg-white pl-10 pr-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
                 />
               </label>
@@ -148,7 +149,7 @@ function MesProduitsPage() {
                         : "bg-[var(--brand-surface-alt)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
                     }`}
                   >
-                    {status === "all" ? "Tous" : statusLabels[status]}
+                    {status === "all" ? t("dashboard.myProducts.all") : statusLabels[status]}
                   </button>
                 ))}
               </div>
@@ -163,13 +164,13 @@ function MesProduitsPage() {
               </div>
             ) : isError ? (
               <div className="rounded-[8px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
-                Impossible de charger vos produits pour le moment.
+                {t("dashboard.myProducts.loadError")}
               </div>
             ) : filteredProducts.length === 0 ? (
               <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-8 text-center">
                 <ShoppingBag className="mx-auto text-[var(--brand-primary)]" size={34} />
-                <h2 className="mt-4 text-[20px] font-bold">Aucun produit trouve</h2>
-                <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Essayez une autre recherche ou ajoutez votre premier produit.</p>
+                <h2 className="mt-4 text-[20px] font-bold">{t("dashboard.myProducts.emptyTitle")}</h2>
+                <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">{t("dashboard.myProducts.emptyDesc")}</p>
               </div>
             ) : (
               filteredProducts.map((product) => {
@@ -185,27 +186,31 @@ function MesProduitsPage() {
                           </span>
                           {isExpiringSoon(product.expiresAt) && (
                             <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[12px] font-bold text-amber-700">
-                              Expire bientot
+                              {t("dashboard.myProducts.expiringSoon")}
                             </span>
                           )}
                           {product.isFeatured && (
                             <span className="inline-flex items-center gap-1 rounded-full border border-[var(--brand-gold)] bg-amber-50 px-3 py-1 text-[12px] font-bold text-[var(--brand-gold)]">
-                              <Sparkles size={12} /> En avant
+                              <Sparkles size={12} /> {t("dashboard.myProducts.featured")}
                             </span>
                           )}
                           {product.isUrgent && (
                             <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-[12px] font-bold text-red-700">
-                              <Flame size={12} /> Urgent
+                              <Flame size={12} /> {t("dashboard.myProducts.urgent")}
                             </span>
                           )}
                         </div>
                         <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">
-                          {product.category} - {formatMoney(product.price)}
-                          {product.type !== "digital" ? ` - stock ${product.stock}` : ""} - maj {formatDate(product.updatedAt)}
-                          {product.expiresAt ? ` - expire le ${formatDate(product.expiresAt)}` : ""}
+                          {t("dashboard.myProducts.productSummary", {
+                            category: product.category,
+                            price: formatMoney(product.price),
+                            stock: product.type !== "digital" ? t("dashboard.myProducts.stockSuffix", { count: product.stock }) : "",
+                            updated: formatDate(product.updatedAt),
+                            expires: product.expiresAt ? t("dashboard.myProducts.expiresSuffix", { date: formatDate(product.expiresAt) }) : "",
+                          })}
                         </p>
                       </div>
-                      <p className="text-[13px] font-bold text-[var(--color-text-secondary)]">{product.viewCount} vues</p>
+                      <p className="text-[13px] font-bold text-[var(--color-text-secondary)]">{product.viewCount} {t("dashboard.myProducts.views")}</p>
                     </div>
 
                     <div className="mt-4 flex flex-wrap gap-2">
@@ -216,7 +221,7 @@ function MesProduitsPage() {
                         className="btn-secondary h-10 px-4 text-[13px]"
                       >
                         {product.isActive ? <ToggleLeft size={16} /> : <ToggleRight size={16} />}
-                        {product.isActive ? "Mettre en pause" : "Publier"}
+                        {product.isActive ? t("dashboard.myProducts.pause") : t("dashboard.myProducts.publish")}
                       </button>
                       {product.type !== "digital" && (
                         <>
@@ -226,7 +231,7 @@ function MesProduitsPage() {
                             disabled={updateProduct.isPending}
                             className="btn-secondary h-10 px-4 text-[13px]"
                           >
-                            + Stock
+                            {t("dashboard.myProducts.increaseStock")}
                           </button>
                           <button
                             type="button"
@@ -234,7 +239,7 @@ function MesProduitsPage() {
                             disabled={updateProduct.isPending}
                             className="btn-secondary h-10 px-4 text-[13px]"
                           >
-                            - Stock
+                            {t("dashboard.myProducts.decreaseStock")}
                           </button>
                         </>
                       )}
@@ -244,7 +249,7 @@ function MesProduitsPage() {
                         disabled={renewProduct.isPending}
                         className="btn-secondary h-10 px-4 text-[13px]"
                       >
-                        <RefreshCw size={16} /> Renouveler
+                        <RefreshCw size={16} /> {t("dashboard.myProducts.renew")}
                       </button>
                       {!product.isFeatured && (
                         <button
@@ -253,7 +258,7 @@ function MesProduitsPage() {
                           disabled={boostProduct.isPending}
                           className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-gold)] px-4 text-[13px] font-semibold text-[var(--brand-gold)]"
                         >
-                          <Sparkles size={16} /> Mettre en avant (2 000 FCFA)
+                          <Sparkles size={16} /> {t("dashboard.myProducts.boost")}
                         </button>
                       )}
                       {!product.isUrgent && (
@@ -263,7 +268,7 @@ function MesProduitsPage() {
                           disabled={markUrgent.isPending}
                           className="inline-flex h-10 items-center gap-2 rounded-full border border-red-200 px-4 text-[13px] font-semibold text-red-700"
                         >
-                          <Flame size={16} /> Badge urgent (1 000 FCFA)
+                          <Flame size={16} /> {t("dashboard.myProducts.markUrgent")}
                         </button>
                       )}
                     </div>

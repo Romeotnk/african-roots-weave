@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { useAdminModerationActions, usePendingProducts } from "@/hooks/useAdminApi";
@@ -20,6 +21,7 @@ type PendingProduct = {
 };
 
 function AdminMarketplace() {
+  const { t } = useTranslation();
   const pendingQuery = usePendingProducts();
   const { approveProduct, rejectProduct } = useAdminModerationActions();
   const [rejectTarget, setRejectTarget] = useState<PendingProduct | null>(null);
@@ -28,21 +30,21 @@ function AdminMarketplace() {
   const products = (pendingQuery.data?.data ?? []) as PendingProduct[];
 
   return (
-    <AdminLayout title="Marketplace" description="Modération des annonces en attente d'approbation.">
+    <AdminLayout title={t("admin.marketplaceModeration.title")} description={t("admin.marketplaceModeration.description")}>
       {notice && <div className="mb-4 rounded-lg bg-emerald-500/15 p-3 text-[13px] text-emerald-200">{notice}</div>}
 
-      {pendingQuery.isLoading && <p className="text-[13px] text-slate-400">Chargement...</p>}
-      {pendingQuery.isError && <p className="text-[13px] text-red-300">Impossible de charger les annonces en attente.</p>}
+      {pendingQuery.isLoading && <p className="text-[13px] text-slate-400">{t("admin.marketplaceModeration.loading")}</p>}
+      {pendingQuery.isError && <p className="text-[13px] text-red-300">{t("admin.marketplaceModeration.loadError")}</p>}
 
       {!pendingQuery.isLoading && !pendingQuery.isError && (
         <div className="overflow-x-auto rounded-[12px] border border-white/10">
           <table className="w-full min-w-[720px] text-left text-[13px]">
             <thead className="bg-white/10 text-slate-300">
-              <tr>{["Annonce", "Catégorie", "Type", "Prix", "Déposée le", "Actions"].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
+              <tr>{[t("admin.marketplaceModeration.colListing"), t("admin.marketplaceModeration.colCategory"), t("admin.marketplaceModeration.colType"), t("admin.marketplaceModeration.colPrice"), t("admin.marketplaceModeration.colSubmittedOn"), t("admin.marketplaceModeration.colActions")].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
             </thead>
             <tbody>
               {products.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400">Aucune annonce en attente de modération.</td></tr>
+                <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400">{t("admin.marketplaceModeration.noPendingListings")}</td></tr>
               )}
               {products.map((product) => (
                 <tr key={product.id} className="border-t border-white/10">
@@ -56,13 +58,13 @@ function AdminMarketplace() {
                       <button
                         type="button"
                         disabled={approveProduct.isPending}
-                        onClick={() => approveProduct.mutate(product.id, { onSuccess: () => setNotice(`« ${product.title} » approuvée.`) })}
+                        onClick={() => approveProduct.mutate(product.id, { onSuccess: () => setNotice(t("admin.marketplaceModeration.approved", { title: product.title })) })}
                         className="rounded-full bg-emerald-400 px-3 py-1 text-[12px] font-bold text-[#111827] disabled:opacity-50"
                       >
-                        Approuver
+                        {t("admin.marketplaceModeration.approve")}
                       </button>
                       <button type="button" onClick={() => setRejectTarget(product)} className="rounded-full bg-red-500/80 px-3 py-1 text-[12px] font-bold text-white">
-                        Rejeter
+                        {t("admin.marketplaceModeration.reject")}
                       </button>
                     </div>
                   </td>
@@ -76,18 +78,18 @@ function AdminMarketplace() {
       <ConfirmDialog
         open={Boolean(rejectTarget)}
         onOpenChange={(open) => !open && setRejectTarget(null)}
-        title={`Rejeter « ${rejectTarget?.title ?? ""} »`}
-        description="Le vendeur ne verra pas ce motif automatiquement — communiquez-le lui séparément si besoin."
+        title={t("admin.marketplaceModeration.rejectTitle", { title: rejectTarget?.title ?? "" })}
+        description={t("admin.marketplaceModeration.rejectDesc")}
         danger
         requireReason
-        reasonLabel="Motif du rejet"
-        confirmLabel="Rejeter"
+        reasonLabel={t("admin.marketplaceModeration.rejectReasonLabel")}
+        confirmLabel={t("admin.marketplaceModeration.reject")}
         pending={rejectProduct.isPending}
         onConfirm={(reason) => {
           if (!rejectTarget || !reason) return;
           rejectProduct.mutate(
             { id: rejectTarget.id, reason },
-            { onSuccess: () => { setNotice(`« ${rejectTarget.title} » rejetée.`); setRejectTarget(null); } },
+            { onSuccess: () => { setNotice(t("admin.marketplaceModeration.rejected", { title: rejectTarget.title })); setRejectTarget(null); } },
           );
         }}
       />

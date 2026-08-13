@@ -89,9 +89,16 @@ function Marketplace() {
     if (selectedCategories.length > 0) params.set("categories", selectedCategories.join(","));
     if (selectedTypes[0]) params.set("type", selectedTypes[0]);
     if (sort) params.set("sort", sort);
+    // Distance sort needs the real global ranking from the backend — without
+    // this, "closest to me" only re-sorted whichever 24 items the default
+    // sort happened to fetch, which could miss genuinely closer listings.
+    if (sort === "distance" && userPosition) {
+      params.set("lat", String(userPosition.lat));
+      params.set("lng", String(userPosition.lng));
+    }
     params.set("limit", "24");
     return params;
-  }, [selectedCategories, selectedTypes, sort]);
+  }, [selectedCategories, selectedTypes, sort, userPosition]);
 
   const categoryCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -350,7 +357,7 @@ function Marketplace() {
     <>
       <HeroSection
         image="https://images.unsplash.com/photo-1597318181409-cf64d0b9d3d2?w=1920&q=80"
-        badge="Marketplace"
+        badge={t("marketplace.hero.badge")}
         title={t("marketplace.hero.title")}
         subtitle={t("marketplace.hero.subtitle")}
         size="md"

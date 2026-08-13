@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, BadgeCheck, Facebook, Instagram, Linkedin, MapPin, MessageCircle, Smartphone, Star } from "lucide-react";
 import { useProducts, useProfessional } from "@/hooks/useApiCatalog";
 import { useFormations } from "@/hooks/useEventsFormationsApi";
@@ -36,6 +37,7 @@ type FormationRecord = {
 };
 
 function ProfessionalShowcase() {
+  const { t } = useTranslation();
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -65,11 +67,18 @@ function ProfessionalShowcase() {
   const formations = (formationsQuery.data?.formations ?? []) as FormationRecord[];
 
   const stats = useMemo(
-    () => (pro ? [[products.length, "produits et services"], [formations.length, "formations"], [pro.reviewCount, "avis vérifiés"]] : []),
-    [pro, products.length, formations.length],
+    () =>
+      pro
+        ? [
+            [products.length, t("pro.about.statsProducts")],
+            [formations.length, t("pro.about.statsFormations")],
+            [pro.reviewCount, t("pro.about.statsReviews")],
+          ]
+        : [],
+    [pro, products.length, formations.length, t],
   );
 
-  const contactMessage = useMemo(() => (pro ? `Bonjour ${pro.name}, je vous contacte depuis Iwosan.` : ""), [pro]);
+  const contactMessage = useMemo(() => (pro ? t("pro.contact.defaultMessage", { name: pro.name }) : ""), [pro, t]);
 
   const socialLinks = useMemo(() => {
     if (!pro?.socialLinks) return [];
@@ -122,12 +131,12 @@ function ProfessionalShowcase() {
     return (
       <main className="grid min-h-[60vh] place-items-center bg-[var(--brand-bg)] px-6 text-center">
         <div>
-          <h1 className="text-[28px] font-bold">Profil introuvable</h1>
+          <h1 className="text-[28px] font-bold">{t("pro.notFound.title")}</h1>
           <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-            Ce professionnel n'existe pas ou n'est plus disponible sur Iwosan.
+            {t("pro.notFound.desc")}
           </p>
           <Link to="/annuaire" className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white">
-            Retour à l'annuaire
+            {t("pro.backToDirectory")}
           </Link>
         </div>
       </main>
@@ -147,9 +156,9 @@ function ProfessionalShowcase() {
               to="/annuaire"
               className="mb-4 inline-flex items-center gap-1.5 text-[13px] font-semibold text-white/75 transition hover:text-white"
             >
-              <ArrowLeft size={15} /> Retour à l'annuaire
+              <ArrowLeft size={15} /> {t("pro.backToDirectory")}
             </Link>
-            <span className="font-mono text-[12px] tracking-[0.22em] text-[var(--brand-gold)]">VITRINE PROFESSIONNELLE</span>
+            <span className="font-mono text-[12px] tracking-[0.22em] text-[var(--brand-gold)]">{t("pro.showcaseLabel")}</span>
             <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="flex flex-col gap-5 md:flex-row md:items-end">
                 <PractitionerAvatar src={pro.avatar} name={pro.name} isVerified={pro.verified} size="lg" clickable gallery={pro.gallery ?? [pro.avatar, pro.cover]} />
@@ -158,7 +167,7 @@ function ProfessionalShowcase() {
                   <p className="mt-2 max-w-2xl text-white/80">{pro.specialty}</p>
                   <p className="mt-2 inline-flex items-center gap-2 text-white/75"><MapPin size={16} /> {pro.location}, {pro.country}</p>
                   {pro.verified && (
-                    <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[12px] font-semibold text-white"><BadgeCheck size={14} className="text-[var(--brand-gold)]" /> Profil vérifié</div>
+                    <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[12px] font-semibold text-white"><BadgeCheck size={14} className="text-[var(--brand-gold)]" /> {t("pro.verifiedBadge")}</div>
                   )}
                 </div>
               </div>
@@ -176,12 +185,12 @@ function ProfessionalShowcase() {
           <div className="space-y-8">
             <nav className="flex flex-wrap gap-2">
               {[
-                ["about", "À propos"],
-                ["location", "Localisation"],
-                ["products", `Ses produits & services (${products.length})`],
-                ["training", `Ses formations (${formations.length})`],
-                ["reviews", `Avis (${pro.reviewCount})`],
-                ...(pro.serviceBookingEnabled ? [["booking", "Réserver"]] : []),
+                ["about", t("pro.tabs.about")],
+                ["location", t("pro.tabs.location")],
+                ["products", t("pro.tabs.products", { count: products.length })],
+                ["training", t("pro.tabs.training", { count: formations.length })],
+                ["reviews", t("pro.tabs.reviews", { count: pro.reviewCount })],
+                ...(pro.serviceBookingEnabled ? [["booking", t("pro.tabs.booking")]] : []),
               ].map(([key, label]) => (
                 <button key={key} onClick={() => setTab(key as typeof tab)} className={`rounded-full px-4 py-2 text-[13px] font-semibold ${tab === key ? "bg-[var(--brand-primary)] text-white" : "bg-white border border-[var(--brand-border)]"}`}>{label}</button>
               ))}
@@ -189,23 +198,23 @@ function ProfessionalShowcase() {
 
             {tab === "about" && (
               <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
-                <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">À PROPOS</p>
+                <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">{t("pro.about.label")}</p>
                 <p className="mt-4 text-[16px] leading-8 text-[var(--color-text-secondary)]">{pro.bio}</p>
                 {pro.innovations && (
                   <div className="mt-6">
-                    <p className="font-mono text-[12px] tracking-[0.14em] text-[var(--brand-primary)]">INNOVATIONS PERSONNELLES</p>
+                    <p className="font-mono text-[12px] tracking-[0.14em] text-[var(--brand-primary)]">{t("pro.about.innovations")}</p>
                     <p className="mt-2 text-[14px] leading-7 text-[var(--color-text-secondary)]">{pro.innovations}</p>
                   </div>
                 )}
                 {pro.communityImpact && (
                   <div className="mt-6">
-                    <p className="font-mono text-[12px] tracking-[0.14em] text-[var(--brand-primary)]">IMPACT COMMUNAUTAIRE</p>
+                    <p className="font-mono text-[12px] tracking-[0.14em] text-[var(--brand-primary)]">{t("pro.about.communityImpact")}</p>
                     <p className="mt-2 text-[14px] leading-7 text-[var(--color-text-secondary)]">{pro.communityImpact}</p>
                   </div>
                 )}
                 {pro.philosophy && (
                   <div className="mt-6">
-                    <p className="font-mono text-[12px] tracking-[0.14em] text-[var(--brand-primary)]">PHILOSOPHIE</p>
+                    <p className="font-mono text-[12px] tracking-[0.14em] text-[var(--brand-primary)]">{t("pro.about.philosophy")}</p>
                     <p className="mt-2 text-[14px] leading-7 text-[var(--color-text-secondary)]">{pro.philosophy}</p>
                   </div>
                 )}
@@ -229,15 +238,15 @@ function ProfessionalShowcase() {
 
             {tab === "location" && (
               <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
-                <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">LOCALISATION</p>
+                <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">{t("pro.location.label")}</p>
                 <p className="mt-4 text-[14px] text-[var(--color-text-secondary)]">{pro.location}, {pro.country}</p>
                 {pro.latitude && pro.longitude ? (
                   <div className="mt-4 overflow-hidden rounded-2xl border border-[var(--brand-border-light)]">
-                    <iframe title="Localisation" className="h-[280px] w-full" src={`https://maps.google.com/maps?q=${pro.latitude},${pro.longitude}&output=embed`} />
+                    <iframe title={t("pro.location.label")} className="h-[280px] w-full" src={`https://maps.google.com/maps?q=${pro.latitude},${pro.longitude}&output=embed`} />
                   </div>
                 ) : (
                   <p className="mt-4 rounded-2xl border border-dashed border-[var(--brand-border)] bg-[var(--brand-surface-alt)] p-4 text-[13px] text-[var(--color-text-muted)]">
-                    Ce professionnel n'a pas encore précisé de localisation exacte sur la carte.
+                    {t("pro.location.noLocation")}
                   </p>
                 )}
               </section>
@@ -246,13 +255,13 @@ function ProfessionalShowcase() {
             {tab === "products" && (
               <section className="space-y-5">
                 <div className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
-                  <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">SES PRODUITS & SERVICES</p>
+                  <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">{t("pro.products.label")}</p>
                   {products.length > 0 ? (
                     <div className="mt-5 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                       {products.map((product) => <ProductCard key={product.id} product={product} />)}
                     </div>
                   ) : (
-                    <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">Aucune annonce publiée pour le moment.</p>
+                    <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">{t("pro.products.empty")}</p>
                   )}
                 </div>
               </section>
@@ -260,7 +269,7 @@ function ProfessionalShowcase() {
 
             {tab === "training" && (
               <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
-                <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">FORMATIONS</p>
+                <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">{t("pro.training.label")}</p>
                 {formations.length > 0 ? (
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     {formations.map((course) => (
@@ -271,13 +280,13 @@ function ProfessionalShowcase() {
                         <div className="p-4">
                           {course.category && <span className="rounded-full bg-[var(--brand-primary-subtle)] px-3 py-1 text-[11px] font-bold text-[var(--brand-primary)]">{course.category}</span>}
                           <h3 className="mt-3 text-[20px] font-bold">{course.title}</h3>
-                          <a href={`/formations/${course.id}`} className="mt-4 inline-flex rounded-full bg-[var(--brand-primary)] px-4 py-2 text-[13px] font-semibold text-white">Accéder</a>
+                          <a href={`/formations/${course.id}`} className="mt-4 inline-flex rounded-full bg-[var(--brand-primary)] px-4 py-2 text-[13px] font-semibold text-white">{t("pro.training.access")}</a>
                         </div>
                       </article>
                     ))}
                   </div>
                 ) : (
-                  <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">Aucune formation publiée pour le moment.</p>
+                  <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">{t("pro.training.empty")}</p>
                 )}
               </section>
             )}
@@ -286,7 +295,7 @@ function ProfessionalShowcase() {
               <section className="space-y-5">
                 {user && user.id !== id && (
                   <div className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
-                    <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">LAISSER UN AVIS</p>
+                    <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">{t("pro.reviews.leaveReview")}</p>
                     <div className="mt-4 flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map((value) => (
                         <button
@@ -295,7 +304,7 @@ function ProfessionalShowcase() {
                           onMouseEnter={() => setReviewHoverRating(value)}
                           onMouseLeave={() => setReviewHoverRating(0)}
                           onClick={() => setReviewRating(value)}
-                          aria-label={`${value} étoile${value > 1 ? "s" : ""}`}
+                          aria-label={t("pro.reviews.starLabel", { count: value })}
                         >
                           <Star
                             size={26}
@@ -312,7 +321,7 @@ function ProfessionalShowcase() {
                       rows={3}
                       value={reviewComment}
                       onChange={(event) => setReviewComment(event.target.value)}
-                      placeholder="Partagez votre expérience avec ce professionnel (facultatif)."
+                      placeholder={t("pro.reviews.commentPlaceholder")}
                       className="mt-3 w-full rounded-lg border border-[var(--brand-border)] px-3 py-2 text-[14px]"
                     />
                     <button
@@ -320,36 +329,36 @@ function ProfessionalShowcase() {
                       disabled={createReview.isPending}
                       onClick={() => {
                         if (reviewRating < 1) {
-                          setReviewNotice("Choisissez une note avant d'envoyer votre avis.");
+                          setReviewNotice(t("pro.reviews.ratingRequired"));
                           return;
                         }
                         createReview.mutate(
                           { targetId: professionalQuery.data!.profileId, targetType: "PROFESSIONAL", rating: reviewRating, comment: reviewComment.trim() || undefined },
                           {
                             onSuccess: () => {
-                              setReviewNotice("Merci, votre avis a été publié.");
+                              setReviewNotice(t("pro.reviews.success"));
                               setReviewRating(0);
                               setReviewComment("");
                               reviewsQuery.refetch();
                               professionalQuery.refetch();
                             },
-                            onError: (error) => setReviewNotice(error instanceof Error ? error.message : "Connectez-vous pour laisser un avis."),
+                            onError: (error) => setReviewNotice(error instanceof Error ? error.message : t("pro.reviews.loginRequired")),
                           },
                         );
                       }}
                       className="mt-3 h-10 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white disabled:opacity-60"
                     >
-                      {createReview.isPending ? "Envoi..." : "Publier mon avis"}
+                      {createReview.isPending ? t("pro.reviews.submitting") : t("pro.reviews.submit")}
                     </button>
                     {reviewNotice && <p className="mt-3 text-[13px] font-semibold text-[var(--color-text-secondary)]">{reviewNotice}</p>}
                   </div>
                 )}
 
                 <div className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
-                  <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">AVIS DES PATIENTS ({pro.reviewCount})</p>
-                  {reviewsQuery.isLoading && <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">Chargement des avis...</p>}
+                  <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">{t("pro.reviews.patientReviews", { count: pro.reviewCount })}</p>
+                  {reviewsQuery.isLoading && <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">{t("pro.reviews.loading")}</p>}
                   {!reviewsQuery.isLoading && ((reviewsQuery.data as ProfessionalReview[] | undefined)?.length ?? 0) === 0 && (
-                    <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">Aucun avis publié pour le moment.</p>
+                    <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">{t("pro.reviews.empty")}</p>
                   )}
                   <div className="mt-4 divide-y divide-[var(--brand-border-light)]">
                     {((reviewsQuery.data as ProfessionalReview[] | undefined) ?? []).map((review) => (
@@ -362,7 +371,7 @@ function ProfessionalShowcase() {
                         <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">{new Date(review.createdAt).toLocaleDateString("fr-FR")}</p>
                         {review.sellerReply && (
                           <div className="mt-3 rounded-lg bg-[var(--brand-surface-alt)] p-3">
-                            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--brand-primary)]">Réponse de {pro.name}</p>
+                            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--brand-primary)]">{t("pro.reviews.replyFrom", { name: pro.name })}</p>
                             <p className="mt-1 text-[13px] text-[var(--color-text-secondary)]">{review.sellerReply}</p>
                           </div>
                         )}
@@ -380,20 +389,20 @@ function ProfessionalShowcase() {
 
           <aside className="lg:sticky lg:top-24 h-fit space-y-5 rounded-[24px] border border-[var(--brand-border-light)] bg-white p-6">
             <div>
-              <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[var(--brand-terracotta)]">CONTACT RAPIDE</p>
-              <h2 className="mt-2 text-[26px]">Contacter {pro.name.split(" ")[0]}</h2>
-              <p className="mt-1 text-[13px] text-[var(--color-text-secondary)]">Toute prise de contact passe par la messagerie Iwosan.</p>
+              <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[var(--brand-terracotta)]">{t("pro.contact.label")}</p>
+              <h2 className="mt-2 text-[26px]">{t("pro.contact.title", { name: pro.name.split(" ")[0] })}</h2>
+              <p className="mt-1 text-[13px] text-[var(--color-text-secondary)]">{t("pro.contact.subtitle")}</p>
             </div>
             <button
               type="button"
               onClick={() => navigate({ to: "/messages", search: { to: id, text: contactMessage } as never })}
               className="flex w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#1f5a39_0%,#2d7a4f_100%)] px-4 py-3 text-center font-semibold text-white"
             >
-              <MessageCircle size={18} /> Ouvrir la messagerie Iwosan
+              <MessageCircle size={18} /> {t("pro.contact.openMessaging")}
             </button>
             <div className="border-t border-[var(--brand-border-light)] pt-4 text-[13px] text-[var(--color-text-secondary)]">
-              <p><strong>Disponibilité :</strong> Sur rendez-vous</p>
-              <p className="mt-2"><strong>Langues :</strong> {pro.languages?.join(", ") ?? "Français"}</p>
+              <p><strong>{t("pro.contact.availability")}</strong> {t("pro.contact.availabilityValue")}</p>
+              <p className="mt-2"><strong>{t("pro.contact.languages")}</strong> {pro.languages?.join(", ") ?? t("pro.contact.defaultLanguage")}</p>
             </div>
             {socialLinks.length > 0 && (
               <div className="grid grid-cols-4 gap-2">

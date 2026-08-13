@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { ArticleCard, articlePath } from "@/components/shared/ArticleCard";
 import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { HeroSection } from "@/components/shared/HeroSection";
@@ -59,10 +61,10 @@ export type BackendArticle = {
   } | null;
 };
 
-export function toArticle(article: BackendArticle, fallbackSpace: string): Article | null {
+export function toArticle(article: BackendArticle, fallbackSpace: string, t: TFunction): Article | null {
   if (!article.id || !article.slug || !article.title) return null;
   const body = article.content ?? "";
-  const excerpt = body.replace(/<[^>]*>/g, "").slice(0, 180) || "Article IWOSAN.";
+  const excerpt = body.replace(/<[^>]*>/g, "").slice(0, 180) || t("articleList.defaultExcerpt");
   const authorName = [article.author?.firstName, article.author?.lastName].filter(Boolean).join(" ").trim();
   return {
     id: article.id,
@@ -75,14 +77,15 @@ export function toArticle(article: BackendArticle, fallbackSpace: string): Artic
     category: article.category ?? article.tags?.[0] ?? fallbackSpace,
     readTime: Math.max(3, Math.ceil(body.length / 900)),
     date: article.publishedAt ?? article.createdAt ?? new Date().toISOString(),
-    authorName: authorName || "Equipe IWOSAN",
+    authorName: authorName || t("articleList.defaultAuthor"),
     authorAvatar: fallbackAvatar,
-    authorSpecialty: article.author?.role ?? "Contributeur",
+    authorSpecialty: article.author?.role ?? t("articleList.defaultAuthorRole"),
     authorProfileId: article.author?.role === "PROFESSIONAL" ? article.author?.id : undefined,
   };
 }
 
 export function ArticleListPage({ space, title, badge, subtitle, image, warning }: ArticleListPageProps) {
+  const { t } = useTranslation();
   const apiSpace = spaceToApi[space];
   const [page, setPage] = useState(1);
   const articlesQuery = useArticles(apiSpace ? { space: apiSpace, page } : { page });
@@ -97,8 +100,8 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
   }, [category, debouncedSearch]);
 
   const apiArticles = useMemo(
-    () => ((articlesQuery.data?.articles ?? []) as BackendArticle[]).map((article) => toArticle(article, space)).filter(Boolean) as Article[],
-    [articlesQuery.data, space],
+    () => ((articlesQuery.data?.articles ?? []) as BackendArticle[]).map((article) => toArticle(article, space, t)).filter(Boolean) as Article[],
+    [articlesQuery.data, space, t],
   );
   const spaceArticles = apiArticles;
   const categories = ["Toutes", ...Array.from(new Set(spaceArticles.map((article) => article.category ?? article.space)))];
@@ -121,7 +124,7 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
     <>
       <HeroSection image={image} badge={badge} title={title} subtitle={subtitle} size="md">
         <div className="mx-auto max-w-2xl">
-          <SearchBar placeholder="Rechercher un article..." value={search} onChange={setSearch} showFilters={false} />
+          <SearchBar placeholder={t("articleList.searchPlaceholder")} value={search} onChange={setSearch} showFilters={false} />
         </div>
       </HeroSection>
 
@@ -146,14 +149,14 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
                       : "border border-[var(--brand-border)] bg-white"
                   }`}
                 >
-                  {item}
+                  {item === "Toutes" ? t("articleList.allCategory") : item}
                 </button>
               ))}
             </div>
 
             <p className="text-[14px] text-[var(--color-text-muted)]">
-              <strong className="text-[var(--color-text-primary)]">{filteredArticles.length}</strong> articles
-              {debouncedSearch ? ` pour "${debouncedSearch}"` : ""}
+              <strong className="text-[var(--color-text-primary)]">{filteredArticles.length}</strong> {t("articleList.articlesFound")}
+              {debouncedSearch ? t("articleList.articlesFoundFor", { query: debouncedSearch }) : ""}
             </p>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -170,7 +173,7 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
 
             {filteredArticles.length === 0 && (
               <div className="rounded-[12px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
-                <p className="font-bold">Aucun article trouvé</p>
+                <p className="font-bold">{t("articleList.notFoundTitle")}</p>
                 <button
                   onClick={() => {
                     setSearch("");
@@ -178,7 +181,7 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
                   }}
                   className="mt-4 h-10 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white"
                 >
-                  Effacer les filtres
+                  {t("articleList.clearFilters")}
                 </button>
               </div>
             )}
@@ -187,7 +190,7 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
           <aside className="space-y-6">
             <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-6">
               <h3 className="mb-4 text-[15px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-                Catégories
+                {t("articleList.categoriesLabel")}
               </h3>
               <ul className="space-y-2 text-[14px]">
                 {categories.slice(1).map((item) => (
@@ -203,7 +206,7 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
               </ul>
             </div>
             <div className="rounded-[12px] bg-[var(--brand-primary-subtle)] p-6">
-              <h3 className="mb-3 text-[15px] font-bold text-[var(--brand-primary)]">Articles populaires</h3>
+              <h3 className="mb-3 text-[15px] font-bold text-[var(--brand-primary)]">{t("articleList.popularArticles")}</h3>
               <ol className="space-y-3 text-[14px]">
                 {spaceArticles.slice(0, 5).map((article, index) => (
                   <li key={article.id} className="flex gap-3">

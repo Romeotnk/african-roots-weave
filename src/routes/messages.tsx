@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Image, Laugh, Paperclip, Search, Send } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { conversations as initialConversations } from "@/data/messages";
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/messages")({
 });
 
 function MessagesPage() {
+  const { t } = useTranslation();
   const hasBackendAuth = Boolean(authTokenStore.get());
   const [conversations, setConversations] = useState(hasBackendAuth ? [] : initialConversations);
   const [activeId, setActiveId] = useState(hasBackendAuth ? "" : initialConversations[0]?.id ?? "");
@@ -97,8 +99,8 @@ function MessagesPage() {
         return [
           {
             id: message.senderId,
-            participantName: "Conversation Iwosan",
-            participantRole: "Message recu via API",
+            participantName: t("messages.defaultConversationName"),
+            participantRole: t("messages.receivedViaApi"),
             avatar: "",
             online: true,
             unreadCount: 1,
@@ -159,18 +161,18 @@ function MessagesPage() {
   const sendMessage = async (attachmentUrl?: string) => {
     const content = draft.trim();
     if (!active) {
-      setActionMessage("Sélectionnez une conversation avant d'envoyer un message.");
+      setActionMessage(t("messages.selectConversationFirst"));
       return;
     }
     if (!content && !attachmentUrl) {
-      setActionMessage("Écrivez un message avant de l'envoyer.");
+      setActionMessage(t("messages.writeMessageFirst"));
       return;
     }
 
     const nextMessage: ChatMessage = {
       id: `local-${Date.now()}`,
       sender: "me",
-      content: content || attachmentUrl!.split("/").pop() || "Pièce jointe",
+      content: content || attachmentUrl!.split("/").pop() || t("messages.attachment"),
       createdAt: new Date().toISOString(),
       read: false,
       attachment: attachmentUrl,
@@ -183,7 +185,7 @@ function MessagesPage() {
       ),
     );
     setDraft("");
-    setActionMessage("Message ajouté à la conversation.");
+    setActionMessage(t("messages.messageAdded"));
 
     if (authenticated && !active.id.startsWith("conv")) {
       try {
@@ -205,28 +207,28 @@ function MessagesPage() {
             ),
           );
           if (contactInfoRedacted) {
-            setActionMessage("Les coordonnées personnelles (téléphone, email, réseaux sociaux) sont masquées : échangez via Iwosan pour rester protégé.");
+            setActionMessage(t("messages.contactInfoRedacted"));
           }
         }
       } catch {
-        setActionMessage("Message ajouté à la conversation. La synchronisation reprendra automatiquement.");
+        setActionMessage(t("messages.messageAddedSyncPending"));
       }
     }
   };
 
   const sendFile = async (file: File) => {
     if (!active) {
-      setActionMessage("Sélectionnez une conversation avant d'envoyer une pièce jointe.");
+      setActionMessage(t("messages.selectConversationForAttachment"));
       return;
     }
     setIsUploadingAttachment(true);
-    setActionMessage("Envoi de la pièce jointe...");
+    setActionMessage(t("messages.uploadingAttachment"));
     try {
       const [url] = await uploadMessageAttachments([file]);
       if (!url) throw new Error("Upload failed");
       await sendMessage(url);
     } catch {
-      setActionMessage("Impossible d'envoyer cette pièce jointe. Réessayez.");
+      setActionMessage(t("messages.attachmentError"));
     } finally {
       setIsUploadingAttachment(false);
     }
@@ -235,7 +237,7 @@ function MessagesPage() {
   const handleComposerAction = (action: "emoji" | "attachment" | "photo") => {
     if (action === "emoji") {
       setDraft((current) => `${current} :)`.trimStart());
-      setActionMessage("Emoji ajouté au message.");
+      setActionMessage(t("messages.emojiAdded"));
       return;
     }
 
@@ -257,15 +259,15 @@ function MessagesPage() {
                 to="/mon-compte"
                 className="mb-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--color-text-muted)] transition hover:text-[var(--brand-primary)]"
               >
-                <ArrowLeft size={15} /> Retour
+                <ArrowLeft size={15} /> {t("messages.back")}
               </Link>
-              <h1 className="text-[24px] font-bold">Messages</h1>
+              <h1 className="text-[24px] font-bold">{t("messages.title")}</h1>
               <div className="mt-4 flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-3">
                 <Search size={16} className="text-[var(--color-text-muted)]" />
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Rechercher une conversation"
+                  placeholder={t("messages.searchPlaceholder")}
                   className="min-w-0 flex-1 bg-transparent text-[13px] outline-none"
                 />
               </div>
@@ -274,7 +276,7 @@ function MessagesPage() {
               <div className="p-2">
                 {filtered.length === 0 && (
                   <div className="rounded-[12px] border border-dashed border-[var(--brand-border)] bg-white p-5 text-center text-[13px] text-[var(--color-text-muted)]">
-                    Aucune conversation ne correspond à cette recherche.
+                    {t("messages.noConversationMatch")}
                   </div>
                 )}
                 {filtered.map((conversation) => {
@@ -338,7 +340,7 @@ function MessagesPage() {
                 <button
                   onClick={() => setMobileConversationOpen(false)}
                   className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)] lg:hidden"
-                  aria-label="Retour aux conversations"
+                  aria-label={t("messages.backToConversations")}
                 >
                   <ArrowLeft size={18} />
                 </button>
@@ -349,7 +351,7 @@ function MessagesPage() {
                 <div className="min-w-0 flex-1">
                   <h2 className="truncate font-bold">{active.participantName}</h2>
                   <p className="text-[12px] text-[var(--color-text-muted)]">
-                    {active.online ? "En ligne" : active.lastSeen ?? "Hors ligne"}
+                    {active.online ? t("messages.online") : active.lastSeen ?? t("messages.offline")}
                   </p>
                 </div>
               </header>
@@ -357,7 +359,7 @@ function MessagesPage() {
               <ScrollArea className="flex-1 bg-[var(--brand-surface-alt)]">
                 <div className="space-y-4 p-4">
                   <div className="mx-auto w-fit rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-[var(--color-text-muted)]">
-                    Aujourd'hui
+                    {t("messages.today")}
                   </div>
                   {active.messages.map((message) => (
                     <div key={message.id} className={`flex ${message.sender === "me" ? "justify-end" : "justify-start"}`}>
@@ -368,7 +370,7 @@ function MessagesPage() {
                           </a>
                         ) : message.attachment ? (
                           <a href={message.attachment} target="_blank" rel="noreferrer" className={`mb-2 flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-semibold underline ${message.sender === "me" ? "bg-white/10" : "bg-[var(--brand-surface-alt)]"}`}>
-                            <Paperclip size={14} /> Voir la pièce jointe
+                            <Paperclip size={14} /> {t("messages.viewAttachment")}
                           </a>
                         ) : null}
                         <p>{message.content}</p>
@@ -408,13 +410,13 @@ function MessagesPage() {
                       void sendFile(file);
                     }}
                   />
-                  <button type="button" onClick={() => handleComposerAction("emoji")} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label="Emoji">
+                  <button type="button" onClick={() => handleComposerAction("emoji")} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)]" aria-label={t("messages.emoji")}>
                     <Laugh size={17} />
                   </button>
-                  <button type="button" onClick={() => handleComposerAction("attachment")} disabled={isUploadingAttachment} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)] disabled:opacity-50" aria-label="Pièce jointe">
+                  <button type="button" onClick={() => handleComposerAction("attachment")} disabled={isUploadingAttachment} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)] disabled:opacity-50" aria-label={t("messages.attachment")}>
                     <Paperclip size={17} />
                   </button>
-                  <button type="button" onClick={() => handleComposerAction("photo")} disabled={isUploadingAttachment} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)] disabled:opacity-50" aria-label="Photo">
+                  <button type="button" onClick={() => handleComposerAction("photo")} disabled={isUploadingAttachment} className="grid h-10 w-10 place-items-center rounded-full border border-[var(--brand-border)] disabled:opacity-50" aria-label={t("messages.photo")}>
                     <Image size={17} />
                   </button>
                   <textarea
@@ -432,14 +434,14 @@ function MessagesPage() {
                       }
                     }}
                     rows={1}
-                    placeholder="Écrire un message..."
+                    placeholder={t("messages.writePlaceholder")}
                     className="max-h-28 min-h-10 flex-1 resize-none rounded-[14px] border border-[var(--brand-border)] px-4 py-2 text-[14px] outline-none focus:border-[var(--brand-primary)]"
                   />
                   <button
                     type="button"
                     onClick={() => sendMessage()}
                     className="grid h-10 w-10 place-items-center rounded-full bg-[var(--brand-primary)] text-white"
-                    aria-label="Envoyer"
+                    aria-label={t("messages.send")}
                   >
                     <Send size={17} />
                   </button>

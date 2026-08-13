@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { Copy, Loader2, Percent, Plus, Search, Tag } from "lucide-react";
 import { useMemo, useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { useCoupons, useCreateCoupon, useUpdateCoupon } from "@/hooks/useCouponsApi";
@@ -20,9 +21,9 @@ const emptyForm: CouponForm = {
   expiresAt: "",
 };
 
-const formatDate = (value: string | null) => (value ? new Date(value).toLocaleDateString("fr-FR") : "Sans expiration");
-
 function CouponsPage() {
+  const { t } = useTranslation();
+  const formatDate = (value: string | null) => (value ? new Date(value).toLocaleDateString("fr-FR") : t("dashboard.coupons.noExpiration"));
   const { data, isLoading, isError } = useCoupons();
   const createCoupon = useCreateCoupon();
   const updateCoupon = useUpdateCoupon();
@@ -51,15 +52,15 @@ function CouponsPage() {
     const usageLimit = Number(form.usageLimit);
 
     if (code.length < 3) {
-      setError("Le code doit contenir au moins 3 caracteres.");
+      setError(t("dashboard.coupons.codeTooShort"));
       return;
     }
     if (!Number.isFinite(discount) || discount <= 0 || discount > 80) {
-      setError("La remise doit etre comprise entre 1 et 80%.");
+      setError(t("dashboard.coupons.discountRange"));
       return;
     }
     if (form.usageLimit && (!Number.isFinite(usageLimit) || usageLimit <= 0)) {
-      setError("Le nombre d'utilisations doit etre superieur a zero.");
+      setError(t("dashboard.coupons.usageLimitInvalid"));
       return;
     }
 
@@ -74,9 +75,9 @@ function CouponsPage() {
       {
         onSuccess: () => {
           setForm(emptyForm);
-          setMessage("Coupon cree avec succes.");
+          setMessage(t("dashboard.coupons.created"));
         },
-        onError: (mutationError) => setError(mutationError instanceof Error ? mutationError.message : "Impossible de creer ce coupon."),
+        onError: (mutationError) => setError(mutationError instanceof Error ? mutationError.message : t("dashboard.coupons.createError")),
       },
     );
   };
@@ -87,8 +88,8 @@ function CouponsPage() {
     updateCoupon.mutate(
       { id, payload: { isActive: !isActive } },
       {
-        onSuccess: () => setMessage("Statut du coupon mis a jour."),
-        onError: (mutationError) => setError(mutationError instanceof Error ? mutationError.message : "Impossible de mettre a jour ce coupon."),
+        onSuccess: () => setMessage(t("dashboard.coupons.statusUpdated")),
+        onError: (mutationError) => setError(mutationError instanceof Error ? mutationError.message : t("dashboard.coupons.updateError")),
       },
     );
   };
@@ -98,25 +99,25 @@ function CouponsPage() {
     setError("");
     try {
       await navigator.clipboard.writeText(code);
-      setMessage(`Code ${code} copie.`);
+      setMessage(t("dashboard.coupons.codeCopied", { code }));
     } catch {
-      setError("Impossible de copier automatiquement ce code.");
+      setError(t("dashboard.coupons.copyError"));
     }
   };
 
   return (
     <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
-      <AccountLayout title="Coupons" description="Creez, activez et surveillez les codes promotionnels de votre boutique.">
+      <AccountLayout title={t("dashboard.coupons.title")} description={t("dashboard.coupons.description")}>
           <div className="grid gap-4 md:grid-cols-3">
-            <StatCard icon={Tag} label="Coupons" value={String(coupons.length)} />
-            <StatCard icon={Percent} label="Actifs" value={String(activeCount)} />
-            <StatCard icon={Copy} label="Utilisations" value={String(totalUses)} />
+            <StatCard icon={Tag} label={t("dashboard.coupons.statCoupons")} value={String(coupons.length)} />
+            <StatCard icon={Percent} label={t("dashboard.coupons.statActive")} value={String(activeCount)} />
+            <StatCard icon={Copy} label={t("dashboard.coupons.statUses")} value={String(totalUses)} />
           </div>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-[360px_1fr]">
             <form onSubmit={handleCreate} className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
-              <h2 className="text-[18px] font-bold">Nouveau coupon</h2>
-              <Field label="Code">
+              <h2 className="text-[18px] font-bold">{t("dashboard.coupons.newCoupon")}</h2>
+              <Field label={t("dashboard.coupons.codeLabel")}>
                 <input
                   value={form.code}
                   onChange={(event) => setForm((current) => ({ ...current, code: event.target.value }))}
@@ -124,7 +125,7 @@ function CouponsPage() {
                   className="mt-2 h-11 w-full rounded-[8px] border border-[var(--brand-border-light)] px-3 text-[14px] uppercase outline-none focus:border-[var(--brand-primary)]"
                 />
               </Field>
-              <Field label="Remise (%)">
+              <Field label={t("dashboard.coupons.discountLabel")}>
                 <input
                   value={form.discount}
                   onChange={(event) => setForm((current) => ({ ...current, discount: event.target.value }))}
@@ -133,7 +134,7 @@ function CouponsPage() {
                   className="mt-2 h-11 w-full rounded-[8px] border border-[var(--brand-border-light)] px-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
                 />
               </Field>
-              <Field label="Nombre d'utilisations (optionnel)">
+              <Field label={t("dashboard.coupons.usageLimitLabel")}>
                 <input
                   value={form.usageLimit}
                   onChange={(event) => setForm((current) => ({ ...current, usageLimit: event.target.value }))}
@@ -142,7 +143,7 @@ function CouponsPage() {
                   className="mt-2 h-11 w-full rounded-[8px] border border-[var(--brand-border-light)] px-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
                 />
               </Field>
-              <Field label="Expiration (optionnel)">
+              <Field label={t("dashboard.coupons.expirationLabel")}>
                 <input
                   type="date"
                   value={form.expiresAt}
@@ -151,7 +152,7 @@ function CouponsPage() {
                 />
               </Field>
               <button type="submit" disabled={createCoupon.isPending} className="btn-primary mt-5 h-11 w-full text-[14px]">
-                <Plus size={17} /> Creer le coupon
+                <Plus size={17} /> {t("dashboard.coupons.createButton")}
               </button>
               {message && <p className="mt-4 rounded-[8px] bg-emerald-50 px-4 py-3 text-[13px] font-semibold text-emerald-700">{message}</p>}
               {error && <p className="mt-4 rounded-[8px] bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-700">{error}</p>}
@@ -163,7 +164,7 @@ function CouponsPage() {
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Rechercher un code"
+                  placeholder={t("dashboard.coupons.searchPlaceholder")}
                   className="h-11 w-full rounded-[8px] border border-[var(--brand-border-light)] bg-white pl-10 pr-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
                 />
               </label>
@@ -175,13 +176,13 @@ function CouponsPage() {
                   </div>
                 ) : isError ? (
                   <div className="rounded-[8px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
-                    Impossible de charger vos coupons pour le moment.
+                    {t("dashboard.coupons.loadError")}
                   </div>
                 ) : filteredCoupons.length === 0 ? (
                   <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-8 text-center">
                     <Tag className="mx-auto text-[var(--brand-primary)]" size={34} />
-                    <h2 className="mt-4 text-[20px] font-bold">Aucun coupon trouve</h2>
-                    <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Essayez une autre recherche ou creez un nouveau code.</p>
+                    <h2 className="mt-4 text-[20px] font-bold">{t("dashboard.coupons.emptyTitle")}</h2>
+                    <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">{t("dashboard.coupons.emptyDesc")}</p>
                   </div>
                 ) : (
                   filteredCoupons.map((coupon) => (
@@ -191,17 +192,16 @@ function CouponsPage() {
                           <div className="flex flex-wrap items-center gap-2">
                             <h2 className="text-[17px] font-extrabold tracking-[0.08em] text-[var(--color-text-primary)]">{coupon.code}</h2>
                             <span className={`rounded-full px-3 py-1 text-[12px] font-bold ${coupon.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
-                              {coupon.isActive ? "Actif" : "Inactif"}
+                              {coupon.isActive ? t("dashboard.coupons.active") : t("dashboard.coupons.inactive")}
                             </span>
                           </div>
                           <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">
-                            {coupon.discount}% - {coupon.usedCount}
-                            {coupon.maxUses ? `/${coupon.maxUses}` : ""} utilisations - expire le {formatDate(coupon.expiresAt)}
+                            {t("dashboard.coupons.usageSummary", { discount: coupon.discount, used: coupon.usedCount, max: coupon.maxUses ? `/${coupon.maxUses}` : "", date: formatDate(coupon.expiresAt) })}
                           </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <button type="button" onClick={() => copyCode(coupon.code)} className="btn-secondary h-10 px-4 text-[13px]">
-                            <Copy size={16} /> Copier
+                            <Copy size={16} /> {t("dashboard.coupons.copy")}
                           </button>
                           <button
                             type="button"
@@ -209,7 +209,7 @@ function CouponsPage() {
                             disabled={updateCoupon.isPending}
                             className="btn-secondary h-10 px-4 text-[13px]"
                           >
-                            {coupon.isActive ? "Desactiver" : "Activer"}
+                            {coupon.isActive ? t("dashboard.coupons.deactivate") : t("dashboard.coupons.activate")}
                           </button>
                         </div>
                       </div>

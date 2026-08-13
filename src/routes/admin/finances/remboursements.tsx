@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { useAdminRefundActions, useAdminRefundRequests } from "@/hooks/useAdminApi";
@@ -10,14 +11,14 @@ export const Route = createFileRoute("/admin/finances/remboursements")({
   component: AdminRemboursements,
 });
 
-const statusLabel: Record<string, string> = {
-  REQUESTED: "Demandé",
-  APPROVED: "Approuvé",
-  REJECTED: "Rejeté",
-  PROCESSED: "Traité",
-};
-
 function AdminRemboursements() {
+  const { t } = useTranslation();
+  const statusLabel: Record<string, string> = {
+    REQUESTED: t("admin.refunds.statusRequested"),
+    APPROVED: t("admin.refunds.statusApproved"),
+    REJECTED: t("admin.refunds.statusRejected"),
+    PROCESSED: t("admin.refunds.statusProcessed"),
+  };
   const [status, setStatus] = useState("REQUESTED");
   const refundsQuery = useAdminRefundRequests({ status: status || undefined });
   const { approve, reject } = useAdminRefundActions();
@@ -27,7 +28,7 @@ function AdminRemboursements() {
   const orders = refundsQuery.data?.data ?? [];
 
   return (
-    <AdminLayout title="Remboursements" description="Demandes de remboursement des commandes.">
+    <AdminLayout title={t("admin.refunds.title")} description={t("admin.refunds.description")}>
       {notice && <div className="mb-4 rounded-lg bg-emerald-500/15 p-3 text-[13px] text-emerald-200">{notice}</div>}
 
       <div className="mb-4 flex gap-2">
@@ -38,23 +39,23 @@ function AdminRemboursements() {
             onClick={() => setStatus(value)}
             className={`rounded-full px-3 py-1.5 text-[12px] font-bold ${status === value ? "bg-emerald-400 text-[#111827]" : "bg-white/10 text-slate-300"}`}
           >
-            {value ? statusLabel[value] : "Tous"}
+            {value ? statusLabel[value] : t("admin.refunds.all")}
           </button>
         ))}
       </div>
 
-      {refundsQuery.isLoading && <p className="text-[13px] text-slate-400">Chargement...</p>}
-      {refundsQuery.isError && <p className="text-[13px] text-red-300">Impossible de charger les remboursements.</p>}
+      {refundsQuery.isLoading && <p className="text-[13px] text-slate-400">{t("admin.refunds.loading")}</p>}
+      {refundsQuery.isError && <p className="text-[13px] text-red-300">{t("admin.refunds.loadError")}</p>}
 
       {!refundsQuery.isLoading && !refundsQuery.isError && (
         <div className="overflow-x-auto rounded-[12px] border border-white/10">
           <table className="w-full min-w-[880px] text-left text-[13px]">
             <thead className="bg-white/10 text-slate-300">
-              <tr>{["Commande", "Acheteur", "Vendeur", "Montant", "Motif", "Accusé vendeur", "Statut", "Actions"].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
+              <tr>{[t("admin.refunds.colOrder"), t("admin.refunds.colBuyer"), t("admin.refunds.colSeller"), t("admin.refunds.colAmount"), t("admin.refunds.colReason"), t("admin.refunds.colSellerAck"), t("admin.refunds.colStatus"), t("admin.refunds.colActions")].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
             </thead>
             <tbody>
               {orders.length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-6 text-center text-slate-400">Aucune demande dans cette file.</td></tr>
+                <tr><td colSpan={8} className="px-4 py-6 text-center text-slate-400">{t("admin.refunds.noRequests")}</td></tr>
               )}
               {orders.map((order) => (
                 <tr key={order.id} className="border-t border-white/10">
@@ -82,14 +83,14 @@ function AdminRemboursements() {
                           type="button"
                           disabled={approve.isPending}
                           onClick={() =>
-                            approve.mutate({ id: order.id }, { onSuccess: () => setNotice("Remboursement approuvé et traité.") })
+                            approve.mutate({ id: order.id }, { onSuccess: () => setNotice(t("admin.refunds.approvedAndProcessed")) })
                           }
                           className="rounded-full bg-emerald-400 px-3 py-1 text-[12px] font-bold text-[#111827] disabled:opacity-50"
                         >
-                          Approuver
+                          {t("admin.refunds.approve")}
                         </button>
                         <button type="button" onClick={() => setRejectTarget(order)} className="rounded-full bg-red-500/80 px-3 py-1 text-[12px] font-bold text-white">
-                          Rejeter
+                          {t("admin.refunds.reject")}
                         </button>
                       </div>
                     ) : (
@@ -106,17 +107,17 @@ function AdminRemboursements() {
       <ConfirmDialog
         open={Boolean(rejectTarget)}
         onOpenChange={(open) => !open && setRejectTarget(null)}
-        title="Rejeter cette demande de remboursement ?"
+        title={t("admin.refunds.rejectRequestTitle")}
         danger
         requireReason
-        reasonLabel="Motif du rejet"
-        confirmLabel="Rejeter"
+        reasonLabel={t("admin.refunds.rejectReasonLabel")}
+        confirmLabel={t("admin.refunds.reject")}
         pending={reject.isPending}
         onConfirm={(reason) => {
           if (!rejectTarget || !reason) return;
           reject.mutate(
             { id: rejectTarget.id, reason },
-            { onSuccess: () => { setNotice("Demande de remboursement rejetée."); setRejectTarget(null); } },
+            { onSuccess: () => { setNotice(t("admin.refunds.requestRejected")); setRejectTarget(null); } },
           );
         }}
       />

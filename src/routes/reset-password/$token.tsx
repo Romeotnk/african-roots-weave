@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { resetPassword } from "@/lib/api/auth";
 import { getPasswordValidationError } from "@/lib/auth/password";
 
@@ -10,6 +11,7 @@ export const Route = createFileRoute("/reset-password/$token")({
 });
 
 function ResetPasswordWithToken() {
+  const { t } = useTranslation();
   const { token } = Route.useParams();
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
@@ -24,14 +26,14 @@ function ResetPasswordWithToken() {
     event.preventDefault();
     setError(null);
 
-    const passwordError = getPasswordValidationError(password);
+    const passwordError = getPasswordValidationError(password, t);
     if (passwordError) {
       setError(passwordError);
       return;
     }
 
     if (password !== confirm) {
-      setError("Les mots de passe ne correspondent pas.");
+      setError(t("resetPassword.mismatch"));
       return;
     }
 
@@ -41,7 +43,7 @@ function ResetPasswordWithToken() {
       setDone(true);
       window.setTimeout(() => navigate({ to: "/connexion" }), 1800);
     } catch (apiError) {
-      setError(apiError instanceof Error ? apiError.message : "Lien invalide ou expiré.");
+      setError(apiError instanceof Error ? apiError.message : t("resetPassword.invalidOrExpiredLink"));
     } finally {
       setLoading(false);
     }
@@ -53,17 +55,17 @@ function ResetPasswordWithToken() {
         <Link to="/" className="mb-6 block text-center">
           <span className="text-[24px] font-extrabold text-[var(--brand-primary)]">IWOSAN</span>
         </Link>
-        <h1 className="text-center text-[24px] font-bold">Nouveau mot de passe</h1>
+        <h1 className="text-center text-[24px] font-bold">{t("resetPassword.title")}</h1>
         {done ? (
           <p className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-center text-[13px] text-emerald-700">
-            Mot de passe mis à jour. Redirection...
+            {t("resetPassword.updated")}
           </p>
         ) : (
           <form onSubmit={submit} className="mt-6 space-y-4">
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Nouveau mot de passe"
+                placeholder={t("resetPassword.newPasswordPlaceholder")}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 required
@@ -74,7 +76,7 @@ function ResetPasswordWithToken() {
                 type="button"
                 onClick={() => setShowPassword((current) => !current)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
-                aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                aria-label={showPassword ? t("resetPassword.hidePassword") : t("resetPassword.showPassword")}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -82,7 +84,7 @@ function ResetPasswordWithToken() {
             <div className="relative">
               <input
                 type={showConfirm ? "text" : "password"}
-                placeholder="Confirmer"
+                placeholder={t("resetPassword.confirmPlaceholder")}
                 value={confirm}
                 onChange={(event) => setConfirm(event.target.value)}
                 required
@@ -92,7 +94,7 @@ function ResetPasswordWithToken() {
                 type="button"
                 onClick={() => setShowConfirm((current) => !current)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
-                aria-label={showConfirm ? "Masquer la confirmation du mot de passe" : "Afficher la confirmation du mot de passe"}
+                aria-label={showConfirm ? t("resetPassword.hideConfirmPassword") : t("resetPassword.showConfirmPassword")}
               >
                 {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -106,7 +108,7 @@ function ResetPasswordWithToken() {
               disabled={loading}
               className="h-12 w-full rounded-full bg-[var(--brand-primary)] font-semibold text-white transition hover:bg-[var(--brand-primary-dark)] disabled:opacity-70"
             >
-              {loading ? "Mise à jour..." : "Mettre à jour"}
+              {loading ? t("resetPassword.updating") : t("resetPassword.update")}
             </button>
           </form>
         )}

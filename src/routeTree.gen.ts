@@ -124,6 +124,7 @@ import { Route as MesCommandesIdLitigeRouteImport } from './routes/mes-commandes
 import { Route as FormationsIdApprendreRouteImport } from './routes/formations.$id.apprendre'
 import { Route as AdminUtilisateursKycRouteImport } from './routes/admin/utilisateurs/kyc'
 import { Route as AdminUtilisateursIdRouteImport } from './routes/admin/utilisateurs/$id'
+import { Route as AdminSiteTextesRouteImport } from './routes/admin/site/textes'
 import { Route as AdminSitePublicitesRouteImport } from './routes/admin/site/publicites'
 import { Route as AdminSitePagesRouteImport } from './routes/admin/site/pages'
 import { Route as AdminSiteMenusRouteImport } from './routes/admin/site/menus'
@@ -722,6 +723,11 @@ const AdminUtilisateursIdRoute = AdminUtilisateursIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AdminUtilisateursRoute,
 } as any)
+const AdminSiteTextesRoute = AdminSiteTextesRouteImport.update({
+  id: '/site/textes',
+  path: '/site/textes',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSitePublicitesRoute = AdminSitePublicitesRouteImport.update({
   id: '/site/publicites',
   path: '/site/publicites',
@@ -933,6 +939,7 @@ export interface FileRoutesByFullPath {
   '/admin/site/menus': typeof AdminSiteMenusRoute
   '/admin/site/pages': typeof AdminSitePagesRoute
   '/admin/site/publicites': typeof AdminSitePublicitesRoute
+  '/admin/site/textes': typeof AdminSiteTextesRoute
   '/admin/utilisateurs/$id': typeof AdminUtilisateursIdRoute
   '/admin/utilisateurs/kyc': typeof AdminUtilisateursKycRoute
   '/formations/$id/apprendre': typeof FormationsIdApprendreRoute
@@ -1044,6 +1051,7 @@ export interface FileRoutesByTo {
   '/admin/site/menus': typeof AdminSiteMenusRoute
   '/admin/site/pages': typeof AdminSitePagesRoute
   '/admin/site/publicites': typeof AdminSitePublicitesRoute
+  '/admin/site/textes': typeof AdminSiteTextesRoute
   '/admin/utilisateurs/$id': typeof AdminUtilisateursIdRoute
   '/admin/utilisateurs/kyc': typeof AdminUtilisateursKycRoute
   '/formations/$id/apprendre': typeof FormationsIdApprendreRoute
@@ -1178,6 +1186,7 @@ export interface FileRoutesById {
   '/admin/site/menus': typeof AdminSiteMenusRoute
   '/admin/site/pages': typeof AdminSitePagesRoute
   '/admin/site/publicites': typeof AdminSitePublicitesRoute
+  '/admin/site/textes': typeof AdminSiteTextesRoute
   '/admin/utilisateurs/$id': typeof AdminUtilisateursIdRoute
   '/admin/utilisateurs/kyc': typeof AdminUtilisateursKycRoute
   '/formations/$id/apprendre': typeof FormationsIdApprendreRoute
@@ -1313,6 +1322,7 @@ export interface FileRouteTypes {
     | '/admin/site/menus'
     | '/admin/site/pages'
     | '/admin/site/publicites'
+    | '/admin/site/textes'
     | '/admin/utilisateurs/$id'
     | '/admin/utilisateurs/kyc'
     | '/formations/$id/apprendre'
@@ -1424,6 +1434,7 @@ export interface FileRouteTypes {
     | '/admin/site/menus'
     | '/admin/site/pages'
     | '/admin/site/publicites'
+    | '/admin/site/textes'
     | '/admin/utilisateurs/$id'
     | '/admin/utilisateurs/kyc'
     | '/formations/$id/apprendre'
@@ -1557,6 +1568,7 @@ export interface FileRouteTypes {
     | '/admin/site/menus'
     | '/admin/site/pages'
     | '/admin/site/publicites'
+    | '/admin/site/textes'
     | '/admin/utilisateurs/$id'
     | '/admin/utilisateurs/kyc'
     | '/formations/$id/apprendre'
@@ -2410,6 +2422,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUtilisateursIdRouteImport
       parentRoute: typeof AdminUtilisateursRoute
     }
+    '/admin/site/textes': {
+      id: '/admin/site/textes'
+      path: '/site/textes'
+      fullPath: '/admin/site/textes'
+      preLoaderRoute: typeof AdminSiteTextesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/site/publicites': {
       id: '/admin/site/publicites'
       path: '/site/publicites'
@@ -2614,6 +2633,7 @@ interface AdminRouteChildren {
   AdminSiteMenusRoute: typeof AdminSiteMenusRoute
   AdminSitePagesRoute: typeof AdminSitePagesRoute
   AdminSitePublicitesRoute: typeof AdminSitePublicitesRoute
+  AdminSiteTextesRoute: typeof AdminSiteTextesRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -2633,6 +2653,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSiteMenusRoute: AdminSiteMenusRoute,
   AdminSitePagesRoute: AdminSitePagesRoute,
   AdminSitePublicitesRoute: AdminSitePublicitesRoute,
+  AdminSiteTextesRoute: AdminSiteTextesRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

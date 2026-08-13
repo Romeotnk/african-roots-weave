@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalendarDays, Download, Loader2, XCircle } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { RouteRedirect } from "@/components/RouteRedirect";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { useMeQuery } from "@/hooks/useAuthApi";
@@ -10,14 +11,20 @@ import type { EventItem } from "@/types";
 
 export const Route = createFileRoute("/dashboard/inscriptions")({
   head: () => ({ meta: [{ title: "Mes inscriptions - IWOSAN" }] }),
-  component: () => <RouteRedirect to="/mon-compte/inscriptions" label="Ouverture de vos inscriptions..." />,
+  component: DashboardInscriptionsRedirect,
 });
+
+function DashboardInscriptionsRedirect() {
+  const { t } = useTranslation();
+  return <RouteRedirect to="/mon-compte/inscriptions" label={t("routeRedirect.openingRegistrations")} />;
+}
 
 type Registration = EventItem & { localStatus: "confirmed" | "pending" | "cancelled" };
 
 type BackendRegistration = { eventId?: string; event?: BackendEvent };
 
 export function Registrations() {
+  const { t } = useTranslation();
   const registrationsQuery = useMyRegistrations();
   const unregister = useUnregisterEvent();
   const { data: profile } = useMeQuery();
@@ -30,22 +37,22 @@ export function Registrations() {
 
   const registrations = useMemo(() => {
     const fromApi = ((registrationsQuery.data ?? []) as BackendRegistration[])
-      .map((registration) => (registration.event ? toEventItem(registration.event) : null))
+      .map((registration) => (registration.event ? toEventItem(registration.event, t) : null))
       .filter((item): item is NonNullable<typeof item> => Boolean(item))
       .map((event): Registration => ({ ...event, localStatus: "confirmed" }));
     const cancelledIds = new Set(cancelledEvents.map((event) => event.id));
     return [...fromApi.filter((event) => !cancelledIds.has(event.id)), ...cancelledEvents];
-  }, [registrationsQuery.data, cancelledEvents]);
+  }, [registrationsQuery.data, cancelledEvents, t]);
 
   const cancelRegistration = (id: string) => {
     const target = registrations.find((event) => event.id === id);
     unregister.mutate(id, {
       onSuccess: () => {
         if (target) setCancelledEvents((current) => [...current, { ...target, localStatus: "cancelled" }]);
-        setActionMessage("Inscription annulée. Une confirmation sera visible dans vos notifications.");
+        setActionMessage(t("account.registrations.cancelSuccess"));
       },
       onError: (error) => {
-        setActionMessage(error instanceof Error ? error.message : "Impossible d'annuler cette inscription.");
+        setActionMessage(error instanceof Error ? error.message : t("account.registrations.cancelError"));
       },
     });
   };
@@ -56,13 +63,13 @@ export function Registrations() {
   // otherwise.
   const downloadAttestation = (event: Registration) => {
     const lines = [
-      "IWOSAN - Attestation d'inscription",
+      t("account.registrations.attestationHeader"),
       "",
-      `Evenement : ${event.title}`,
-      `Date : ${new Intl.DateTimeFormat("fr-FR", { dateStyle: "full", timeStyle: "short" }).format(new Date(event.date))}`,
-      `Lieu : ${event.online ? "En ligne" : (event.address ?? event.location)}`,
-      `Participant : ${profile ? `${profile.firstName} ${profile.lastName}` : "Compte Iwosan"}`,
-      `Reference : ${event.id}`,
+      t("account.registrations.attestationEvent", { title: event.title }),
+      t("account.registrations.attestationDate", { date: new Intl.DateTimeFormat("fr-FR", { dateStyle: "full", timeStyle: "short" }).format(new Date(event.date)) }),
+      t("account.registrations.attestationLocation", { location: event.online ? t("account.registrations.onlineParticipation") : (event.address ?? event.location) }),
+      t("account.registrations.attestationParticipant", { name: profile ? `${profile.firstName} ${profile.lastName}` : t("account.registrations.defaultAccountLabel") }),
+      t("account.registrations.attestationReference", { id: event.id }),
     ];
     const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -71,13 +78,13 @@ export function Registrations() {
     link.download = `attestation-${event.id}.txt`;
     link.click();
     URL.revokeObjectURL(url);
-    setActionMessage(`Attestation telechargee pour ${event.title}.`);
+    setActionMessage(t("account.registrations.attestationDownloaded", { title: event.title }));
   };
 
   return (
     <AccountLayout
-      title="Mes inscriptions"
-      description="Retrouvez vos événements, formations et webinaires réservés depuis l'agenda."
+      title={t("account.registrations.title")}
+      description={t("account.registrations.description")}
     >
         {actionMessage && (
           <p className="mt-6 rounded-[8px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-[13px] font-semibold text-emerald-800">
@@ -92,14 +99,14 @@ export function Registrations() {
             </div>
           ) : registrationsQuery.isError ? (
             <div className="rounded-[12px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
-              Impossible de charger vos inscriptions pour le moment.
+              {t("account.registrations.loadError")}
             </div>
           ) : registrations.length === 0 ? (
             <div className="rounded-[12px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
               <CalendarDays className="mx-auto text-[var(--brand-primary)]" size={28} />
-              <h2 className="mt-3 text-[20px] font-bold">Aucune inscription</h2>
+              <h2 className="mt-3 text-[20px] font-bold">{t("account.registrations.emptyTitle")}</h2>
               <p className="mt-2 text-[13px] text-[var(--color-text-muted)]">
-                Vos prochaines inscriptions apparaîtront ici après réservation.
+                {t("account.registrations.emptyDesc")}
               </p>
             </div>
           ) : (
@@ -114,17 +121,17 @@ export function Registrations() {
                       {new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(event.date))} - {event.location}
                     </p>
                     <p className="mt-2 text-[13px] text-[var(--color-text-secondary)]">
-                      {event.online ? "Participation en ligne" : event.address ?? "Adresse à confirmer"}
+                      {event.online ? t("account.registrations.onlineParticipation") : event.address ?? t("account.registrations.addressToConfirm")}
                     </p>
                   </div>
                   <span className={`rounded-full px-3 py-1 text-[12px] font-semibold ${isCancelled ? "bg-rose-50 text-rose-700" : "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]"}`}>
-                    {event.localStatus === "pending" ? "En attente" : isCancelled ? "Annulé" : "Confirmé"}
+                    {event.localStatus === "pending" ? t("account.registrations.pending") : isCancelled ? t("account.registrations.cancelled") : t("account.registrations.confirmed")}
                   </span>
                 </div>
 
                 <div className="mt-5 flex flex-wrap gap-2">
                   <Link to="/agenda" className="inline-flex h-10 items-center rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
-                    Voir l'agenda
+                    {t("account.registrations.viewAgenda")}
                   </Link>
                   <button
                     type="button"
@@ -132,7 +139,7 @@ export function Registrations() {
                     disabled={isCancelled}
                     className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <Download size={15} /> Attestation
+                    <Download size={15} /> {t("account.registrations.attestation")}
                   </button>
                   <button
                     type="button"
@@ -140,7 +147,7 @@ export function Registrations() {
                     disabled={isCancelled}
                     className="inline-flex h-10 items-center gap-2 rounded-full border border-rose-200 px-4 text-[13px] font-semibold text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <XCircle size={15} /> Annuler
+                    <XCircle size={15} /> {t("account.registrations.cancel")}
                   </button>
                 </div>
               </article>
@@ -150,7 +157,7 @@ export function Registrations() {
         </div>
 
         <Link to="/agenda" className="mt-6 inline-flex h-10 items-center rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
-          Retour agenda
+          {t("account.registrations.backToAgenda")}
         </Link>
     </AccountLayout>
   );

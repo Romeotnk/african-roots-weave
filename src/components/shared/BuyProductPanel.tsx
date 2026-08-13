@@ -1,14 +1,18 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { CreditCard, Loader2, Smartphone, Wallet } from "lucide-react";
 import { useCreateOrder } from "@/hooks/useOrdersApi";
 import { useInitiatePayment } from "@/hooks/usePaymentsApi";
 import type { PaymentMethod } from "@/lib/api/payments";
 
-const methods: { id: PaymentMethod; label: string; icon: typeof Wallet }[] = [
-  { id: "wallet", label: "Portefeuille", icon: Wallet },
-  { id: "card", label: "Carte bancaire", icon: CreditCard },
-  { id: "mobile_money", label: "Mobile Money", icon: Smartphone },
-];
+function buildMethods(t: TFunction): { id: PaymentMethod; label: string; icon: typeof Wallet }[] {
+  return [
+    { id: "wallet", label: t("buyProductPanel.wallet"), icon: Wallet },
+    { id: "card", label: t("buyProductPanel.card"), icon: CreditCard },
+    { id: "mobile_money", label: t("buyProductPanel.mobileMoney"), icon: Smartphone },
+  ];
+}
 
 export function BuyProductPanel({
   productId,
@@ -19,6 +23,8 @@ export function BuyProductPanel({
   maxQuantity?: number;
   isDigital: boolean;
 }) {
+  const { t } = useTranslation();
+  const methods = buildMethods(t);
   const createOrder = useCreateOrder();
   const initiatePayment = useInitiatePayment();
   const [quantity, setQuantity] = useState(1);
@@ -37,7 +43,7 @@ export function BuyProductPanel({
         onSuccess: (created) => {
           const orderId = created.data?.id;
           if (!orderId) {
-            setStatus("Commande créée, mais impossible de récupérer son identifiant.");
+            setStatus(t("buyProductPanel.orderCreatedNoId"));
             return;
           }
           initiatePayment.mutate(
@@ -50,13 +56,13 @@ export function BuyProductPanel({
                   return;
                 }
                 setSuccess(true);
-                setStatus("Paiement effectué avec succès. Retrouvez votre commande dans « Mes commandes ».");
+                setStatus(t("buyProductPanel.paymentSuccess"));
               },
-              onError: (error) => setStatus(error instanceof Error ? error.message : "Le paiement n'a pas pu être initié."),
+              onError: (error) => setStatus(error instanceof Error ? error.message : t("buyProductPanel.paymentError")),
             },
           );
         },
-        onError: (error) => setStatus(error instanceof Error ? error.message : "Impossible de créer la commande."),
+        onError: (error) => setStatus(error instanceof Error ? error.message : t("buyProductPanel.orderError")),
       },
     );
   };
@@ -69,11 +75,11 @@ export function BuyProductPanel({
 
   return (
     <div className="space-y-3 rounded-2xl border p-4 sm:p-5">
-      <p className="font-mono text-[12px] text-[var(--brand-primary)]">Acheter</p>
+      <p className="font-mono text-[12px] text-[var(--brand-primary)]">{t("buyProductPanel.buy")}</p>
       <div className="flex flex-wrap items-center gap-3">
         {!isDigital && (
           <label className="flex items-center gap-2 text-[13px] font-semibold">
-            Quantité
+            {t("buyProductPanel.quantity")}
             <input
               type="number"
               min={1}
@@ -87,7 +93,7 @@ export function BuyProductPanel({
         <input
           value={couponCode}
           onChange={(event) => setCouponCode(event.target.value)}
-          placeholder="Code coupon (facultatif)"
+          placeholder={t("buyProductPanel.couponPlaceholder")}
           className="h-10 flex-1 min-w-[160px] rounded-lg border border-[var(--brand-border)] px-3 text-[13px] outline-none focus:border-[var(--brand-primary)]"
         />
       </div>
@@ -111,7 +117,7 @@ export function BuyProductPanel({
         disabled={isPending}
         className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] font-semibold text-white disabled:opacity-60"
       >
-        {isPending ? <Loader2 size={16} className="animate-spin" /> : null} {isPending ? "Traitement..." : "Payer maintenant"}
+        {isPending ? <Loader2 size={16} className="animate-spin" /> : null} {isPending ? t("buyProductPanel.processing") : t("buyProductPanel.payNow")}
       </button>
       {status && !success && <p className="text-[12px] font-semibold text-red-700">{status}</p>}
     </div>

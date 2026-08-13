@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Bell, CheckCheck, MessageSquare, PackageCheck, Star, Store, Users } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import type { AppNotification, NotificationType } from "@/data/notifications";
 import { notificationKeys, useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from "@/hooks/useNotificationsApi";
@@ -22,6 +23,7 @@ const icons: Record<NotificationType, typeof Bell> = {
 const isSafeInternalPath = (href: string) => /^\/(?!\/)/.test(href);
 
 export function NotificationBell({ compact = false }: { compact?: boolean }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const { data: notifications = [] } = useNotifications();
@@ -49,7 +51,7 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        aria-label="Notifications"
+        aria-label={t("notificationBell.ariaLabel")}
         className={compact
           ? "relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--brand-border)] text-[var(--color-text-secondary)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
           : "relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--brand-border)] text-[var(--color-text-secondary)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"}
@@ -67,7 +69,7 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
       {open && (
         <div className="absolute right-0 top-12 z-50 w-[320px] rounded-[12px] border border-[var(--brand-border-light)] bg-[var(--color-surface)] p-3 shadow-iwosan-lg">
           <div className="mb-2 flex items-center justify-between gap-2">
-            <strong className="text-[14px]">Notifications</strong>
+            <strong className="text-[14px]">{t("notificationBell.title")}</strong>
             <button
               type="button"
               onClick={() => {
@@ -76,7 +78,7 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
               }}
               className="inline-flex items-center gap-1 text-[12px] font-semibold text-[var(--brand-primary)]"
             >
-              <CheckCheck size={14} /> Tout lire
+              <CheckCheck size={14} /> {t("notificationBell.markAllRead")}
             </button>
           </div>
           <div className="max-h-[340px] space-y-2 overflow-y-auto">
@@ -110,7 +112,7 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
             })}
           </div>
           <Link to="/mon-compte/notifications" onClick={() => setOpen(false)} className="mt-2 flex h-9 items-center justify-center rounded-full bg-[var(--brand-primary)] text-[12px] font-bold text-white">
-            Voir tout l'historique
+            {t("notificationBell.viewFullHistory")}
           </Link>
         </div>
       )}

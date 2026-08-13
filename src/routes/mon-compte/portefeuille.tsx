@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -37,20 +39,24 @@ export const Route = createFileRoute("/mon-compte/portefeuille")({
   component: WalletPage,
 });
 
-const typeLabels: Record<WalletTransactionType, string> = {
-  deposit: "Dépôt",
-  withdrawal: "Retrait",
-  payment: "Paiement",
-  reception: "Réception",
-  refund: "Remboursement",
-  commission: "Commission",
-};
+function buildTypeLabels(t: TFunction): Record<WalletTransactionType, string> {
+  return {
+    deposit: t("account.wallet.typeDeposit"),
+    withdrawal: t("account.wallet.typeWithdrawal"),
+    payment: t("account.wallet.typePayment"),
+    reception: t("account.wallet.typeReception"),
+    refund: t("account.wallet.typeRefund"),
+    commission: t("account.wallet.typeCommission"),
+  };
+}
 
-const statusLabels: Record<WalletTransactionStatus, string> = {
-  pending: "En attente",
-  completed: "Complété",
-  failed: "Échoué",
-};
+function buildStatusLabels(t: TFunction): Record<WalletTransactionStatus, string> {
+  return {
+    pending: t("account.wallet.statusPending"),
+    completed: t("account.wallet.statusCompleted"),
+    failed: t("account.wallet.statusFailed"),
+  };
+}
 
 const statusClasses: Record<WalletTransactionStatus, string> = {
   pending: "bg-amber-50 text-amber-700",
@@ -61,6 +67,9 @@ const statusClasses: Record<WalletTransactionStatus, string> = {
 type WalletDialog = "deposit" | "withdraw" | "transfer" | "pin" | null;
 
 function WalletPage() {
+  const { t } = useTranslation();
+  const typeLabels = buildTypeLabels(t);
+  const statusLabels = buildStatusLabels(t);
   const [dialog, setDialog] = useState<WalletDialog>(null);
   const [typeFilter, setTypeFilter] = useState<WalletTransactionType | "all">("all");
   const [periodFilter, setPeriodFilter] = useState("all");
@@ -131,46 +140,46 @@ function WalletPage() {
     if (dialog === "pin") {
       try {
         await setPinMutation.mutateAsync({ pin, currentPin: hasWalletPin ? currentPin : undefined });
-        closeDialog(hasWalletPin ? "PIN mis a jour." : "PIN configure. Il sera demande pour les retraits et transferts.");
+        closeDialog(hasWalletPin ? t("account.wallet.pinUpdated") : t("account.wallet.pinConfigured"));
       } catch (error) {
-        setActionMessage(error instanceof Error ? error.message : "Impossible d'enregistrer le PIN.");
+        setActionMessage(error instanceof Error ? error.message : t("account.wallet.pinSaveError"));
       }
       return;
     }
 
     const amount = Number(walletForm.amount);
     if (!Number.isFinite(amount) || amount <= 0) {
-      setActionMessage("Indiquez un montant valide.");
+      setActionMessage(t("account.wallet.invalidAmount"));
       return;
     }
 
     try {
       if (dialog === "deposit") {
         await deposit.mutateAsync({ amount, method: walletForm.method });
-        closeDialog("Dépôt initialisé. Suivez les instructions de paiement reçues.");
+        closeDialog(t("account.wallet.depositInitiated"));
         return;
       }
       if (dialog === "withdraw") {
-        await withdraw.mutateAsync({ amount, destination: walletForm.destination || "Destination principale", pin: hasWalletPin ? pin : undefined });
-        closeDialog("Demande de retrait envoyée à l'administration.");
+        await withdraw.mutateAsync({ amount, destination: walletForm.destination || t("account.wallet.defaultDestination"), pin: hasWalletPin ? pin : undefined });
+        closeDialog(t("account.wallet.withdrawSent"));
         return;
       }
       if (dialog === "transfer") {
         if (!walletForm.receiver.trim()) {
-          setActionMessage("Indiquez l'email ou l'identifiant du destinataire.");
+          setActionMessage(t("account.wallet.receiverRequired"));
           return;
         }
         await transfer.mutateAsync({ amount, receiver: walletForm.receiver.trim(), pin: hasWalletPin ? pin : undefined });
-        closeDialog("Transfert effectué.");
+        closeDialog(t("account.wallet.transferDone"));
       }
     } catch (error) {
-      setActionMessage(error instanceof Error ? error.message : "Action portefeuille impossible.");
+      setActionMessage(error instanceof Error ? error.message : t("account.wallet.actionError"));
     }
   };
 
   const exportCsv = () => {
     const rows = [
-      "date,type,label,montant,statut",
+      t("account.wallet.csvHeader"),
       ...filteredTransactions.map((transaction) =>
         [
           transaction.date,
@@ -193,37 +202,37 @@ function WalletPage() {
   return (
     <ProtectedRoute>
     <AccountLayout
-      title="Portefeuille Iwosan"
-      description="Solde, transactions, dépôt, retrait et transfert liés à votre compte connecté."
+      title={t("account.wallet.title")}
+      description={t("account.wallet.description")}
     >
       <div className="space-y-6">
         <div className="rounded-[16px] bg-[var(--brand-primary)] p-7 text-white">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-white/70 text-[13px] font-semibold uppercase tracking-wider">
-                Solde disponible
+                {t("account.wallet.availableBalance")}
               </p>
               <p className="mt-2 text-[42px] font-extrabold md:text-[56px]">
                 {displayedSummary.available.toLocaleString("fr-FR")} {displayedSummary.currency}
               </p>
               <div className="mt-4 flex flex-wrap gap-3 text-[13px] text-white/80">
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1">
-                  <Info size={14} /> En attente escrow: {displayedSummary.pending.toLocaleString("fr-FR")} FCFA
+                  <Info size={14} /> {t("account.wallet.pendingEscrow", { amount: displayedSummary.pending.toLocaleString("fr-FR") })}
                 </span>
                 <span className="rounded-full bg-white/10 px-3 py-1">
-                  Total gagné : {displayedSummary.lifetime.toLocaleString("fr-FR")} FCFA
+                  {t("account.wallet.totalEarned", { amount: displayedSummary.lifetime.toLocaleString("fr-FR") })}
                 </span>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2">
               <button onClick={() => setDialog("deposit")} className="rounded-[12px] bg-white px-4 py-3 text-[13px] font-bold text-[var(--brand-primary)]">
-                <ArrowDownToLine className="mx-auto mb-1" size={18} /> Déposer
+                <ArrowDownToLine className="mx-auto mb-1" size={18} /> {t("account.wallet.deposit")}
               </button>
               <button onClick={() => setDialog("withdraw")} className="rounded-[12px] bg-white/10 px-4 py-3 text-[13px] font-bold">
-                <ArrowUpFromLine className="mx-auto mb-1" size={18} /> Retirer
+                <ArrowUpFromLine className="mx-auto mb-1" size={18} /> {t("account.wallet.withdraw")}
               </button>
               <button onClick={() => setDialog("transfer")} className="rounded-[12px] bg-white/10 px-4 py-3 text-[13px] font-bold">
-                <Send className="mx-auto mb-1" size={18} /> Transférer
+                <Send className="mx-auto mb-1" size={18} /> {t("account.wallet.transfer")}
               </button>
             </div>
           </div>
@@ -238,30 +247,30 @@ function WalletPage() {
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white">
             <div className="flex flex-col gap-3 border-b border-[var(--brand-border-light)] p-5 md:flex-row md:items-center md:justify-between">
-              <h2 className="font-bold">Historique des transactions</h2>
+              <h2 className="font-bold">{t("account.wallet.transactionHistory")}</h2>
               <div className="flex flex-wrap gap-2">
                 <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value as WalletTransactionType | "all")} className="h-10 rounded-full border border-[var(--brand-border)] bg-white px-3 text-[13px]">
-                  <option value="all">Tous types</option>
+                  <option value="all">{t("account.wallet.allTypes")}</option>
                   {Object.entries(typeLabels).map(([value, label]) => (
                     <option key={value} value={value}>{label}</option>
                   ))}
                 </select>
                 <select value={periodFilter} onChange={(event) => setPeriodFilter(event.target.value)} className="h-10 rounded-full border border-[var(--brand-border)] bg-white px-3 text-[13px]">
-                  <option value="all">Toute période</option>
-                  <option value="week">7 jours</option>
-                  <option value="month">30 jours</option>
+                  <option value="all">{t("account.wallet.allPeriods")}</option>
+                  <option value="week">{t("account.wallet.sevenDays")}</option>
+                  <option value="month">{t("account.wallet.thirtyDays")}</option>
                 </select>
                 {(typeFilter !== "all" || periodFilter !== "all") && (
-                  <button onClick={() => { setTypeFilter("all"); setPeriodFilter("all"); }} className="h-10 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">Reinitialiser</button>
+                  <button onClick={() => { setTypeFilter("all"); setPeriodFilter("all"); }} className="h-10 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">{t("account.wallet.reset")}</button>
                 )}
                 <button onClick={exportCsv} className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white">
-                  <Download size={15} /> CSV
+                  <Download size={15} /> {t("account.wallet.csv")}
                 </button>
               </div>
             </div>
             <div className="divide-y divide-[var(--brand-border-light)]">
               {filteredTransactions.length === 0 && (
-                <div className="p-8 text-center text-[13px] text-[var(--color-text-muted)]">Aucune transaction ne correspond aux filtres.</div>
+                <div className="p-8 text-center text-[13px] text-[var(--color-text-muted)]">{t("account.wallet.noTransactions")}</div>
               )}
               {filteredTransactions.map((transaction) => (
                 <article key={transaction.id} className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
@@ -272,7 +281,9 @@ function WalletPage() {
                     <div>
                       <p className="font-bold">{transaction.label}</p>
                       <p className="mt-1 text-[12px] text-[var(--color-text-muted)]">
-                        {transaction.date} - {typeLabels[transaction.type]}{transaction.note ? ` - ${transaction.note}` : ""}
+                        {transaction.note
+                          ? t("account.wallet.transactionMetaWithNote", { date: transaction.date, type: typeLabels[transaction.type], note: transaction.note })
+                          : t("account.wallet.transactionMeta", { date: transaction.date, type: typeLabels[transaction.type] })}
                       </p>
                     </div>
                   </div>
@@ -294,18 +305,18 @@ function WalletPage() {
               <div className="flex items-center gap-3">
                 <ShieldCheck className="text-[var(--brand-primary)]" size={24} />
                 <div>
-              <h2 className="font-bold">Sécurité du portefeuille</h2>
+              <h2 className="font-bold">{t("account.wallet.walletSecurity")}</h2>
                   <p className="text-[12px] text-[var(--color-text-muted)]">
-                    {hasWalletPin ? "PIN actif : requis pour les retraits et transferts." : "Aucun PIN configuré pour le moment."}
+                    {hasWalletPin ? t("account.wallet.pinActive") : t("account.wallet.pinNotConfigured")}
                   </p>
                 </div>
               </div>
               <button onClick={() => setDialog("pin")} className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[13px] font-semibold">
-                <LockKeyhole size={15} /> {hasWalletPin ? "Modifier le PIN" : "Configurer un PIN"}
+                <LockKeyhole size={15} /> {hasWalletPin ? t("account.wallet.editPin") : t("account.wallet.configurePin")}
               </button>
             </div>
             <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5 text-[13px] text-[var(--color-text-secondary)]">
-              Les fonds sous escrow sont affichés en attente jusqu'à confirmation de réception par l'acheteur.
+              {t("account.wallet.escrowNotice")}
             </div>
           </aside>
         </div>
@@ -357,6 +368,7 @@ function WalletActionDialog({
   onConfirm: () => void;
   isPending: boolean;
 }) {
+  const { t } = useTranslation();
   // A PIN is only ever required for: setting/changing it (dialog === "pin"),
   // and confirming a withdraw/transfer once the user has opted in by setting
   // one. Deposits never need it (money coming in, nothing to protect), and
@@ -367,19 +379,19 @@ function WalletActionDialog({
   const pinReady = (!needsPinField || pin.length === 6) && (!needsCurrentPinField || currentPin.length === 6);
   const title =
     dialog === "deposit"
-      ? "Déposer des fonds"
+      ? t("account.wallet.depositTitle")
       : dialog === "withdraw"
-        ? "Retirer des fonds"
+        ? t("account.wallet.withdrawTitle")
         : dialog === "transfer"
-          ? "Transférer"
-          : "Configurer le PIN";
+          ? t("account.wallet.transferTitle")
+          : t("account.wallet.pinTitle");
 
   return (
     <Dialog open={Boolean(dialog)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-xl bg-white">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>Les actions sont envoyées au backend IWOSAN du compte connecté.</DialogDescription>
+          <DialogDescription>{t("account.wallet.dialogDesc")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           {dialog === "deposit" && (
@@ -387,7 +399,7 @@ function WalletActionDialog({
               <input
                 type="number"
                 min="1"
-                placeholder="Montant"
+                placeholder={t("account.wallet.amountPlaceholder")}
                 value={walletForm.amount}
                 onChange={(event) => setWalletForm({ ...walletForm, amount: event.target.value })}
                 className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4"
@@ -397,36 +409,36 @@ function WalletActionDialog({
                 onChange={(event) => setWalletForm({ ...walletForm, method: event.target.value })}
                 className="h-11 w-full rounded-lg border border-[var(--brand-border)] bg-white px-4"
               >
-                <option value="mobile_money">Mobile money</option>
-                <option value="card">Carte bancaire</option>
+                <option value="mobile_money">{t("account.wallet.mobileMoney")}</option>
+                <option value="card">{t("account.wallet.card")}</option>
               </select>
-              <p className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">Confirmez ensuite la demande USSD sur votre téléphone.</p>
+              <p className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">{t("account.wallet.ussdNotice")}</p>
             </>
           )}
           {dialog === "withdraw" && (
             <>
-              <p className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">Solde disponible : {availableBalance.toLocaleString("fr-FR")} FCFA</p>
+              <p className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">{t("account.wallet.availableBalanceNotice", { amount: availableBalance.toLocaleString("fr-FR") })}</p>
               <input
                 type="number"
                 min="1"
-                placeholder="Montant à retirer"
+                placeholder={t("account.wallet.withdrawAmountPlaceholder")}
                 value={walletForm.amount}
                 onChange={(event) => setWalletForm({ ...walletForm, amount: event.target.value })}
                 className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4"
               />
               <input
-                placeholder="Destination de paiement"
+                placeholder={t("account.wallet.destinationPlaceholder")}
                 value={walletForm.destination}
                 onChange={(event) => setWalletForm({ ...walletForm, destination: event.target.value })}
                 className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4"
               />
-              <p className="text-[13px] text-[var(--color-text-muted)]">Délai estimé : 1-3 jours ouvrables.</p>
+              <p className="text-[13px] text-[var(--color-text-muted)]">{t("account.wallet.withdrawDelay")}</p>
             </>
           )}
           {dialog === "transfer" && (
             <>
               <input
-                placeholder="Email ou identifiant IWOSAN"
+                placeholder={t("account.wallet.receiverPlaceholder")}
                 value={walletForm.receiver}
                 onChange={(event) => setWalletForm({ ...walletForm, receiver: event.target.value })}
                 className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4"
@@ -434,7 +446,7 @@ function WalletActionDialog({
               <input
                 type="number"
                 min="1"
-                placeholder="Montant"
+                placeholder={t("account.wallet.amountPlaceholder")}
                 value={walletForm.amount}
                 onChange={(event) => setWalletForm({ ...walletForm, amount: event.target.value })}
                 className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4"
@@ -443,7 +455,7 @@ function WalletActionDialog({
           )}
           {needsCurrentPinField && (
             <div>
-              <p className="mb-2 text-[13px] font-semibold">PIN actuel</p>
+              <p className="mb-2 text-[13px] font-semibold">{t("account.wallet.currentPin")}</p>
               <InputOTP maxLength={6} value={currentPin} onChange={setCurrentPin}>
                 <InputOTPGroup>
                   {[0, 1, 2, 3, 4, 5].map((index) => (
@@ -455,7 +467,7 @@ function WalletActionDialog({
           )}
           {needsPinField && (
             <div>
-              <p className="mb-2 text-[13px] font-semibold">{dialog === "pin" ? "Nouveau PIN" : "Confirmation PIN"}</p>
+              <p className="mb-2 text-[13px] font-semibold">{dialog === "pin" ? t("account.wallet.newPin") : t("account.wallet.confirmPin")}</p>
               <InputOTP maxLength={6} value={pin} onChange={setPin}>
                 <InputOTPGroup>
                   {[0, 1, 2, 3, 4, 5].map((index) => (
@@ -470,7 +482,7 @@ function WalletActionDialog({
             disabled={isPending || !dialog || !pinReady}
             className="h-11 w-full rounded-full bg-[var(--brand-primary)] font-semibold text-white disabled:opacity-70"
           >
-            {isPending ? "Traitement..." : !pinReady ? "PIN requis" : "Confirmer"}
+            {isPending ? t("account.wallet.processing") : !pinReady ? t("account.wallet.pinRequired") : t("account.wallet.confirm")}
           </button>
         </div>
       </DialogContent>

@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ChefHat, Clock, Coffee, Leaf, Soup } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { HeroSection } from "@/components/shared/HeroSection";
 import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { SearchBar } from "@/components/shared/SearchBar";
@@ -19,7 +21,7 @@ const themes = [
 
 const fallbackCover = "https://images.unsplash.com/photo-1490818387583-1baba5e638af?w=1200&q=80&auto=format&fit=crop";
 
-export function toRecipe(article: BackendArticle): Recipe | null {
+export function toRecipe(article: BackendArticle, t: TFunction): Recipe | null {
   if (!article.id || !article.slug || !article.title) return null;
   const recipeData = article.recipeData ?? {};
   const body = article.content ?? "";
@@ -27,7 +29,7 @@ export function toRecipe(article: BackendArticle): Recipe | null {
     id: article.id,
     slug: article.slug,
     title: article.title,
-    excerpt: body.replace(/<[^>]*>/g, "").slice(0, 180) || "Recette IWOSAN.",
+    excerpt: body.replace(/<[^>]*>/g, "").slice(0, 180) || t("recipeList.defaultExcerpt"),
     image: article.coverImage ?? fallbackCover,
     type: (recipeData.type as Recipe["type"]) ?? "Infusion",
     difficulty: (recipeData.difficulty as Recipe["difficulty"]) ?? "Facile",
@@ -40,6 +42,18 @@ export function toRecipe(article: BackendArticle): Recipe | null {
 }
 
 export function RecipeListPage() {
+  const { t } = useTranslation();
+  const themeLabels: Record<string, string> = {
+    Infusion: t("recipeList.themeInfusion"),
+    Decoction: t("recipeList.themeDecoction"),
+    Cataplasme: t("recipeList.themePoultice"),
+    "Preparation culinaire": t("recipeList.themeCulinaryPrep"),
+  };
+  const difficultyLabels: Record<string, string> = {
+    Facile: t("recipeList.difficultyEasy"),
+    Intermediaire: t("recipeList.difficultyIntermediate"),
+    Avance: t("recipeList.difficultyAdvanced"),
+  };
   const [page, setPage] = useState(1);
   const articlesQuery = useArticles({ space: "RECETTES_SANTE", page });
   const [search, setSearch] = useState("");
@@ -53,8 +67,8 @@ export function RecipeListPage() {
   }, [type, debouncedSearch]);
 
   const apiRecipes = useMemo(
-    () => ((articlesQuery.data?.articles ?? []) as BackendArticle[]).map(toRecipe).filter((item): item is Recipe => Boolean(item)),
-    [articlesQuery.data],
+    () => ((articlesQuery.data?.articles ?? []) as BackendArticle[]).map((article) => toRecipe(article, t)).filter((item): item is Recipe => Boolean(item)),
+    [articlesQuery.data, t],
   );
   const allRecipes = apiRecipes;
 
@@ -80,19 +94,19 @@ export function RecipeListPage() {
     <>
       <HeroSection
         image="https://images.unsplash.com/photo-1597318181409-cf64d0b9d3d2?w=1920&q=80"
-        badge="Recettes"
-        title="Recettes Sante"
-        subtitle="Preparations traditionnelles documentees pas a pas, avec dosages, indications et precautions."
+        badge={t("recipeList.heroBadge")}
+        title={t("recipeList.heroTitle")}
+        subtitle={t("recipeList.heroSubtitle")}
         size="md"
       >
         <div className="mx-auto max-w-2xl">
-          <SearchBar placeholder="Recette, plante, indication..." value={search} onChange={setSearch} showFilters={false} />
+          <SearchBar placeholder={t("recipeList.searchPlaceholder")} value={search} onChange={setSearch} showFilters={false} />
         </div>
       </HeroSection>
 
       <section className="py-16">
         <div className="container-iwosan">
-          <h2 className="mb-8 text-[28px]">Parcourir par theme</h2>
+          <h2 className="mb-8 text-[28px]">{t("recipeList.browseByTheme")}</h2>
           <div className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {populatedThemes.map((theme) => (
               <button
@@ -105,9 +119,9 @@ export function RecipeListPage() {
                 <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl ${theme.color}`}>
                   <theme.icon size={22} />
                 </div>
-                <h3 className="text-[16px] font-bold">{theme.name}</h3>
+                <h3 className="text-[16px] font-bold">{themeLabels[theme.name] ?? theme.name}</h3>
                 <p className="mt-1 text-[12px] uppercase tracking-wider text-[var(--color-text-muted)]">
-                  {allRecipes.filter((recipe) => recipe.type === theme.name).length} recettes
+                  {t("recipeList.recipeCount", { count: allRecipes.filter((recipe) => recipe.type === theme.name).length })}
                 </p>
               </button>
             ))}
@@ -116,8 +130,8 @@ export function RecipeListPage() {
           <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
             <div className="space-y-5">
               <p className="text-[14px] text-[var(--color-text-muted)]">
-                <strong className="text-[var(--color-text-primary)]">{filteredRecipes.length}</strong> recettes
-                {debouncedSearch ? ` pour "${debouncedSearch}"` : ""}
+                <strong className="text-[var(--color-text-primary)]">{filteredRecipes.length}</strong> {t("recipeList.recipesFound")}
+                {debouncedSearch ? t("recipeList.recipesFoundFor", { query: debouncedSearch }) : ""}
               </p>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {filteredRecipes.map((recipe, index) => (
@@ -128,14 +142,14 @@ export function RecipeListPage() {
                       </div>
                       <div className="p-5">
                         <div className="mb-3 flex flex-wrap items-center gap-2 text-[12px]">
-                          <span className="rounded-full bg-[var(--brand-primary-subtle)] px-3 py-1 font-semibold text-[var(--brand-primary)]">{recipe.type}</span>
-                          <span>{recipe.difficulty}</span>
+                          <span className="rounded-full bg-[var(--brand-primary-subtle)] px-3 py-1 font-semibold text-[var(--brand-primary)]">{themeLabels[recipe.type] ?? recipe.type}</span>
+                          <span>{difficultyLabels[recipe.difficulty] ?? recipe.difficulty}</span>
                           <span className="inline-flex items-center gap-1"><Clock size={13} /> {recipe.prepTime}</span>
                         </div>
                         <h3 className="text-[18px] font-bold">{recipe.title}</h3>
                         <p className="mt-2 line-clamp-2 text-[14px] text-[var(--color-text-secondary)]">{recipe.excerpt}</p>
                         <Link to="/recettes-sante/$slug" params={{ slug: recipe.slug }} className="mt-4 inline-flex text-[13px] font-semibold text-[var(--brand-primary)]">
-                          Voir la recette
+                          {t("recipeList.viewRecipe")}
                         </Link>
                       </div>
                     </article>
@@ -144,7 +158,7 @@ export function RecipeListPage() {
               </div>
               {filteredRecipes.length === 0 && (
                 <div className="rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
-                  <p className="font-bold">Aucune recette ne correspond a votre recherche.</p>
+                  <p className="font-bold">{t("recipeList.noRecipeMatch")}</p>
                 </div>
               )}
               {isUnfiltered && pagination && (
@@ -152,12 +166,12 @@ export function RecipeListPage() {
               )}
             </div>
             <aside className="h-fit rounded-[12px] bg-[var(--brand-primary)] p-6 text-white">
-              <h3 className="mb-2 text-[18px] font-bold">Besoin d'aide ?</h3>
+              <h3 className="mb-2 text-[18px] font-bold">{t("recipeList.needHelp")}</h3>
               <p className="mb-5 text-[14px] leading-[1.6] text-white/80">
-                Un doute sur une posologie, une plante, une indication ? Notre equipe repond sous 24h.
+                {t("recipeList.needHelpDesc")}
               </p>
               <Link to="/aide" className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[var(--brand-gold)] font-semibold text-[var(--color-text-primary)]">
-                Ouvrir un ticket
+                {t("recipeList.openTicket")}
               </Link>
             </aside>
           </div>

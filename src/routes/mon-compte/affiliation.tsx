@@ -1,6 +1,8 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Copy, Loader2, MessageCircle, Share2, Wallet } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAffiliateLink, useMlmEarnings, useMlmLeaderboard, useMlmStats, useMlmTree, useMyCommissions } from "@/hooks/useMlmApi";
@@ -15,11 +17,13 @@ export const Route = createFileRoute("/mon-compte/affiliation")({
   ),
 });
 
-const earningLabels: Record<AffiliateEarning["type"], string> = {
-  direct_sale: "Vente directe",
-  level_2: "Commission niveau 2",
-  level_3: "Commission niveau 3",
-};
+function buildEarningLabels(t: TFunction): Record<AffiliateEarning["type"], string> {
+  return {
+    direct_sale: t("account.affiliation.earningDirectSale"),
+    level_2: t("account.affiliation.earningLevel2"),
+    level_3: t("account.affiliation.earningLevel3"),
+  };
+}
 
 function flattenTree(node: AffiliateNode): AffiliateNode[] {
   return [node, ...(node.children ?? []).flatMap(flattenTree)];
@@ -60,7 +64,7 @@ const commissionTypeMap: Record<string, AffiliateEarning["type"]> = {
   MLM_LEVEL3: "level_3",
 };
 
-function toAffiliateEarning(commission: BackendCommission): AffiliateEarning | null {
+function toAffiliateEarning(commission: BackendCommission, t: TFunction): AffiliateEarning | null {
   if (!commission.id) return null;
   return {
     id: commission.id,
@@ -68,7 +72,7 @@ function toAffiliateEarning(commission: BackendCommission): AffiliateEarning | n
     type: commissionTypeMap[commission.type ?? ""] ?? "direct_sale",
     amount: toAmount(commission.amount),
     status: commission.status === "PAID" ? "paid" : "pending",
-    source: commission.sourceOrder?.product?.title ?? "Commande Iwosan",
+    source: commission.sourceOrder?.product?.title ?? t("account.affiliation.defaultOrderSource"),
   };
 }
 
@@ -77,15 +81,15 @@ const toAmount = (value: unknown) => {
   return Number.isFinite(amount) ? amount : 0;
 };
 
-function fromBackendNode(node: BackendMlmNode): AffiliateNode {
+function fromBackendNode(node: BackendMlmNode, t: TFunction): AffiliateNode {
   return {
     id: node.id,
-    name: `${node.user?.firstName ?? "Membre"} ${node.user?.lastName ?? ""}`.trim(),
+    name: `${node.user?.firstName ?? t("account.affiliation.defaultMemberName")} ${node.user?.lastName ?? ""}`.trim(),
     level: Math.min(Math.max(node.level, 0), 3) as AffiliateNode["level"],
     joinedAt: node.createdAt ? new Date(node.createdAt).toLocaleDateString("fr-FR") : "-",
     active: node.user?.isActive ?? true,
     commissions: toAmount(node.totalEarnings),
-    children: node.children?.map(fromBackendNode),
+    children: node.children?.map((child) => fromBackendNode(child, t)),
   };
 }
 
@@ -98,6 +102,7 @@ function TreeNode({
   selectedId: string;
   onSelect: (node: AffiliateNode) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col items-center gap-3">
       <button
@@ -113,7 +118,7 @@ function TreeNode({
         </div>
         <p className="mt-2 text-[13px] font-bold">{node.name}</p>
         <p className={`mt-1 text-[11px] font-semibold ${node.active ? "text-emerald-700" : "text-[var(--color-text-muted)]"}`}>
-          {node.active ? "Actif" : "Inactif"} · N{node.level}
+          {node.active ? t("account.affiliation.active") : t("account.affiliation.inactive")} · N{node.level}
         </p>
       </button>
       {node.children && node.children.length > 0 && (
@@ -153,6 +158,8 @@ function AffiliateQrCode({ seed }: { seed: string }) {
 }
 
 function AffiliationPage() {
+  const { t } = useTranslation();
+  const earningLabels = buildEarningLabels(t);
   const affiliateLinkQuery = useAffiliateLink();
   const mlmStatsQuery = useMlmStats();
   const mlmTreeQuery = useMlmTree();
@@ -160,18 +167,21 @@ function AffiliationPage() {
   const commissionsQuery = useMyCommissions();
   const leaderboardQuery = useMlmLeaderboard();
   const displayedEarnings = useMemo(
-    () => ((commissionsQuery.data ?? []) as BackendCommission[]).map(toAffiliateEarning).filter((row): row is AffiliateEarning => Boolean(row)),
+    () => ((commissionsQuery.data ?? []) as BackendCommission[]).map((row) => toAffiliateEarning(row, t)).filter((row): row is AffiliateEarning => Boolean(row)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [commissionsQuery.data],
   );
   const displayedLeaderboard = useMemo(
-    () => ((leaderboardQuery.data ?? []) as BackendLeaderboardRow[]).map((row) => ({ rank: row.rank ?? 0, name: row.name || "Membre Iwosan", earnings: toAmount(row.earnings) })),
+    () => ((leaderboardQuery.data ?? []) as BackendLeaderboardRow[]).map((row) => ({ rank: row.rank ?? 0, name: row.name || t("account.affiliation.defaultLeaderboardMember"), earnings: toAmount(row.earnings) })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [leaderboardQuery.data],
   );
   const treeRoot = useMemo(() => {
     if (mlmTreeQuery.data && typeof mlmTreeQuery.data === "object" && "id" in mlmTreeQuery.data) {
-      return fromBackendNode(mlmTreeQuery.data as BackendMlmNode);
+      return fromBackendNode(mlmTreeQuery.data as BackendMlmNode, t);
     }
     return null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mlmTreeQuery.data]);
   const nodes = useMemo(() => (treeRoot ? flattenTree(treeRoot) : []), [treeRoot]);
   const [selectedNode, setSelectedNode] = useState<AffiliateNode | null>(null);
@@ -208,28 +218,28 @@ function AffiliationPage() {
     try {
       await navigator.clipboard?.writeText(affiliateLink);
       setCopied(true);
-      setActionMessage("Lien copie dans le presse-papiers.");
+      setActionMessage(t("account.affiliation.linkCopied"));
     } catch {
-      setActionMessage("Copie automatique indisponible. Selectionnez le lien puis copiez-le manuellement.");
+      setActionMessage(t("account.affiliation.copyUnavailable"));
     }
   };
 
   const share = async () => {
     try {
       if (navigator.share) {
-        await navigator.share({ title: "IWOSAN", text: "Rejoignez-moi sur IWOSAN", url: affiliateLink });
-        setActionMessage("Fenetre de partage ouverte.");
+        await navigator.share({ title: t("account.affiliation.shareTitle"), text: t("account.affiliation.shareText"), url: affiliateLink });
+        setActionMessage(t("account.affiliation.shareWindowOpened"));
         return;
       }
       await copyAffiliateLink();
     } catch {
-      setActionMessage("Partage annule ou indisponible sur cet appareil.");
+      setActionMessage(t("account.affiliation.shareCancelled"));
     }
   };
 
   if (isLoading) {
     return (
-      <AccountLayout title="Mon parrainage" description="Suivez votre lien de parrainage, vos filleuls et les commissions generees par votre reseau.">
+      <AccountLayout title={t("account.affiliation.title")} description={t("account.affiliation.description")}>
         <div className="flex items-center justify-center rounded-[12px] border border-[var(--brand-border-light)] bg-white p-10">
           <Loader2 className="animate-spin text-[var(--brand-primary)]" size={28} />
         </div>
@@ -239,9 +249,9 @@ function AffiliationPage() {
 
   if (isError || !treeRoot || !activeNode) {
     return (
-      <AccountLayout title="Mon parrainage" description="Suivez votre lien de parrainage, vos filleuls et les commissions generees par votre reseau.">
+      <AccountLayout title={t("account.affiliation.title")} description={t("account.affiliation.description")}>
         <div className="rounded-[12px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
-          Impossible de charger vos donnees de parrainage pour le moment.
+          {t("account.affiliation.loadError")}
         </div>
       </AccountLayout>
     );
@@ -249,13 +259,13 @@ function AffiliationPage() {
 
   return (
     <AccountLayout
-      title="Mon parrainage"
-      description="Suivez votre lien de parrainage, vos filleuls et les commissions generees par votre reseau."
+      title={t("account.affiliation.title")}
+      description={t("account.affiliation.description")}
     >
       <div className="space-y-8">
         <div className="grid gap-6 lg:grid-cols-[1fr_260px]">
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="text-[22px] font-bold">Mon lien de parrainage</h2>
+            <h2 className="text-[22px] font-bold">{t("account.affiliation.myLink")}</h2>
             <div className="mt-4 flex flex-col gap-3 md:flex-row">
               <input value={affiliateLink} readOnly className="h-12 min-w-0 flex-1 rounded-lg border border-[var(--brand-border)] bg-[var(--brand-surface-alt)] px-4 text-[13px]" />
               <button
@@ -265,40 +275,40 @@ function AffiliationPage() {
                 }}
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white"
               >
-                <Copy size={15} /> Copier
+                <Copy size={15} /> {t("account.affiliation.copy")}
               </button>
             </div>
-            {(copied || actionMessage) && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[13px] text-emerald-800">{actionMessage || "Lien copie."}</p>}
+            {(copied || actionMessage) && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[13px] text-emerald-800">{actionMessage || t("account.affiliation.linkCopiedShort")}</p>}
             <div className="mt-4 flex flex-wrap gap-2">
               <button
                 onClick={() => {
                   window.open(`https://wa.me/?text=${encodeURIComponent(affiliateLink)}`, "_blank", "noopener,noreferrer");
-                  setActionMessage("Ouverture du partage WhatsApp.");
+                  setActionMessage(t("account.affiliation.whatsappOpening"));
                 }}
                 className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[12px] font-semibold"
               >
-                <MessageCircle size={14} /> WhatsApp
+                <MessageCircle size={14} /> {t("account.affiliation.whatsapp")}
               </button>
               <button
                 onClick={() => void share()}
                 className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[12px] font-semibold"
               >
-                <Share2 size={14} /> Reseaux sociaux
+                <Share2 size={14} /> {t("account.affiliation.socialNetworks")}
               </button>
             </div>
           </div>
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
             <AffiliateQrCode seed={affiliateCode} />
-            <p className="mt-3 text-[13px] font-semibold">QR code de parrainage</p>
-            <p className="text-[12px] text-[var(--color-text-muted)]">Code : {affiliateCode}</p>
+            <p className="mt-3 text-[13px] font-semibold">{t("account.affiliation.qrCodeLabel")}</p>
+            <p className="text-[12px] text-[var(--color-text-muted)]">{t("account.affiliation.code", { code: affiliateCode })}</p>
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
           {[
-            ["Inscrits", mlmStats?.totalNodes ?? totals.all],
-            ["Actifs", totals.active],
-            ["Clics lien", mlmStats?.affiliateLinkClicks ?? 0],
+            [t("account.affiliation.statRegistered"), mlmStats?.totalNodes ?? totals.all],
+            [t("account.affiliation.statActive"), totals.active],
+            [t("account.affiliation.statLinkClicks"), mlmStats?.affiliateLinkClicks ?? 0],
           ].map(([label, value]) => (
             <div key={label} className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
               <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">{label}</p>
@@ -310,9 +320,9 @@ function AffiliationPage() {
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
           <section className="overflow-x-auto rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-[22px] font-bold">Mon reseau</h2>
+              <h2 className="text-[22px] font-bold">{t("account.affiliation.myNetwork")}</h2>
               <p className="text-[13px] text-[var(--color-text-muted)]">
-                N1: {totals.level1} · N2: {totals.level2} · N3: {totals.level3}
+                {t("account.affiliation.levelsSummary", { level1: totals.level1, level2: totals.level2, level3: totals.level3 })}
               </p>
             </div>
             <div className="min-w-[760px] rounded-lg bg-[var(--brand-bg)] p-5">
@@ -320,13 +330,13 @@ function AffiliationPage() {
             </div>
           </section>
           <aside className="h-fit rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="text-[18px] font-bold">Fiche resume</h2>
+            <h2 className="text-[18px] font-bold">{t("account.affiliation.summaryCard")}</h2>
             <div className="mt-4 space-y-3 text-[14px]">
-              <p><strong>Nom :</strong> {activeNode.name}</p>
-              <p><strong>Niveau :</strong> {activeNode.level}</p>
-              <p><strong>Inscription :</strong> {activeNode.joinedAt}</p>
-              <p><strong>Statut :</strong> {activeNode.active ? "Actif" : "Inactif"}</p>
-              <p><strong>Commissions :</strong> {activeNode.commissions.toLocaleString("fr-FR")} FCFA</p>
+              <p><strong>{t("account.affiliation.name")}</strong> {activeNode.name}</p>
+              <p><strong>{t("account.affiliation.level")}</strong> {activeNode.level}</p>
+              <p><strong>{t("account.affiliation.registration")}</strong> {activeNode.joinedAt}</p>
+              <p><strong>{t("account.affiliation.status")}</strong> {activeNode.active ? t("account.affiliation.active") : t("account.affiliation.inactive")}</p>
+              <p><strong>{t("account.affiliation.commissions")}</strong> {activeNode.commissions.toLocaleString("fr-FR")} FCFA</p>
             </div>
           </aside>
         </div>
@@ -334,29 +344,29 @@ function AffiliationPage() {
         <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-[22px] font-bold">Mes gains de parrainage</h2>
+              <h2 className="text-[22px] font-bold">{t("account.affiliation.myEarnings")}</h2>
               <p className="mt-1 text-[var(--color-text-muted)]">
-                Total gagne : <strong className="text-[var(--color-text-primary)]">{totals.earnings.toLocaleString("fr-FR")} FCFA</strong>
+                {t("account.affiliation.totalEarned")} <strong className="text-[var(--color-text-primary)]">{totals.earnings.toLocaleString("fr-FR")} FCFA</strong>
               </p>
             </div>
             <Link
               to="/mon-compte/portefeuille"
               className="inline-flex h-11 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white"
             >
-              <Wallet size={16} /> Voir mon portefeuille
+              <Wallet size={16} /> {t("account.affiliation.viewWallet")}
             </Link>
           </div>
           <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[13px] text-emerald-800">
-            Les commissions approuvees sont creditees automatiquement dans votre portefeuille IWOSAN.
+            {t("account.affiliation.autoCreditNotice")}
           </p>
           <div className="mt-5 overflow-x-auto">
             <table className="w-full min-w-[720px] text-left text-[13px]">
               <thead className="bg-[var(--brand-surface-alt)]">
-                <tr><th className="p-3">Date</th><th className="p-3">Type</th><th className="p-3">Source</th><th className="p-3">Montant</th><th className="p-3">Statut</th></tr>
+                <tr><th className="p-3">{t("account.affiliation.colDate")}</th><th className="p-3">{t("account.affiliation.colType")}</th><th className="p-3">{t("account.affiliation.colSource")}</th><th className="p-3">{t("account.affiliation.colAmount")}</th><th className="p-3">{t("account.affiliation.colStatus")}</th></tr>
               </thead>
               <tbody>
                 {displayedEarnings.length === 0 && (
-                  <tr><td colSpan={5} className="p-6 text-center text-[13px] text-[var(--color-text-muted)]">Aucun gain de parrainage pour le moment.</td></tr>
+                  <tr><td colSpan={5} className="p-6 text-center text-[13px] text-[var(--color-text-muted)]">{t("account.affiliation.noEarnings")}</td></tr>
                 )}
                 {displayedEarnings.map((earning) => (
                   <tr key={earning.id} className="border-t border-[var(--brand-border-light)]">
@@ -364,7 +374,7 @@ function AffiliationPage() {
                     <td className="p-3">{earningLabels[earning.type]}</td>
                     <td className="p-3">{earning.source}</td>
                     <td className="p-3 font-bold">{earning.amount.toLocaleString("fr-FR")} FCFA</td>
-                    <td className="p-3">{earning.status === "paid" ? "Verse" : "En attente"}</td>
+                    <td className="p-3">{earning.status === "paid" ? t("account.affiliation.paid") : t("account.affiliation.pending")}</td>
                   </tr>
                 ))}
               </tbody>
@@ -374,12 +384,12 @@ function AffiliationPage() {
 
         <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
           <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="text-[22px] font-bold">Regles du programme</h2>
+            <h2 className="text-[22px] font-bold">{t("account.affiliation.programRules")}</h2>
             <div className="mt-4 grid gap-3 md:grid-cols-3">
               {[
-                ["Niveau 1", "5% sur ventes directes"],
-                ["Niveau 2", "3% sur reseau indirect"],
-                ["Niveau 3", "2% sur reseau profond"],
+                [t("account.affiliation.level1Title"), t("account.affiliation.level1Desc")],
+                [t("account.affiliation.level2Title"), t("account.affiliation.level2Desc")],
+                [t("account.affiliation.level3Title"), t("account.affiliation.level3Desc")],
               ].map(([title, desc]) => (
                 <div key={title} className="rounded-lg bg-[var(--brand-surface-alt)] p-4">
                   <p className="font-bold">{title}</p>
@@ -388,14 +398,14 @@ function AffiliationPage() {
               ))}
             </div>
             <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">
-              Activation : compte verifie, KYC approuve et solde minimum atteint avant retrait.
+              {t("account.affiliation.activationNotice")}
             </p>
           </section>
           <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="text-[18px] font-bold">Top parrains du mois</h2>
+            <h2 className="text-[18px] font-bold">{t("account.affiliation.topReferrers")}</h2>
             <div className="mt-4 space-y-3">
               {displayedLeaderboard.length === 0 && (
-                <p className="text-[13px] text-[var(--color-text-muted)]">Aucun classement disponible pour le moment.</p>
+                <p className="text-[13px] text-[var(--color-text-muted)]">{t("account.affiliation.noLeaderboard")}</p>
               )}
               {displayedLeaderboard.map((row) => (
                 <div key={row.rank} className="flex items-center justify-between rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">

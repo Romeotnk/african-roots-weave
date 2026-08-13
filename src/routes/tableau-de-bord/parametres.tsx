@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Bell, Globe2, LockKeyhole, Save, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import type { AppRole } from "@/lib/auth/AuthContext";
 import { AccountLayout } from "@/components/account/AccountLayout";
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/tableau-de-bord/parametres")({
 });
 
 export function SettingsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { allowedRoles?: AppRole[] } = {}) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const meQuery = useMeQuery();
   const { setLanguage: applyLanguage } = useLanguage();
@@ -34,11 +36,11 @@ export function SettingsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { al
     mutationFn: (nextLanguage: "fr" | "en") => updateMe({ language: nextLanguage }),
     onSuccess: async (_response, nextLanguage) => {
       applyLanguage(nextLanguage);
-      setMessage("Langue mise à jour.");
+      setMessage(t("dashboard.settings.languageUpdated"));
       await queryClient.invalidateQueries({ queryKey: meQueryKey });
     },
     onError: (error) => {
-      setMessage(error instanceof Error ? error.message : "Mise à jour impossible.");
+      setMessage(error instanceof Error ? error.message : t("dashboard.settings.updateError"));
     },
   });
 
@@ -49,26 +51,26 @@ export function SettingsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { al
 
   return (
     <AccountLayout
-      title="Paramètres"
-      description="Contrôlez les préférences principales, les notifications et les options de sécurité du compte."
+      title={t("dashboard.settings.title")}
+      description={t("dashboard.settings.description")}
     >
       <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
         <div className="space-y-5">
           <section className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
             <div className="flex items-center gap-3">
               <Globe2 size={20} className="text-[var(--brand-primary)]" />
-              <h2 className="text-[20px] font-bold">Langue</h2>
+              <h2 className="text-[20px] font-bold">{t("dashboard.settings.languageSectionTitle")}</h2>
             </div>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               <label className="grid gap-2 text-[13px] font-semibold text-[var(--color-text-secondary)]">
-                Langue de l'interface
+                {t("dashboard.settings.interfaceLanguage")}
                 <select
                   value={language}
                   onChange={(event) => setLanguage(event.target.value as "fr" | "en")}
                   className="h-11 rounded-[8px] border border-[var(--brand-border-light)] bg-white px-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
                 >
-                  <option value="fr">Français</option>
-                  <option value="en">English</option>
+                  <option value="fr">{t("admin.siteTexts.french")}</option>
+                  <option value="en">{t("admin.siteTexts.english")}</option>
                 </select>
               </label>
             </div>
@@ -77,33 +79,33 @@ export function SettingsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { al
           <section className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
             <div className="flex items-center gap-3">
               <Bell size={20} className="text-[var(--brand-primary)]" />
-              <h2 className="text-[20px] font-bold">Notifications</h2>
+              <h2 className="text-[20px] font-bold">{t("dashboard.settings.notificationsTitle")}</h2>
             </div>
             <div className="mt-5 divide-y divide-[var(--brand-border-light)]">
-              <ToggleRow label="Recevoir les emails importants" checked disabled comingSoon />
-              <ToggleRow label="Alertes commandes et livraisons" checked disabled comingSoon />
-              <ToggleRow label="Reponses forum et mentions" checked disabled comingSoon />
-              <ToggleRow label="Conseils, offres et newsletter" checked={false} disabled comingSoon />
+              <ToggleRow label={t("dashboard.settings.importantEmails")} checked disabled comingSoon />
+              <ToggleRow label={t("dashboard.settings.orderAlerts")} checked disabled comingSoon />
+              <ToggleRow label={t("dashboard.settings.forumReplies")} checked disabled comingSoon />
+              <ToggleRow label={t("dashboard.settings.newsletter")} checked={false} disabled comingSoon />
             </div>
           </section>
 
           <section className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
             <div className="flex items-center gap-3">
               <LockKeyhole size={20} className="text-[var(--brand-primary)]" />
-              <h2 className="text-[20px] font-bold">Confidentialité et sécurité</h2>
+              <h2 className="text-[20px] font-bold">{t("dashboard.settings.privacySectionTitle")}</h2>
             </div>
             <div className="mt-5 divide-y divide-[var(--brand-border-light)]">
-              <ToggleRow label="Profil public dans l'annuaire" checked disabled comingSoon />
-              <ToggleRow label="Double authentification" checked={false} disabled comingSoon />
+              <ToggleRow label={t("dashboard.settings.publicProfile")} checked disabled comingSoon />
+              <ToggleRow label={t("dashboard.settings.twoFactor")} checked={false} disabled comingSoon />
             </div>
           </section>
         </div>
 
         <aside className="h-fit rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
           <Settings size={22} className="text-[var(--brand-primary)]" />
-          <h2 className="mt-3 text-[20px] font-bold">Résumé</h2>
+          <h2 className="mt-3 text-[20px] font-bold">{t("dashboard.settings.summaryTitle")}</h2>
           <div className="mt-4 space-y-3 text-[13px] text-[var(--color-text-secondary)]">
-            <p><strong>Langue :</strong> {language.toUpperCase()}</p>
+            <p><strong>{t("dashboard.settings.language")}</strong> {language.toUpperCase()}</p>
           </div>
           {message && <p className="mt-4 rounded-[8px] bg-emerald-50 p-3 text-[13px] font-semibold text-emerald-800">{message}</p>}
           <button
@@ -112,7 +114,7 @@ export function SettingsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { al
             disabled={updateLanguage.isPending}
             className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white disabled:opacity-60"
           >
-            <Save size={17} /> {updateLanguage.isPending ? "Enregistrement..." : "Enregistrer"}
+            <Save size={17} /> {updateLanguage.isPending ? t("dashboard.settings.saving") : t("dashboard.settings.save")}
           </button>
         </aside>
       </div>
@@ -131,13 +133,14 @@ function ToggleRow({
   disabled?: boolean;
   comingSoon?: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center justify-between gap-4 py-4">
       <p className="flex items-center gap-2 text-[14px] font-semibold">
         {label}
         {comingSoon && (
           <span className="rounded-full bg-[var(--brand-surface-alt)] px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--color-text-muted)]">
-            Bientôt disponible
+            {t("dashboard.settings.comingSoon")}
           </span>
         )}
       </p>

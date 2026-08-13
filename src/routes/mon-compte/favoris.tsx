@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bookmark, MessageCircle, ThumbsUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useMyFavorites, useToggleFavorite } from "@/hooks/useForumApi";
@@ -17,6 +18,7 @@ type FavoriteAnswer = {
 };
 
 function FavoritesPage() {
+  const { t } = useTranslation();
   const favoritesQuery = useMyFavorites("QUESTION");
   const answerFavoritesQuery = useMyFavorites("ANSWER");
   const toggleFavorite = useToggleFavorite();
@@ -29,20 +31,20 @@ function FavoritesPage() {
   return (
     <ProtectedRoute>
       <AccountLayout
-        title="Mes favoris"
-        description="Questions du forum que vous avez enregistrées pour les retrouver facilement."
+        title={t("account.favorites.title")}
+        description={t("account.favorites.description")}
       >
-          {favoritesQuery.isLoading && <p className="text-[13px] text-[var(--color-text-muted)]">Chargement...</p>}
+          {favoritesQuery.isLoading && <p className="text-[13px] text-[var(--color-text-muted)]">{t("account.favorites.loading")}</p>}
 
           {!favoritesQuery.isLoading && !answerFavoritesQuery.isLoading && favorites.length === 0 && favoriteAnswers.length === 0 && (
             <div className="rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-10 text-center">
               <Bookmark className="mx-auto text-[var(--brand-primary)]" size={42} />
-              <h2 className="mt-4 text-[24px] font-bold">Aucun favori pour le moment</h2>
+              <h2 className="mt-4 text-[24px] font-bold">{t("account.favorites.emptyTitle")}</h2>
               <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-                Ouvrez une question ou une réponse dans le forum et cliquez sur « Favori » pour la retrouver ici.
+                {t("account.favorites.emptyDesc")}
               </p>
               <Link to="/forum" className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 font-semibold text-white">
-                Aller au forum
+                {t("account.favorites.goToForum")}
               </Link>
             </div>
           )}
@@ -67,7 +69,7 @@ function FavoritesPage() {
                     disabled={toggleFavorite.isPending}
                     className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold text-red-600 disabled:opacity-50"
                   >
-                    <Bookmark size={14} className="fill-current" /> Retirer
+                    <Bookmark size={14} className="fill-current" /> {t("account.favorites.remove")}
                   </button>
                 </article>
               ))}
@@ -76,7 +78,7 @@ function FavoritesPage() {
 
           {favoriteAnswers.length > 0 && (
             <div className="mt-8">
-              <h2 className="text-[18px] font-bold">Réponses favorites</h2>
+              <h2 className="text-[18px] font-bold">{t("account.favorites.favoriteAnswers")}</h2>
               <div className="mt-3 space-y-3">
                 {favoriteAnswers.map((favoriteAnswer) => (
                   <article key={favoriteAnswer.id} className="flex flex-col gap-3 rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5 md:flex-row md:items-center md:justify-between">
@@ -92,7 +94,7 @@ function FavoritesPage() {
                       disabled={toggleFavorite.isPending}
                       className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold text-red-600 disabled:opacity-50"
                     >
-                      <Bookmark size={14} className="fill-current" /> Retirer
+                      <Bookmark size={14} className="fill-current" /> {t("account.favorites.remove")}
                     </button>
                   </article>
                 ))}

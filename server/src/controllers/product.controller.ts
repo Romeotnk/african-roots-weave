@@ -5,7 +5,13 @@ import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
 import { demoOwnerFilter } from "../utils/demoMode.js";
+import { haversineKm, parseCoordinate } from "../utils/geo.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
+
+// Same rationale as professional.controller.ts's DISTANCE_SORT_FETCH_CAP —
+// no PostGIS, so distance sort is computed in application code within a
+// bounded fetch rather than an unconditional full-table pull.
+const DISTANCE_SORT_FETCH_CAP = 1000;
 import { makeSlug } from "../utils/slug.js";
 import { SUBSCRIPTION_PLANS } from "../utils/subscriptionPlans.js";
 import { optimizeAndWatermarkImage } from "../utils/watermark.js";
@@ -132,6 +138,35 @@ export const listProducts = asyncHandler(async (req, res) => {
           }
         : undefined,
   };
+
+  const lat = parseCoordinate(req.query.lat);
+  const lng = parseCoordinate(req.query.lng);
+
+  if (sort === "distance" && lat !== undefined && lng !== undefined) {
+    const [matches, total] = await prisma.$transaction([
+      prisma.product.findMany({ where, take: DISTANCE_SORT_FETCH_CAP, select: productSelect }),
+      prisma.product.count({ where }),
+    ]);
+
+    const origin = { lat, lng };
+    const withDistance = matches.map((product) => {
+      const sellerLat = product.seller?.professionalProfile?.latitude;
+      const sellerLng = product.seller?.professionalProfile?.longitude;
+      return {
+        ...product,
+        distanceKm: sellerLat != null && sellerLng != null ? haversineKm(origin, { lat: sellerLat, lng: sellerLng }) : null,
+      };
+    });
+
+    // Boosted listings ("mise en avant") always float to the top regardless
+    // of the chosen sort — same invariant as the non-distance branch below.
+    const featured = withDistance.filter((product) => product.isFeatured).sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+    const rest = withDistance.filter((product) => !product.isFeatured).sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+    const ranked = [...featured, ...rest].slice(skip, skip + limit);
+
+    res.json(apiResponse(true, await withCategoryLabels(ranked), "Products retrieved", paginationMeta(page, limit, total)));
+    return;
+  }
 
   const secondaryOrderBy: Prisma.ProductOrderByWithRelationInput =
     sort === "price_asc"

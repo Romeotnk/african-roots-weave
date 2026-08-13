@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { useAdminKycActions, useAdminModerationActions, useAdminUsers, usePendingProfessionals } from "@/hooks/useAdminApi";
@@ -18,6 +19,7 @@ type PendingProfessional = {
 };
 
 function AdminKycQueue() {
+  const { t } = useTranslation();
   const usersQuery = useAdminUsers({ kyc: "SUBMITTED", limit: 50 });
   const { approve, reject } = useAdminKycActions();
   const professionalsQuery = usePendingProfessionals();
@@ -29,21 +31,21 @@ function AdminKycQueue() {
   const professionals = (professionalsQuery.data?.data ?? []) as PendingProfessional[];
 
   return (
-    <AdminLayout title="KYC en attente" description="Documents soumis, approbation et rejet.">
+    <AdminLayout title={t("admin.kycQueue.title")} description={t("admin.kycQueue.description")}>
       {notice && <div className="mb-4 rounded-lg bg-emerald-500/15 p-3 text-[13px] text-emerald-200">{notice}</div>}
 
-      {usersQuery.isLoading && <p className="text-[13px] text-slate-400">Chargement...</p>}
-      {usersQuery.isError && <p className="text-[13px] text-red-300">Impossible de charger la file KYC.</p>}
+      {usersQuery.isLoading && <p className="text-[13px] text-slate-400">{t("admin.kycQueue.loading")}</p>}
+      {usersQuery.isError && <p className="text-[13px] text-red-300">{t("admin.kycQueue.loadError")}</p>}
 
       {!usersQuery.isLoading && !usersQuery.isError && (
         <div className="overflow-x-auto rounded-[12px] border border-white/10">
           <table className="w-full min-w-[720px] text-left text-[13px]">
             <thead className="bg-white/10 text-slate-300">
-              <tr>{["Utilisateur", "Pays", "Soumis le", "Statut", "Actions"].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
+              <tr>{[t("admin.kycQueue.colUser"), t("admin.kycQueue.colCountry"), t("admin.kycQueue.colSubmittedOn"), t("admin.kycQueue.colStatus"), t("admin.kycQueue.colActions")].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
             </thead>
             <tbody>
               {users.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Aucun dossier KYC en attente.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">{t("admin.kycQueue.noKycPending")}</td></tr>
               )}
               {users.map((user) => (
                 <tr key={user.id} className="border-t border-white/10">
@@ -63,26 +65,26 @@ function AdminKycQueue() {
                         disabled={approve.isPending}
                         onClick={() =>
                           approve.mutate(user.id, {
-                            onSuccess: () => setNotice(`KYC approuvé pour ${user.firstName} ${user.lastName}.`),
-                            onError: (error) => setNotice(error instanceof Error ? error.message : "Impossible d'approuver ce KYC."),
+                            onSuccess: () => setNotice(t("admin.kycQueue.kycApprovedFor", { name: `${user.firstName} ${user.lastName}` })),
+                            onError: (error) => setNotice(error instanceof Error ? error.message : t("admin.kycQueue.approveError")),
                           })
                         }
                         className="rounded-full bg-emerald-400 px-3 py-1 text-[12px] font-bold text-[#111827] disabled:opacity-50"
                       >
-                        Approuver
+                        {t("admin.kycQueue.approve")}
                       </button>
                       <button
                         type="button"
                         disabled={reject.isPending}
                         onClick={() =>
                           reject.mutate(user.id, {
-                            onSuccess: () => setNotice(`KYC rejeté pour ${user.firstName} ${user.lastName}.`),
-                            onError: (error) => setNotice(error instanceof Error ? error.message : "Impossible de rejeter ce KYC."),
+                            onSuccess: () => setNotice(t("admin.kycQueue.kycRejectedFor", { name: `${user.firstName} ${user.lastName}` })),
+                            onError: (error) => setNotice(error instanceof Error ? error.message : t("admin.kycQueue.rejectError")),
                           })
                         }
                         className="rounded-full bg-red-500/80 px-3 py-1 text-[12px] font-bold text-white disabled:opacity-50"
                       >
-                        Rejeter
+                        {t("admin.kycQueue.reject")}
                       </button>
                     </div>
                   </td>
@@ -93,20 +95,20 @@ function AdminKycQueue() {
         </div>
       )}
 
-      <h2 className="mb-4 mt-8 text-[18px] font-bold text-white">Profils professionnels en attente</h2>
+      <h2 className="mb-4 mt-8 text-[18px] font-bold text-white">{t("admin.kycQueue.pendingProfessionalProfiles")}</h2>
 
-      {professionalsQuery.isLoading && <p className="text-[13px] text-slate-400">Chargement...</p>}
-      {professionalsQuery.isError && <p className="text-[13px] text-red-300">Impossible de charger la file des profils.</p>}
+      {professionalsQuery.isLoading && <p className="text-[13px] text-slate-400">{t("admin.kycQueue.loading")}</p>}
+      {professionalsQuery.isError && <p className="text-[13px] text-red-300">{t("admin.kycQueue.loadProfilesError")}</p>}
 
       {!professionalsQuery.isLoading && !professionalsQuery.isError && (
         <div className="overflow-x-auto rounded-[12px] border border-white/10">
           <table className="w-full min-w-[720px] text-left text-[13px]">
             <thead className="bg-white/10 text-slate-300">
-              <tr>{["Profil", "Utilisateur", "Localisation", "Soumis le", "Actions"].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
+              <tr>{[t("admin.kycQueue.colProfile"), t("admin.kycQueue.colUser"), t("admin.kycQueue.colLocation"), t("admin.kycQueue.colSubmittedOn"), t("admin.kycQueue.colActions")].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
             </thead>
             <tbody>
               {professionals.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Aucun profil professionnel en attente.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">{t("admin.kycQueue.noPendingProfiles")}</td></tr>
               )}
               {professionals.map((profile) => (
                 <tr key={profile.id} className="border-t border-white/10">
@@ -121,16 +123,16 @@ function AdminKycQueue() {
                         disabled={verifyProfessional.isPending}
                         onClick={() =>
                           verifyProfessional.mutate(profile.id, {
-                            onSuccess: () => setNotice(`Profil « ${profile.displayName} » vérifié.`),
-                            onError: (error) => setNotice(error instanceof Error ? error.message : "Impossible de vérifier ce profil."),
+                            onSuccess: () => setNotice(t("admin.kycQueue.profileVerified", { name: profile.displayName })),
+                            onError: (error) => setNotice(error instanceof Error ? error.message : t("admin.kycQueue.verifyError")),
                           })
                         }
                         className="rounded-full bg-emerald-400 px-3 py-1 text-[12px] font-bold text-[#111827] disabled:opacity-50"
                       >
-                        Vérifier
+                        {t("admin.kycQueue.verify")}
                       </button>
                       <button type="button" onClick={() => setRejectTarget(profile)} className="rounded-full bg-red-500/80 px-3 py-1 text-[12px] font-bold text-white">
-                        Rejeter
+                        {t("admin.kycQueue.reject")}
                       </button>
                     </div>
                   </td>
@@ -144,20 +146,20 @@ function AdminKycQueue() {
       <ConfirmDialog
         open={Boolean(rejectTarget)}
         onOpenChange={(open) => !open && setRejectTarget(null)}
-        title={`Rejeter le profil « ${rejectTarget?.displayName ?? ""} »`}
-        description="Le profil sera supprimé ; l'utilisateur pourra soumettre une nouvelle candidature."
+        title={t("admin.kycQueue.rejectProfileTitle", { name: rejectTarget?.displayName ?? "" })}
+        description={t("admin.kycQueue.rejectProfileDesc")}
         danger
         requireReason
-        reasonLabel="Motif du rejet"
-        confirmLabel="Rejeter"
+        reasonLabel={t("admin.kycQueue.rejectReasonLabel")}
+        confirmLabel={t("admin.kycQueue.reject")}
         pending={rejectProfessional.isPending}
         onConfirm={(reason) => {
           if (!rejectTarget || !reason) return;
           rejectProfessional.mutate(
             { id: rejectTarget.id, reason },
             {
-              onSuccess: () => { setNotice(`Profil « ${rejectTarget.displayName} » rejeté.`); setRejectTarget(null); },
-              onError: (error) => setNotice(error instanceof Error ? error.message : "Impossible de rejeter ce profil."),
+              onSuccess: () => { setNotice(t("admin.kycQueue.profileRejected", { name: rejectTarget.displayName })); setRejectTarget(null); },
+              onError: (error) => setNotice(error instanceof Error ? error.message : t("admin.kycQueue.rejectProfileError")),
             },
           );
         }}

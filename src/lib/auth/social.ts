@@ -1,4 +1,5 @@
 import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
+import i18n from "@/lib/i18n";
 
 export type SocialAuthProvider = "google" | "facebook";
 export type SocialAccountIntent = "user" | "professional";
@@ -15,18 +16,18 @@ const translateSocialAuthError = (error: unknown) => {
   const lower = message.toLowerCase();
 
   if (lower.includes("provider is not enabled") || lower.includes("unsupported provider")) {
-    return "Ce fournisseur de connexion n'est pas encore activé dans Supabase.";
+    return i18n.t("socialAuth.providerNotEnabled");
   }
 
   if (lower.includes("redirect") || lower.includes("url")) {
-    return "L'URL de redirection OAuth n'est pas encore autorisée dans Supabase.";
+    return i18n.t("socialAuth.redirectNotAllowed");
   }
 
   if (lower.includes("load failed") || lower.includes("failed to fetch") || lower.includes("network")) {
-    return "Impossible de joindre Supabase. Vérifiez la configuration OAuth ou réessayez dans un instant.";
+    return i18n.t("socialAuth.unreachable");
   }
 
-  return message || "La connexion sociale n'a pas pu être lancée.";
+  return message || i18n.t("socialAuth.genericError");
 };
 
 export const consumePendingSocialAccountType = (): SocialAccountIntent | null => {
@@ -41,7 +42,7 @@ export const signInWithSocialProvider = async (
   accountIntent: SocialAccountIntent = "user",
 ) => {
   if (!isSupabaseConfigured) {
-    throw new Error("La connexion Google/Facebook n'est pas encore configurée. Ajoutez les variables Supabase publiques pour l'activer.");
+    throw new Error(i18n.t("socialAuth.notConfigured"));
   }
 
   const redirectTo = typeof window === "undefined" ? undefined : `${window.location.origin}/connexion`;

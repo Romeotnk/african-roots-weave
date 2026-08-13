@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { FileText, Loader2, Send, X } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useDeclineQuote, useMyQuotes, useProposeQuote } from "@/hooks/useQuotesApi";
@@ -15,13 +16,6 @@ export const Route = createFileRoute("/tableau-de-bord/devis")({
   ),
 });
 
-const statusLabels: Record<QuoteStatus, string> = {
-  PENDING: "À traiter",
-  PROPOSED: "Devis envoyé",
-  ACCEPTED: "Accepté par le client",
-  DECLINED: "Refusé",
-};
-
 const statusClasses: Record<QuoteStatus, string> = {
   PENDING: "bg-amber-50 text-amber-700 border-amber-100",
   PROPOSED: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)] border-[var(--brand-border-light)]",
@@ -30,6 +24,13 @@ const statusClasses: Record<QuoteStatus, string> = {
 };
 
 function SellerQuotesPage() {
+  const { t } = useTranslation();
+  const statusLabels: Record<QuoteStatus, string> = {
+    PENDING: t("dashboard.sellerQuotes.statusPending"),
+    PROPOSED: t("dashboard.sellerQuotes.statusProposed"),
+    ACCEPTED: t("dashboard.sellerQuotes.statusAccepted"),
+    DECLINED: t("dashboard.sellerQuotes.statusDeclined"),
+  };
   const { data: quotes, isLoading, isError } = useMyQuotes("seller");
   const proposeQuote = useProposeQuote();
   const declineQuote = useDeclineQuote();
@@ -43,22 +44,22 @@ function SellerQuotesPage() {
     const draft = draftFor(id);
     const price = Number(draft.price);
     if (!Number.isFinite(price) || price <= 0) {
-      setMessage("Indiquez un prix valide avant d'envoyer le devis.");
+      setMessage(t("dashboard.sellerQuotes.priceRequired"));
       return;
     }
     proposeQuote.mutate(
       { id, proposedPrice: price, responseNote: draft.note.trim() || undefined },
       {
-        onSuccess: () => setMessage("Devis envoyé au client."),
-        onError: (error) => setMessage(error instanceof Error ? error.message : "Impossible d'envoyer ce devis."),
+        onSuccess: () => setMessage(t("dashboard.sellerQuotes.sent")),
+        onError: (error) => setMessage(error instanceof Error ? error.message : t("dashboard.sellerQuotes.sendError")),
       },
     );
   };
 
   return (
     <AccountLayout
-      title="Demandes de devis"
-      description={'Répondez aux demandes de devis reçues sur vos annonces "Prix sur devis".'}
+      title={t("dashboard.sellerQuotes.title")}
+      description={t("dashboard.sellerQuotes.description")}
     >
         {message && <p className="mb-4 rounded-[8px] bg-emerald-50 px-4 py-3 text-[13px] font-semibold text-emerald-700">{message}</p>}
         <div className="space-y-3">
@@ -68,13 +69,13 @@ function SellerQuotesPage() {
             </div>
           ) : isError ? (
             <div className="rounded-[8px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
-              Impossible de charger les demandes de devis pour le moment.
+              {t("dashboard.sellerQuotes.loadError")}
             </div>
           ) : list.length === 0 ? (
             <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-8 text-center">
               <FileText className="mx-auto text-[var(--brand-primary)]" size={34} />
-              <h2 className="mt-4 text-[20px] font-bold">Aucune demande de devis</h2>
-              <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Les demandes de vos clients apparaîtront ici.</p>
+              <h2 className="mt-4 text-[20px] font-bold">{t("dashboard.sellerQuotes.emptyTitle")}</h2>
+              <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">{t("dashboard.sellerQuotes.emptyDesc")}</p>
             </div>
           ) : (
             list.map((quote) => (
@@ -86,7 +87,7 @@ function SellerQuotesPage() {
                   </span>
                 </div>
                 <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">
-                  Client : {quote.buyer.firstName} {quote.buyer.lastName}
+                  {t("dashboard.sellerQuotes.client", { name: `${quote.buyer.firstName} ${quote.buyer.lastName}` })}
                 </p>
                 {quote.message && <p className="mt-2 text-[13px] text-[var(--color-text-secondary)]">"{quote.message}"</p>}
                 {quote.status === "PENDING" && (
@@ -96,13 +97,13 @@ function SellerQuotesPage() {
                       min={1}
                       value={draftFor(quote.id).price}
                       onChange={(event) => setDrafts((current) => ({ ...current, [quote.id]: { ...draftFor(quote.id), price: event.target.value } }))}
-                      placeholder="Prix proposé (FCFA)"
+                      placeholder={t("dashboard.sellerQuotes.pricePlaceholder")}
                       className="h-10 rounded-lg border border-[var(--brand-border)] px-3 text-[13px] sm:w-48"
                     />
                     <input
                       value={draftFor(quote.id).note}
                       onChange={(event) => setDrafts((current) => ({ ...current, [quote.id]: { ...draftFor(quote.id), note: event.target.value } }))}
-                      placeholder="Note (facultatif)"
+                      placeholder={t("dashboard.sellerQuotes.notePlaceholder")}
                       className="h-10 flex-1 rounded-lg border border-[var(--brand-border)] px-3 text-[13px]"
                     />
                     <button
@@ -111,20 +112,20 @@ function SellerQuotesPage() {
                       disabled={proposeQuote.isPending}
                       className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-50"
                     >
-                      <Send size={16} /> Envoyer
+                      <Send size={16} /> {t("dashboard.sellerQuotes.send")}
                     </button>
                     <button
                       type="button"
                       onClick={() =>
                         declineQuote.mutate(quote.id, {
-                          onSuccess: () => setMessage("Demande de devis refusée."),
-                          onError: (error) => setMessage(error instanceof Error ? error.message : "Impossible de refuser cette demande."),
+                          onSuccess: () => setMessage(t("dashboard.sellerQuotes.declined")),
+                          onError: (error) => setMessage(error instanceof Error ? error.message : t("dashboard.sellerQuotes.declineError")),
                         })
                       }
                       disabled={declineQuote.isPending}
                       className="inline-flex h-10 items-center gap-2 rounded-full bg-red-50 px-4 text-[13px] font-semibold text-red-700 disabled:opacity-50"
                     >
-                      <X size={16} /> Refuser
+                      <X size={16} /> {t("dashboard.sellerQuotes.decline")}
                     </button>
                   </div>
                 )}

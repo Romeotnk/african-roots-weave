@@ -29,7 +29,13 @@ export type AdminUser = {
   banExpiresAt: string | null;
   lastLoginAt: string | null;
   createdAt: string;
-  professionalProfile: { id: string; defaultCommissionRate: number | null } | null;
+  professionalProfile: {
+    id: string;
+    defaultCommissionRate: number | null;
+    isPortraitOfWeek: boolean;
+    portraitStartDate: string | null;
+    portraitEndDate: string | null;
+  } | null;
   permissionOverrides: { grant?: string[]; revoke?: string[] } | null;
 };
 
@@ -109,6 +115,8 @@ export const rejectProfessional = (id: string, reason: string) =>
   apiRequest<unknown>(`/admin/professionals/${id}/reject`, { method: "PUT", body: { reason } });
 export const updateProfessionalCommissionRate = (id: string, defaultCommissionRate: number | null) =>
   apiRequest<unknown>(`/admin/professionals/${id}/commission-rate`, { method: "PUT", body: { defaultCommissionRate } });
+export const setProfessionalPortraitOfWeek = (id: string, startDate: string, endDate: string) =>
+  apiRequest<unknown>(`/admin/professionals/${id}/portrait-of-week`, { method: "PUT", body: { startDate, endDate } });
 
 export const getAdminBanners = () => apiRequest<unknown[]>("/admin/banners");
 export const createAdminBanner = (body: Record<string, unknown>) =>
@@ -157,6 +165,17 @@ export const updateAdminConfig = (body: Record<string, unknown>) =>
   apiRequest<unknown>("/admin/config", { method: "PUT", body });
 export const updateMaintenanceMode = (enabled: boolean) =>
   apiRequest<unknown>("/admin/maintenance", { method: "POST", body: { enabled } });
+
+export type AdminTranslation = { id: string; locale: string; key: string; value: string; updatedAt: string };
+export const getAdminTranslations = (locale: string) =>
+  apiRequest<AdminTranslation[]>(`/admin/translations?locale=${encodeURIComponent(locale)}`);
+export const updateAdminTranslations = (locale: string, entries: Record<string, string>) =>
+  apiRequest<AdminTranslation[]>("/admin/translations", { method: "PUT", body: { locale, entries } });
+
+export type AdminEmailTemplate = { id: string | null; key: string; subject: string; html: string; updatedAt: string | null };
+export const getAdminEmailTemplates = () => apiRequest<AdminEmailTemplate[]>("/admin/email-templates");
+export const updateAdminEmailTemplate = (key: string, subject: string, html: string) =>
+  apiRequest<AdminEmailTemplate>(`/admin/email-templates/${key}`, { method: "PUT", body: { subject, html } });
 
 export const getAdminCommissionConfig = () =>
   apiRequest<{ key: string; value: string }[]>("/admin/commissions/config");

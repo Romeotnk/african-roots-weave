@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { useArticlesForAdmin, useCreateArticle, useDeleteArticle, usePublishArticle, useUpdateArticle } from "@/hooks/useContentApi";
 import { useTaxonomy } from "@/hooks/useTaxonomyApi";
@@ -16,6 +17,7 @@ type FormState = {
 const emptyForm: FormState = { title: "", category: "", coverImage: "", tags: "", content: "", isPublished: false };
 
 export function RitesCultureManager() {
+  const { t } = useTranslation();
   const articlesQuery = useArticlesForAdmin("RITES_CULTURES");
   const categoriesQuery = useTaxonomy("ARTICLE_CATEGORY");
   const categories = categoriesQuery.data ?? [];
@@ -72,7 +74,7 @@ export function RitesCultureManager() {
   const submit = () => {
     setError("");
     if (!form.title.trim() || !form.content.trim()) {
-      setError("Le titre et le contenu sont obligatoires.");
+      setError(t("admin.ritesCultureManager.titleContentRequired"));
       return;
     }
 
@@ -96,10 +98,10 @@ export function RitesCultureManager() {
         },
         {
           onSuccess: () => {
-            setNotice(`« ${form.title} » mis à jour.`);
+            setNotice(t("admin.ritesCultureManager.updated", { title: form.title }));
             cancel();
           },
-          onError: (mutationError) => setError(mutationError instanceof Error ? mutationError.message : "Échec de la mise à jour."),
+          onError: (mutationError) => setError(mutationError instanceof Error ? mutationError.message : t("admin.ritesCultureManager.updateFailed")),
         },
       );
     } else {
@@ -115,10 +117,10 @@ export function RitesCultureManager() {
         },
         {
           onSuccess: () => {
-            setNotice(`« ${form.title} » créé.`);
+            setNotice(t("admin.ritesCultureManager.created", { title: form.title }));
             cancel();
           },
-          onError: (mutationError) => setError(mutationError instanceof Error ? mutationError.message : "Échec de la création."),
+          onError: (mutationError) => setError(mutationError instanceof Error ? mutationError.message : t("admin.ritesCultureManager.createFailed")),
         },
       );
     }
@@ -133,36 +135,36 @@ export function RitesCultureManager() {
       {!creating && (
         <div className="mb-4 flex justify-end">
           <button type="button" onClick={startCreate} className="rounded-full bg-emerald-400 px-4 py-2 text-[12px] font-bold text-[#111827]">
-            + Nouvel article Rites & Cultures
+            {t("admin.ritesCultureManager.newArticle")}
           </button>
         </div>
       )}
 
       {creating && (
         <div className="mb-6 rounded-[12px] border border-white/10 bg-white/[0.04] p-5">
-          <h3 className="text-[15px] font-bold text-white">{editingId ? "Modifier l'article" : "Nouvel article Rites & Cultures"}</h3>
+          <h3 className="text-[15px] font-bold text-white">{editingId ? t("admin.ritesCultureManager.editArticle") : t("admin.ritesCultureManager.newArticle")}</h3>
 
           <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <Field label="Titre *" value={form.title} onChange={setField("title")} />
+            <Field label={t("admin.ritesCultureManager.titleLabel")} value={form.title} onChange={setField("title")} />
             <label className="block text-[12px] font-semibold text-slate-300">
-              Catégorie
+              {t("admin.ritesCultureManager.category")}
               <select
                 value={form.category}
                 onChange={(event) => setField("category")(event.target.value)}
                 className="mt-1 h-10 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none focus:border-emerald-400"
               >
-                <option value="">Sans catégorie</option>
+                <option value="">{t("admin.ritesCultureManager.noCategory")}</option>
                 {categories.map((category) => (
                   <option key={category.id} value={category.name}>{category.name}</option>
                 ))}
               </select>
             </label>
-            <Field label="Image de couverture (URL)" value={form.coverImage} onChange={setField("coverImage")} />
-            <Field label="Tags (séparés par des virgules)" value={form.tags} onChange={setField("tags")} />
+            <Field label={t("admin.ritesCultureManager.coverImage")} value={form.coverImage} onChange={setField("coverImage")} />
+            <Field label={t("admin.ritesCultureManager.tags")} value={form.tags} onChange={setField("tags")} />
           </div>
 
           <label className="mt-4 block text-[12px] font-semibold text-slate-300">
-            Contenu *
+            {t("admin.ritesCultureManager.content")}
             <textarea
               value={form.content}
               onChange={(event) => setField("content")(event.target.value)}
@@ -174,7 +176,7 @@ export function RitesCultureManager() {
           {!editingId && (
             <label className="mt-4 flex items-center gap-2 text-[13px] text-slate-300">
               <input type="checkbox" checked={form.isPublished} onChange={(event) => setField("isPublished")(event.target.checked)} />
-              Publier immédiatement
+              {t("admin.ritesCultureManager.publishImmediately")}
             </label>
           )}
 
@@ -187,10 +189,10 @@ export function RitesCultureManager() {
               onClick={submit}
               className="rounded-full bg-emerald-400 px-5 py-2 text-[13px] font-bold text-[#111827] disabled:opacity-50"
             >
-              {isPending ? "Enregistrement..." : editingId ? "Enregistrer" : "Créer l'article"}
+              {isPending ? t("admin.ritesCultureManager.saving") : editingId ? t("admin.ritesCultureManager.save") : t("admin.ritesCultureManager.createArticle")}
             </button>
             <button type="button" onClick={cancel} className="rounded-full border border-white/15 px-5 py-2 text-[13px] font-semibold text-white/80">
-              Annuler
+              {t("admin.ritesCultureManager.cancel")}
             </button>
           </div>
         </div>
@@ -199,12 +201,18 @@ export function RitesCultureManager() {
       <div className="overflow-x-auto rounded-[12px] border border-white/10">
         <table className="w-full min-w-[720px] text-left text-[13px]">
           <thead className="bg-white/10 text-slate-300">
-            <tr>{["Titre", "Catégorie", "Statut", "Vues", "Actions"].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
+            <tr>{[
+              t("admin.ritesCultureManager.headerTitle"),
+              t("admin.ritesCultureManager.headerCategory"),
+              t("admin.ritesCultureManager.headerStatus"),
+              t("admin.ritesCultureManager.headerViews"),
+              t("admin.ritesCultureManager.headerActions"),
+            ].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
           </thead>
           <tbody>
-            {articlesQuery.isLoading && <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Chargement...</td></tr>}
+            {articlesQuery.isLoading && <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">{t("admin.ritesCultureManager.loading")}</td></tr>}
             {!articlesQuery.isLoading && articles.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Aucun article Rites & Cultures pour le moment.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">{t("admin.ritesCultureManager.noArticles")}</td></tr>
             )}
             {articles.map((article) => (
               <tr key={article.id} className="border-t border-white/10">
@@ -212,27 +220,27 @@ export function RitesCultureManager() {
                 <td className="px-4 py-3 text-slate-200">{article.category ?? "—"}</td>
                 <td className="px-4 py-3">
                   <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${article.isPublished && article.isApproved ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-slate-300"}`}>
-                    {article.isPublished && article.isApproved ? "Publié" : "Brouillon"}
+                    {article.isPublished && article.isApproved ? t("admin.ritesCultureManager.published") : t("admin.ritesCultureManager.draft")}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-slate-200">{article.views}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-2">
                     <button type="button" onClick={() => startEdit(article.id)} className="rounded-full bg-white/10 px-3 py-1 text-[12px] font-bold text-white">
-                      Modifier
+                      {t("admin.ritesCultureManager.edit")}
                     </button>
                     {!(article.isPublished && article.isApproved) && (
                       <button
                         type="button"
                         disabled={publishArticle.isPending}
-                        onClick={() => publishArticle.mutate(article.id, { onSuccess: () => setNotice(`« ${article.title} » publié.`) })}
+                        onClick={() => publishArticle.mutate(article.id, { onSuccess: () => setNotice(t("admin.ritesCultureManager.publishedNotice", { title: article.title })) })}
                         className="rounded-full bg-emerald-400 px-3 py-1 text-[12px] font-bold text-[#111827] disabled:opacity-50"
                       >
-                        Publier
+                        {t("admin.ritesCultureManager.publish")}
                       </button>
                     )}
                     <button type="button" onClick={() => setDeleteTarget(article)} className="rounded-full bg-red-500/80 px-3 py-1 text-[12px] font-bold text-white">
-                      Supprimer
+                      {t("admin.ritesCultureManager.delete")}
                     </button>
                   </div>
                 </td>
@@ -245,16 +253,16 @@ export function RitesCultureManager() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
-        title={`Supprimer « ${deleteTarget?.title ?? ""} » ?`}
-        description="Cet article sera définitivement supprimé."
+        title={t("admin.ritesCultureManager.deleteConfirmTitle", { title: deleteTarget?.title ?? "" })}
+        description={t("admin.ritesCultureManager.deleteConfirmDescription")}
         danger
-        confirmLabel="Supprimer"
+        confirmLabel={t("admin.ritesCultureManager.delete")}
         pending={deleteArticle.isPending}
         onConfirm={() => {
           if (!deleteTarget) return;
           deleteArticle.mutate(deleteTarget.id, {
             onSuccess: () => {
-              setNotice(`« ${deleteTarget.title} » supprimé.`);
+              setNotice(t("admin.ritesCultureManager.deleted", { title: deleteTarget.title }));
               setDeleteTarget(null);
             },
           });

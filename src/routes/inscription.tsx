@@ -83,7 +83,7 @@ function Inscription() {
     setError(null);
     setMessage(null);
 
-    const passwordError = getPasswordValidationError(password);
+    const passwordError = getPasswordValidationError(password, t);
     if (passwordError) {
       setError(passwordError);
       return;

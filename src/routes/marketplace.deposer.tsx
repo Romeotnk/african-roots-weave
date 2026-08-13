@@ -57,7 +57,7 @@ function DepositListing() {
     t("deposer.steps.summary"),
   ];
   const [step, setStep] = useState(0);
-  const [title, setTitle] = useState("Tisane digestive au kinkeliba");
+  const [title, setTitle] = useState(t("deposer.defaults.title"));
   const [type, setType] = useState<(typeof productTypes)[number]["id"]>("physical");
   const taxonomyQuery = useTaxonomy("PRODUCT_CATEGORY");
   const allCategories = useMemo(() => taxonomyQuery.data ?? [], [taxonomyQuery.data]);
@@ -81,9 +81,7 @@ function DepositListing() {
     setCategoryId(subcategories[0].id);
   }, [subcategories, categoryId]);
   const selectedCategory = allCategories.find((item) => item.id === categoryId);
-  const [description, setDescription] = useState(
-    "Préparation traditionnelle documentée, issue de feuilles sélectionnées et séchées à l'ombre.",
-  );
+  const [description, setDescription] = useState(t("deposer.defaults.description"));
   const [price, setPrice] = useState("8500");
   const [currency, setCurrency] = useState("XOF");
   const [quantity, setQuantity] = useState("25");
@@ -184,8 +182,8 @@ function DepositListing() {
       // discarding data the form already required and validated.
       const descriptionParts = [
         description.trim(),
-        tags.length > 0 ? `\n\nTags : ${tags.map((tag) => `#${tag}`).join(" ")}` : "",
-        specialConditions.trim() ? `\n\nConditions particulières : ${specialConditions.trim()}` : "",
+        tags.length > 0 ? t("deposer.descriptionParts.tags", { tags: tags.map((tag) => `#${tag}`).join(" ") }) : "",
+        specialConditions.trim() ? t("deposer.descriptionParts.specialConditions", { conditions: specialConditions.trim() }) : "",
       ];
       const created = await createProduct.mutateAsync({
         title,

@@ -1,5 +1,6 @@
 ﻿import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AlertTriangle, Bug, Lightbulb, X } from "lucide-react";
 import { AdSlot } from "@/components/shared/AdSlot";
 import { useMonograph } from "@/hooks/useContentApi";
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/pharmacopee/$slug")({
 });
 
 function PlantMonograph() {
+  const { t } = useTranslation();
   const { slug } = Route.useParams();
   const { data: monograph, isLoading } = useMonograph(slug);
   const apiPlant = useMemo(() => mapMonographToPlant(monograph), [monograph]);
@@ -34,7 +36,7 @@ function PlantMonograph() {
   if (isLoading) {
     return (
       <main className="grid min-h-[60vh] place-items-center bg-[var(--brand-bg)] px-6 text-center">
-        <p className="text-[14px] text-[var(--color-text-muted)]">Chargement...</p>
+        <p className="text-[14px] text-[var(--color-text-muted)]">{t("pharmacopee.detail.loading")}</p>
       </main>
     );
   }
@@ -43,12 +45,12 @@ function PlantMonograph() {
     return (
       <main className="grid min-h-[60vh] place-items-center bg-[var(--brand-bg)] px-6 text-center">
         <div>
-          <h1 className="text-[28px] font-bold">Monographie introuvable</h1>
+          <h1 className="text-[28px] font-bold">{t("pharmacopee.detail.notFoundTitle")}</h1>
           <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-            Cette plante n'existe pas ou n'est plus disponible sur Iwosan.
+            {t("pharmacopee.detail.notFoundDesc")}
           </p>
           <Link to="/pharmacopee" className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white">
-            Retour aux monographies
+            {t("pharmacopee.detail.backToMonographs")}
           </Link>
         </div>
       </main>
@@ -62,12 +64,12 @@ function PlantMonograph() {
       <section className="bg-[var(--brand-primary-dark)] text-white">
         <div className="container-iwosan grid gap-8 py-10 lg:grid-cols-[1fr_420px] lg:items-center">
           <div>
-            <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--brand-gold)]">Pharmacopée vivante</p>
+            <p className="text-[13px] font-bold uppercase tracking-[0.14em] text-[var(--brand-gold)]">{t("pharmacopee.detail.eyebrow")}</p>
             <h1 className="mt-3 text-[38px] italic text-white md:text-[56px]">{plant.scientificName}</h1>
             <p className="mt-3 text-white/75">{plant.vernacularNames.join(" · ")}</p>
             <p className="mt-5 max-w-2xl text-white/80">{plant.summary}</p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link to="/pharmacopee" className="inline-flex h-11 items-center justify-center rounded-full bg-white px-5 text-[13px] font-semibold text-[var(--brand-primary-dark)]">Retour aux monographies</Link>
+              <Link to="/pharmacopee" className="inline-flex h-11 items-center justify-center rounded-full bg-white px-5 text-[13px] font-semibold text-[var(--brand-primary-dark)]">{t("pharmacopee.detail.backToMonographs")}</Link>
             </div>
           </div>
           <div>
@@ -86,28 +88,28 @@ function PlantMonograph() {
       <section className="container-iwosan grid gap-8 py-10 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
           <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-6">
-            <h2 className="text-[22px] font-bold">Identification</h2>
+            <h2 className="text-[22px] font-bold">{t("pharmacopee.detail.identification")}</h2>
             <dl className="mt-4 grid gap-3 md:grid-cols-2">
-              <div><dt className="text-[12px] font-bold uppercase text-[var(--color-text-muted)]">Noms locaux</dt><dd>{plant.vernacularNames.join(", ")}</dd></div>
-              <div><dt className="text-[12px] font-bold uppercase text-[var(--color-text-muted)]">Famille</dt><dd>{plant.family}</dd></div>
-              <div><dt className="text-[12px] font-bold uppercase text-[var(--color-text-muted)]">Distribution</dt><dd>{plant.region ?? plant.origin}</dd></div>
-              <div><dt className="text-[12px] font-bold uppercase text-[var(--color-text-muted)]">Catégorie</dt><dd>{plant.therapeuticCategory}</dd></div>
+              <div><dt className="text-[12px] font-bold uppercase text-[var(--color-text-muted)]">{t("pharmacopee.detail.localNames")}</dt><dd>{plant.vernacularNames.join(", ")}</dd></div>
+              <div><dt className="text-[12px] font-bold uppercase text-[var(--color-text-muted)]">{t("pharmacopee.detail.family")}</dt><dd>{plant.family}</dd></div>
+              <div><dt className="text-[12px] font-bold uppercase text-[var(--color-text-muted)]">{t("pharmacopee.detail.distribution")}</dt><dd>{plant.region ?? plant.origin}</dd></div>
+              <div><dt className="text-[12px] font-bold uppercase text-[var(--color-text-muted)]">{t("pharmacopee.detail.category")}</dt><dd>{plant.therapeuticCategory}</dd></div>
             </dl>
             <p className="mt-4 leading-7 text-[var(--color-text-secondary)]">{plant.botanicalDescription}</p>
             {plant.dosage && (
               <div className="mt-5 rounded-lg bg-[var(--brand-surface-alt)] p-4">
-                <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-[var(--brand-primary)]">Posologie</p>
+                <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-[var(--brand-primary)]">{t("pharmacopee.detail.dosage")}</p>
                 <p className="mt-2 leading-7 text-[var(--color-text-secondary)]">{plant.dosage}</p>
               </div>
             )}
           </section>
 
           <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-6">
-            <h2 className="text-[22px] font-bold">Propriétés médicinales</h2>
+            <h2 className="text-[22px] font-bold">{t("pharmacopee.detail.medicinalProperties")}</h2>
             <div className="mt-4 overflow-hidden rounded-lg border border-[var(--brand-border)]">
               <table className="w-full text-left text-[13px]">
                 <thead className="bg-[var(--brand-surface-alt)]">
-                  <tr><th className="p-3">Propriété</th><th className="p-3">Usage</th><th className="p-3">Niveau</th></tr>
+                  <tr><th className="p-3">{t("pharmacopee.detail.propertyCol")}</th><th className="p-3">{t("pharmacopee.detail.useCol")}</th><th className="p-3">{t("pharmacopee.detail.levelCol")}</th></tr>
                 </thead>
                 <tbody>
                   {(plant.medicinalProperties ?? []).map((item) => (
@@ -123,7 +125,7 @@ function PlantMonograph() {
           </section>
 
           <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-6">
-            <h2 className="text-[22px] font-bold">Préparations traditionnelles</h2>
+            <h2 className="text-[22px] font-bold">{t("pharmacopee.detail.preparations")}</h2>
             <ol className="mt-4 space-y-3">
               {(plant.preparations ?? []).map((step, index) => (
                 <li key={step} className="flex gap-3">
@@ -135,14 +137,14 @@ function PlantMonograph() {
           </section>
 
           <section className="rounded-[12px] border border-red-200 bg-red-50 p-6 text-red-900">
-            <h2 className="flex items-center gap-2 text-[20px] font-bold"><AlertTriangle size={20} /> Précautions et contre-indications</h2>
+            <h2 className="flex items-center gap-2 text-[20px] font-bold"><AlertTriangle size={20} /> {t("pharmacopee.detail.precautions")}</h2>
             <ul className="mt-4 list-disc space-y-2 pl-5 text-[14px]">
               {(plant.precautions ?? []).map((item) => <li key={item}>{item}</li>)}
             </ul>
           </section>
 
           <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-6">
-            <h2 className="text-[22px] font-bold">Références</h2>
+            <h2 className="text-[22px] font-bold">{t("pharmacopee.detail.references")}</h2>
             <ul className="mt-4 list-disc space-y-2 pl-5 text-[14px] text-[var(--color-text-secondary)]">
               {(plant.references ?? []).map((item) => <li key={item}>{item}</li>)}
             </ul>
@@ -153,18 +155,18 @@ function PlantMonograph() {
           <AdSlot position="pharmacopee_sidebar" />
           <div className="space-y-4 rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
           <button type="button" onClick={() => { setFeedback("error"); setFeedbackMessage(""); setFeedbackSent(false); }} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[var(--brand-border)] text-[13px] font-semibold">
-            <Bug size={15} /> Signaler une erreur
+            <Bug size={15} /> {t("pharmacopee.detail.reportError")}
           </button>
           <button type="button" onClick={() => { setFeedback("improve"); setFeedbackMessage(""); setFeedbackSent(false); }} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] text-[13px] font-semibold text-white">
-            <Lightbulb size={15} /> Suggérer une amélioration
+            <Lightbulb size={15} /> {t("pharmacopee.detail.suggestImprovement")}
           </button>
           {feedback && (
             <div className="rounded-lg bg-[var(--brand-surface-alt)] p-4">
               <div className="flex items-center justify-between">
-                <p className="font-bold">{feedback === "error" ? "Erreur signalée" : "Amélioration proposée"}</p>
-                <button type="button" onClick={() => { setFeedback(null); setFeedbackMessage(""); setFeedbackSent(false); }} aria-label="Fermer le formulaire"><X size={15} /></button>
+                <p className="font-bold">{feedback === "error" ? t("pharmacopee.detail.errorReported") : t("pharmacopee.detail.improvementProposed")}</p>
+                <button type="button" onClick={() => { setFeedback(null); setFeedbackMessage(""); setFeedbackSent(false); }} aria-label={t("pharmacopee.detail.closeForm")}><X size={15} /></button>
               </div>
-              <textarea rows={4} value={feedbackMessage} onChange={(event) => { setFeedbackMessage(event.target.value); setFeedbackSent(false); setFeedbackError(""); }} placeholder="Votre message..." className="mt-3 w-full rounded-lg border border-[var(--brand-border)] px-3 py-2 text-[13px]" />
+              <textarea rows={4} value={feedbackMessage} onChange={(event) => { setFeedbackMessage(event.target.value); setFeedbackSent(false); setFeedbackError(""); }} placeholder={t("pharmacopee.detail.messagePlaceholder")} className="mt-3 w-full rounded-lg border border-[var(--brand-border)] px-3 py-2 text-[13px]" />
               <button
                 type="button"
                 disabled={feedbackMessage.trim().length < 10 || createTicket.isPending}
@@ -172,22 +174,22 @@ function PlantMonograph() {
                   setFeedbackError("");
                   createTicket.mutate(
                     {
-                      subject: `Pharmacopée — ${feedback === "error" ? "Erreur signalée" : "Suggestion"} : ${plant.scientificName}`,
-                      category: "Pharmacopée",
+                      subject: t(feedback === "error" ? "pharmacopee.detail.ticketSubjectError" : "pharmacopee.detail.ticketSubjectImprove", { name: plant.scientificName }),
+                      category: t("pharmacopee.detail.ticketCategory"),
                       content: feedbackMessage.trim(),
                     },
                     {
                       onSuccess: () => setFeedbackSent(true),
-                      onError: (error) => setFeedbackError(error instanceof Error ? error.message : "Connectez-vous pour envoyer une contribution."),
+                      onError: (error) => setFeedbackError(error instanceof Error ? error.message : t("pharmacopee.detail.loginRequired")),
                     },
                   );
                 }}
                 className="mt-3 h-9 rounded-full bg-[var(--brand-primary)] px-4 text-[12px] font-semibold text-white disabled:opacity-50"
               >
-                {createTicket.isPending ? "Envoi..." : "Envoyer la contribution"}
+                {createTicket.isPending ? t("pharmacopee.detail.sending") : t("pharmacopee.detail.sendContribution")}
               </button>
               {feedbackError && <p className="mt-3 text-[12px] font-semibold text-red-700">{feedbackError}</p>}
-              {feedbackSent && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[12px] text-emerald-800">Contribution enregistrée comme ticket support. Elle sera examinée par notre équipe éditoriale.</p>}
+              {feedbackSent && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[12px] text-emerald-800">{t("pharmacopee.detail.contributionSent")}</p>}
             </div>
           )}
           </div>

@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import {
   ArrowDown,
   ArrowUp,
@@ -31,13 +33,9 @@ import type { ReportReasonCategory } from "@/lib/api/forum";
 import { toComments, toQuestion, type BackendQuestion } from "@/lib/forumMappers";
 import type { ForumAttachment } from "@/types";
 
-const REPORT_REASON_OPTIONS: { value: ReportReasonCategory; label: string }[] = [
-  { value: "FRAUDULENT_CONTENT", label: "Contenu frauduleux" },
-  { value: "SCAM", label: "Arnaque / escroquerie" },
-  { value: "INAPPROPRIATE_CONTENT", label: "Contenu inapproprié" },
-  { value: "SPAM", label: "Spam" },
-  { value: "OTHER", label: "Autre" },
-];
+const REPORT_REASON_VALUES: ReportReasonCategory[] = ["FRAUDULENT_CONTENT", "SCAM", "INAPPROPRIATE_CONTENT", "SPAM", "OTHER"];
+const buildReportReasonOptions = (t: TFunction): { value: ReportReasonCategory; label: string }[] =>
+  REPORT_REASON_VALUES.map((value) => ({ value, label: t(`forum.reportReasons.${value}`) }));
 
 function AttachmentGallery({ attachments }: { attachments?: ForumAttachment[] }) {
   if (!attachments || attachments.length === 0) return null;
@@ -88,6 +86,8 @@ function formatDate(date: string) {
 }
 
 function QuestionDetail() {
+  const { t } = useTranslation();
+  const REPORT_REASON_OPTIONS = useMemo(() => buildReportReasonOptions(t), [t]);
   const { id } = Route.useParams();
   const { user, roles } = useAuth();
   const questionQuery = useForumQuestion(id);
@@ -181,7 +181,7 @@ function QuestionDetail() {
   const submitReport = () => {
     if (!reportPanelTarget) return;
     if (!reportReasonCategory) {
-      setReportNotice("Choisissez un motif de signalement.");
+      setReportNotice(t("forum.detail.reasonRequired"));
       return;
     }
     reportMutation.mutate(
@@ -194,7 +194,7 @@ function QuestionDetail() {
           setReportReasonCategory("");
           setReportDetail("");
         },
-        onError: (error) => setReportNotice(error instanceof Error ? error.message : "Le signalement n'a pas pu être envoyé."),
+        onError: (error) => setReportNotice(error instanceof Error ? error.message : t("forum.detail.reportFailed")),
       },
     );
   };
@@ -206,7 +206,7 @@ function QuestionDetail() {
   const submitComment = () => {
     setCommentError("");
     if (commentText.trim().length < 3) {
-      setCommentError("Le commentaire doit contenir au moins 3 caractères.");
+      setCommentError(t("forum.detail.commentTooShort"));
       return;
     }
     commentMutation.mutate(
@@ -237,12 +237,12 @@ function QuestionDetail() {
   if (!apiQuestion) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[var(--brand-bg)] px-4 text-center">
-        <h1 className="text-[24px] font-bold">Question introuvable</h1>
+        <h1 className="text-[24px] font-bold">{t("forum.detail.notFoundTitle")}</h1>
         <p className="max-w-md text-[14px] text-[var(--color-text-muted)]">
-          Cette question n'existe pas ou n'est plus disponible.
+          {t("forum.detail.notFoundDesc")}
         </p>
         <Link to="/forum" className="text-[14px] font-semibold text-[var(--brand-primary)]">
-          Retour au forum
+          {t("forum.detail.backToForum")}
         </Link>
       </main>
     );
@@ -256,7 +256,7 @@ function QuestionDetail() {
       <section className="border-b border-[var(--brand-border-light)] bg-white">
         <div className="container-iwosan py-8">
           <Link to="/forum" className="text-[13px] font-semibold text-[var(--brand-primary)]">
-            Retour au forum
+            {t("forum.detail.backToForum")}
           </Link>
           <div className="mt-5 flex flex-wrap items-center gap-2">
             <span className="rounded bg-[var(--brand-primary-subtle)] px-2 py-1 text-[12px] font-bold text-[var(--brand-primary)]">
@@ -268,11 +268,11 @@ function QuestionDetail() {
               </span>
             )}
             {question.resolved && (
-              <span className="rounded bg-emerald-50 px-2 py-1 text-[12px] font-bold text-emerald-700">Répondue</span>
+              <span className="rounded bg-emerald-50 px-2 py-1 text-[12px] font-bold text-emerald-700">{t("forum.detail.answered")}</span>
             )}
             {question.featured && (
               <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-2 py-1 text-[12px] font-bold text-amber-700">
-                <Star size={13} /> Vedette
+                <Star size={13} /> {t("forum.detail.featured")}
               </span>
             )}
           </div>
@@ -284,10 +284,10 @@ function QuestionDetail() {
               className="h-10 w-10 rounded-full object-cover"
             />
             <span className="font-semibold text-[var(--color-text-primary)]">{question.authorName}</span>
-            <span>{question.authorReputation ?? 0} pts</span>
+            <span>{question.authorReputation ?? 0} {t("forum.detail.points")}</span>
             <span>{formatDate(question.date)}</span>
             <span className="inline-flex items-center gap-1">
-              <Eye size={14} /> {question.views} vues
+              <Eye size={14} /> {question.views} {t("forum.detail.views")}
             </span>
           </div>
         </div>
@@ -299,7 +299,7 @@ function QuestionDetail() {
             type="button"
             onClick={() => voteQuestion(1)}
             className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--brand-border)] bg-white"
-            aria-label="Voter pour"
+            aria-label={t("forum.detail.voteFor")}
           >
             <ArrowUp size={18} />
           </button>
@@ -310,7 +310,7 @@ function QuestionDetail() {
             type="button"
             onClick={() => voteQuestion(-1)}
             className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--brand-border)] bg-white"
-            aria-label="Voter contre"
+            aria-label={t("forum.detail.voteAgainst")}
           >
             <ArrowDown size={18} />
           </button>
@@ -334,7 +334,7 @@ function QuestionDetail() {
             {(
               <div className="mt-6 border-t border-[var(--brand-border-light)] pt-5">
                 <h3 className="flex items-center gap-2 text-[15px] font-bold">
-                  <MessageCircle size={16} /> {comments.length} commentaire{comments.length > 1 ? "s" : ""}
+                  <MessageCircle size={16} /> {t("forum.detail.comment", { count: comments.length })}
                 </h3>
                 <div className="mt-3 space-y-3">
                   {comments.map((comment) => {
@@ -352,7 +352,7 @@ function QuestionDetail() {
                               onClick={() => startEditComment(comment.id, comment.content)}
                               className="inline-flex items-center gap-1 text-[12px] font-semibold text-[var(--brand-primary)]"
                             >
-                              <Pencil size={12} /> Modifier
+                              <Pencil size={12} /> {t("forum.detail.edit")}
                             </button>
                           )}
                         </div>
@@ -370,14 +370,14 @@ function QuestionDetail() {
                                 disabled={updateCommentMutation.isPending}
                                 className="h-9 rounded-full bg-[var(--brand-primary)] px-3 text-[12px] font-semibold text-white disabled:opacity-50"
                               >
-                                Enregistrer
+                                {t("forum.detail.save")}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setEditingCommentId(null)}
                                 className="h-9 rounded-full border border-[var(--brand-border)] px-3 text-[12px] font-semibold"
                               >
-                                Annuler
+                                {t("forum.detail.cancel")}
                               </button>
                             </div>
                           </div>
@@ -385,11 +385,11 @@ function QuestionDetail() {
                           <p className="mt-1 text-[var(--color-text-secondary)]">{comment.content}</p>
                         )}
                         <div className="mt-2 flex items-center gap-2">
-                          <button type="button" onClick={() => voteComment(comment.id, 1)} aria-label="Voter pour ce commentaire" className="flex h-6 w-6 items-center justify-center rounded-full border border-[var(--brand-border)]">
+                          <button type="button" onClick={() => voteComment(comment.id, 1)} aria-label={t("forum.detail.voteForComment")} className="flex h-6 w-6 items-center justify-center rounded-full border border-[var(--brand-border)]">
                             <ArrowUp size={12} />
                           </button>
                           <span className="text-[12px] font-semibold text-[var(--color-text-muted)]">{comment.votes}</span>
-                          <button type="button" onClick={() => voteComment(comment.id, -1)} aria-label="Voter contre ce commentaire" className="flex h-6 w-6 items-center justify-center rounded-full border border-[var(--brand-border)]">
+                          <button type="button" onClick={() => voteComment(comment.id, -1)} aria-label={t("forum.detail.voteAgainstComment")} className="flex h-6 w-6 items-center justify-center rounded-full border border-[var(--brand-border)]">
                             <ArrowDown size={12} />
                           </button>
                         </div>
@@ -404,7 +404,7 @@ function QuestionDetail() {
                       setCommentText(event.target.value);
                       setCommentError("");
                     }}
-                    placeholder="Ajouter un commentaire..."
+                    placeholder={t("forum.detail.addCommentPlaceholder")}
                     className="h-10 flex-1 rounded-lg border border-[var(--brand-border)] px-3 text-[13px]"
                   />
                   <button
@@ -413,7 +413,7 @@ function QuestionDetail() {
                     disabled={commentMutation.isPending}
                     className="h-10 shrink-0 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-50"
                   >
-                    Commenter
+                    {t("forum.detail.commentAction")}
                   </button>
                 </div>
                 {commentError && <p className="mt-2 text-[12px] font-semibold text-red-700">{commentError}</p>}
@@ -422,7 +422,7 @@ function QuestionDetail() {
           </article>
 
           <section className="space-y-4">
-            <h2 className="text-[24px] font-bold">{sortedAnswers.length} réponses</h2>
+            <h2 className="text-[24px] font-bold">{t("forum.detail.answer", { count: sortedAnswers.length })}</h2>
             {sortedAnswers.map((item) => {
               const accepted = item.accepted;
               const itemReported = reportedAnswerIds.includes(item.id);
@@ -436,20 +436,20 @@ function QuestionDetail() {
                 >
                   <div className="flex flex-col gap-4 sm:flex-row">
                     <div className="flex gap-2 sm:flex-col">
-                      <button type="button" onClick={() => voteAnswer(item.id, 1)} className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--brand-border)]" aria-label="Voter pour cette reponse">
+                      <button type="button" onClick={() => voteAnswer(item.id, 1)} className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--brand-border)]" aria-label={t("forum.detail.voteForAnswer")}>
                         <ArrowUp size={15} />
                       </button>
                       <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--brand-surface-alt)] text-[13px] font-bold">
                         {item.votes}
                       </span>
-                      <button type="button" onClick={() => voteAnswer(item.id, -1)} className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--brand-border)]" aria-label="Voter contre cette reponse">
+                      <button type="button" onClick={() => voteAnswer(item.id, -1)} className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--brand-border)]" aria-label={t("forum.detail.voteAgainstAnswer")}>
                         <ArrowDown size={15} />
                       </button>
                     </div>
                     <div className="flex-1">
                       {accepted && (
                         <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-[12px] font-bold text-emerald-700">
-                          <Check size={14} /> Réponse acceptée
+                          <Check size={14} /> {t("forum.detail.answerAccepted")}
                         </div>
                       )}
                       <p className="leading-7 text-[var(--color-text-secondary)]">{item.body}</p>
@@ -465,7 +465,7 @@ function QuestionDetail() {
                           onClick={() => favoriteAnswer(item.id)}
                           className={`inline-flex items-center gap-1 font-semibold disabled:opacity-50 ${itemFavorited ? "text-[var(--brand-primary)]" : ""}`}
                         >
-                          <Bookmark size={13} className={itemFavorited ? "fill-current" : undefined} /> {itemFavorited ? "Dans mes favoris" : "Favori"}
+                          <Bookmark size={13} className={itemFavorited ? "fill-current" : undefined} /> {itemFavorited ? t("forum.detail.inFavorites") : t("forum.detail.favorite")}
                         </button>
                         <button
                           type="button"
@@ -473,7 +473,7 @@ function QuestionDetail() {
                           onClick={() => openReportPanel(item.id, "ANSWER")}
                           className="inline-flex items-center gap-1 font-semibold disabled:opacity-50"
                         >
-                          <Flag size={13} /> {itemReported ? "Signalée" : "Signaler"}
+                          <Flag size={13} /> {itemReported ? t("forum.detail.reported") : t("forum.detail.report")}
                         </button>
                         {isAuthor && !accepted && (
                           <button
@@ -481,7 +481,7 @@ function QuestionDetail() {
                             onClick={() => acceptAnswerAction(item.id)}
                             className="inline-flex items-center gap-1 font-semibold text-emerald-700"
                           >
-                            <Check size={13} /> Accepter cette réponse
+                            <Check size={13} /> {t("forum.detail.acceptThisAnswer")}
                           </button>
                         )}
                       </div>
@@ -492,7 +492,7 @@ function QuestionDetail() {
                             onChange={(event) => setReportReasonCategory(event.target.value as ReportReasonCategory)}
                             className="h-10 w-full rounded-lg border border-[var(--brand-border)] px-3 text-[13px]"
                           >
-                            <option value="">Choisir un motif...</option>
+                            <option value="">{t("forum.detail.chooseAReason")}</option>
                             {REPORT_REASON_OPTIONS.map((option) => (
                               <option key={option.value} value={option.value}>{option.label}</option>
                             ))}
@@ -501,7 +501,7 @@ function QuestionDetail() {
                             rows={2}
                             value={reportDetail}
                             onChange={(event) => setReportDetail(event.target.value)}
-                            placeholder="Détail (facultatif)"
+                            placeholder={t("forum.detail.detailOptional")}
                             className="w-full rounded-lg border border-[var(--brand-border)] px-3 py-2 text-[13px]"
                           />
                           <button
@@ -510,12 +510,12 @@ function QuestionDetail() {
                             onClick={submitReport}
                             className="inline-flex h-9 items-center gap-2 rounded-full bg-red-600 px-4 text-[12px] font-semibold text-white disabled:opacity-60"
                           >
-                            {reportMutation.isPending ? "Envoi..." : "Envoyer le signalement"}
+                            {reportMutation.isPending ? t("forum.detail.sending") : t("forum.detail.sendReport")}
                           </button>
                           {reportNotice && <p className="text-[12px] text-amber-800">{reportNotice}</p>}
                         </div>
                       )}
-                      {itemReported && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">Signalement de la réponse enregistré.</p>}
+                      {itemReported && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">{t("forum.detail.answerReportSaved")}</p>}
                     </div>
                   </div>
                 </article>
@@ -525,7 +525,7 @@ function QuestionDetail() {
 
           <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
             <h2 className="flex items-center gap-2 text-[20px] font-bold">
-              <MessageCircle size={20} /> Répondre
+              <MessageCircle size={20} /> {t("forum.detail.reply")}
             </h2>
             <textarea
               value={answer}
@@ -534,7 +534,7 @@ function QuestionDetail() {
                 setAnswerSubmitted(false);
               }}
               rows={6}
-              placeholder="Rédigez une réponse argumentée, prudente et utile..."
+              placeholder={t("forum.detail.answerPlaceholder")}
               className="mt-4 w-full rounded-lg border border-[var(--brand-border)] px-4 py-3"
             />
             <input
@@ -550,10 +550,10 @@ function QuestionDetail() {
                 uploadAnswerAttachments.mutate(files, {
                   onSuccess: (urls) => {
                     setAnswerAttachments((current) => [...current, ...urls]);
-                    setAnswerAttachmentNotice(`${urls.length} fichier(s) ajouté(s) à la réponse.`);
+                    setAnswerAttachmentNotice(t("forum.detail.attachmentsAdded", { count: urls.length }));
                   },
                   onError: (error) =>
-                    setAnswerAttachmentNotice(error instanceof Error ? error.message : "Impossible d'envoyer ces fichiers."),
+                    setAnswerAttachmentNotice(error instanceof Error ? error.message : t("forum.detail.attachmentUploadError")),
                 });
               }}
             />
@@ -566,7 +566,7 @@ function QuestionDetail() {
                       type="button"
                       onClick={() => setAnswerAttachments((current) => current.filter((item) => item !== url))}
                       className="shrink-0 text-[var(--color-text-muted)] hover:text-red-600"
-                      aria-label="Retirer ce fichier"
+                      aria-label={t("forum.detail.removeFile")}
                     >
                       ✕
                     </button>
@@ -582,7 +582,7 @@ function QuestionDetail() {
                 disabled={uploadAnswerAttachments.isPending}
                 className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold disabled:opacity-50"
               >
-                {uploadAnswerAttachments.isPending ? <Loader2 size={14} className="animate-spin" /> : <Paperclip size={14} />} Joindre un fichier
+                {uploadAnswerAttachments.isPending ? <Loader2 size={14} className="animate-spin" /> : <Paperclip size={14} />} {t("forum.detail.attachFile")}
               </button>
               <button
                 type="button"
@@ -590,12 +590,12 @@ function QuestionDetail() {
                 disabled={answer.trim().length < 20 || answerMutation.isPending}
                 className="h-10 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white disabled:opacity-50"
               >
-                {answerMutation.isPending ? "Publication..." : "Publier la réponse"}
+                {answerMutation.isPending ? t("forum.detail.publishing") : t("forum.detail.publishAnswer")}
               </button>
             </div>
             {answerSubmitted && (
               <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[13px] text-emerald-800">
-                Réponse publiée. Elle apparaît dans le fil de discussion.
+                {t("forum.detail.answerPublished")}
               </p>
             )}
           </section>
@@ -613,7 +613,7 @@ function QuestionDetail() {
             }`}
           >
             <Bookmark size={15} className={isFavorited ? "fill-current" : undefined} />
-            {isFavorited ? "Dans mes favoris" : "Ajouter aux favoris"}
+            {isFavorited ? t("forum.detail.inFavorites") : t("forum.detail.addToFavorites")}
           </button>
           <button
             type="button"
@@ -621,7 +621,7 @@ function QuestionDetail() {
             onClick={() => openReportPanel(id, "QUESTION")}
             className="h-11 w-full rounded-full border border-[var(--brand-border)] text-[13px] font-semibold disabled:opacity-50"
           >
-            <Flag size={15} className="mr-2 inline" /> {reported ? "Signalée" : "Signaler"}
+            <Flag size={15} className="mr-2 inline" /> {reported ? t("forum.detail.reported") : t("forum.detail.report")}
           </button>
           {reportPanelTarget?.id === id && reportPanelTarget.type === "QUESTION" && (
             <div className="space-y-2 rounded-lg border border-[var(--brand-border-light)] p-3">
@@ -630,7 +630,7 @@ function QuestionDetail() {
                 onChange={(event) => setReportReasonCategory(event.target.value as ReportReasonCategory)}
                 className="h-10 w-full rounded-lg border border-[var(--brand-border)] px-3 text-[13px]"
               >
-                <option value="">Choisir un motif...</option>
+                <option value="">{t("forum.detail.chooseAReason")}</option>
                 {REPORT_REASON_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
@@ -639,7 +639,7 @@ function QuestionDetail() {
                 rows={3}
                 value={reportDetail}
                 onChange={(event) => setReportDetail(event.target.value)}
-                placeholder="Détail (facultatif)"
+                placeholder={t("forum.detail.detailOptional")}
                 className="w-full rounded-lg border border-[var(--brand-border)] px-3 py-2 text-[13px]"
               />
               <button
@@ -648,14 +648,14 @@ function QuestionDetail() {
                 onClick={submitReport}
                 className="inline-flex h-9 items-center gap-2 rounded-full bg-red-600 px-4 text-[12px] font-semibold text-white disabled:opacity-60"
               >
-                {reportMutation.isPending ? "Envoi..." : "Envoyer le signalement"}
+                {reportMutation.isPending ? t("forum.detail.sending") : t("forum.detail.sendReport")}
               </button>
             </div>
           )}
-          {reported && <p className="rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">Signalement enregistré.</p>}
+          {reported && <p className="rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">{t("forum.detail.questionReportSaved")}</p>}
           {reportNotice && <p className="rounded-lg bg-amber-50 p-3 text-[12px] text-amber-800">{reportNotice}</p>}
           <div className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[12px] text-[var(--color-text-muted)]">
-            Les actions de modération avancées seront disponibles selon vos droits.
+            {t("forum.detail.moderationNotice")}
           </div>
           </div>
         </aside>

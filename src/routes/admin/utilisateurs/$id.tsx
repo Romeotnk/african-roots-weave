@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import {
@@ -35,12 +36,15 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 }
 
 function AdminUserDetail() {
+  const { t } = useTranslation();
   const { id } = Route.useParams();
   const { roles: actorRoles } = useAuth();
   const assignableRoles = actorRoles.includes("super_admin") ? allRoles : adminAssignableRoles;
   const userQuery = useAdminUser(id);
-  const { ban, unban, updateRole, updateCommissionRate } = useAdminUserActions();
+  const { ban, unban, updateRole, updateCommissionRate, setPortraitOfWeek } = useAdminUserActions();
   const [commissionRateDraft, setCommissionRateDraft] = useState("");
+  const [portraitStart, setPortraitStart] = useState("");
+  const [portraitEnd, setPortraitEnd] = useState("");
   const { approve: approveKyc, reject: rejectKyc } = useAdminKycActions();
   const kycDocsQuery = useAdminKycDocuments(id, userQuery.data?.data?.kycStatus !== "PENDING" && Boolean(userQuery.data?.data));
   const [banOpen, setBanOpen] = useState(false);
@@ -56,25 +60,25 @@ function AdminUserDetail() {
 
   if (userQuery.isLoading) {
     return (
-      <AdminLayout title="Chargement..." description="Fiche utilisateur, rôles, statut, KYC et historique.">
-        <p className="text-[13px] text-slate-400">Chargement de la fiche...</p>
+      <AdminLayout title={t("admin.userDetail.loadingTitle")} description={t("admin.userDetail.description")}>
+        <p className="text-[13px] text-slate-400">{t("admin.userDetail.loadingDetail")}</p>
       </AdminLayout>
     );
   }
 
   if (!user) {
     return (
-      <AdminLayout title="Utilisateur introuvable" description="Fiche utilisateur, rôles, statut, KYC et historique.">
-        <p className="text-[13px] text-red-300">Cet utilisateur n'existe pas ou n'a pas pu être chargé.</p>
+      <AdminLayout title={t("admin.userDetail.notFoundTitle")} description={t("admin.userDetail.description")}>
+        <p className="text-[13px] text-red-300">{t("admin.userDetail.notFoundDesc")}</p>
       </AdminLayout>
     );
   }
 
   return (
-    <AdminLayout title={`${user.firstName} ${user.lastName}`} description="Fiche utilisateur, rôles, statut, KYC et historique.">
+    <AdminLayout title={`${user.firstName} ${user.lastName}`} description={t("admin.userDetail.description")}>
       <div className="mb-4">
         <Link to="/admin/utilisateurs" className="text-[13px] font-bold text-emerald-300 hover:text-emerald-200">
-          Retour aux utilisateurs
+          {t("admin.userDetail.backToUsers")}
         </Link>
       </div>
 
@@ -91,18 +95,18 @@ function AdminUserDetail() {
           </div>
 
           <div className="mt-6 space-y-3 text-[13px]">
-            <InfoRow label="Rôle" value={user.role} />
-            <InfoRow label="Pays" value={user.country} />
-            <InfoRow label="Statut" value={user.isBanned ? `Banni${user.banReason ? ` — ${user.banReason}` : ""}` : "Actif"} />
-            <InfoRow label="Inscription" value={new Date(user.createdAt).toLocaleDateString("fr-FR")} />
+            <InfoRow label={t("admin.userDetail.role")} value={user.role} />
+            <InfoRow label={t("admin.userDetail.country")} value={user.country} />
+            <InfoRow label={t("admin.userDetail.status")} value={user.isBanned ? `${t("admin.userDetail.banned")}${user.banReason ? ` — ${user.banReason}` : ""}` : t("admin.userDetail.active")} />
+            <InfoRow label={t("admin.userDetail.registration")} value={new Date(user.createdAt).toLocaleDateString("fr-FR")} />
             <InfoRow label="KYC" value={user.kycStatus} />
-            <InfoRow label="Solde wallet" value={`${Number(user.walletBalance).toLocaleString("fr-FR")} FCFA`} />
+            <InfoRow label={t("admin.userDetail.walletBalance")} value={`${Number(user.walletBalance).toLocaleString("fr-FR")} FCFA`} />
           </div>
 
           <div className="mt-6 space-y-3">
             <div className="flex gap-2">
               <select value={roleDraft} onChange={(event) => setRoleDraft(event.target.value)} className="h-10 flex-1 rounded-lg border border-white/10 bg-[#1a1a2e] px-3 text-[13px] text-white">
-                <option value="">Changer le rôle...</option>
+                <option value="">{t("admin.userDetail.changeRole")}</option>
                 {assignableRoles.map((role) => <option key={role} value={role}>{role}</option>)}
               </select>
               <button
@@ -112,14 +116,14 @@ function AdminUserDetail() {
                   updateRole.mutate(
                     { id: user.id, role: roleDraft },
                     {
-                      onSuccess: () => setNotice("Rôle mis à jour."),
-                      onError: (error) => setNotice(error instanceof Error ? error.message : "Impossible de changer ce rôle."),
+                      onSuccess: () => setNotice(t("admin.userDetail.roleUpdated")),
+                      onError: (error) => setNotice(error instanceof Error ? error.message : t("admin.userDetail.roleUpdateError")),
                     },
                   )
                 }
                 className="rounded-lg bg-emerald-400 px-4 text-[13px] font-bold text-[#111827] disabled:opacity-50"
               >
-                Appliquer
+                {t("admin.userDetail.apply")}
               </button>
             </div>
 
@@ -129,7 +133,7 @@ function AdminUserDetail() {
                   type="number"
                   min={0}
                   max={100}
-                  placeholder="Taux commission négocié (%)"
+                  placeholder={t("admin.userDetail.negotiatedCommissionPlaceholder")}
                   value={commissionRateDraft}
                   onChange={(event) => setCommissionRateDraft(event.target.value)}
                   className="h-10 flex-1 rounded-lg border border-white/10 bg-[#1a1a2e] px-3 text-[13px] text-white"
@@ -145,14 +149,57 @@ function AdminUserDetail() {
                         defaultCommissionRate: commissionRateDraft.trim() === "" ? null : Number(commissionRateDraft),
                       },
                       {
-                        onSuccess: () => setNotice("Taux de commission négocié mis à jour."),
-                        onError: (error) => setNotice(error instanceof Error ? error.message : "Impossible de mettre à jour le taux de commission."),
+                        onSuccess: () => setNotice(t("admin.userDetail.commissionUpdated")),
+                        onError: (error) => setNotice(error instanceof Error ? error.message : t("admin.userDetail.commissionUpdateError")),
                       },
                     )
                   }
                   className="rounded-lg bg-emerald-400 px-4 text-[13px] font-bold text-[#111827] disabled:opacity-50"
                 >
-                  Enregistrer
+                  {t("admin.userDetail.save")}
+                </button>
+              </div>
+            )}
+
+            {user.professionalProfile && (
+              <div className="space-y-2 rounded-lg border border-white/10 p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] font-semibold text-slate-300">{t("admin.userDetail.portraitOfWeek")}</span>
+                  {user.professionalProfile.isPortraitOfWeek && (
+                    <span className="rounded-full bg-emerald-500/20 px-2 py-1 text-[11px] font-bold text-emerald-300">
+                      {user.professionalProfile.portraitEndDate ? t("admin.userDetail.portraitActiveUntil", { date: new Date(user.professionalProfile.portraitEndDate).toLocaleDateString("fr-FR") }) : t("admin.userDetail.portraitActive")}
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="date"
+                    value={portraitStart}
+                    onChange={(event) => setPortraitStart(event.target.value)}
+                    className="h-10 flex-1 rounded-lg border border-white/10 bg-[#1a1a2e] px-3 text-[13px] text-white"
+                  />
+                  <input
+                    type="date"
+                    value={portraitEnd}
+                    onChange={(event) => setPortraitEnd(event.target.value)}
+                    className="h-10 flex-1 rounded-lg border border-white/10 bg-[#1a1a2e] px-3 text-[13px] text-white"
+                  />
+                </div>
+                <button
+                  type="button"
+                  disabled={!portraitStart || !portraitEnd || setPortraitOfWeek.isPending}
+                  onClick={() =>
+                    setPortraitOfWeek.mutate(
+                      { profileId: user.professionalProfile!.id, userId: user.id, startDate: portraitStart, endDate: portraitEnd },
+                      {
+                        onSuccess: () => setNotice(t("admin.userDetail.portraitConfigured")),
+                        onError: (error) => setNotice(error instanceof Error ? error.message : t("admin.userDetail.portraitConfigureError")),
+                      },
+                    )
+                  }
+                  className="w-full rounded-lg bg-emerald-400 px-4 py-2 text-[13px] font-bold text-[#111827] disabled:opacity-50"
+                >
+                  {t("admin.userDetail.setAsPortraitOfWeek")}
                 </button>
               </div>
             )}
@@ -161,14 +208,14 @@ function AdminUserDetail() {
               <button
                 type="button"
                 disabled={unban.isPending}
-                onClick={() => unban.mutate(user.id, { onSuccess: () => setNotice("Compte débanni.") })}
+                onClick={() => unban.mutate(user.id, { onSuccess: () => setNotice(t("admin.userDetail.accountUnbanned")) })}
                 className="w-full rounded-lg bg-emerald-400 px-4 py-3 text-[13px] font-bold text-[#111827] disabled:opacity-50"
               >
-                Débannir le compte
+                {t("admin.userDetail.unbanAccount")}
               </button>
             ) : (
               <button type="button" onClick={() => setBanOpen(true)} className="w-full rounded-lg bg-red-500/80 px-4 py-3 text-[13px] font-bold text-white">
-                Suspendre le compte
+                {t("admin.userDetail.suspendAccount")}
               </button>
             )}
 
@@ -177,18 +224,18 @@ function AdminUserDetail() {
                 <button
                   type="button"
                   disabled={approveKyc.isPending}
-                  onClick={() => approveKyc.mutate(user.id, { onSuccess: () => setNotice("KYC approuvé.") })}
+                  onClick={() => approveKyc.mutate(user.id, { onSuccess: () => setNotice(t("admin.userDetail.kycApproved")) })}
                   className="flex-1 rounded-lg bg-emerald-400 px-4 py-2 text-[13px] font-bold text-[#111827] disabled:opacity-50"
                 >
-                  Approuver le KYC
+                  {t("admin.userDetail.approveKyc")}
                 </button>
                 <button
                   type="button"
                   disabled={rejectKyc.isPending}
-                  onClick={() => rejectKyc.mutate(user.id, { onSuccess: () => setNotice("KYC rejeté.") })}
+                  onClick={() => rejectKyc.mutate(user.id, { onSuccess: () => setNotice(t("admin.userDetail.kycRejected")) })}
                   className="flex-1 rounded-lg bg-red-500/80 px-4 py-2 text-[13px] font-bold text-white disabled:opacity-50"
                 >
-                  Rejeter le KYC
+                  {t("admin.userDetail.rejectKyc")}
                 </button>
               </div>
             )}
@@ -203,47 +250,47 @@ function AdminUserDetail() {
 
         <div className="space-y-6">
           <AdminCard>
-            <h2 className="mb-4 text-[18px] font-bold text-white">Réputation & activité</h2>
+            <h2 className="mb-4 text-[18px] font-bold text-white">{t("admin.userDetail.reputationActivity")}</h2>
             <div className="grid gap-3 md:grid-cols-3">
               <div className="rounded-lg bg-white/5 p-4">
-                <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-slate-500">Score de réputation</p>
+                <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-slate-500">{t("admin.userDetail.reputationScore")}</p>
                 <p className="mt-2 text-[24px] font-black text-white">{user.reputationScore}</p>
               </div>
               <div className="rounded-lg bg-white/5 p-4">
-                <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-slate-500">Dernière connexion</p>
-                <p className="mt-2 text-[16px] font-bold text-white">{user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString("fr-FR") : "Jamais"}</p>
+                <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-slate-500">{t("admin.userDetail.lastLogin")}</p>
+                <p className="mt-2 text-[16px] font-bold text-white">{user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString("fr-FR") : t("admin.userDetail.never")}</p>
               </div>
               <div className="rounded-lg bg-white/5 p-4">
-                <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-slate-500">Email vérifié</p>
-                <p className="mt-2 text-[16px] font-bold text-white">{user.isActive ? "Oui" : "Compte désactivé"}</p>
+                <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-slate-500">{t("admin.userDetail.emailVerified")}</p>
+                <p className="mt-2 text-[16px] font-bold text-white">{user.isActive ? t("admin.userDetail.yes") : t("admin.userDetail.accountDisabled")}</p>
               </div>
             </div>
           </AdminCard>
 
           {user.kycStatus !== "PENDING" && (
             <AdminCard>
-              <h2 className="mb-4 text-[18px] font-bold text-white">Documents KYC</h2>
-              {kycDocsQuery.isLoading && <p className="text-[13px] text-slate-400">Chargement des documents...</p>}
-              {kycDocsQuery.isError && <p className="text-[13px] text-red-300">Impossible de charger les documents.</p>}
+              <h2 className="mb-4 text-[18px] font-bold text-white">{t("admin.userDetail.kycDocuments")}</h2>
+              {kycDocsQuery.isLoading && <p className="text-[13px] text-slate-400">{t("admin.userDetail.loadingDocuments")}</p>}
+              {kycDocsQuery.isError && <p className="text-[13px] text-red-300">{t("admin.userDetail.loadDocumentsError")}</p>}
               {(() => {
                 const record = kycDocsQuery.data?.data as
                   | { kycDocuments?: { docType?: string; documentNumber?: string; expiresAt?: string; files?: { front?: string; back?: string; selfie?: string } } | null }
                   | undefined;
                 const docs = record?.kycDocuments;
                 if (!kycDocsQuery.isLoading && !docs) {
-                  return <p className="text-[13px] text-slate-400">Aucun document disponible.</p>;
+                  return <p className="text-[13px] text-slate-400">{t("admin.userDetail.noDocumentsAvailable")}</p>;
                 }
                 if (!docs) return null;
                 const links: Array<[string, string | undefined]> = [
-                  ["Recto", docs.files?.front],
-                  ["Verso", docs.files?.back],
-                  ["Selfie", docs.files?.selfie],
+                  [t("admin.userDetail.front"), docs.files?.front],
+                  [t("admin.userDetail.back"), docs.files?.back],
+                  [t("admin.userDetail.selfie"), docs.files?.selfie],
                 ];
                 return (
                   <div className="space-y-3 text-[13px]">
-                    <InfoRow label="Type de document" value={docs.docType ?? "—"} />
-                    <InfoRow label="Numéro" value={docs.documentNumber ?? "—"} />
-                    <InfoRow label="Expire le" value={docs.expiresAt ? new Date(docs.expiresAt).toLocaleDateString("fr-FR") : "—"} />
+                    <InfoRow label={t("admin.userDetail.documentType")} value={docs.docType ?? "—"} />
+                    <InfoRow label={t("admin.userDetail.documentNumber")} value={docs.documentNumber ?? "—"} />
+                    <InfoRow label={t("admin.userDetail.expiresOn")} value={docs.expiresAt ? new Date(docs.expiresAt).toLocaleDateString("fr-FR") : "—"} />
                     <div className="flex flex-wrap gap-2 pt-2">
                       {links.map(([label, url]) => url ? (
                         <a
@@ -253,7 +300,7 @@ function AdminUserDetail() {
                           rel="noreferrer"
                           className="rounded-lg bg-white/10 px-3 py-2 font-semibold text-emerald-300 hover:text-emerald-200"
                         >
-                          Voir : {label}
+                          {t("admin.userDetail.view", { label })}
                         </a>
                       ) : null)}
                     </div>
@@ -270,16 +317,16 @@ function AdminUserDetail() {
       <ConfirmDialog
         open={banOpen}
         onOpenChange={setBanOpen}
-        title={`Suspendre ${user.firstName} ${user.lastName}`}
-        description="Le compte sera immédiatement bloqué. Indiquez un motif conservé dans l'historique de modération."
+        title={t("admin.userDetail.suspendTitle", { name: `${user.firstName} ${user.lastName}` })}
+        description={t("admin.userDetail.suspendDesc")}
         danger
         requireReason
-        reasonLabel="Motif de la suspension"
-        confirmLabel="Suspendre"
+        reasonLabel={t("admin.userDetail.suspendReasonLabel")}
+        confirmLabel={t("admin.userDetail.suspendConfirm")}
         pending={ban.isPending}
         onConfirm={(reason) => {
           if (!reason) return;
-          ban.mutate({ id: user.id, reason }, { onSuccess: () => { setBanOpen(false); setNotice("Compte suspendu."); } });
+          ban.mutate({ id: user.id, reason }, { onSuccess: () => { setBanOpen(false); setNotice(t("admin.userDetail.accountSuspended")); } });
         }}
       />
     </AdminLayout>
@@ -287,6 +334,7 @@ function AdminUserDetail() {
 }
 
 function UserPermissionsPanel({ user, canEdit }: { user: AdminUser; canEdit: boolean }) {
+  const { t } = useTranslation();
   const permissionsQuery = useAdminPermissions();
   const updateOverrides = useUpdateUserPermissionOverrides();
   const [effective, setEffective] = useState<Set<string>>(new Set());
@@ -309,8 +357,8 @@ function UserPermissionsPanel({ user, canEdit }: { user: AdminUser; canEdit: boo
   if (user.role === "SUPER_ADMIN") {
     return (
       <AdminCard>
-        <h2 className="mb-2 text-[18px] font-bold text-white">Permissions individuelles</h2>
-        <p className="text-[13px] text-slate-400">Le rôle Super admin a toujours accès à toutes les permissions.</p>
+        <h2 className="mb-2 text-[18px] font-bold text-white">{t("admin.userDetail.individualPermissions")}</h2>
+        <p className="text-[13px] text-slate-400">{t("admin.userDetail.superAdminAlwaysAllPerms")}</p>
       </AdminCard>
     );
   }
@@ -321,8 +369,8 @@ function UserPermissionsPanel({ user, canEdit }: { user: AdminUser; canEdit: boo
   if (!canEdit) {
     return (
       <AdminCard>
-        <h2 className="mb-2 text-[18px] font-bold text-white">Permissions individuelles</h2>
-        <p className="text-[13px] text-slate-400">Réservé au rôle Super admin.</p>
+        <h2 className="mb-2 text-[18px] font-bold text-white">{t("admin.userDetail.individualPermissions")}</h2>
+        <p className="text-[13px] text-slate-400">{t("admin.userDetail.reservedForSuperAdmin")}</p>
       </AdminCard>
     );
   }
@@ -342,8 +390,8 @@ function UserPermissionsPanel({ user, canEdit }: { user: AdminUser; canEdit: boo
     updateOverrides.mutate(
       { id: user.id, grant, revoke },
       {
-        onSuccess: () => setNotice("Permissions individuelles mises à jour."),
-        onError: (error) => setNotice(error instanceof Error ? error.message : "Impossible de mettre à jour les permissions."),
+        onSuccess: () => setNotice(t("admin.userDetail.permissionsUpdated")),
+        onError: (error) => setNotice(error instanceof Error ? error.message : t("admin.userDetail.permissionsUpdateError")),
       },
     );
   };
@@ -352,9 +400,9 @@ function UserPermissionsPanel({ user, canEdit }: { user: AdminUser; canEdit: boo
     <AdminCard>
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h2 className="text-[18px] font-bold text-white">Permissions individuelles</h2>
+          <h2 className="text-[18px] font-bold text-white">{t("admin.userDetail.individualPermissions")}</h2>
           <p className="mt-1 text-[12px] text-slate-500">
-            Cases pré-cochées = accordées par le rôle « {user.role} ». Décochez ou cochez pour composer un accès personnalisé.
+            {t("admin.userDetail.preCheckedByRole", { role: user.role })}
           </p>
         </div>
         <button
@@ -363,11 +411,11 @@ function UserPermissionsPanel({ user, canEdit }: { user: AdminUser; canEdit: boo
           onClick={save}
           className="rounded-lg bg-emerald-400 px-4 py-2 text-[13px] font-bold text-[#111827] disabled:opacity-50"
         >
-          {updateOverrides.isPending ? "Enregistrement..." : "Enregistrer"}
+          {updateOverrides.isPending ? t("admin.userDetail.saving") : t("admin.userDetail.save")}
         </button>
       </div>
       {notice && <p className="mb-3 text-[12px] font-semibold text-emerald-300">{notice}</p>}
-      {permissionsQuery.isLoading && <p className="text-[13px] text-slate-400">Chargement...</p>}
+      {permissionsQuery.isLoading && <p className="text-[13px] text-slate-400">{t("admin.userDetail.loading")}</p>}
       <div className="grid gap-2 md:grid-cols-2">
         {catalog.map((entry) => (
           <label key={entry.key} className="flex items-center gap-2 text-[13px] text-slate-300">

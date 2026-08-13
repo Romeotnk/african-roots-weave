@@ -1,14 +1,26 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { Camera, Eye, EyeOff, KeyRound, Save, User } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import type { AppRole } from "@/lib/auth/AuthContext";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { changePassword, updateMe } from "@/lib/api/auth";
 import { useMeQuery } from "@/hooks/useAuthApi";
-import { getPasswordValidationError } from "@/lib/auth/password";
 import { PROFESSIONAL_ACCOUNT_ROLES } from "@/lib/auth/roles";
+import type { TFunction } from "i18next";
+
+const getNewPasswordValidationError = (password: string, t: TFunction) => {
+  const requirements = [
+    { test: (value: string) => value.length >= 8, message: t("account.profile.newPasswordMinLength") },
+    { test: (value: string) => /[A-Z]/.test(value), message: t("account.profile.newPasswordUppercase") },
+    { test: (value: string) => /[a-z]/.test(value), message: t("account.profile.newPasswordLowercase") },
+    { test: (value: string) => /[0-9]/.test(value), message: t("account.profile.newPasswordDigit") },
+    { test: (value: string) => /[^A-Za-z0-9]/.test(value), message: t("account.profile.newPasswordSpecialChar") },
+  ];
+  return requirements.find((requirement) => !requirement.test(password))?.message ?? null;
+};
 
 export const Route = createFileRoute("/tableau-de-bord/profil")({
   head: () => ({ meta: [{ title: "Mon profil - IWOSAN" }] }),
@@ -34,6 +46,7 @@ const isValidUrl = (value: string) => {
 };
 
 export function ProfilePage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { allowedRoles?: AppRole[] } = {}) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [profileMessage, setProfileMessage] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
@@ -73,22 +86,22 @@ export function ProfilePage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { all
         avatarUrl: form.avatarUrl.trim() || null,
       }),
     onSuccess: async () => {
-      setProfileMessage("Profil mis a jour.");
+      setProfileMessage(t("account.profile.profileUpdated"));
       await queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
     },
     onError: (error) => {
-      setProfileMessage(error instanceof Error ? error.message : "Mise à jour impossible.");
+      setProfileMessage(error instanceof Error ? error.message : t("account.profile.updateError"));
     },
   });
 
   const passwordMutation = useMutation({
     mutationFn: () => changePassword(passwords.currentPassword, passwords.password),
     onSuccess: () => {
-      setPasswordMessage("Mot de passe changé. Utilisez le nouveau mot de passe à la prochaine connexion.");
+      setPasswordMessage(t("account.profile.passwordChanged"));
       setPasswords({ currentPassword: "", password: "", confirmPassword: "" });
     },
     onError: (error) => {
-      setPasswordMessage(error instanceof Error ? error.message : "Changement impossible.");
+      setPasswordMessage(error instanceof Error ? error.message : t("account.profile.passwordChangeError"));
     },
   });
 
@@ -97,12 +110,12 @@ export function ProfilePage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { all
     setProfileMessage("");
 
     if (form.firstName.trim().length < 2 || form.lastName.trim().length < 2) {
-      setProfileMessage("Renseignez un prénom et un nom d'au moins 2 caractères.");
+      setProfileMessage(t("account.profile.firstNameLastNameTooShort"));
       return;
     }
 
     if (!isValidUrl(form.avatarUrl)) {
-      setProfileMessage("L'URL de la photo doit commencer par http:// ou https://.");
+      setProfileMessage(t("account.profile.invalidAvatarUrl"));
       return;
     }
 
@@ -114,18 +127,18 @@ export function ProfilePage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { all
     setPasswordMessage("");
 
     if (!passwords.currentPassword) {
-      setPasswordMessage("Saisissez votre mot de passe actuel.");
+      setPasswordMessage(t("account.profile.currentPasswordRequired"));
       return;
     }
 
-    const passwordError = getPasswordValidationError(passwords.password);
+    const passwordError = getNewPasswordValidationError(passwords.password, t);
     if (passwordError) {
-      setPasswordMessage(passwordError.replace("Le mot de passe", "Le nouveau mot de passe"));
+      setPasswordMessage(passwordError);
       return;
     }
 
     if (passwords.password !== passwords.confirmPassword) {
-      setPasswordMessage("Les deux nouveaux mots de passe ne correspondent pas.");
+      setPasswordMessage(t("account.profile.passwordsDontMatch"));
       return;
     }
 
@@ -135,8 +148,8 @@ export function ProfilePage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { all
   return (
     <ProtectedRoute requireAnyRole={allowedRoles}>
       <AccountLayout
-        title="Mon profil"
-        description="Identite, photo de compte et securite du compte connecte."
+        title={t("account.profile.title")}
+        description={t("account.profile.description")}
         actions={
           <div className="flex items-center gap-3 rounded-[8px] border border-[var(--brand-border-light)] px-4 py-3">
             <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-[var(--brand-primary-subtle)]">
@@ -147,8 +160,8 @@ export function ProfilePage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { all
               )}
             </div>
             <div>
-              <p className="text-[14px] font-bold">{form.firstName || "Prenom"} {form.lastName || "Nom"}</p>
-              <p className="text-[12px] text-[var(--color-text-muted)]">{profileQuery.data?.role ?? "Compte"}</p>
+              <p className="text-[14px] font-bold">{form.firstName || t("account.profile.firstNamePlaceholder")} {form.lastName || t("account.profile.lastNamePlaceholder")}</p>
+              <p className="text-[12px] text-[var(--color-text-muted)]">{profileQuery.data?.role ?? t("account.profile.accountPlaceholder")}</p>
             </div>
           </div>
         }
@@ -157,35 +170,35 @@ export function ProfilePage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { all
           <form onSubmit={submitProfile} className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
             <div className="flex items-center gap-3">
               <Camera size={20} className="text-[var(--brand-primary)]" />
-              <h2 className="text-[20px] font-bold">Informations personnelles</h2>
+              <h2 className="text-[20px] font-bold">{t("account.profile.personalInfoTitle")}</h2>
             </div>
 
             {profileQuery.isLoading ? (
-              <p className="mt-5 text-[14px] text-[var(--color-text-muted)]">Chargement du profil...</p>
+              <p className="mt-5 text-[14px] text-[var(--color-text-muted)]">{t("account.profile.loadingProfile")}</p>
             ) : profileQuery.isError ? (
               <p className="mt-5 rounded-[8px] bg-red-50 p-4 text-[14px] text-red-700">
-                Impossible de charger le profil. Reconnectez-vous puis reessayez.
+                {t("account.profile.loadError")}
               </p>
             ) : (
               <div className="mt-5 grid gap-4 md:grid-cols-2">
-                <Field label="Prenom" value={form.firstName} onChange={(firstName) => setForm((current) => ({ ...current, firstName }))} />
-                <Field label="Nom" value={form.lastName} onChange={(lastName) => setForm((current) => ({ ...current, lastName }))} />
-                <Field label="Pays" value={form.country} onChange={(country) => setForm((current) => ({ ...current, country }))} />
+                <Field label={t("account.profile.firstName")} value={form.firstName} onChange={(firstName) => setForm((current) => ({ ...current, firstName }))} />
+                <Field label={t("account.profile.lastName")} value={form.lastName} onChange={(lastName) => setForm((current) => ({ ...current, lastName }))} />
+                <Field label={t("account.profile.country")} value={form.country} onChange={(country) => setForm((current) => ({ ...current, country }))} />
                 <label className="grid gap-2 text-[13px] font-semibold text-[var(--color-text-secondary)]">
-                  Langue
+                  {t("account.profile.language")}
                   <select
                     value={form.language}
                     onChange={(event) => setForm((current) => ({ ...current, language: event.target.value as ProfileForm["language"] }))}
                     className="h-11 rounded-[8px] border border-[var(--brand-border-light)] bg-white px-3 text-[14px] text-[var(--color-text-primary)] outline-none focus:border-[var(--brand-primary)]"
                   >
-                    <option value="fr">Francais</option>
-                    <option value="en">English</option>
-                    <option value="ar">Arabe</option>
+                    <option value="fr">{t("account.profile.languageFr")}</option>
+                    <option value="en">{t("account.profile.languageEn")}</option>
+                    <option value="ar">{t("account.profile.languageAr")}</option>
                   </select>
                 </label>
                 <div className="md:col-span-2">
                   <Field
-                    label="URL photo de profil"
+                    label={t("account.profile.avatarUrlLabel")}
                     value={form.avatarUrl}
                     placeholder="https://..."
                     onChange={(avatarUrl) => setForm((current) => ({ ...current, avatarUrl }))}
@@ -206,29 +219,29 @@ export function ProfilePage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { all
               className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[14px] font-semibold text-white disabled:opacity-60"
             >
               <Save size={17} />
-              {profileMutation.isPending ? "Enregistrement..." : "Enregistrer"}
+              {profileMutation.isPending ? t("account.profile.saving") : t("account.profile.save")}
             </button>
           </form>
 
           <form onSubmit={submitPassword} className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
             <div className="flex items-center gap-3">
               <KeyRound size={20} className="text-[var(--brand-primary)]" />
-              <h2 className="text-[20px] font-bold">Mot de passe</h2>
+              <h2 className="text-[20px] font-bold">{t("account.profile.passwordSectionTitle")}</h2>
             </div>
 
             <div className="mt-5 grid gap-4">
               <PasswordField
-                label="Mot de passe actuel"
+                label={t("account.profile.currentPassword")}
                 value={passwords.currentPassword}
                 onChange={(currentPassword) => setPasswords((current) => ({ ...current, currentPassword }))}
               />
               <PasswordField
-                label="Nouveau mot de passe"
+                label={t("account.profile.newPassword")}
                 value={passwords.password}
                 onChange={(password) => setPasswords((current) => ({ ...current, password }))}
               />
               <PasswordField
-                label="Confirmer"
+                label={t("account.profile.confirmPassword")}
                 value={passwords.confirmPassword}
                 onChange={(confirmPassword) => setPasswords((current) => ({ ...current, confirmPassword }))}
               />
@@ -246,7 +259,7 @@ export function ProfilePage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { all
               className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--color-text-primary)] px-5 text-[14px] font-semibold text-white disabled:opacity-60"
             >
               <KeyRound size={17} />
-              {passwordMutation.isPending ? "Changement..." : "Changer le mot de passe"}
+              {passwordMutation.isPending ? t("account.profile.changing") : t("account.profile.changePassword")}
             </button>
           </form>
         </div>
@@ -283,6 +296,7 @@ function Field({
 }
 
 function PasswordField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const Icon = visible ? EyeOff : Eye;
 
@@ -300,7 +314,7 @@ function PasswordField({ label, value, onChange }: { label: string; value: strin
           type="button"
           onClick={() => setVisible((current) => !current)}
           className="grid h-10 w-10 place-items-center text-[var(--color-text-muted)]"
-          aria-label={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+          aria-label={visible ? t("account.profile.hidePassword") : t("account.profile.showPassword")}
         >
           <Icon size={17} />
         </button>

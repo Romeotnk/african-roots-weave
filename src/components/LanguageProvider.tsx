@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { I18nextProvider } from "react-i18next";
 import { useMeQuery } from "@/hooks/useAuthApi";
 import { updateMe } from "@/lib/api/auth";
-import i18n, { SUPPORTED_LANGUAGES, type SupportedLanguage } from "@/lib/i18n";
+import i18n, { applyTranslationOverrides, SUPPORTED_LANGUAGES, type SupportedLanguage } from "@/lib/i18n";
 
 interface Ctx {
   language: SupportedLanguage;
@@ -49,6 +49,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     i18n.changeLanguage(language).catch(() => undefined);
     document.documentElement.lang = language;
+    applyTranslationOverrides(language).catch(() => undefined);
   }, [language]);
 
   const setLanguage = useCallback(

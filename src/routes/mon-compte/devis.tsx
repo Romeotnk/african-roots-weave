@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, FileText, Loader2, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAcceptQuote, useDeclineQuote, useMyQuotes } from "@/hooks/useQuotesApi";
@@ -14,13 +15,6 @@ export const Route = createFileRoute("/mon-compte/devis")({
   ),
 });
 
-const statusLabels: Record<QuoteStatus, string> = {
-  PENDING: "En attente du vendeur",
-  PROPOSED: "Devis reçu",
-  ACCEPTED: "Accepté",
-  DECLINED: "Refusé",
-};
-
 const statusClasses: Record<QuoteStatus, string> = {
   PENDING: "bg-slate-100 text-slate-700 border-slate-200",
   PROPOSED: "bg-amber-50 text-amber-700 border-amber-100",
@@ -31,15 +25,23 @@ const statusClasses: Record<QuoteStatus, string> = {
 const formatMoney = (amount: number) => `${amount.toLocaleString("fr-FR")} FCFA`;
 
 function MyQuotesPage() {
+  const { t } = useTranslation();
   const { data: quotes, isLoading, isError } = useMyQuotes("buyer");
   const acceptQuote = useAcceptQuote();
   const declineQuote = useDeclineQuote();
   const list = quotes ?? [];
 
+  const statusLabels: Record<QuoteStatus, string> = {
+    PENDING: t("account.quotes.statusPending"),
+    PROPOSED: t("account.quotes.statusProposed"),
+    ACCEPTED: t("account.quotes.statusAccepted"),
+    DECLINED: t("account.quotes.statusDeclined"),
+  };
+
   return (
     <AccountLayout
-      title="Mes devis"
-      description="Suivez vos demandes de devis et acceptez la proposition d'un vendeur pour créer votre commande."
+      title={t("account.quotes.title")}
+      description={t("account.quotes.description")}
     >
         <div className="space-y-3">
           {isLoading ? (
@@ -48,14 +50,14 @@ function MyQuotesPage() {
             </div>
           ) : isError ? (
             <div className="rounded-[8px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
-              Impossible de charger vos devis pour le moment.
+              {t("account.quotes.loadError")}
             </div>
           ) : list.length === 0 ? (
             <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-8 text-center">
               <FileText className="mx-auto text-[var(--brand-primary)]" size={34} />
-              <h2 className="mt-4 text-[20px] font-bold">Aucun devis demandé</h2>
+              <h2 className="mt-4 text-[20px] font-bold">{t("account.quotes.emptyTitle")}</h2>
               <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-                Sur une annonce "Prix sur devis", utilisez le bouton "Demander un devis".
+                {t("account.quotes.emptyDesc")}
               </p>
             </div>
           ) : (
@@ -68,7 +70,7 @@ function MyQuotesPage() {
                   </span>
                 </div>
                 <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">
-                  Vendeur : {quote.seller.firstName} {quote.seller.lastName}
+                  {t("account.quotes.seller", { name: `${quote.seller.firstName} ${quote.seller.lastName}` })}
                 </p>
                 {quote.status === "PROPOSED" && quote.proposedPrice && (
                   <div className="mt-3 rounded-lg bg-[var(--brand-surface-alt)] p-3">
@@ -81,7 +83,7 @@ function MyQuotesPage() {
                         disabled={acceptQuote.isPending}
                         className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-50"
                       >
-                        <CheckCircle2 size={16} /> Accepter et commander
+                        <CheckCircle2 size={16} /> {t("account.quotes.acceptAndOrder")}
                       </button>
                       <button
                         type="button"
@@ -89,7 +91,7 @@ function MyQuotesPage() {
                         disabled={declineQuote.isPending}
                         className="inline-flex h-10 items-center gap-2 rounded-full bg-red-50 px-4 text-[13px] font-semibold text-red-700 disabled:opacity-50"
                       >
-                        <X size={16} /> Refuser
+                        <X size={16} /> {t("account.quotes.decline")}
                       </button>
                     </div>
                   </div>

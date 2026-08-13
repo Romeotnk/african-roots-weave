@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminPermissions, useUpdateRolePermissions } from "@/hooks/useAdminApi";
 
@@ -9,14 +10,15 @@ export const Route = createFileRoute("/admin/roles-permissions")({
 });
 
 const ROLES = ["SUPER_ADMIN", "ADMIN", "PROFESSIONAL", "USER"] as const;
-const roleLabels: Record<string, string> = {
-  SUPER_ADMIN: "Super admin",
-  ADMIN: "Admin",
-  PROFESSIONAL: "Professionnel",
-  USER: "Utilisateur",
-};
 
 function AdminRolesPermissions() {
+  const { t } = useTranslation();
+  const roleLabels: Record<string, string> = {
+    SUPER_ADMIN: t("admin.rolesPermissions.roleSuperAdmin"),
+    ADMIN: t("admin.rolesPermissions.roleAdmin"),
+    PROFESSIONAL: t("admin.rolesPermissions.roleProfessional"),
+    USER: t("admin.rolesPermissions.roleUser"),
+  };
   const permissionsQuery = useAdminPermissions();
   const updateRolePermissions = useUpdateRolePermissions();
   const [draft, setDraft] = useState<Partial<Record<string, Set<string>>>>({});
@@ -44,23 +46,23 @@ function AdminRolesPermissions() {
     updateRolePermissions.mutate(
       { role, permissions: [...(draft[role] ?? [])] },
       {
-        onSuccess: () => setNotice(`Permissions de « ${roleLabels[role]} » mises à jour.`),
+        onSuccess: () => setNotice(t("admin.rolesPermissions.permissionsUpdated", { role: roleLabels[role] })),
         onError: (error) =>
-          setNotice(error instanceof Error ? error.message : `Impossible de mettre à jour « ${roleLabels[role]} ».`),
+          setNotice(error instanceof Error ? error.message : t("admin.rolesPermissions.permissionsUpdateError", { role: roleLabels[role] })),
       },
     );
   };
 
   return (
     <AdminLayout
-      title="Rôles & permissions"
-      description="Composez les permissions par défaut de chaque rôle. SUPER_ADMIN a toujours accès à tout, quel que soit ce tableau."
+      title={t("admin.rolesPermissions.title")}
+      description={t("admin.rolesPermissions.description")}
     >
       {notice && <div className="mb-4 rounded-lg bg-emerald-500/15 p-3 text-[13px] text-emerald-200">{notice}</div>}
-      {permissionsQuery.isLoading && <p className="text-[13px] text-slate-400">Chargement...</p>}
+      {permissionsQuery.isLoading && <p className="text-[13px] text-slate-400">{t("admin.rolesPermissions.loading")}</p>}
       {permissionsQuery.isError && (
         <p className="text-[13px] text-red-300">
-          Cette page est réservée au rôle Super Admin. Vous n'avez pas les droits pour consulter ou modifier les permissions.
+          {t("admin.rolesPermissions.accessDenied")}
         </p>
       )}
 
@@ -76,7 +78,7 @@ function AdminRolesPermissions() {
                   onClick={() => saveRole(role)}
                   className="rounded-full bg-emerald-400 px-4 py-1.5 text-[12px] font-bold text-[#111827] disabled:opacity-50"
                 >
-                  {updateRolePermissions.isPending ? "Enregistrement..." : "Enregistrer"}
+                  {updateRolePermissions.isPending ? t("admin.rolesPermissions.saving") : t("admin.rolesPermissions.save")}
                 </button>
               </div>
               <div className="grid gap-4 md:grid-cols-2">

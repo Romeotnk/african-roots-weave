@@ -35,6 +35,29 @@ export const getPublicSiteConfig = asyncHandler(async (_req, res) => {
   res.json(apiResponse(true, cache.config, "Site config retrieved"));
 });
 
+// Same short-TTL pattern as the site config cache above — text overrides are
+// fetched once at app boot (and on language switch) by every visitor, but
+// only change when a super admin edits them.
+let translationsCache: { locale: string; entries: Record<string, string>; expiresAt: number } | null = null;
+
+export const invalidatePublicTranslationsCache = () => {
+  translationsCache = null;
+};
+
+export const getPublicTranslations = asyncHandler(async (req, res) => {
+  const locale = typeof req.query.locale === "string" ? req.query.locale : "fr";
+  const now = Date.now();
+  if (!translationsCache || translationsCache.locale !== locale || translationsCache.expiresAt <= now) {
+    const rows = await prisma.translationOverride.findMany({ where: { locale } });
+    translationsCache = {
+      locale,
+      entries: Object.fromEntries(rows.map((row) => [row.key, row.value])),
+      expiresAt: now + CACHE_TTL_MS,
+    };
+  }
+  res.json(apiResponse(true, translationsCache.entries, "Translations retrieved"));
+});
+
 export const getPublicPage = asyncHandler(async (req, res) => {
   const page = await prisma.page.findFirst({ where: { slug: req.params.slug, isPublished: true } });
   if (!page) throw new ApiError(404, "Page not found");

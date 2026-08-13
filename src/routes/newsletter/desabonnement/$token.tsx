@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { unsubscribeNewsletter } from "@/lib/api/newsletter";
 
 export const Route = createFileRoute("/newsletter/desabonnement/$token")({
@@ -8,6 +9,7 @@ export const Route = createFileRoute("/newsletter/desabonnement/$token")({
 });
 
 function NewsletterUnsubscribe() {
+  const { t } = useTranslation();
   const { token } = Route.useParams();
   const [status, setStatus] = useState<"loading" | "done" | "error">("loading");
   const [error, setError] = useState<string | null>(null);
@@ -20,9 +22,9 @@ function NewsletterUnsubscribe() {
       .then(() => setStatus("done"))
       .catch((apiError) => {
         setStatus("error");
-        setError(apiError instanceof Error ? apiError.message : "Lien invalide ou déjà utilisé.");
+        setError(apiError instanceof Error ? apiError.message : t("newsletterUnsubscribe.invalidOrUsedLink"));
       });
-  }, [token]);
+  }, [token, t]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--brand-bg)] px-4 py-12">
@@ -30,13 +32,13 @@ function NewsletterUnsubscribe() {
         <Link to="/" className="mb-6 block text-center">
           <span className="text-[24px] font-extrabold text-[var(--brand-primary)]">IWOSAN</span>
         </Link>
-        <h1 className="text-[24px] font-bold">Désabonnement newsletter</h1>
+        <h1 className="text-[24px] font-bold">{t("newsletterUnsubscribe.title")}</h1>
         {status === "loading" && (
-          <p className="mt-6 text-[14px] text-[var(--color-text-muted)]">Traitement en cours...</p>
+          <p className="mt-6 text-[14px] text-[var(--color-text-muted)]">{t("newsletterUnsubscribe.processing")}</p>
         )}
         {status === "done" && (
           <p className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[13px] text-emerald-700">
-            Vous ne recevrez plus la newsletter Iwosan. Vous pouvez vous réabonner à tout moment depuis le site.
+            {t("newsletterUnsubscribe.success")}
           </p>
         )}
         {status === "error" && (
@@ -45,7 +47,7 @@ function NewsletterUnsubscribe() {
           </p>
         )}
         <Link to="/" className="mt-6 inline-block text-[14px] font-semibold text-[var(--brand-primary)] hover:underline">
-          Retour à l'accueil
+          {t("newsletterUnsubscribe.backToHome")}
         </Link>
       </div>
     </div>

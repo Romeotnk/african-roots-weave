@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { useTheme, type ThemeMode } from "@/components/ThemeProvider";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { getAccountHomePath, isProfessionalAccount } from "@/lib/auth/roles";
+import { getAccountHomePath, isProfessionalAccount, isStaffAccount } from "@/lib/auth/roles";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import type { SupportedLanguage } from "@/lib/i18n";
 
@@ -135,7 +135,7 @@ export function Navbar() {
   const { t } = useTranslation();
   const isProAccount = isProfessionalAccount(roles);
   const accountHomePath = getAccountHomePath(roles);
-  const accountHomeLabel = isProAccount ? t("nav.dashboard") : t("nav.myAccount");
+  const accountHomeLabel = isStaffAccount(roles) ? t("nav.admin") : isProAccount ? t("nav.dashboard") : t("nav.myAccount");
   const mainLinks = useMainLinks(t);
   const groupedMobileLinks = useGroupedMobileLinks(t);
 
@@ -146,7 +146,7 @@ export function Navbar() {
   );
   const navLinks = customHeaderLinks ?? mainLinks;
   const siteName = siteConfigQuery.data?.data?.["site.name"] || "IWOSAN";
-  const siteTagline = siteConfigQuery.data?.data?.["site.tagline"] || "Savoirs africains documentés";
+  const siteTagline = siteConfigQuery.data?.data?.["site.tagline"] || t("nav.defaultTagline");
   const logoUrl = siteConfigQuery.data?.data?.["site.logoUrl"];
 
   useEffect(() => setOpen(false), [pathname]);

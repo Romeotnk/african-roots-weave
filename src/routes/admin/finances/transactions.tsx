@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminTransactions } from "@/hooks/useAdminApi";
 
@@ -7,33 +8,33 @@ export const Route = createFileRoute("/admin/finances/transactions")({
   component: AdminTransactions,
 });
 
-const typeLabel: Record<string, string> = {
-  DEPOSIT: "Dépôt",
-  WITHDRAWAL: "Retrait",
-  COMMISSION: "Commission",
-  PAYMENT: "Paiement",
-  REFUND: "Remboursement",
-  TRANSFER: "Transfert",
-};
-
 function AdminTransactions() {
+  const { t } = useTranslation();
+  const typeLabel: Record<string, string> = {
+    DEPOSIT: t("admin.transactions.typeDeposit"),
+    WITHDRAWAL: t("admin.transactions.typeWithdrawal"),
+    COMMISSION: t("admin.transactions.typeCommission"),
+    PAYMENT: t("admin.transactions.typePayment"),
+    REFUND: t("admin.transactions.typeRefund"),
+    TRANSFER: t("admin.transactions.typeTransfer"),
+  };
   const transactionsQuery = useAdminTransactions();
   const transactions = transactionsQuery.data?.data ?? [];
 
   return (
-    <AdminLayout title="Transactions" description="Historique des mouvements du portefeuille Iwosan.">
-      {transactionsQuery.isLoading && <p className="text-[13px] text-slate-400">Chargement...</p>}
-      {transactionsQuery.isError && <p className="text-[13px] text-red-300">Impossible de charger les transactions.</p>}
+    <AdminLayout title={t("admin.transactions.title")} description={t("admin.transactions.description")}>
+      {transactionsQuery.isLoading && <p className="text-[13px] text-slate-400">{t("admin.transactions.loading")}</p>}
+      {transactionsQuery.isError && <p className="text-[13px] text-red-300">{t("admin.transactions.loadError")}</p>}
 
       {!transactionsQuery.isLoading && !transactionsQuery.isError && (
         <div className="overflow-x-auto rounded-[12px] border border-white/10">
           <table className="w-full min-w-[820px] text-left text-[13px]">
             <thead className="bg-white/10 text-slate-300">
-              <tr>{["Date", "Utilisateur", "Type", "Montant", "Solde après", "Référence"].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
+              <tr>{[t("admin.transactions.colDate"), t("admin.transactions.colUser"), t("admin.transactions.colType"), t("admin.transactions.colAmount"), t("admin.transactions.colBalanceAfter"), t("admin.transactions.colReference")].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
             </thead>
             <tbody>
               {transactions.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400">Aucune transaction.</td></tr>
+                <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400">{t("admin.transactions.noTransactions")}</td></tr>
               )}
               {transactions.map((tx) => {
                 const amount = Number(tx.amount);

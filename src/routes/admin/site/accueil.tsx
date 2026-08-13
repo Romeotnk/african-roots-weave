@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminConfig, useUpdateAdminConfig } from "@/hooks/useAdminApi";
-import { DEFAULT_HOMEPAGE_SECTIONS, HOMEPAGE_SECTION_LABELS, parseHomepageSections, type HomepageSectionConfig } from "@/lib/homepageSections";
+import { DEFAULT_HOMEPAGE_SECTIONS, buildHomepageSectionLabels, parseHomepageSections, type HomepageSectionConfig } from "@/lib/homepageSections";
 
 export const Route = createFileRoute("/admin/site/accueil")({
   head: () => ({ meta: [{ title: "Admin accueil - IWOSAN" }] }),
@@ -17,6 +18,8 @@ const defaults = {
 };
 
 function AdminAccueil() {
+  const { t } = useTranslation();
+  const sectionLabels = buildHomepageSectionLabels(t);
   const configQuery = useAdminConfig();
   const updateConfig = useUpdateAdminConfig();
   const [form, setForm] = useState(defaults);
@@ -48,15 +51,15 @@ function AdminAccueil() {
   };
 
   return (
-    <AdminLayout title="Accueil" description="Référencement et bandeau d'annonce de la page d'accueil.">
+    <AdminLayout title={t("admin.homepageAdmin.title")} description={t("admin.homepageAdmin.description")}>
       {notice && <div className="mb-4 rounded-lg bg-emerald-500/15 p-3 text-[13px] text-emerald-200">{notice}</div>}
 
       <div className="grid gap-6 xl:grid-cols-2">
         <AdminCard>
-          <h2 className="mb-4 text-[18px] font-bold text-white">Référencement (SEO)</h2>
+          <h2 className="mb-4 text-[18px] font-bold text-white">{t("admin.homepageAdmin.seo")}</h2>
           <div className="space-y-4">
             <label className="block text-[13px] text-slate-300">
-              Titre de la page
+              {t("admin.homepageAdmin.pageTitle")}
               <input
                 value={form["site.home.metaTitle"]}
                 onChange={(event) => setForm((current) => ({ ...current, "site.home.metaTitle": event.target.value }))}
@@ -64,7 +67,7 @@ function AdminAccueil() {
               />
             </label>
             <label className="block text-[13px] text-slate-300">
-              Meta description
+              {t("admin.homepageAdmin.metaDescription")}
               <textarea
                 value={form["site.home.metaDescription"]}
                 onChange={(event) => setForm((current) => ({ ...current, "site.home.metaDescription": event.target.value }))}
@@ -75,29 +78,29 @@ function AdminAccueil() {
         </AdminCard>
 
         <AdminCard>
-          <h2 className="mb-4 text-[18px] font-bold text-white">Bandeau d'annonce</h2>
+          <h2 className="mb-4 text-[18px] font-bold text-white">{t("admin.homepageAdmin.announcementBanner")}</h2>
           <p className="mb-3 text-[13px] text-slate-400">
-            Affiché en haut de la page d'accueil. Laisser vide pour ne rien afficher.
+            {t("admin.homepageAdmin.announcementDesc")}
           </p>
           <textarea
             value={form["site.home.announcement"]}
             onChange={(event) => setForm((current) => ({ ...current, "site.home.announcement": event.target.value }))}
-            placeholder="Ex : Nouvelle fonctionnalité disponible : la messagerie professionnelle."
+            placeholder={t("admin.homepageAdmin.announcementPlaceholder")}
             className="min-h-24 w-full rounded-lg border border-white/10 bg-white/5 p-3 text-[13px] text-white outline-none"
           />
           <p className="mt-4 text-[13px] text-slate-400">
-            Le carrousel visuel de la page d'accueil se gère depuis{" "}
+            {t("admin.homepageAdmin.carouselManagedFrom")}{" "}
             <Link to="/admin/site/publicites" className="font-semibold text-emerald-300">
-              Publicités → Carrousel d'accueil
+              {t("admin.homepageAdmin.adsCarouselLink")}
             </Link>.
           </p>
         </AdminCard>
       </div>
 
       <AdminCard className="mt-6">
-        <h2 className="mb-1 text-[18px] font-bold text-white">Sections de la page d'accueil</h2>
+        <h2 className="mb-1 text-[18px] font-bold text-white">{t("admin.homepageAdmin.homepageSections")}</h2>
         <p className="mb-4 text-[13px] text-slate-400">
-          Activez, désactivez et réordonnez les sections affichées sous le carrousel. Le bandeau d'annonce, le carrousel et les statistiques restent toujours visibles.
+          {t("admin.homepageAdmin.sectionsDesc")}
         </p>
         <div className="space-y-2">
           {sections.map((section, index) => (
@@ -107,14 +110,14 @@ function AdminAccueil() {
             >
               <label className="flex flex-1 items-center gap-3 text-[13px] text-slate-200">
                 <input type="checkbox" checked={section.enabled} onChange={() => toggleSection(index)} className="h-4 w-4 accent-emerald-400" />
-                {HOMEPAGE_SECTION_LABELS[section.key]}
+                {sectionLabels[section.key]}
               </label>
               <div className="flex gap-1">
                 <button
                   type="button"
                   disabled={index === 0}
                   onClick={() => moveSection(index, -1)}
-                  aria-label="Monter"
+                  aria-label={t("admin.homepageAdmin.moveUp")}
                   className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 text-slate-300 disabled:opacity-30"
                 >
                   <ArrowUp size={14} />
@@ -123,7 +126,7 @@ function AdminAccueil() {
                   type="button"
                   disabled={index === sections.length - 1}
                   onClick={() => moveSection(index, 1)}
-                  aria-label="Descendre"
+                  aria-label={t("admin.homepageAdmin.moveDown")}
                   className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 text-slate-300 disabled:opacity-30"
                 >
                   <ArrowDown size={14} />
@@ -140,12 +143,12 @@ function AdminAccueil() {
         onClick={() =>
           updateConfig.mutate(
             { ...form, "homepage.sections": JSON.stringify(sections) },
-            { onSuccess: () => setNotice("Page d'accueil mise à jour.") },
+            { onSuccess: () => setNotice(t("admin.homepageAdmin.updated")) },
           )
         }
         className="mt-6 rounded-full bg-emerald-400 px-5 py-2.5 text-[13px] font-bold text-[#111827] disabled:opacity-50"
       >
-        {updateConfig.isPending ? "Enregistrement..." : "Enregistrer"}
+        {updateConfig.isPending ? t("admin.homepageAdmin.saving") : t("admin.homepageAdmin.save")}
       </button>
     </AdminLayout>
   );

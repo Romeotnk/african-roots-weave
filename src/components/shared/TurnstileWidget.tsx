@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import i18n from "@/lib/i18n";
 
 declare global {
   interface Window {
@@ -30,7 +31,7 @@ const loadTurnstileScript = () => {
     script.async = true;
     script.defer = true;
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Impossible de charger la vérification anti-robot."));
+    script.onerror = () => reject(new Error(i18n.t("turnstileWidget.loadError")));
     document.head.appendChild(script);
   });
 

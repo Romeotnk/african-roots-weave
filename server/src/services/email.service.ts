@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { env } from "../config/env.js";
+import { prisma } from "../config/db.js";
 
 const transporter =
   env.smtp.host && env.smtp.user && env.smtp.pass
@@ -38,16 +39,37 @@ export const sendEmail = async ({ to, subject, html }: EmailPayload) => {
   });
 };
 
-export const sendVerificationEmail = async (to: string, verificationUrl: string) =>
-  sendEmail({
-    to,
+// Fallback content used until a super admin overrides a template via
+// /admin/site/textes (EmailTemplate table) — {{url}} is the only variable
+// either template needs today.
+export const EMAIL_TEMPLATE_DEFAULTS: Record<string, { subject: string; html: string }> = {
+  verification: {
     subject: "Verifiez votre email Iwosan",
-    html: `<p>Bienvenue sur Iwosan.</p><p><a href="${verificationUrl}">Verifier mon email</a></p>`,
-  });
-
-export const sendPasswordResetEmail = async (to: string, resetUrl: string) =>
-  sendEmail({
-    to,
+    html: `<p>Bienvenue sur Iwosan.</p><p><a href="{{url}}">Verifier mon email</a></p>`,
+  },
+  password_reset: {
     subject: "Reinitialisation du mot de passe Iwosan",
-    html: `<p>Une demande de reinitialisation a ete faite.</p><p><a href="${resetUrl}">Changer mon mot de passe</a></p>`,
-  });
+    html: `<p>Une demande de reinitialisation a ete faite.</p><p><a href="{{url}}">Changer mon mot de passe</a></p>`,
+  },
+};
+
+const renderTemplate = async (key: string, vars: Record<string, string>) => {
+  const override = await prisma.emailTemplate.findUnique({ where: { key } });
+  const base = override ?? EMAIL_TEMPLATE_DEFAULTS[key];
+  let { subject, html } = base;
+  for (const [name, value] of Object.entries(vars)) {
+    subject = subject.replaceAll(`{{${name}}}`, value);
+    html = html.replaceAll(`{{${name}}}`, value);
+  }
+  return { subject, html };
+};
+
+export const sendVerificationEmail = async (to: string, verificationUrl: string) => {
+  const { subject, html } = await renderTemplate("verification", { url: verificationUrl });
+  return sendEmail({ to, subject, html });
+};
+
+export const sendPasswordResetEmail = async (to: string, resetUrl: string) => {
+  const { subject, html } = await renderTemplate("password_reset", { url: resetUrl });
+  return sendEmail({ to, subject, html });
+};

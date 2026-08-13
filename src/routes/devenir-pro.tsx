@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { Camera, CheckCircle2, Compass, FileUp, MapPin, Plus, Sparkles, Stethoscope, Upload } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CountrySelect } from "@/components/shared/CountrySelect";
 import { Switch } from "@/components/ui/switch";
@@ -36,6 +37,7 @@ const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dima
 const slots = ["Matin", "Apres-midi", "Soir"];
 
 function BecomePro() {
+  const { t } = useTranslation();
   const profileQuery = useMyProfessionalProfile();
   const upsertProfile = useUpsertMyProfessionalProfile();
   const uploadPhotos = useUploadMyProfilePhotos();
@@ -131,28 +133,28 @@ function BecomePro() {
 
   const submitProfile = async () => {
     if (profileName.trim().length < 3) {
-      setFormMessage("Renseignez le nom de pratique.");
+      setFormMessage(t("becomePro.practiceNameRequired"));
       return;
     }
     if (bio.trim().length < 300) {
-      setFormMessage("Le recit professionnel doit contenir au moins 300 caracteres.");
+      setFormMessage(t("becomePro.bioTooShort"));
       return;
     }
     if (!city.trim()) {
-      setFormMessage("Indiquez la ville du cabinet ou de pratique.");
+      setFormMessage(t("becomePro.cityRequired"));
       return;
     }
     if (selectedSlots.length === 0) {
-      setFormMessage("Ajoutez au moins un creneau de disponibilite.");
+      setFormMessage(t("becomePro.slotRequired"));
       return;
     }
     const allSpecialties = Array.from(new Set([mainSpecialty, ...treated])).slice(0, 8);
     if (allSpecialties.length === 0) {
-      setFormMessage("Ajoutez au moins une specialite traitee.");
+      setFormMessage(t("becomePro.specialtyRequired"));
       return;
     }
     if (!existingProfile && documentFiles.length === 0) {
-      setFormMessage("Ajoutez au moins un document ou certificat pour la moderation.");
+      setFormMessage(t("becomePro.documentRequired"));
       return;
     }
 
@@ -190,10 +192,10 @@ function BecomePro() {
       if (me.data) backendAuthUserStore.set(me.data);
 
       setSubmitted(true);
-      setFormMessage("Profil soumis en moderation. L'equipe verifiera les documents avant publication.");
+      setFormMessage(t("becomePro.profileSubmitted"));
     } catch (error) {
       setSubmitted(false);
-      setFormMessage(error instanceof Error ? error.message : "Une erreur est survenue lors de l'envoi.");
+      setFormMessage(error instanceof Error ? error.message : t("becomePro.submitError"));
     }
   };
 
@@ -203,10 +205,10 @@ function BecomePro() {
     <main className="min-h-screen bg-[var(--brand-bg)]">
       <section className="border-b border-[var(--brand-border-light)] bg-white">
         <div className="container-iwosan py-8">
-          <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--brand-primary)]">Annuaire professionnel</p>
-          <h1 className="mt-2 text-[32px] md:text-[42px]">Creer mon profil professionnel</h1>
+          <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--brand-primary)]">{t("becomePro.eyebrow")}</p>
+          <h1 className="mt-2 text-[32px] md:text-[42px]">{t("becomePro.title")}</h1>
           <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-            Completez votre profil, vos documents et vos disponibilites. La publication reste soumise a validation.
+            {t("becomePro.description")}
           </p>
         </div>
       </section>
@@ -220,9 +222,9 @@ function BecomePro() {
           className="space-y-6"
         >
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="flex items-center gap-2 text-[20px] font-bold"><Stethoscope size={20} /> Informations identitaires</h2>
+            <h2 className="flex items-center gap-2 text-[20px] font-bold"><Stethoscope size={20} /> {t("becomePro.identitySection")}</h2>
             <div className="mt-5 grid gap-3 md:grid-cols-2">
-              <input required value={profileName} onChange={(event) => { setProfileName(event.target.value); setFormMessage(""); }} placeholder="Nom de pratique / nom d'exercice" className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
+              <input required value={profileName} onChange={(event) => { setProfileName(event.target.value); setFormMessage(""); }} placeholder={t("becomePro.practiceNamePlaceholder")} className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
               <select value={mainSpecialty} onChange={(event) => setMainSpecialty(event.target.value)} className="h-11 rounded-lg border border-[var(--brand-border)] bg-white px-4">
                 {specialtyOptions.map((item) => <option key={item}>{item}</option>)}
               </select>
@@ -230,54 +232,54 @@ function BecomePro() {
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <label className="flex min-h-[130px] cursor-pointer flex-col items-center justify-center rounded-[12px] border-2 border-dashed border-[var(--brand-border)] bg-[var(--brand-surface-alt)]">
                 <Camera size={26} className="text-[var(--brand-primary)]" />
-                <span className="mt-2 text-[13px] font-semibold">Photo de profil</span>
-                <span className="mt-1 max-w-full truncate px-3 text-[11px] text-[var(--color-text-muted)]">{avatarFile?.name ?? "Aucun fichier"}</span>
+                <span className="mt-2 text-[13px] font-semibold">{t("becomePro.profilePhoto")}</span>
+                <span className="mt-1 max-w-full truncate px-3 text-[11px] text-[var(--color-text-muted)]">{avatarFile?.name ?? t("becomePro.noFile")}</span>
                 <input type="file" accept="image/*" className="sr-only" onChange={(event) => setAvatarFile(event.target.files?.[0] ?? null)} />
               </label>
               <label className="flex min-h-[130px] cursor-pointer flex-col items-center justify-center rounded-[12px] border-2 border-dashed border-[var(--brand-border)] bg-[var(--brand-surface-alt)]">
                 <Upload size={26} className="text-[var(--brand-primary)]" />
-                <span className="mt-2 text-[13px] font-semibold">Galerie 5 a 10 photos</span>
-                <span className="mt-1 max-w-full truncate px-3 text-[11px] text-[var(--color-text-muted)]">{galleryFiles.length ? `${galleryFiles.length} fichier(s)` : "Aucun fichier"}</span>
+                <span className="mt-2 text-[13px] font-semibold">{t("becomePro.gallery5to10")}</span>
+                <span className="mt-1 max-w-full truncate px-3 text-[11px] text-[var(--color-text-muted)]">{galleryFiles.length ? t("becomePro.fileCount", { count: galleryFiles.length }) : t("becomePro.noFile")}</span>
                 <input type="file" multiple accept="image/*" className="sr-only" onChange={(event) => setGalleryFiles(Array.from(event.target.files ?? []).slice(0, 10))} />
               </label>
             </div>
           </div>
 
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="text-[20px] font-bold">Recit professionnel</h2>
+            <h2 className="text-[20px] font-bold">{t("becomePro.narrativeSection")}</h2>
             <div className="mt-5 space-y-3">
-              <textarea required minLength={300} value={bio} onChange={(event) => { setBio(event.target.value); setFormMessage(""); }} rows={6} placeholder="Histoire / biographie narrative, minimum 300 caracteres" className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
-              <textarea value={initiationPath} onChange={(event) => setInitiationPath(event.target.value)} rows={4} placeholder="Formation et initiation : comment, ou, avec qui" className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
+              <textarea required minLength={300} value={bio} onChange={(event) => { setBio(event.target.value); setFormMessage(""); }} rows={6} placeholder={t("becomePro.biographyPlaceholder")} className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
+              <textarea value={initiationPath} onChange={(event) => setInitiationPath(event.target.value)} rows={4} placeholder={t("becomePro.initiationPlaceholder")} className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
               <div className="flex gap-2">
-                <input value={treatedInput} onChange={(event) => setTreatedInput(event.target.value)} placeholder="Specialite traitee" className="h-10 flex-1 rounded-lg border border-[var(--brand-border)] px-3" />
-                <button type="button" aria-label="Ajouter une specialite" onClick={addTreated} className="h-10 rounded-lg bg-[var(--brand-primary)] px-4 text-white"><Plus size={16} /></button>
+                <input value={treatedInput} onChange={(event) => setTreatedInput(event.target.value)} placeholder={t("becomePro.specialtyPlaceholder")} className="h-10 flex-1 rounded-lg border border-[var(--brand-border)] px-3" />
+                <button type="button" aria-label={t("becomePro.addSpecialty")} onClick={addTreated} className="h-10 rounded-lg bg-[var(--brand-primary)] px-4 text-white"><Plus size={16} /></button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {treated.map((item) => <button type="button" key={item} onClick={() => setTreated((current) => current.filter((value) => value !== item))} className="rounded-full bg-[var(--brand-primary-subtle)] px-3 py-1 text-[12px] font-semibold text-[var(--brand-primary)]">{item} x</button>)}
               </div>
-              <input type="number" min="0" max="100" value={successRate} onChange={(event) => setSuccessRate(event.target.value)} placeholder="Taux de reussite auto-declare (%)" className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4 md:w-auto" />
+              <input type="number" min="0" max="100" value={successRate} onChange={(event) => setSuccessRate(event.target.value)} placeholder={t("becomePro.successRatePlaceholder")} className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-4 md:w-auto" />
             </div>
           </div>
 
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="flex items-center gap-2 text-[20px] font-bold"><Sparkles size={20} /> Innovations, impact et philosophie</h2>
+            <h2 className="flex items-center gap-2 text-[20px] font-bold"><Sparkles size={20} /> {t("becomePro.impactSection")}</h2>
             <div className="mt-5 space-y-3">
-              <textarea value={innovations} onChange={(event) => setInnovations(event.target.value)} rows={3} placeholder="Innovations personnelles (nouvelles preparations, protocoles, etc.)" className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
-              <textarea value={communityImpact} onChange={(event) => setCommunityImpact(event.target.value)} rows={3} placeholder="Impact communautaire (personnes formees, actions locales, etc.)" className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
-              <textarea value={philosophy} onChange={(event) => setPhilosophy(event.target.value)} rows={3} placeholder="Philosophie de soin et valeurs" className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
+              <textarea value={innovations} onChange={(event) => setInnovations(event.target.value)} rows={3} placeholder={t("becomePro.innovationsPlaceholder")} className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
+              <textarea value={communityImpact} onChange={(event) => setCommunityImpact(event.target.value)} rows={3} placeholder={t("becomePro.communityImpactPlaceholder")} className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
+              <textarea value={philosophy} onChange={(event) => setPhilosophy(event.target.value)} rows={3} placeholder={t("becomePro.philosophyPlaceholder")} className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
               <div className="grid gap-3 md:grid-cols-3">
-                <input value={facebookUrl} onChange={(event) => setFacebookUrl(event.target.value)} placeholder="Lien Facebook" className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
-                <input value={instagramUrl} onChange={(event) => setInstagramUrl(event.target.value)} placeholder="Lien Instagram" className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
-                <input value={whatsapp} onChange={(event) => setWhatsapp(event.target.value)} placeholder="WhatsApp (numero ou lien)" className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
+                <input value={facebookUrl} onChange={(event) => setFacebookUrl(event.target.value)} placeholder={t("becomePro.facebookPlaceholder")} className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
+                <input value={instagramUrl} onChange={(event) => setInstagramUrl(event.target.value)} placeholder={t("becomePro.instagramPlaceholder")} className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
+                <input value={whatsapp} onChange={(event) => setWhatsapp(event.target.value)} placeholder={t("becomePro.whatsappPlaceholder")} className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
               </div>
             </div>
           </div>
 
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="flex items-center gap-2 text-[20px] font-bold"><MapPin size={20} /> Localisation et disponibilite</h2>
+            <h2 className="flex items-center gap-2 text-[20px] font-bold"><MapPin size={20} /> {t("becomePro.locationSection")}</h2>
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               <CountrySelect value={country} onChange={setCountry} className="h-11 w-full rounded-lg border border-[var(--brand-border)] bg-white px-4" />
-              <input value={city} onChange={(event) => { setCity(event.target.value); setFormMessage(""); }} placeholder="Ville" className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
+              <input value={city} onChange={(event) => { setCity(event.target.value); setFormMessage(""); }} placeholder={t("becomePro.cityPlaceholder")} className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <button
@@ -285,25 +287,25 @@ function BecomePro() {
                 onClick={() => {
                   setLocationMessage("");
                   if (!navigator.geolocation) {
-                    setLocationMessage("La géolocalisation n'est pas disponible sur cet appareil.");
+                    setLocationMessage(t("becomePro.geolocationUnavailable"));
                     return;
                   }
                   navigator.geolocation.getCurrentPosition(
                     (position) => {
                       setLatitude(position.coords.latitude);
                       setLongitude(position.coords.longitude);
-                      setLocationMessage("Position enregistree pour la carte de l'annuaire.");
+                      setLocationMessage(t("becomePro.positionSaved"));
                     },
-                    () => setLocationMessage("Impossible de recuperer votre position."),
+                    () => setLocationMessage(t("becomePro.positionError")),
                   );
                 }}
                 className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold"
               >
-                <Compass size={16} /> Utiliser ma position actuelle
+                <Compass size={16} /> {t("becomePro.useCurrentPosition")}
               </button>
               {latitude != null && longitude != null && (
                 <span className="text-[12px] text-[var(--color-text-muted)]">
-                  Position enregistree : {latitude.toFixed(4)}, {longitude.toFixed(4)}
+                  {t("becomePro.positionSavedCoords", { lat: latitude.toFixed(4), lng: longitude.toFixed(4) })}
                 </span>
               )}
             </div>
@@ -319,7 +321,7 @@ function BecomePro() {
                       const value = `${day}-${slot}`;
                       return (
                         <button type="button" key={value} onClick={() => toggleSlot(value)} className={`rounded-lg border p-2 ${selectedSlots.includes(value) ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]" : "border-[var(--brand-border)]"}`}>
-                          {selectedSlots.includes(value) ? "Disponible" : "Libre"}
+                          {selectedSlots.includes(value) ? t("becomePro.available") : t("becomePro.free")}
                         </button>
                       );
                     })}
@@ -329,47 +331,47 @@ function BecomePro() {
             </div>
             <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center">
               <label className="flex flex-1 items-center justify-between rounded-lg border border-[var(--brand-border)] px-4 py-3 text-[13px] font-semibold">
-                Consultations en ligne <Switch checked={online} onCheckedChange={setOnline} />
+                {t("becomePro.onlineConsultations")} <Switch checked={online} onCheckedChange={setOnline} />
               </label>
-              {online && <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="Lien visioconference" className="h-11 flex-1 rounded-lg border border-[var(--brand-border)] px-4" />}
-              <input type="number" value={consultationPrice} onChange={(event) => setConsultationPrice(event.target.value)} placeholder="Prix consultation" className="h-11 flex-1 rounded-lg border border-[var(--brand-border)] px-4" />
+              {online && <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder={t("becomePro.videoconferenceLinkPlaceholder")} className="h-11 flex-1 rounded-lg border border-[var(--brand-border)] px-4" />}
+              <input type="number" value={consultationPrice} onChange={(event) => setConsultationPrice(event.target.value)} placeholder={t("becomePro.consultationPricePlaceholder")} className="h-11 flex-1 rounded-lg border border-[var(--brand-border)] px-4" />
             </div>
           </div>
 
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="text-[20px] font-bold">Documents et certifications</h2>
+            <h2 className="text-[20px] font-bold">{t("becomePro.documentsSection")}</h2>
             <label className="mt-5 flex min-h-[130px] cursor-pointer flex-col items-center justify-center rounded-[12px] border-2 border-dashed border-[var(--brand-border)] bg-[var(--brand-surface-alt)]">
               <FileUp size={28} className="text-[var(--brand-primary)]" />
-              <span className="mt-2 text-[13px] font-semibold">Documents envoyes a l'administration pour validation</span>
-              <span className="mt-1 max-w-full px-4 text-center text-[11px] text-[var(--color-text-muted)]">{documentFiles.length ? `${documentFiles.length} fichier(s) selectionne(s)` : "Aucun fichier selectionne"}</span>
+              <span className="mt-2 text-[13px] font-semibold">{t("becomePro.documentsSentForValidation")}</span>
+              <span className="mt-1 max-w-full px-4 text-center text-[11px] text-[var(--color-text-muted)]">{documentFiles.length ? t("becomePro.filesSelected", { count: documentFiles.length }) : t("becomePro.noFileSelected")}</span>
               <input type="file" multiple className="sr-only" onChange={(event) => { setDocumentFiles(Array.from(event.target.files ?? []).slice(0, 5)); setFormMessage(""); }} />
             </label>
           </div>
 
           {formMessage && <p className={`rounded-lg border p-3 text-[13px] ${submitted ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-700"}`}>{formMessage}</p>}
           <button type="submit" disabled={isSaving} className="h-12 rounded-full bg-[var(--brand-primary)] px-7 font-semibold text-white disabled:opacity-60">
-            {isSaving ? "Envoi..." : "Soumettre mon profil"}
+            {isSaving ? t("becomePro.sending") : t("becomePro.submitProfile")}
           </button>
         </form>
 
         <aside className="h-fit space-y-4">
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="font-bold">Completion du profil</h2>
+            <h2 className="font-bold">{t("becomePro.completionTitle")}</h2>
             <div className="mt-4 h-3 overflow-hidden rounded-full bg-[var(--brand-border-light)]">
               <div className="h-full bg-[var(--brand-primary)]" style={{ width: `${completeness}%` }} />
             </div>
-            <p className="mt-2 text-[13px] font-semibold text-[var(--brand-primary)]">{completeness}% pret</p>
+            <p className="mt-2 text-[13px] font-semibold text-[var(--brand-primary)]">{t("becomePro.readyPercent", { percent: completeness })}</p>
           </div>
           {existingProfile && (
             <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5 text-[13px]">
-              <p className="font-bold">Statut</p>
+              <p className="font-bold">{t("becomePro.status")}</p>
               <p className={`mt-2 inline-flex rounded-full px-3 py-1 text-[12px] font-bold ${existingProfile.isVerified ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
-                {existingProfile.isVerified ? "Profil vérifié" : "En attente de vérification"}
+                {existingProfile.isVerified ? t("becomePro.verified") : t("becomePro.pendingVerification")}
               </p>
             </div>
           )}
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5 text-[13px] text-[var(--color-text-secondary)]">
-            <CheckCircle2 className="mb-3 text-[var(--brand-primary)]" /> Les certifications restent privees et servent a la validation du badge verifie.
+            <CheckCircle2 className="mb-3 text-[var(--brand-primary)]" /> {t("becomePro.certificationsPrivacyNotice")}
           </div>
         </aside>
       </section>

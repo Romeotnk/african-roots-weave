@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LifeBuoy, Send } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useStaffTicketActions, useStaffTickets } from "@/hooks/useTicketsApi";
@@ -18,9 +19,15 @@ type TicketMessage = { id: string; content: string; authorId: string; createdAt:
 type StaffTicket = { id: string; subject: string; category: string; status: string; createdAt: string; messages: TicketMessage[] };
 
 const statuses = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"] as const;
-const statusLabels: Record<string, string> = { OPEN: "Ouvert", IN_PROGRESS: "En cours", RESOLVED: "Résolu", CLOSED: "Fermé" };
 
 function SupportPage() {
+  const { t } = useTranslation();
+  const statusLabels: Record<string, string> = {
+    OPEN: t("dashboard.support.statusOpen"),
+    IN_PROGRESS: t("dashboard.support.statusInProgress"),
+    RESOLVED: t("dashboard.support.statusResolved"),
+    CLOSED: t("dashboard.support.statusClosed"),
+  };
   const ticketsQuery = useStaffTickets();
   const { updateStatus, reply } = useStaffTicketActions();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -33,12 +40,12 @@ function SupportPage() {
 
   return (
     <AccountLayout
-      title="Support utilisateurs"
-      description="Aidez les utilisateurs en répondant aux tickets ouverts du centre d'aide. Votre expertise professionnelle est visible sur vos réponses."
+      title={t("dashboard.support.title")}
+      description={t("dashboard.support.description")}
     >
-        {ticketsQuery.isLoading && <p className="text-[13px] text-[var(--color-text-muted)]">Chargement...</p>}
+        {ticketsQuery.isLoading && <p className="text-[13px] text-[var(--color-text-muted)]">{t("dashboard.support.loading")}</p>}
         {ticketsQuery.isError && (
-          <p className="rounded-[8px] border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700">Impossible de charger les tickets.</p>
+          <p className="rounded-[8px] border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700">{t("dashboard.support.loadError")}</p>
         )}
 
         {!ticketsQuery.isLoading && !ticketsQuery.isError && (
@@ -55,7 +62,7 @@ function SupportPage() {
                       : "bg-[var(--brand-surface-alt)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
                   }`}
                 >
-                  {status === "all" ? "Tous" : statusLabels[status]}
+                  {status === "all" ? t("dashboard.support.all") : statusLabels[status]}
                 </button>
               ))}
             </div>
@@ -63,7 +70,7 @@ function SupportPage() {
             <div className="grid gap-6 xl:grid-cols-[1fr_1.3fr]">
               <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white">
                 <div className="max-h-[560px] overflow-y-auto">
-                  {filtered.length === 0 && <p className="p-5 text-[13px] text-[var(--color-text-muted)]">Aucun ticket dans cette file.</p>}
+                  {filtered.length === 0 && <p className="p-5 text-[13px] text-[var(--color-text-muted)]">{t("dashboard.support.emptyQueue")}</p>}
                   {filtered.map((ticket) => (
                     <button
                       key={ticket.id}
@@ -106,7 +113,7 @@ function SupportPage() {
                   </div>
 
                   <div className="mt-4 max-h-72 space-y-3 overflow-y-auto">
-                    {active.messages.length === 0 && <p className="text-[13px] text-[var(--color-text-muted)]">Aucun message échangé.</p>}
+                    {active.messages.length === 0 && <p className="text-[13px] text-[var(--color-text-muted)]">{t("dashboard.support.noMessages")}</p>}
                     {active.messages.map((message) => (
                       <div key={message.id} className="rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px] text-[var(--color-text-secondary)]">
                         <p>{message.content}</p>
@@ -119,7 +126,7 @@ function SupportPage() {
                     <textarea
                       value={draft}
                       onChange={(event) => setDraft(event.target.value)}
-                      placeholder="Écrire une réponse..."
+                      placeholder={t("dashboard.support.replyPlaceholder")}
                       className="min-h-20 flex-1 rounded-lg border border-[var(--brand-border-light)] px-3 py-2 text-[13px] outline-none focus:border-[var(--brand-primary)]"
                     />
                     <button
@@ -128,14 +135,14 @@ function SupportPage() {
                       onClick={() => reply.mutate({ id: active.id, content: draft.trim() }, { onSuccess: () => setDraft("") })}
                       className="btn-primary h-auto px-4 text-[13px] disabled:opacity-50"
                     >
-                      <Send size={16} /> Répondre
+                      <Send size={16} /> {t("dashboard.support.reply")}
                     </button>
                   </div>
                 </div>
               ) : (
                 <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-8 text-center">
                   <LifeBuoy className="mx-auto text-[var(--brand-primary)]" size={34} />
-                  <p className="mt-3 text-[14px] text-[var(--color-text-muted)]">Sélectionnez un ticket pour voir la conversation.</p>
+                  <p className="mt-3 text-[14px] text-[var(--color-text-muted)]">{t("dashboard.support.selectTicket")}</p>
                 </div>
               )}
             </div>

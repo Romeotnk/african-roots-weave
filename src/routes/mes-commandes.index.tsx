@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, Loader2, MessageSquare, PackageCheck, Star } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useConfirmOrderDelivery, useMyOrders } from "@/hooks/useOrdersApi";
 import { useCreateReview } from "@/hooks/useReviewsApi";
@@ -16,12 +18,14 @@ export const Route = createFileRoute("/mes-commandes/")({
   ),
 });
 
-const timeline: { id: OrderStatus; label: string }[] = [
-  { id: "confirmed", label: "Confirmee" },
-  { id: "paid", label: "Payee" },
-  { id: "shipped", label: "Expediee" },
-  { id: "delivered", label: "Livree" },
-];
+function buildTimeline(t: TFunction): { id: OrderStatus; label: string }[] {
+  return [
+    { id: "confirmed", label: t("myOrders.timelineConfirmed") },
+    { id: "paid", label: t("myOrders.timelinePaid") },
+    { id: "shipped", label: t("myOrders.timelineShipped") },
+    { id: "delivered", label: t("myOrders.timelineDelivered") },
+  ];
+}
 
 type BackendOrder = {
   id: string;
@@ -44,20 +48,22 @@ const statusMap: Record<string, OrderStatus> = {
   CANCELLED: "confirmed",
 };
 
-function toOrder(order: BackendOrder, myUserId: string | undefined): Order {
+function toOrder(order: BackendOrder, myUserId: string | undefined, t: TFunction): Order {
   return {
     id: order.id,
     role: order.buyerId === myUserId ? "buyer" : "seller",
     date: order.createdAt.slice(0, 10),
     status: statusMap[order.status] ?? "confirmed",
     total: Number(order.totalAmount),
-    items: [{ title: order.product?.title ?? "Produit", seller: "", quantity: order.quantity, price: Number(order.totalAmount) }],
+    items: [{ title: order.product?.title ?? t("myOrders.defaultProduct"), seller: "", quantity: order.quantity, price: Number(order.totalAmount) }],
   };
 }
 
 type ReviewDraft = { rating: number; comment: string; submitted?: boolean };
 
 function OrdersPage() {
+  const { t } = useTranslation();
+  const timeline = buildTimeline(t);
   const { user } = useAuth();
   const [tab, setTab] = useState<"buyer" | "seller">("buyer");
   const ordersQuery = useMyOrders("all");
@@ -66,7 +72,8 @@ function OrdersPage() {
 
   const apiOrders = useMemo(() => {
     const raw = (ordersQuery.data?.data ?? []) as (BackendOrder & { productId?: string })[];
-    return raw.map((order) => toOrder(order, user?.id));
+    return raw.map((order) => toOrder(order, user?.id, t));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ordersQuery.data, user?.id]);
   const rawOrders = (ordersQuery.data?.data ?? []) as (BackendOrder & { productId?: string })[];
 
@@ -78,8 +85,8 @@ function OrdersPage() {
 
   const confirmReception = (orderId: string) => {
     confirmDelivery.mutate(orderId, {
-      onSuccess: () => setActionMessage(`Reception confirmee pour la commande ${orderId}.`),
-      onError: (error) => setActionMessage(error instanceof Error ? error.message : "Confirmation impossible."),
+      onSuccess: () => setActionMessage(t("myOrders.receptionConfirmedFor", { id: orderId })),
+      onError: (error) => setActionMessage(error instanceof Error ? error.message : t("myOrders.confirmationError")),
     });
   };
 
@@ -94,13 +101,13 @@ function OrdersPage() {
   const submitReview = (orderId: string) => {
     const review = orderReviews[orderId];
     if (!review?.rating) {
-      setActionMessage("Choisissez une note avant d'envoyer l'avis.");
+      setActionMessage(t("myOrders.chooseRatingBeforeReview"));
       return;
     }
 
     const productId = rawOrders.find((order) => order.id === orderId)?.product?.id;
     if (!productId) {
-      setActionMessage("Impossible d'identifier le produit de cette commande pour enregistrer l'avis.");
+      setActionMessage(t("myOrders.cannotIdentifyProduct"));
       return;
     }
 
@@ -110,9 +117,9 @@ function OrdersPage() {
         onSuccess: () => {
           setOrderReviews((current) => ({ ...current, [orderId]: { ...review, submitted: true } }));
           setReviewOrderId("");
-          setActionMessage(`Avis enregistre pour la commande ${orderId}.`);
+          setActionMessage(t("myOrders.reviewSavedFor", { id: orderId }));
         },
-        onError: (error) => setActionMessage(error instanceof Error ? error.message : "Impossible d'enregistrer l'avis."),
+        onError: (error) => setActionMessage(error instanceof Error ? error.message : t("myOrders.reviewSaveError")),
       },
     );
   };
@@ -120,13 +127,13 @@ function OrdersPage() {
   const submitBuyerRating = (orderId: string) => {
     const draft = buyerRatings[orderId];
     if (!draft?.rating) {
-      setActionMessage("Choisissez une note avant d'envoyer l'evaluation.");
+      setActionMessage(t("myOrders.chooseRatingBeforeEvaluation"));
       return;
     }
 
     const buyerId = rawOrders.find((order) => order.id === orderId)?.buyerId;
     if (!buyerId) {
-      setActionMessage("Impossible d'identifier l'acheteur de cette commande pour enregistrer l'evaluation.");
+      setActionMessage(t("myOrders.cannotIdentifyBuyer"));
       return;
     }
 
@@ -135,9 +142,9 @@ function OrdersPage() {
       {
         onSuccess: () => {
           setBuyerRatings((current) => ({ ...current, [orderId]: { ...draft, submitted: true } }));
-          setActionMessage(`Evaluation enregistree pour la commande ${orderId}.`);
+          setActionMessage(t("myOrders.evaluationSavedFor", { id: orderId }));
         },
-        onError: (error) => setActionMessage(error instanceof Error ? error.message : "Impossible d'enregistrer l'evaluation."),
+        onError: (error) => setActionMessage(error instanceof Error ? error.message : t("myOrders.evaluationSaveError")),
       },
     );
   };
@@ -146,11 +153,11 @@ function OrdersPage() {
     <main className="min-h-screen bg-[var(--brand-bg)]">
       <section className="border-b border-[var(--brand-border-light)] bg-white">
         <div className="container-iwosan py-8">
-          <h1 className="text-[32px] md:text-[42px]">Mes commandes</h1>
+          <h1 className="text-[32px] md:text-[42px]">{t("myOrders.title")}</h1>
           <div className="mt-5 inline-flex rounded-full border border-[var(--brand-border)] bg-white p-1">
             {[
-              ["buyer", "Acheteur"],
-              ["seller", "Vendeur"],
+              ["buyer", t("myOrders.buyer")],
+              ["seller", t("myOrders.seller")],
             ].map(([value, label]) => (
               <button
                 key={value}
@@ -178,13 +185,13 @@ function OrdersPage() {
           </div>
         ) : ordersQuery.isError ? (
           <div className="rounded-[12px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
-            Impossible de charger vos commandes pour le moment.
+            {t("myOrders.loadError")}
           </div>
         ) : filtered.length === 0 ? (
           <div className="rounded-[12px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
-            <h2 className="text-[20px] font-bold">Aucune commande pour ce role</h2>
+            <h2 className="text-[20px] font-bold">{t("myOrders.emptyTitle")}</h2>
             <p className="mt-2 text-[13px] text-[var(--color-text-muted)]">
-              Les nouvelles commandes apparaitront ici des qu'elles seront creees.
+              {t("myOrders.emptyDesc")}
             </p>
           </div>
         ) : null}
@@ -201,7 +208,7 @@ function OrdersPage() {
                 <div>
                   <h2 className="text-[18px] font-bold">{order.id}</h2>
                   <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">
-                    {order.date} - {order.total.toLocaleString("fr-FR")} FCFA
+                    {t("myOrders.orderMeta", { date: order.date, total: order.total.toLocaleString("fr-FR") })}
                   </p>
                 </div>
                 <span className="inline-flex rounded-full bg-[var(--brand-primary-subtle)] px-3 py-1 text-[12px] font-bold text-[var(--brand-primary)]">
@@ -235,7 +242,7 @@ function OrdersPage() {
                   params={{ id: order.id }}
                   className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold"
                 >
-                  <MessageSquare size={15} /> Signaler un probleme
+                  <MessageSquare size={15} /> {t("myOrders.reportProblem")}
                 </Link>
 
                 {tab === "buyer" && (
@@ -246,14 +253,14 @@ function OrdersPage() {
                       disabled={!canConfirmReception || confirmDelivery.isPending}
                       className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-[13px] font-semibold ${canConfirmReception ? "bg-[var(--brand-primary)] text-white" : "cursor-not-allowed bg-[var(--brand-surface-alt)] text-[var(--color-text-muted)]"}`}
                     >
-                      <PackageCheck size={15} /> {receptionConfirmed ? "Reception confirmee" : canConfirmReception ? "Confirmer la reception" : "Attendre la livraison"}
+                      <PackageCheck size={15} /> {receptionConfirmed ? t("myOrders.receptionConfirmed") : canConfirmReception ? t("myOrders.confirmReception") : t("myOrders.waitForDelivery")}
                     </button>
                     <button
                       type="button"
                       onClick={() => openReview(order.id)}
                       className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold"
                     >
-                      <Star size={15} /> {review?.submitted ? "Modifier l'avis" : "Laisser un avis"}
+                      <Star size={15} /> {review?.submitted ? t("myOrders.editReview") : t("myOrders.leaveReview")}
                     </button>
                   </>
                 )}
@@ -263,14 +270,14 @@ function OrdersPage() {
                 <div className="mt-5 rounded-lg border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h3 className="font-bold">Votre avis</h3>
+                      <h3 className="font-bold">{t("myOrders.yourReview")}</h3>
                       <p className="text-[13px] text-[var(--color-text-muted)]">
-                        Notez votre experience apres reception de la commande.
+                        {t("myOrders.rateExperience")}
                       </p>
                     </div>
                     {review?.submitted && (
                       <span className="rounded-full bg-emerald-50 px-3 py-1 text-[12px] font-bold text-emerald-700">
-                        Avis deja enregistre
+                        {t("myOrders.reviewAlreadySaved")}
                       </span>
                     )}
                   </div>
@@ -281,7 +288,7 @@ function OrdersPage() {
                         type="button"
                         onClick={() => setOrderReviews((current) => ({ ...current, [order.id]: { rating: value, comment: current[order.id]?.comment ?? "", submitted: false } }))}
                         className={`grid h-10 w-10 place-items-center rounded-full border ${review?.rating >= value ? "border-[var(--brand-gold)] bg-[var(--brand-gold)] text-[var(--brand-primary-dark)]" : "border-[var(--brand-border)] bg-white"}`}
-                        aria-label={`${value} etoiles`}
+                        aria-label={t("myOrders.starsLabel", { count: value })}
                       >
                         <Star size={16} />
                       </button>
@@ -290,7 +297,7 @@ function OrdersPage() {
                   <textarea
                     value={review?.comment ?? ""}
                     onChange={(event) => setOrderReviews((current) => ({ ...current, [order.id]: { rating: current[order.id]?.rating ?? 5, comment: event.target.value, submitted: false } }))}
-                    placeholder="Commentaire optionnel"
+                    placeholder={t("myOrders.commentOptional")}
                     className="mt-3 min-h-20 w-full rounded-lg border border-[var(--brand-border)] bg-white px-3 py-2 text-[13px]"
                   />
                   <button
@@ -299,7 +306,7 @@ function OrdersPage() {
                     disabled={createReview.isPending}
                     className="mt-3 h-10 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-50"
                   >
-                    {createReview.isPending ? "Envoi..." : "Enregistrer l'avis"}
+                    {createReview.isPending ? t("myOrders.sending") : t("myOrders.saveReview")}
                   </button>
                 </div>
               )}
@@ -308,14 +315,14 @@ function OrdersPage() {
                 <div className="mt-5 rounded-lg border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h3 className="font-bold">Noter l'acheteur</h3>
+                      <h3 className="font-bold">{t("myOrders.rateBuyer")}</h3>
                       <p className="text-[13px] text-[var(--color-text-muted)]">
-                        Score de fiabilite visible sur son profil vendeur.
+                        {t("myOrders.reliabilityScoreNotice")}
                       </p>
                     </div>
                     {buyerRatings[order.id]?.submitted && (
                       <span className="rounded-full bg-emerald-50 px-3 py-1 text-[12px] font-bold text-emerald-700">
-                        Note envoyee : {buyerRatings[order.id].rating}/5
+                        {t("myOrders.ratingSent", { rating: buyerRatings[order.id].rating })}
                       </span>
                     )}
                   </div>
@@ -326,7 +333,7 @@ function OrdersPage() {
                         type="button"
                         onClick={() => setBuyerRatings((current) => ({ ...current, [order.id]: { rating: value, comment: current[order.id]?.comment ?? "" } }))}
                         className={`grid h-10 w-10 place-items-center rounded-full border ${buyerRatings[order.id]?.rating >= value ? "border-[var(--brand-gold)] bg-[var(--brand-gold)] text-[var(--brand-primary-dark)]" : "border-[var(--brand-border)] bg-white"}`}
-                        aria-label={`${value} etoiles`}
+                        aria-label={t("myOrders.starsLabel", { count: value })}
                       >
                         <Star size={16} />
                       </button>
@@ -335,7 +342,7 @@ function OrdersPage() {
                   <textarea
                     value={buyerRatings[order.id]?.comment ?? ""}
                     onChange={(event) => setBuyerRatings((current) => ({ ...current, [order.id]: { rating: current[order.id]?.rating ?? 5, comment: event.target.value } }))}
-                    placeholder="Commentaire optionnel"
+                    placeholder={t("myOrders.commentOptional")}
                     className="mt-3 min-h-20 w-full rounded-lg border border-[var(--brand-border)] bg-white px-3 py-2 text-[13px]"
                   />
                   <button
@@ -344,7 +351,7 @@ function OrdersPage() {
                     disabled={createReview.isPending || buyerRatings[order.id]?.submitted}
                     className="mt-3 h-10 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-50"
                   >
-                    {createReview.isPending ? "Envoi..." : buyerRatings[order.id]?.submitted ? "Evaluation envoyee" : "Envoyer l'evaluation"}
+                    {createReview.isPending ? t("myOrders.sending") : buyerRatings[order.id]?.submitted ? t("myOrders.evaluationSent") : t("myOrders.sendEvaluation")}
                   </button>
                 </div>
               )}

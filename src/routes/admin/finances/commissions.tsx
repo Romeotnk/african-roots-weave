@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminCommissionConfig, useUpdateAdminCommissionConfig } from "@/hooks/useAdminApi";
 import { useTaxonomy } from "@/hooks/useTaxonomyApi";
@@ -9,15 +10,15 @@ export const Route = createFileRoute("/admin/finances/commissions")({
   component: AdminCommissionsPage,
 });
 
-const fields: { key: "global" | "level1" | "level2" | "level3" | "affiliate"; label: string; fallback: string }[] = [
-  { key: "global", label: "Taux global vendeur (%)", fallback: "10" },
-  { key: "affiliate", label: "Programme d'affiliation (%)", fallback: "5" },
-  { key: "level1", label: "Reseau MLM niveau 1 (%)", fallback: "3" },
-  { key: "level2", label: "Reseau MLM niveau 2 (%)", fallback: "2" },
-  { key: "level3", label: "Reseau MLM niveau 3 (%)", fallback: "1" },
-];
-
 function AdminCommissionsPage() {
+  const { t } = useTranslation();
+  const fields: { key: "global" | "level1" | "level2" | "level3" | "affiliate"; label: string; fallback: string }[] = [
+    { key: "global", label: t("admin.commissions.globalRate"), fallback: "10" },
+    { key: "affiliate", label: t("admin.commissions.affiliateRate"), fallback: "5" },
+    { key: "level1", label: t("admin.commissions.level1Rate"), fallback: "3" },
+    { key: "level2", label: t("admin.commissions.level2Rate"), fallback: "2" },
+    { key: "level3", label: t("admin.commissions.level3Rate"), fallback: "1" },
+  ];
   const configQuery = useAdminCommissionConfig();
   const updateConfig = useUpdateAdminCommissionConfig();
   const taxonomyQuery = useTaxonomy("PRODUCT_CATEGORY");
@@ -43,16 +44,16 @@ function AdminCommissionsPage() {
 
   const save = () => {
     updateConfig.mutate(values, {
-      onSuccess: () => setNotice("Taux de commission mis à jour."),
-      onError: (error) => setNotice(error instanceof Error ? error.message : "Échec de l'enregistrement."),
+      onSuccess: () => setNotice(t("admin.commissions.updated")),
+      onError: (error) => setNotice(error instanceof Error ? error.message : t("admin.commissions.saveError")),
     });
   };
 
   return (
-    <AdminLayout title="Commissions" description="Taux prélevé par la plateforme et taux d'affiliation MLM (niveaux 1 à 3).">
+    <AdminLayout title={t("admin.commissions.title")} description={t("admin.commissions.description")}>
       <AdminCard>
         <p className="mb-4 text-[13px] text-slate-400">
-          Ces taux s'appliquent à toute nouvelle commande — les commandes déjà créées ne sont pas recalculées.
+          {t("admin.commissions.appliesToNewOrders")}
         </p>
         <div className="grid gap-4 md:grid-cols-4">
           {fields.map((field) => (
@@ -70,9 +71,9 @@ function AdminCommissionsPage() {
           ))}
         </div>
         <div className="mt-8">
-          <h2 className="mb-1 text-[15px] font-bold text-white">Taux par catégorie (optionnel)</h2>
+          <h2 className="mb-1 text-[15px] font-bold text-white">{t("admin.commissions.categoryRates")}</h2>
           <p className="mb-4 text-[13px] text-slate-400">
-            Prioritaires sur le taux par défaut du professionnel et le taux global, mais toujours écrasés par un taux fixé au niveau d'un produit précis. Laissez vide pour ne pas surcharger.
+            {t("admin.commissions.categoryRatesDesc")}
           </p>
           <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-4">
             {categories.map((category) => {
@@ -84,7 +85,7 @@ function AdminCommissionsPage() {
                     type="number"
                     min={0}
                     max={100}
-                    placeholder="Défaut"
+                    placeholder={t("admin.commissions.defaultPlaceholder")}
                     value={values[key] ?? ""}
                     onChange={(event) => setValues((current) => ({ ...current, [key]: event.target.value }))}
                     className="h-11 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none placeholder:text-slate-500"
@@ -101,7 +102,7 @@ function AdminCommissionsPage() {
           onClick={save}
           className="mt-4 rounded-full bg-emerald-400 px-5 py-2 text-[13px] font-bold text-[#111827] disabled:opacity-50"
         >
-          {updateConfig.isPending ? "Enregistrement..." : "Enregistrer"}
+          {updateConfig.isPending ? t("admin.commissions.saving") : t("admin.commissions.save")}
         </button>
       </AdminCard>
     </AdminLayout>

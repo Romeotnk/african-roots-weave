@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type ConfirmDialogProps = {
@@ -21,15 +22,19 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = "Confirmer",
-  cancelLabel = "Annuler",
+  confirmLabel,
+  cancelLabel,
   danger = false,
   requireReason = false,
-  reasonLabel = "Motif",
+  reasonLabel,
   pending = false,
   onConfirm,
 }: ConfirmDialogProps) {
+  const { t } = useTranslation();
   const [reason, setReason] = useState("");
+  const resolvedConfirmLabel = confirmLabel ?? t("admin.confirmDialog.confirm");
+  const resolvedCancelLabel = cancelLabel ?? t("admin.confirmDialog.cancel");
+  const resolvedReasonLabel = reasonLabel ?? t("admin.confirmDialog.reason");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -42,7 +47,7 @@ export function ConfirmDialog({
           <textarea
             value={reason}
             onChange={(event) => setReason(event.target.value)}
-            placeholder={reasonLabel}
+            placeholder={resolvedReasonLabel}
             className="min-h-24 w-full rounded-lg border border-white/10 bg-white/5 p-3 text-[13px] text-white outline-none"
           />
         )}
@@ -52,7 +57,7 @@ export function ConfirmDialog({
             onClick={() => onOpenChange(false)}
             className="rounded-full border border-white/15 px-4 py-2 text-[13px] font-semibold text-white/80"
           >
-            {cancelLabel}
+            {resolvedCancelLabel}
           </button>
           <button
             type="button"
@@ -62,7 +67,7 @@ export function ConfirmDialog({
               danger ? "bg-red-500 text-white" : "bg-emerald-400 text-[#111827]"
             }`}
           >
-            {pending ? "..." : confirmLabel}
+            {pending ? t("admin.confirmDialog.sending") : resolvedConfirmLabel}
           </button>
         </div>
       </DialogContent>

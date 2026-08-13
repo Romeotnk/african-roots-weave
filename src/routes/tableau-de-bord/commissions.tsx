@@ -2,19 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { Banknote, CheckCircle2, Copy, Loader2, Search, Wallet } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { useAffiliateLink, useMyCommissions } from "@/hooks/useMlmApi";
 import type { MlmCommission } from "@/lib/api/mlm";
 
 type CommissionStatus = MlmCommission["status"];
-
-const statusLabels: Record<CommissionStatus, string> = {
-  PENDING: "En attente",
-  APPROVED: "Calculee - versee a la livraison",
-  PAID: "Versee au portefeuille",
-  CANCELLED: "Annulee",
-};
 
 const statusClasses: Record<CommissionStatus, string> = {
   PENDING: "bg-slate-100 text-slate-700 border-slate-200",
@@ -23,18 +17,24 @@ const statusClasses: Record<CommissionStatus, string> = {
   CANCELLED: "bg-red-50 text-red-700 border-red-100",
 };
 
-const levelLabels: Record<MlmCommission["type"], string> = {
-  DIRECT: "Vente directe",
-  MLM_LEVEL1: "Reseau - niveau 1",
-  MLM_LEVEL2: "Reseau - niveau 2",
-  MLM_LEVEL3: "Reseau - niveau 3",
-  AFFILIATE: "Affiliation",
-};
-
 const formatMoney = (amount: number) => `${amount.toLocaleString("fr-FR")} FCFA`;
 const formatDate = (value: string) => new Date(value).toLocaleDateString("fr-FR");
 
 function CommissionsPage() {
+  const { t } = useTranslation();
+  const statusLabels: Record<CommissionStatus, string> = {
+    PENDING: t("dashboard.mlmCommissions.statusPending"),
+    APPROVED: t("dashboard.mlmCommissions.statusApproved"),
+    PAID: t("dashboard.mlmCommissions.statusPaid"),
+    CANCELLED: t("dashboard.mlmCommissions.statusCancelled"),
+  };
+  const levelLabels: Record<MlmCommission["type"], string> = {
+    DIRECT: t("dashboard.mlmCommissions.levelDirect"),
+    MLM_LEVEL1: t("dashboard.mlmCommissions.levelMlm1"),
+    MLM_LEVEL2: t("dashboard.mlmCommissions.levelMlm2"),
+    MLM_LEVEL3: t("dashboard.mlmCommissions.levelMlm3"),
+    AFFILIATE: t("dashboard.mlmCommissions.levelAffiliate"),
+  };
   const { data: commissions, isLoading, isError } = useMyCommissions();
   const { data: affiliate } = useAffiliateLink();
   const [query, setQuery] = useState("");
@@ -56,7 +56,7 @@ function CommissionsPage() {
     const normalizedQuery = query.trim().toLowerCase();
     return list.filter((commission) => {
       const matchesStatus = statusFilter === "all" || commission.status === statusFilter;
-      const source = commission.sourceOrder?.product?.title ?? "Commande";
+      const source = commission.sourceOrder?.product?.title ?? t("dashboard.mlmCommissions.order");
       const matchesQuery = normalizedQuery.length === 0 || source.toLowerCase().includes(normalizedQuery);
       return matchesStatus && matchesQuery;
     });
@@ -66,31 +66,31 @@ function CommissionsPage() {
     setError("");
     setMessage("");
     if (!affiliate?.link) {
-      setError("Votre lien d'affiliation n'est pas encore disponible.");
+      setError(t("dashboard.mlmCommissions.linkNotAvailable"));
       return;
     }
     try {
       await navigator.clipboard.writeText(affiliate.link);
-      setMessage("Lien d'affiliation copie.");
+      setMessage(t("dashboard.mlmCommissions.linkCopied"));
     } catch {
-      setError("Impossible de copier automatiquement le lien. Copiez-le manuellement depuis votre navigateur.");
+      setError(t("dashboard.mlmCommissions.copyError"));
     }
   };
 
   return (
     <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
       <AccountLayout
-        title="Commissions"
-        description="Suivez vos gains de vente directe, d'affiliation et de reseau."
+        title={t("dashboard.mlmCommissions.title")}
+        description={t("dashboard.mlmCommissions.description")}
         actions={
           <button type="button" onClick={copyAffiliateLink} className="btn-secondary h-11 px-5 text-[14px]">
-            <Copy size={17} /> Copier le lien
+            <Copy size={17} /> {t("dashboard.mlmCommissions.copyLink")}
           </button>
         }
       >
           <div className="grid gap-4 md:grid-cols-2">
-            <StatCard icon={Banknote} label="A venir (livraison confirmee)" value={formatMoney(totals.pendingPayout)} />
-            <StatCard icon={CheckCircle2} label="Deja versee au portefeuille" value={formatMoney(totals.paid)} />
+            <StatCard icon={Banknote} label={t("dashboard.mlmCommissions.upcomingLabel")} value={formatMoney(totals.pendingPayout)} />
+            <StatCard icon={CheckCircle2} label={t("dashboard.mlmCommissions.paidLabel")} value={formatMoney(totals.paid)} />
           </div>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_360px]">
@@ -101,7 +101,7 @@ function CommissionsPage() {
                   <input
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Rechercher une commande"
+                    placeholder={t("dashboard.mlmCommissions.searchPlaceholder")}
                     className="h-11 w-full rounded-[8px] border border-[var(--brand-border-light)] bg-white pl-10 pr-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
                   />
                 </label>
@@ -117,7 +117,7 @@ function CommissionsPage() {
                           : "bg-[var(--brand-surface-alt)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
                       }`}
                     >
-                      {status === "all" ? "Toutes" : statusLabels[status]}
+                      {status === "all" ? t("dashboard.mlmCommissions.all") : statusLabels[status]}
                     </button>
                   ))}
                 </div>
@@ -130,13 +130,13 @@ function CommissionsPage() {
                   </div>
                 ) : isError ? (
                   <div className="rounded-[8px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
-                    Impossible de charger vos commissions pour le moment.
+                    {t("dashboard.mlmCommissions.loadError")}
                   </div>
                 ) : filteredCommissions.length === 0 ? (
                   <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-8 text-center">
                     <Wallet className="mx-auto text-[var(--brand-primary)]" size={34} />
-                    <h2 className="mt-4 text-[20px] font-bold">Aucune commission trouvee</h2>
-                    <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Essayez un autre filtre ou une autre recherche.</p>
+                    <h2 className="mt-4 text-[20px] font-bold">{t("dashboard.mlmCommissions.emptyTitle")}</h2>
+                    <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">{t("dashboard.mlmCommissions.emptyDesc")}</p>
                   </div>
                 ) : (
                   filteredCommissions.map((commission) => (
@@ -144,7 +144,7 @@ function CommissionsPage() {
                       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
                           <p className="text-[15px] font-bold text-[var(--color-text-primary)]">
-                            {commission.sourceOrder?.product?.title ?? "Commande"}
+                            {commission.sourceOrder?.product?.title ?? t("dashboard.mlmCommissions.order")}
                           </p>
                           <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">
                             {levelLabels[commission.type]} - {formatDate(commission.createdAt)}
@@ -164,12 +164,12 @@ function CommissionsPage() {
             </div>
 
             <aside className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
-              <h2 className="text-[18px] font-bold">Retirer mes gains</h2>
+              <h2 className="text-[18px] font-bold">{t("dashboard.mlmCommissions.withdrawTitle")}</h2>
               <p className="mt-2 text-[13px] leading-6 text-[var(--color-text-muted)]">
-                Les commissions versees sont automatiquement creditees sur votre portefeuille des la confirmation de livraison. Le retrait se fait depuis votre portefeuille.
+                {t("dashboard.mlmCommissions.withdrawDesc")}
               </p>
               <Link to="/mon-compte/portefeuille" className="btn-primary mt-4 flex h-11 w-full items-center justify-center text-[14px]">
-                <Wallet size={17} /> Aller au portefeuille
+                <Wallet size={17} /> {t("dashboard.mlmCommissions.goToWallet")}
               </Link>
               {message && <p className="mt-4 rounded-[8px] bg-emerald-50 px-4 py-3 text-[13px] font-semibold text-emerald-700">{message}</p>}
               {error && <p className="mt-4 rounded-[8px] bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-700">{error}</p>}

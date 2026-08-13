@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Work Sans", system-ui, sans-serif;
-  --font-display: "Fraunces", serif;
+  --font-sans: "Montserrat", system-ui, sans-serif;
+  --font-display: "Montserrat", system-ui, sans-serif;
 
   --radius-sm: 6px;
   --radius-md: 12px;
@@ -154,7 +154,7 @@
   body {
     background-color: var(--color-bg);
     color: var(--color-text-primary);
-    font-family: "Work Sans", system-ui, sans-serif;
+    font-family: "Montserrat", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
     text-rendering: optimizeLegibility;
@@ -165,20 +165,14 @@
   h4 {
     color: var(--color-text-primary);
   }
-  /* Fraunces was loaded as --font-display but never actually applied
-     anywhere — every heading site-wide rendered in the same Work Sans as
-     body text, with nothing to signal "editorial" over "generic SaaS
-     dashboard". H1/H2 (hero and section titles) get the serif; H3/H4 stay
-     sans — they're used inconsistently down to 13-14px card labels, where a
-     serif reads cramped rather than premium. */
   h1,
   h2 {
-    font-family: "Fraunces", serif;
+    font-family: "Montserrat", system-ui, sans-serif;
     text-wrap: balance;
   }
   h3,
   h4 {
-    font-family: "Work Sans", system-ui, sans-serif;
+    font-family: "Montserrat", system-ui, sans-serif;
   }
   h1 {
     font-weight: 600;

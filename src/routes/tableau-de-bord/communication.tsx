@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Calendar, GraduationCap, Megaphone, Video } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/tableau-de-bord/communication")({
 });
 
 function CommunicationHub() {
+  const { t } = useTranslation();
   const announcementsQuery = useMyAnnouncements();
   const webinarsQuery = useEvents({ type: "WEBINAR", limit: 6 });
   const formationsQuery = useFormations({ limit: 4 });
@@ -26,25 +28,25 @@ function CommunicationHub() {
 
   const webinars = useMemo(() => {
     const items = ((webinarsQuery.data as { events?: BackendEvent[] } | undefined)?.events ?? [])
-      .map(toEventItem)
+      .map((event) => toEventItem(event, t))
       .filter((item): item is NonNullable<typeof item> => Boolean(item));
     return items.filter((item) => new Date(item.date).getTime() >= Date.now()).slice(0, 4);
-  }, [webinarsQuery.data]);
+  }, [webinarsQuery.data, t]);
 
   const formations = (formationsQuery.data as { formations?: { id: string; title: string; category?: string; coverImage?: string | null }[] } | undefined)?.formations ?? [];
 
   return (
     <AccountLayout
-      title="Communication & webinaires"
-      description="Annonces de l'équipe Iwosan, webinaires à venir et formations pour développer votre activité."
+      title={t("dashboard.communication.title")}
+      description={t("dashboard.communication.description")}
     >
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="flex items-center gap-2 text-[18px] font-bold"><Megaphone size={18} className="text-[var(--brand-primary)]" /> Annonces & opportunités</h2>
-            {announcementsQuery.isLoading && <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">Chargement...</p>}
+            <h2 className="flex items-center gap-2 text-[18px] font-bold"><Megaphone size={18} className="text-[var(--brand-primary)]" /> {t("dashboard.communication.announcementsTitle")}</h2>
+            {announcementsQuery.isLoading && <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">{t("dashboard.communication.loading")}</p>}
             {!announcementsQuery.isLoading && announcements.length === 0 && (
-              <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">Aucune annonce pour le moment. Les opportunités et communications de l'équipe Iwosan apparaîtront ici.</p>
+              <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">{t("dashboard.communication.noAnnouncements")}</p>
             )}
             <div className="mt-4 space-y-3">
               {announcements.map((item) => (
@@ -55,7 +57,7 @@ function CommunicationHub() {
                   </div>
                   <p className="mt-1 text-[13px] text-[var(--color-text-secondary)]">{item.message}</p>
                   {item.link && (
-                    <Link to={item.link as never} className="mt-2 inline-flex text-[12px] font-semibold text-[var(--brand-primary)]">En savoir plus</Link>
+                    <Link to={item.link as never} className="mt-2 inline-flex text-[12px] font-semibold text-[var(--brand-primary)]">{t("dashboard.communication.learnMore")}</Link>
                   )}
                 </div>
               ))}
@@ -63,10 +65,10 @@ function CommunicationHub() {
           </div>
 
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="flex items-center gap-2 text-[18px] font-bold"><GraduationCap size={18} className="text-[var(--brand-primary)]" /> Formations pour développer votre activité</h2>
-            {formationsQuery.isLoading && <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">Chargement...</p>}
+            <h2 className="flex items-center gap-2 text-[18px] font-bold"><GraduationCap size={18} className="text-[var(--brand-primary)]" /> {t("dashboard.communication.formationsTitle")}</h2>
+            {formationsQuery.isLoading && <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">{t("dashboard.communication.loading")}</p>}
             {!formationsQuery.isLoading && formations.length === 0 && (
-              <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">Aucune formation disponible pour le moment.</p>
+              <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">{t("dashboard.communication.noFormations")}</p>
             )}
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {formations.map((formation) => (
@@ -81,15 +83,15 @@ function CommunicationHub() {
                 </Link>
               ))}
             </div>
-            <Link to="/tableau-de-bord/formations" className="mt-4 inline-flex text-[13px] font-semibold text-[var(--brand-primary)]">Gérer mes formations</Link>
+            <Link to="/tableau-de-bord/formations" className="mt-4 inline-flex text-[13px] font-semibold text-[var(--brand-primary)]">{t("dashboard.communication.manageFormations")}</Link>
           </div>
         </div>
 
         <aside className="h-fit rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-          <h2 className="flex items-center gap-2 text-[16px] font-bold"><Video size={17} className="text-[var(--brand-primary)]" /> Prochains webinaires</h2>
-          {webinarsQuery.isLoading && <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">Chargement...</p>}
+          <h2 className="flex items-center gap-2 text-[16px] font-bold"><Video size={17} className="text-[var(--brand-primary)]" /> {t("dashboard.communication.upcomingWebinars")}</h2>
+          {webinarsQuery.isLoading && <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">{t("dashboard.communication.loading")}</p>}
           {!webinarsQuery.isLoading && webinars.length === 0 && (
-            <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">Aucun webinaire programmé pour le moment.</p>
+            <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">{t("dashboard.communication.noWebinars")}</p>
           )}
           <div className="mt-4 space-y-3">
             {webinars.map((webinar) => (
@@ -99,7 +101,7 @@ function CommunicationHub() {
               </Link>
             ))}
           </div>
-          <Link to="/agenda" className="mt-4 inline-flex text-[13px] font-semibold text-[var(--brand-primary)]">Voir tout l'agenda</Link>
+          <Link to="/agenda" className="mt-4 inline-flex text-[13px] font-semibold text-[var(--brand-primary)]">{t("dashboard.communication.seeFullAgenda")}</Link>
         </aside>
       </div>
     </AccountLayout>

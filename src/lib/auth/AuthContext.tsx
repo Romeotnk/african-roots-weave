@@ -3,6 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 import { authTokenStore } from "@/lib/api/client";
 import { backendAuthUserStore, loginWithSupabaseAccessToken, logout as backendLogout, type AuthUser } from "@/lib/api/auth";
+import i18n from "@/lib/i18n";
 
 export type AppRole = "user" | "professional" | "admin" | "super_admin";
 
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return syncBackendFromSupabaseSession(supabaseSession, attempt + 1);
       }
       console.warn("Synchronisation OAuth Supabase vers backend impossible.", error);
-      setAuthSyncError("La connexion n'a pas pu être synchronisée avec votre compte. Merci de réessayer.");
+      setAuthSyncError(i18n.t("authContext.syncError"));
     }
 
     return false;

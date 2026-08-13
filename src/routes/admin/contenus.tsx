@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { useAdminModerationActions, usePendingArticles, usePendingEvents, usePendingFormations } from "@/hooks/useAdminApi";
@@ -22,6 +23,7 @@ type ModerationTab = "articles" | "events" | "formations";
 type RejectTarget = { id: string; label: string; kind: ModerationTab };
 
 function AdminContenus() {
+  const { t } = useTranslation();
   const { roles } = useAuth();
   const isSuperAdmin = roles.includes("super_admin");
   const [tab, setTab] = useState<Tab>("articles");
@@ -45,14 +47,14 @@ function AdminContenus() {
   const rejectMutation = rejectTarget?.kind === "articles" ? rejectArticle : rejectTarget?.kind === "events" ? rejectEvent : rejectFormation;
 
   return (
-    <AdminLayout title="Contenus" description="Articles, événements et formations en attente d'approbation.">
+    <AdminLayout title={t("admin.content.title")} description={t("admin.content.description")}>
       {notice && <div className="mb-4 rounded-lg bg-emerald-500/15 p-3 text-[13px] text-emerald-200">{notice}</div>}
 
       <div className="mb-4 flex gap-2">
         {([
-          ["articles", "Articles"],
-          ["events", "Événements"],
-          ["formations", "Formations"],
+          ["articles", t("admin.content.tabArticles")],
+          ["events", t("admin.content.tabEvents")],
+          ["formations", t("admin.content.tabFormations")],
         ] as const).map(([value, label]) => (
           <button
             key={value}
@@ -64,8 +66,8 @@ function AdminContenus() {
           </button>
         ))}
         {([
-          ...(isSuperAdmin ? ([["pharmacopee", "Pharmacopée"], ["rites", "Rites & Cultures"]] as const) : []),
-          ["categories", "Catégories"],
+          ...(isSuperAdmin ? ([["pharmacopee", t("admin.content.tabPharmacopoeia")], ["rites", t("admin.content.tabRitesCultures")]] as const) : []),
+          ["categories", t("admin.content.tabCategories")],
         ] as const).map(([value, label]) => (
           <button
             key={value}
@@ -77,7 +79,7 @@ function AdminContenus() {
           </button>
         ))}
         {!isSuperAdmin && (
-          <p className="ml-2 self-center text-[11px] text-slate-400">Pharmacopée et Rites & Cultures sont gérés exclusivement par l'administrateur principal.</p>
+          <p className="ml-2 self-center text-[11px] text-slate-400">{t("admin.content.superAdminOnlyNotice")}</p>
         )}
       </div>
 
@@ -85,12 +87,12 @@ function AdminContenus() {
         <div className="overflow-x-auto rounded-[12px] border border-white/10">
           <table className="w-full min-w-[720px] text-left text-[13px]">
             <thead className="bg-white/10 text-slate-300">
-              <tr>{["Titre", "Espace", "Catégorie", "Créé le", "Actions"].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
+              <tr>{[t("admin.content.colTitle"), t("admin.content.colSpace"), t("admin.content.colCategory"), t("admin.content.colCreatedOn"), t("admin.content.colActions")].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
             </thead>
             <tbody>
-              {articlesQuery.isLoading && <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Chargement...</td></tr>}
+              {articlesQuery.isLoading && <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">{t("admin.content.loading")}</td></tr>}
               {!articlesQuery.isLoading && articles.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Aucun article en attente de modération.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">{t("admin.content.noPendingArticles")}</td></tr>
               )}
               {articles.map((article) => (
                 <tr key={article.id} className="border-t border-white/10">
@@ -103,13 +105,13 @@ function AdminContenus() {
                       <button
                         type="button"
                         disabled={approveArticle.isPending}
-                        onClick={() => approveArticle.mutate(article.id, { onSuccess: () => setNotice(`« ${article.title} » approuvé.`) })}
+                        onClick={() => approveArticle.mutate(article.id, { onSuccess: () => setNotice(t("admin.content.approved", { title: article.title })) })}
                         className="rounded-full bg-emerald-400 px-3 py-1 text-[12px] font-bold text-[#111827] disabled:opacity-50"
                       >
-                        Approuver
+                        {t("admin.content.approve")}
                       </button>
                       <button type="button" onClick={() => setRejectTarget({ id: article.id, label: article.title, kind: "articles" })} className="rounded-full bg-red-500/80 px-3 py-1 text-[12px] font-bold text-white">
-                        Rejeter
+                        {t("admin.content.reject")}
                       </button>
                     </div>
                   </td>
@@ -124,12 +126,12 @@ function AdminContenus() {
         <div className="overflow-x-auto rounded-[12px] border border-white/10">
           <table className="w-full min-w-[720px] text-left text-[13px]">
             <thead className="bg-white/10 text-slate-300">
-              <tr>{["Titre", "Type", "Date", "Créateur", "Actions"].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
+              <tr>{[t("admin.content.colTitle"), t("admin.content.colType"), t("admin.content.colDate"), t("admin.content.colCreator"), t("admin.content.colActions")].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
             </thead>
             <tbody>
-              {eventsQuery.isLoading && <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Chargement...</td></tr>}
+              {eventsQuery.isLoading && <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">{t("admin.content.loading")}</td></tr>}
               {!eventsQuery.isLoading && events.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Aucun événement en attente de modération.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">{t("admin.content.noPendingEvents")}</td></tr>
               )}
               {events.map((event) => (
                 <tr key={event.id} className="border-t border-white/10">
@@ -142,13 +144,13 @@ function AdminContenus() {
                       <button
                         type="button"
                         disabled={approveEvent.isPending}
-                        onClick={() => approveEvent.mutate(event.id, { onSuccess: () => setNotice(`« ${event.title} » approuvé.`) })}
+                        onClick={() => approveEvent.mutate(event.id, { onSuccess: () => setNotice(t("admin.content.approved", { title: event.title })) })}
                         className="rounded-full bg-emerald-400 px-3 py-1 text-[12px] font-bold text-[#111827] disabled:opacity-50"
                       >
-                        Approuver
+                        {t("admin.content.approve")}
                       </button>
                       <button type="button" onClick={() => setRejectTarget({ id: event.id, label: event.title, kind: "events" })} className="rounded-full bg-red-500/80 px-3 py-1 text-[12px] font-bold text-white">
-                        Rejeter
+                        {t("admin.content.reject")}
                       </button>
                     </div>
                   </td>
@@ -163,12 +165,12 @@ function AdminContenus() {
         <div className="overflow-x-auto rounded-[12px] border border-white/10">
           <table className="w-full min-w-[720px] text-left text-[13px]">
             <thead className="bg-white/10 text-slate-300">
-              <tr>{["Titre", "Type", "Catégorie", "Créateur", "Actions"].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
+              <tr>{[t("admin.content.colTitle"), t("admin.content.colType"), t("admin.content.colCategory"), t("admin.content.colCreator"), t("admin.content.colActions")].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
             </thead>
             <tbody>
-              {formationsQuery.isLoading && <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Chargement...</td></tr>}
+              {formationsQuery.isLoading && <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">{t("admin.content.loading")}</td></tr>}
               {!formationsQuery.isLoading && formations.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Aucune formation en attente de modération.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">{t("admin.content.noPendingFormations")}</td></tr>
               )}
               {formations.map((formation) => (
                 <tr key={formation.id} className="border-t border-white/10">
@@ -181,13 +183,13 @@ function AdminContenus() {
                       <button
                         type="button"
                         disabled={approveFormation.isPending}
-                        onClick={() => approveFormation.mutate(formation.id, { onSuccess: () => setNotice(`« ${formation.title} » approuvée.`) })}
+                        onClick={() => approveFormation.mutate(formation.id, { onSuccess: () => setNotice(t("admin.content.approvedFem", { title: formation.title })) })}
                         className="rounded-full bg-emerald-400 px-3 py-1 text-[12px] font-bold text-[#111827] disabled:opacity-50"
                       >
-                        Approuver
+                        {t("admin.content.approve")}
                       </button>
                       <button type="button" onClick={() => setRejectTarget({ id: formation.id, label: formation.title, kind: "formations" })} className="rounded-full bg-red-500/80 px-3 py-1 text-[12px] font-bold text-white">
-                        Rejeter
+                        {t("admin.content.reject")}
                       </button>
                     </div>
                   </td>
@@ -205,17 +207,17 @@ function AdminContenus() {
       <ConfirmDialog
         open={Boolean(rejectTarget)}
         onOpenChange={(open) => !open && setRejectTarget(null)}
-        title={`Rejeter « ${rejectTarget?.label ?? ""} »`}
+        title={t("admin.content.rejectTitle", { label: rejectTarget?.label ?? "" })}
         danger
         requireReason
-        reasonLabel="Motif du rejet"
-        confirmLabel="Rejeter"
+        reasonLabel={t("admin.content.rejectReasonLabel")}
+        confirmLabel={t("admin.content.reject")}
         pending={rejectMutation.isPending}
         onConfirm={(reason) => {
           if (!rejectTarget || !reason) return;
           rejectMutation.mutate(
             { id: rejectTarget.id, reason },
-            { onSuccess: () => { setNotice(`« ${rejectTarget.label} » rejeté(e).`); setRejectTarget(null); } },
+            { onSuccess: () => { setNotice(t("admin.content.rejected", { label: rejectTarget.label })); setRejectTarget(null); } },
           );
         }}
       />

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, CheckCircle2, MessageSquare, PackageCheck, Star, Store, Users } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import type { NotificationType } from "@/data/notifications";
@@ -23,16 +24,8 @@ const icons: Record<NotificationType, typeof Bell> = {
   forum: Users,
 };
 
-const filterLabels: Record<"all" | NotificationType, string> = {
-  all: "Toutes",
-  message: "Messages",
-  listing: "Annonces",
-  order: "Commandes",
-  review: "Avis",
-  forum: "Forum",
-};
-
 function NotificationsPage() {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<"all" | NotificationType>("all");
   const [actionMessage, setActionMessage] = useState("");
   const { data: items = [] } = useNotifications();
@@ -41,27 +34,36 @@ function NotificationsPage() {
   const filtered = useMemo(() => items.filter((item) => filter === "all" || item.type === filter), [filter, items]);
   const unreadCount = items.filter((item) => !item.read).length;
 
+  const filterLabels: Record<"all" | NotificationType, string> = {
+    all: t("account.notifications.filterAll"),
+    message: t("account.notifications.filterMessage"),
+    listing: t("account.notifications.filterListing"),
+    order: t("account.notifications.filterOrder"),
+    review: t("account.notifications.filterReview"),
+    forum: t("account.notifications.filterForum"),
+  };
+
   const updateReadState = (id: string, read: boolean) => {
     markRead.mutate(
       { id, read },
       {
-        onSuccess: () => setActionMessage(read ? "Notification marquee comme lue." : "Notification marquee comme non lue."),
-        onError: (error) => setActionMessage(error instanceof Error ? error.message : "Action impossible."),
+        onSuccess: () => setActionMessage(read ? t("account.notifications.markedRead") : t("account.notifications.markedUnread")),
+        onError: (error) => setActionMessage(error instanceof Error ? error.message : t("account.notifications.actionError")),
       },
     );
   };
 
   const markAllRead = () => {
     markAllReadMutation.mutate(undefined, {
-      onSuccess: () => setActionMessage("Toutes les notifications sont marquees comme lues."),
-      onError: (error) => setActionMessage(error instanceof Error ? error.message : "Action impossible."),
+      onSuccess: () => setActionMessage(t("account.notifications.allMarkedRead")),
+      onError: (error) => setActionMessage(error instanceof Error ? error.message : t("account.notifications.actionError")),
     });
   };
 
   return (
     <AccountLayout
-      title="Notifications"
-      description={unreadCount > 0 ? `${unreadCount} notification${unreadCount > 1 ? "s" : ""} non lue${unreadCount > 1 ? "s" : ""}.` : "Aucune notification non lue."}
+      title={t("account.notifications.title")}
+      description={unreadCount > 0 ? t("account.notifications.unreadCount", { count: unreadCount }) : t("account.notifications.noUnread")}
       actions={
         <button
           type="button"
@@ -69,7 +71,7 @@ function NotificationsPage() {
           disabled={items.length === 0 || unreadCount === 0 || markAllReadMutation.isPending}
           className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] bg-white px-4 text-[13px] font-semibold disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <CheckCircle2 size={15} /> Tout marquer lu
+          <CheckCircle2 size={15} /> {t("account.notifications.markAllRead")}
         </button>
       }
     >
@@ -97,9 +99,9 @@ function NotificationsPage() {
           {filtered.length === 0 && (
             <div className="rounded-[12px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
               <Bell className="mx-auto text-[var(--brand-primary)]" size={26} />
-              <h2 className="mt-3 text-[20px] font-bold">Aucune notification</h2>
+              <h2 className="mt-3 text-[20px] font-bold">{t("account.notifications.emptyTitle")}</h2>
               <p className="mt-2 text-[13px] text-[var(--color-text-muted)]">
-                Les alertes liees aux messages, commandes et annonces apparaitront ici.
+                {t("account.notifications.emptyDesc")}
               </p>
             </div>
           )}
@@ -119,7 +121,7 @@ function NotificationsPage() {
                     <p className="mt-1 text-[14px] text-[var(--color-text-secondary)]">{item.body}</p>
                     <p className="mt-2 text-[12px] text-[var(--color-text-muted)]">{item.date}</p>
                   </div>
-                  {!item.read && <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--brand-primary)]" aria-label="Non lue" />}
+                  {!item.read && <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--brand-primary)]" aria-label={t("account.notifications.unread")} />}
                 </div>
                 <div className="mt-3 flex justify-end">
                   <button
@@ -128,7 +130,7 @@ function NotificationsPage() {
                     disabled={markRead.isPending && markRead.variables?.id === item.id}
                     className="rounded-full border border-[var(--brand-border)] px-3 py-1 text-[12px] font-semibold disabled:opacity-50"
                   >
-                    {item.read ? "Marquer non lue" : "Marquer lue"}
+                    {item.read ? t("account.notifications.markUnread") : t("account.notifications.markRead")}
                   </button>
                 </div>
               </div>

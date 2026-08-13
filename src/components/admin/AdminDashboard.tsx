@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminDashboard, usePendingArticles, usePendingEvents, usePendingFormations, usePendingProducts, usePendingProfessionals } from "@/hooks/useAdminApi";
 import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { cn } from "@/lib/utils";
 
 export function AdminDashboard() {
+  const { t } = useTranslation();
   const dashboardQuery = useAdminDashboard();
   const pendingProductsQuery = usePendingProducts();
   const pendingArticlesQuery = usePendingArticles();
@@ -21,29 +23,29 @@ export function AdminDashboard() {
 
   const kpis = stats
     ? [
-        { label: "Utilisateurs", value: stats.totalUsers.toLocaleString("fr-FR") },
-        { label: "Nouveaux aujourd'hui", value: stats.newUsersToday.toLocaleString("fr-FR") },
-        { label: "Annonces actives", value: stats.activeListings.toLocaleString("fr-FR") },
-        { label: "Revenu (30j, commissions)", value: `${Number(stats.revenue ?? 0).toLocaleString("fr-FR")} FCFA` },
-        { label: "KYC en attente", value: stats.pendingKYC, urgent: stats.pendingKYC > 0 },
-        { label: "Tickets ouverts", value: stats.openTickets, urgent: stats.openTickets > 0 },
+        { label: t("admin.overview.kpiUsers"), value: stats.totalUsers.toLocaleString("fr-FR") },
+        { label: t("admin.overview.kpiNewToday"), value: stats.newUsersToday.toLocaleString("fr-FR") },
+        { label: t("admin.overview.kpiActiveListings"), value: stats.activeListings.toLocaleString("fr-FR") },
+        { label: t("admin.overview.kpiRevenue"), value: `${Number(stats.revenue ?? 0).toLocaleString("fr-FR")} FCFA` },
+        { label: t("admin.overview.kpiPendingKyc"), value: stats.pendingKYC, urgent: stats.pendingKYC > 0 },
+        { label: t("admin.overview.kpiOpenTickets"), value: stats.openTickets, urgent: stats.openTickets > 0 },
       ]
     : [];
 
   const urgentActions = [
-    { label: "KYC en attente", to: "/admin/utilisateurs/kyc", count: stats?.pendingKYC ?? 0 },
-    { label: "Annonces à modérer", to: "/admin/marketplace", count: pendingProductsCount },
-    { label: "Articles à modérer", to: "/admin/contenus", count: pendingArticlesCount },
-    { label: "Événements à modérer", to: "/admin/contenus", count: pendingEventsCount },
-    { label: "Formations à modérer", to: "/admin/contenus", count: pendingFormationsCount },
-    { label: "Profils professionnels à vérifier", to: "/admin/utilisateurs/kyc", count: pendingProfessionalsCount },
-    { label: "Tickets ouverts", to: "/admin/communication/tickets", count: stats?.openTickets ?? 0 },
+    { label: t("admin.overview.actionPendingKyc"), to: "/admin/utilisateurs/kyc", count: stats?.pendingKYC ?? 0 },
+    { label: t("admin.overview.actionModerateListings"), to: "/admin/marketplace", count: pendingProductsCount },
+    { label: t("admin.overview.actionModerateArticles"), to: "/admin/contenus", count: pendingArticlesCount },
+    { label: t("admin.overview.actionModerateEvents"), to: "/admin/contenus", count: pendingEventsCount },
+    { label: t("admin.overview.actionModerateFormations"), to: "/admin/contenus", count: pendingFormationsCount },
+    { label: t("admin.overview.actionVerifyProfiles"), to: "/admin/utilisateurs/kyc", count: pendingProfessionalsCount },
+    { label: t("admin.overview.actionOpenTickets"), to: "/admin/communication/tickets", count: stats?.openTickets ?? 0 },
   ].filter((action) => action.count > 0);
 
   return (
-    <AdminLayout title="Vue d'ensemble" description="Pilotage opérationnel de la plateforme.">
-      {dashboardQuery.isLoading && <p className="text-[13px] text-slate-400">Chargement...</p>}
-      {dashboardQuery.isError && <p className="text-[13px] text-red-300">Impossible de charger les statistiques.</p>}
+    <AdminLayout title={t("admin.overview.title")} description={t("admin.overview.description")}>
+      {dashboardQuery.isLoading && <p className="text-[13px] text-slate-400">{t("admin.overview.loading")}</p>}
+      {dashboardQuery.isError && <p className="text-[13px] text-red-300">{t("admin.overview.loadError")}</p>}
 
       {stats && (
         <>
@@ -56,7 +58,7 @@ export function AdminDashboard() {
                   <p className="mt-3 text-[28px] font-black text-white">{kpi.value}</p>
                   {"urgent" in kpi && (
                     <span className={`mt-2 inline-flex rounded-full px-2 py-1 text-[11px] font-bold ${kpi.urgent ? "bg-red-500/20 text-red-300" : "bg-emerald-500/20 text-emerald-300"}`}>
-                      {kpi.urgent ? "À traiter" : "OK"}
+                      {kpi.urgent ? t("admin.overview.toHandle") : t("admin.overview.ok")}
                     </span>
                   )}
                 </AdminCard>
@@ -66,9 +68,9 @@ export function AdminDashboard() {
 
           <div className="mt-6 grid gap-6 xl:grid-cols-2">
             <AdminCard>
-              <h2 className="mb-4 text-[18px] font-bold text-white">Top catégories (annonces)</h2>
+              <h2 className="mb-4 text-[18px] font-bold text-white">{t("admin.overview.topCategories")}</h2>
               {stats.topCategories.length === 0 ? (
-                <p className="text-[13px] text-slate-400">Aucune annonce publiée pour le moment.</p>
+                <p className="text-[13px] text-slate-400">{t("admin.overview.noListingsYet")}</p>
               ) : (
                 <div className="space-y-3">
                   {stats.topCategories.map((row) => {
@@ -86,9 +88,9 @@ export function AdminDashboard() {
             </AdminCard>
 
             <AdminCard>
-              <h2 className="mb-4 text-[18px] font-bold text-white">À traiter</h2>
+              <h2 className="mb-4 text-[18px] font-bold text-white">{t("admin.overview.toHandleTitle")}</h2>
               {urgentActions.length === 0 ? (
-                <p className="text-[13px] text-slate-400">Rien à traiter pour le moment.</p>
+                <p className="text-[13px] text-slate-400">{t("admin.overview.nothingToHandle")}</p>
               ) : (
                 <div className="space-y-3">
                   {urgentActions.map((item) => (

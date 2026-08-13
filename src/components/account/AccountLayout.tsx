@@ -1,11 +1,12 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, Bell, Leaf, Menu, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { isProfessionalAccount } from "@/lib/auth/roles";
+import { isProfessionalAccount, isStaffAccount } from "@/lib/auth/roles";
 import { useMeQuery } from "@/hooks/useAuthApi";
-import { ACCOUNT_NAV_GROUPS } from "@/lib/accountNav";
+import { buildAccountNavGroups } from "@/lib/accountNav";
 
 // Shared shell for the whole account area (/mon-compte/* and /tableau-de-bord/*):
 // a persistent sidebar (same visual design across both spaces, content just
@@ -23,6 +24,7 @@ export function AccountLayout({
   actions?: ReactNode;
   children: ReactNode;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const navigate = useNavigate();
@@ -32,22 +34,35 @@ export function AccountLayout({
   useEffect(() => setOpen(false), [pathname]);
 
   const isPro = isProfessionalAccount(roles);
+  const isStaff = isStaffAccount(roles);
+  // Commerce-only tiles (storefront, sales, KYC self-submission) are for
+  // real merchants, not staff wearing professional-tier permissions.
+  const isCommercial = isPro && !isStaff;
   const displayName =
     `${profile?.firstName ?? ""} ${profile?.lastName ?? ""}`.trim() ||
     (user?.user_metadata?.first_name as string | undefined) ||
     user?.email?.split("@")[0] ||
-    "Compte";
-  const roleLabel = isPro ? "Professionnel" : "Utilisateur";
+    t("accountLayout.defaultDisplayName");
+  const roleLabel = roles.includes("super_admin")
+    ? t("accountLayout.roleSuperAdmin")
+    : roles.includes("admin")
+      ? t("accountLayout.roleAdmin")
+      : isPro
+        ? t("accountLayout.roleProfessional")
+        : t("accountLayout.roleUser");
 
   const handleLogout = async () => {
     await signOut();
     navigate({ to: "/" });
   };
 
-  const groups = ACCOUNT_NAV_GROUPS.filter((group) => !group.proOnly || isPro)
+  const accountNavGroups = buildAccountNavGroups(t);
+  const groups = accountNavGroups.filter((group) => (!group.proOnly || isPro) && (!group.commercialOnly || isCommercial))
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => (!item.proOnly || isPro) && (!item.hideForPro || !isPro)),
+      items: group.items.filter(
+        (item) => (!item.proOnly || isPro) && (!item.hideForPro || !isPro) && (!item.commercialOnly || isCommercial),
+      ),
     }))
     .filter((group) => group.items.length > 0);
 
@@ -75,7 +90,7 @@ export function AccountLayout({
       </div>
       <nav className="flex-1 space-y-5 p-3">
         {groups.map((group) => (
-          <div key={group.title}>
+          <div key={group.id}>
             <h4 className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">
               {group.title}
             </h4>
@@ -91,7 +106,7 @@ export function AccountLayout({
                       : "text-[var(--color-text-secondary)] hover:bg-[var(--brand-surface-alt)]",
                 );
                 return (
-                  <li key={item.label} className="relative">
+                  <li key={item.id} className="relative">
                     {active && (
                       <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-[var(--brand-primary)]" />
                     )}
@@ -122,20 +137,20 @@ export function AccountLayout({
           className="fixed left-4 top-4 z-[90] grid h-11 w-11 place-items-center rounded-full bg-[var(--brand-primary)] text-white shadow-iwosan-md"
           aria-expanded={open}
           aria-controls="account-mobile-menu"
-          aria-label="Ouvrir le menu du compte"
+          aria-label={t("accountLayout.openAccountMenu")}
         >
           <Menu size={20} />
         </button>
       </div>
       {open && (
         <div className="fixed inset-0 z-[100] lg:hidden" id="account-mobile-menu">
-          <button className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} aria-label="Fermer le menu" />
+          <button className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} aria-label={t("accountLayout.closeMenu")} />
           <div className="relative h-full">
             {sidebar}
             <button
               onClick={() => setOpen(false)}
               className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-[var(--brand-surface-alt)]"
-              aria-label="Fermer le menu"
+              aria-label={t("accountLayout.closeMenu")}
             >
               <X size={18} />
             </button>
@@ -153,7 +168,7 @@ export function AccountLayout({
                 to={hubPath}
                 className="mb-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--color-text-muted)] transition hover:text-[var(--brand-primary)]"
               >
-                <ArrowLeft size={15} /> Retour
+                <ArrowLeft size={15} /> {t("accountLayout.back")}
               </Link>
             )}
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -166,7 +181,7 @@ export function AccountLayout({
                 <Link
                   to="/mon-compte/notifications"
                   className="relative flex h-10 w-10 items-center justify-center rounded-full hover:bg-[var(--brand-surface-alt)]"
-                  aria-label="Notifications"
+                  aria-label={t("accountLayout.notifications")}
                 >
                   <Bell size={18} />
                 </Link>

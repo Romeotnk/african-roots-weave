@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminConfig, useUpdateAdminConfig } from "@/hooks/useAdminApi";
 
@@ -23,6 +24,7 @@ const defaults = {
 };
 
 function AdminIdentite() {
+  const { t } = useTranslation();
   const configQuery = useAdminConfig();
   const updateConfig = useUpdateAdminConfig();
   const [form, setForm] = useState(defaults);
@@ -44,39 +46,39 @@ function AdminIdentite() {
   });
 
   return (
-    <AdminLayout title="Identité du site" description="Nom, logo, couleurs et CSS personnalisé de la plateforme.">
+    <AdminLayout title={t("admin.identity.title")} description={t("admin.identity.description")}>
       {notice && <div className="mb-4 rounded-lg bg-emerald-500/15 p-3 text-[13px] text-emerald-200">{notice}</div>}
 
       <div className="grid gap-6 xl:grid-cols-2">
         <AdminCard>
-          <h2 className="mb-4 text-[18px] font-bold text-white">Nom, logo et couleurs</h2>
+          <h2 className="mb-4 text-[18px] font-bold text-white">{t("admin.identity.nameLogoColors")}</h2>
           <div className="space-y-4">
             <label className="block text-[13px] text-slate-300">
-              Nom du site
+              {t("admin.identity.siteName")}
               <input {...field("site.name")} className="mt-1 h-10 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none" />
             </label>
             <label className="block text-[13px] text-slate-300">
-              Accroche
+              {t("admin.identity.tagline")}
               <input {...field("site.tagline")} className="mt-1 h-10 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none" />
             </label>
             <label className="block text-[13px] text-slate-300">
-              URL du logo
+              {t("admin.identity.logoUrl")}
               <input {...field("site.logoUrl")} placeholder="https://..." className="mt-1 h-10 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none" />
             </label>
             <label className="block text-[13px] text-slate-300">
-              URL du favicon
+              {t("admin.identity.faviconUrl")}
               <input {...field("site.faviconUrl")} placeholder="https://..." className="mt-1 h-10 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none" />
             </label>
             <div className="grid grid-cols-2 gap-4">
               <label className="block text-[13px] text-slate-300">
-                Couleur primaire
+                {t("admin.identity.primaryColor")}
                 <div className="mt-1 flex items-center gap-2">
                   <input type="color" value={form["site.primaryColor"]} onChange={(event) => setForm((current) => ({ ...current, "site.primaryColor": event.target.value }))} className="h-10 w-12 rounded border border-white/10 bg-transparent" />
                   <input {...field("site.primaryColor")} className="h-10 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none" />
                 </div>
               </label>
               <label className="block text-[13px] text-slate-300">
-                Couleur secondaire
+                {t("admin.identity.secondaryColor")}
                 <div className="mt-1 flex items-center gap-2">
                   <input type="color" value={form["site.secondaryColor"]} onChange={(event) => setForm((current) => ({ ...current, "site.secondaryColor": event.target.value }))} className="h-10 w-12 rounded border border-white/10 bg-transparent" />
                   <input {...field("site.secondaryColor")} className="h-10 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none" />
@@ -87,32 +89,32 @@ function AdminIdentite() {
         </AdminCard>
 
         <AdminCard>
-          <h2 className="mb-4 text-[18px] font-bold text-white">Aperçu</h2>
+          <h2 className="mb-4 text-[18px] font-bold text-white">{t("admin.identity.preview")}</h2>
           <div className="rounded-lg bg-white p-4 text-[#111827]">
             <div className="flex items-center justify-between border-b pb-3">
               <strong>{form["site.name"] || "IWOSAN"}</strong>
               <button type="button" style={{ background: form["site.primaryColor"] }} className="rounded-full px-4 py-2 text-white">
-                Bouton
+                {t("admin.identity.button")}
               </button>
             </div>
             <p className="mt-4 rounded p-4" style={{ background: `${form["site.secondaryColor"]}22` }}>
-              {form["site.tagline"] || "Accroche du site"}
+              {form["site.tagline"] || t("admin.identity.defaultTagline")}
             </p>
           </div>
           <label className="mt-4 block text-[13px] text-slate-300">
-            CSS personnalisé (avancé)
+            {t("admin.identity.customCssLabel")}
             <textarea
               {...field("site.customCss")}
-              placeholder="/* CSS personnalisé réservé aux admins techniques */"
+              placeholder={t("admin.identity.customCssPlaceholder")}
               className="mt-1 min-h-32 w-full rounded-lg border border-red-400/40 bg-red-500/10 p-3 text-[13px] text-white outline-none"
             />
           </label>
         </AdminCard>
 
         <AdminCard>
-          <h2 className="mb-4 text-[18px] font-bold text-white">Mode maintenance</h2>
+          <h2 className="mb-4 text-[18px] font-bold text-white">{t("admin.identity.maintenanceMode")}</h2>
           <label className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-3 text-[13px] text-slate-300">
-            Activer le mode maintenance (site public)
+            {t("admin.identity.enableMaintenanceMode")}
             <input
               type="checkbox"
               checked={form["maintenance.enabled"] === "true"}
@@ -121,19 +123,19 @@ function AdminIdentite() {
             />
           </label>
           <label className="mt-4 block text-[13px] text-slate-300">
-            Message affiché aux visiteurs
+            {t("admin.identity.visitorMessage")}
             <textarea {...field("maintenance.message")} className="mt-1 min-h-20 w-full rounded-lg border border-white/10 bg-white/5 p-3 text-[13px] text-white outline-none" />
           </label>
           <label className="mt-4 block text-[13px] text-slate-300">
-            Retour estimé (texte libre)
-            <input {...field("maintenance.returnAt")} placeholder="Ex : dans quelques heures" className="mt-1 h-10 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none" />
+            {t("admin.identity.estimatedReturn")}
+            <input {...field("maintenance.returnAt")} placeholder={t("admin.identity.estimatedReturnPlaceholder")} className="mt-1 h-10 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none" />
           </label>
         </AdminCard>
 
         <AdminCard>
-          <h2 className="mb-4 text-[18px] font-bold text-white">Mode démo</h2>
+          <h2 className="mb-4 text-[18px] font-bold text-white">{t("admin.identity.demoMode")}</h2>
           <label className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-3 text-[13px] text-slate-300">
-            Masquer les comptes et contenus de démonstration (site public)
+            {t("admin.identity.hideDemoContent")}
             <input
               type="checkbox"
               checked={form["demo.hidden"] === "true"}
@@ -142,11 +144,7 @@ function AdminIdentite() {
             />
           </label>
           <p className="mt-3 text-[12px] text-slate-500">
-            Coche cette case pour cacher instantanément les professionnels, produits, articles,
-            monographies, questions du forum, événements et formations de démonstration (créés par
-            prisma/seed.ts) — comme si tout était supprimé. Décoche pour tout faire réapparaître.
-            Rien n'est jamais réellement supprimé, les vrais comptes et contenus ne sont jamais
-            concernés. Le changement peut prendre jusqu'à 15 secondes pour s'appliquer partout.
+            {t("admin.identity.demoModeDesc")}
           </p>
         </AdminCard>
       </div>
@@ -154,10 +152,10 @@ function AdminIdentite() {
       <button
         type="button"
         disabled={updateConfig.isPending}
-        onClick={() => updateConfig.mutate(form, { onSuccess: () => setNotice("Identité du site mise à jour.") })}
+        onClick={() => updateConfig.mutate(form, { onSuccess: () => setNotice(t("admin.identity.updated")) })}
         className="mt-6 rounded-full bg-emerald-400 px-5 py-2.5 text-[13px] font-bold text-[#111827] disabled:opacity-50"
       >
-        {updateConfig.isPending ? "Enregistrement..." : "Enregistrer"}
+        {updateConfig.isPending ? t("admin.identity.saving") : t("admin.identity.save")}
       </button>
     </AdminLayout>
   );

@@ -1,4 +1,5 @@
 ﻿import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import type { EventItem } from "@/types";
 import { MapPin, Wifi } from "lucide-react";
 
@@ -16,7 +17,9 @@ type EventCardProps = {
   onRegister?: () => void;
 };
 
-export function EventCard({ event, actionLabel = "S'inscrire", onRegister }: EventCardProps) {
+export function EventCard({ event, actionLabel, onRegister }: EventCardProps) {
+  const { t } = useTranslation();
+  const resolvedActionLabel = actionLabel ?? t("eventCard.register");
   const d = new Date(event.date);
   const day = d.getDate();
   const month = d.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "").toUpperCase();
@@ -36,9 +39,9 @@ export function EventCard({ event, actionLabel = "S'inscrire", onRegister }: Eve
           <div className="mt-3 flex items-center justify-between flex-wrap gap-2">
             <span className="inline-flex items-center gap-1 text-[12px] text-[var(--color-text-muted)]">{event.online ? <Wifi size={12} /> : <MapPin size={12} />} {event.location}</span>
             {onRegister ? (
-              <button type="button" onClick={onRegister} className={actionClass}>{actionLabel} →</button>
+              <button type="button" onClick={onRegister} className={actionClass}>{resolvedActionLabel} →</button>
             ) : (
-              <Link to={"/agenda/" + event.id} className={actionClass}>{actionLabel} →</Link>
+              <Link to={"/agenda/" + event.id} className={actionClass}>{resolvedActionLabel} →</Link>
             )}
           </div>
         </div>

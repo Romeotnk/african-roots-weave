@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminSubscriptionActions, useAdminSubscriptions } from "@/hooks/useAdminApi";
 import type { AdminSubscription } from "@/lib/api/admin";
@@ -44,6 +45,7 @@ const toForm = (subscription: AdminSubscription): EditForm => ({
 });
 
 function AdminAbonnements() {
+  const { t } = useTranslation();
   const subscriptionsQuery = useAdminSubscriptions();
   const { update } = useAdminSubscriptionActions();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -78,31 +80,31 @@ function AdminAbonnements() {
       },
       {
         onSuccess: () => {
-          setNotice("Abonnement mis à jour.");
+          setNotice(t("admin.subscriptions.updated"));
           setEditingId(null);
           setForm(null);
         },
-        onError: (error) => setNotice(error instanceof Error ? error.message : "Impossible de mettre à jour l'abonnement."),
+        onError: (error) => setNotice(error instanceof Error ? error.message : t("admin.subscriptions.updateError")),
       },
     );
   };
 
   return (
-    <AdminLayout title="Abonnements" description="Forfaits professionnels : plan, quotas d'annonces/téléchargements et statut de renouvellement.">
+    <AdminLayout title={t("admin.subscriptions.title")} description={t("admin.subscriptions.description")}>
       {notice && <div className="mb-4 rounded-lg bg-emerald-500/15 p-3 text-[13px] text-emerald-200">{notice}</div>}
 
-      {subscriptionsQuery.isLoading && <p className="text-[13px] text-slate-400">Chargement...</p>}
-      {subscriptionsQuery.isError && <p className="text-[13px] text-red-300">Impossible de charger les abonnements.</p>}
+      {subscriptionsQuery.isLoading && <p className="text-[13px] text-slate-400">{t("admin.subscriptions.loading")}</p>}
+      {subscriptionsQuery.isError && <p className="text-[13px] text-red-300">{t("admin.subscriptions.loadError")}</p>}
 
       {!subscriptionsQuery.isLoading && !subscriptionsQuery.isError && (
         <div className="overflow-x-auto rounded-[12px] border border-white/10">
           <table className="w-full min-w-[960px] text-left text-[13px]">
             <thead className="bg-white/10 text-slate-300">
-              <tr>{["Professionnel", "Plan", "Prix/mois", "Quotas", "Fin", "Statut", "Renouvellement", "Actions"].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
+              <tr>{[t("admin.subscriptions.colProfessional"), t("admin.subscriptions.colPlan"), t("admin.subscriptions.colPricePerMonth"), t("admin.subscriptions.colQuotas"), t("admin.subscriptions.colEnd"), t("admin.subscriptions.colStatus"), t("admin.subscriptions.colRenewal"), t("admin.subscriptions.colActions")].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
             </thead>
             <tbody>
               {subscriptions.length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-6 text-center text-slate-400">Aucun abonnement.</td></tr>
+                <tr><td colSpan={8} className="px-4 py-6 text-center text-slate-400">{t("admin.subscriptions.noSubscriptions")}</td></tr>
               )}
               {subscriptions.map((subscription) => {
                 const isEditing = editingId === subscription.id;
@@ -141,7 +143,7 @@ function AdminAbonnements() {
                               min={0}
                               value={form.maxListings}
                               onChange={(event) => setForm((current) => (current ? { ...current, maxListings: event.target.value } : current))}
-                              placeholder="Annonces"
+                              placeholder={t("admin.subscriptions.listingsPlaceholder")}
                               className="h-8 w-28 rounded-lg border border-white/20 bg-[#111827] px-2 text-[12px] text-white"
                             />
                             <input
@@ -149,7 +151,7 @@ function AdminAbonnements() {
                               min={0}
                               value={form.maxDownloads}
                               onChange={(event) => setForm((current) => (current ? { ...current, maxDownloads: event.target.value } : current))}
-                              placeholder="Téléchargements"
+                              placeholder={t("admin.subscriptions.downloadsPlaceholder")}
                               className="h-8 w-28 rounded-lg border border-white/20 bg-[#111827] px-2 text-[12px] text-white"
                             />
                           </div>
@@ -169,7 +171,7 @@ function AdminAbonnements() {
                               checked={form.isActive}
                               onChange={(event) => setForm((current) => (current ? { ...current, isActive: event.target.checked } : current))}
                             />
-                            Actif
+                            {t("admin.subscriptions.active")}
                           </label>
                         </td>
                         <td className="px-4 py-3">
@@ -179,7 +181,7 @@ function AdminAbonnements() {
                               checked={form.autoRenew}
                               onChange={(event) => setForm((current) => (current ? { ...current, autoRenew: event.target.checked } : current))}
                             />
-                            Auto
+                            {t("admin.subscriptions.auto")}
                           </label>
                         </td>
                         <td className="px-4 py-3">
@@ -190,14 +192,14 @@ function AdminAbonnements() {
                               onClick={saveEdit}
                               className="rounded-full bg-emerald-400 px-3 py-1 text-[12px] font-bold text-[#111827] disabled:opacity-50"
                             >
-                              Enregistrer
+                              {t("admin.subscriptions.save")}
                             </button>
                             <button
                               type="button"
                               onClick={() => { setEditingId(null); setForm(null); }}
                               className="rounded-full bg-white/10 px-3 py-1 text-[12px] font-bold text-slate-200"
                             >
-                              Annuler
+                              {t("admin.subscriptions.cancel")}
                             </button>
                           </div>
                         </td>
@@ -206,17 +208,17 @@ function AdminAbonnements() {
                       <>
                         <td className="px-4 py-3 font-semibold text-white">{planLabel[subscription.plan]}</td>
                         <td className="px-4 py-3 text-slate-200">{Number(subscription.price).toLocaleString("fr-FR")} FCFA</td>
-                        <td className="px-4 py-3 text-slate-200">{subscription.maxListings} annonces · {subscription.maxDownloads} téléch.</td>
+                        <td className="px-4 py-3 text-slate-200">{t("admin.subscriptions.listingsAndDownloads", { listings: subscription.maxListings, downloads: subscription.maxDownloads })}</td>
                         <td className="px-4 py-3 text-slate-400">{new Date(subscription.endDate).toLocaleDateString("fr-FR")}</td>
                         <td className="px-4 py-3">
                           <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${subscription.isActive ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-slate-400"}`}>
-                            {subscription.isActive ? "Actif" : "Inactif"}
+                            {subscription.isActive ? t("admin.subscriptions.active") : t("admin.subscriptions.inactive")}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-slate-400">{subscription.autoRenew ? "Automatique" : "Manuel"}</td>
+                        <td className="px-4 py-3 text-slate-400">{subscription.autoRenew ? t("admin.subscriptions.automatic") : t("admin.subscriptions.manual")}</td>
                         <td className="px-4 py-3">
                           <button type="button" onClick={() => startEdit(subscription)} className="rounded-full bg-white/10 px-3 py-1 text-[12px] font-bold text-slate-200">
-                            Modifier
+                            {t("admin.subscriptions.edit")}
                           </button>
                         </td>
                       </>

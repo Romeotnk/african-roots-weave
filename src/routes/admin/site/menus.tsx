@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminConfig, useUpdateAdminConfig } from "@/hooks/useAdminApi";
 
@@ -38,6 +39,7 @@ function MenuEditor({
   links: MenuLink[];
   onChange: (links: MenuLink[]) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <AdminCard>
       <h2 className="mb-1 text-[18px] font-bold text-white">{title}</h2>
@@ -52,7 +54,7 @@ function MenuEditor({
                 next[index] = { ...next[index], label: event.target.value };
                 onChange(next);
               }}
-              placeholder="Libellé"
+              placeholder={t("admin.menus.labelPlaceholder")}
               className="h-10 flex-1 rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none"
             />
             <input
@@ -62,14 +64,14 @@ function MenuEditor({
                 next[index] = { ...next[index], to: event.target.value };
                 onChange(next);
               }}
-              placeholder="/chemin"
+              placeholder={t("admin.menus.pathPlaceholder")}
               className="h-10 flex-1 rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none"
             />
             <button
               type="button"
               onClick={() => onChange(links.filter((_, i) => i !== index))}
               className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-red-500/20 text-red-300"
-              aria-label="Supprimer"
+              aria-label={t("admin.menus.delete")}
             >
               <Trash2 size={16} />
             </button>
@@ -81,13 +83,14 @@ function MenuEditor({
         onClick={() => onChange([...links, { to: "/", label: "" }])}
         className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[12px] font-bold text-slate-200"
       >
-        <Plus size={14} /> Ajouter un lien
+        <Plus size={14} /> {t("admin.menus.addLink")}
       </button>
     </AdminCard>
   );
 }
 
 function AdminMenus() {
+  const { t } = useTranslation();
   const configQuery = useAdminConfig();
   const updateConfig = useUpdateAdminConfig();
   const [header, setHeader] = useState<MenuLink[]>([]);
@@ -112,21 +115,21 @@ function AdminMenus() {
         [configKeys.footerNav]: JSON.stringify(footerNav.filter((link) => link.label.trim() && link.to.trim())),
         [configKeys.footerEspaces]: JSON.stringify(footerEspaces.filter((link) => link.label.trim() && link.to.trim())),
       },
-      { onSuccess: () => setNotice("Menus mis à jour.") },
+      { onSuccess: () => setNotice(t("admin.menus.updated")) },
     );
   };
 
   return (
-    <AdminLayout title="Menus" description="Navigation principale (en-tête) et colonnes du pied de page.">
+    <AdminLayout title={t("admin.menus.title")} description={t("admin.menus.description")}>
       {notice && <div className="mb-4 rounded-lg bg-emerald-500/15 p-3 text-[13px] text-emerald-200">{notice}</div>}
       <p className="mb-4 text-[13px] text-slate-400">
-        Laisser un menu vide conserve la navigation par défaut du site.
+        {t("admin.menus.emptyMenuHint")}
       </p>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <MenuEditor title="Navigation principale (en-tête)" description="Liens affichés dans la barre de navigation du site." links={header} onChange={setHeader} />
-        <MenuEditor title="Pied de page — Navigation" description="Colonne « Navigation » du footer." links={footerNav} onChange={setFooterNav} />
-        <MenuEditor title="Pied de page — Nos Espaces" description="Colonne « Nos Espaces » du footer." links={footerEspaces} onChange={setFooterEspaces} />
+        <MenuEditor title={t("admin.menus.headerNavTitle")} description={t("admin.menus.headerNavDesc")} links={header} onChange={setHeader} />
+        <MenuEditor title={t("admin.menus.footerNavTitle")} description={t("admin.menus.footerNavDesc")} links={footerNav} onChange={setFooterNav} />
+        <MenuEditor title={t("admin.menus.footerEspacesTitle")} description={t("admin.menus.footerEspacesDesc")} links={footerEspaces} onChange={setFooterEspaces} />
       </div>
 
       <button
@@ -135,7 +138,7 @@ function AdminMenus() {
         onClick={save}
         className="mt-6 rounded-full bg-emerald-400 px-5 py-2.5 text-[13px] font-bold text-[#111827] disabled:opacity-50"
       >
-        {updateConfig.isPending ? "Enregistrement..." : "Enregistrer"}
+        {updateConfig.isPending ? t("admin.menus.saving") : t("admin.menus.save")}
       </button>
     </AdminLayout>
   );

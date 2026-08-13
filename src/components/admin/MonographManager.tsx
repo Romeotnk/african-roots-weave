@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import {
   useAdminMonographs,
@@ -153,17 +155,21 @@ const REQUIRED_FIELDS: (keyof FormState)[] = [
   "preparationMethods",
 ];
 
-const fieldLabel: Record<string, string> = {
-  scientificName: "Nom scientifique",
-  botanicalDescription: "Description botanique",
-  activeCompounds: "Principes actifs",
-  therapeuticIndications: "Indications thérapeutiques",
-  dosage: "Posologie",
-  contraindications: "Contre-indications",
-  preparationMethods: "Méthodes de préparation",
-};
+function buildFieldLabel(t: TFunction): Record<string, string> {
+  return {
+    scientificName: t("admin.monographManager.fieldScientificName"),
+    botanicalDescription: t("admin.monographManager.fieldBotanicalDescription"),
+    activeCompounds: t("admin.monographManager.fieldActiveCompounds"),
+    therapeuticIndications: t("admin.monographManager.fieldTherapeuticIndications"),
+    dosage: t("admin.monographManager.fieldDosage"),
+    contraindications: t("admin.monographManager.fieldContraindications"),
+    preparationMethods: t("admin.monographManager.fieldPreparationMethods"),
+  };
+}
 
 export function MonographManager() {
+  const { t } = useTranslation();
+  const fieldLabel = buildFieldLabel(t);
   const monographsQuery = useAdminMonographs();
   const createMonograph = useCreateMonograph();
   const updateMonograph = useUpdateMonograph();
@@ -211,7 +217,7 @@ export function MonographManager() {
     setError("");
     const missing = REQUIRED_FIELDS.filter((key) => !form[key] || String(form[key]).trim() === "");
     if (missing.length > 0) {
-      setError(`Champs requis manquants : ${missing.map((key) => fieldLabel[key] ?? key).join(", ")}`);
+      setError(t("admin.monographManager.missingFields", { fields: missing.map((key) => fieldLabel[key] ?? key).join(", ") }));
       return;
     }
 
@@ -221,19 +227,19 @@ export function MonographManager() {
         { id: editingId, payload },
         {
           onSuccess: () => {
-            setNotice(`« ${form.scientificName} » mis à jour.`);
+            setNotice(t("admin.monographManager.updated", { name: form.scientificName }));
             cancel();
           },
-          onError: (mutationError) => setError(mutationError instanceof Error ? mutationError.message : "Échec de la mise à jour."),
+          onError: (mutationError) => setError(mutationError instanceof Error ? mutationError.message : t("admin.monographManager.updateFailed")),
         },
       );
     } else {
       createMonograph.mutate(payload, {
         onSuccess: () => {
-          setNotice(`« ${form.scientificName} » créé.`);
+          setNotice(t("admin.monographManager.created", { name: form.scientificName }));
           cancel();
         },
-        onError: (mutationError) => setError(mutationError instanceof Error ? mutationError.message : "Échec de la création."),
+        onError: (mutationError) => setError(mutationError instanceof Error ? mutationError.message : t("admin.monographManager.createFailed")),
       });
     }
   };
@@ -247,50 +253,50 @@ export function MonographManager() {
       {!creating && (
         <div className="mb-4 flex justify-end">
           <button type="button" onClick={startCreate} className="rounded-full bg-emerald-400 px-4 py-2 text-[12px] font-bold text-[#111827]">
-            + Nouvelle monographie
+            {t("admin.monographManager.newMonograph")}
           </button>
         </div>
       )}
 
       {creating && (
         <div className="mb-6 rounded-[12px] border border-white/10 bg-white/[0.04] p-5">
-          <h3 className="text-[15px] font-bold text-white">{editingId ? "Modifier la monographie" : "Nouvelle monographie"}</h3>
-          {editingId && editingRecordQuery.isLoading && <p className="mt-2 text-[13px] text-slate-400">Chargement...</p>}
+          <h3 className="text-[15px] font-bold text-white">{editingId ? t("admin.monographManager.editMonograph") : t("admin.monographManager.newMonograph")}</h3>
+          {editingId && editingRecordQuery.isLoading && <p className="mt-2 text-[13px] text-slate-400">{t("admin.monographManager.loading")}</p>}
 
           <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <Field label="Nom scientifique *" value={form.scientificName} onChange={setField("scientificName")} />
-            <Field label="Famille botanique" value={form.family} onChange={setField("family")} />
-            <Field label="Origine" value={form.origin} onChange={setField("origin")} />
-            <Field label="Région de distribution" value={form.region} onChange={setField("region")} />
-            <Field label="Catégorie thérapeutique" value={form.therapeuticCategory} onChange={setField("therapeuticCategory")} />
-            <Field label="Illustration (URL image)" value={form.illustration} onChange={setField("illustration")} />
+            <Field label={t("admin.monographManager.scientificNameLabel")} value={form.scientificName} onChange={setField("scientificName")} />
+            <Field label={t("admin.monographManager.family")} value={form.family} onChange={setField("family")} />
+            <Field label={t("admin.monographManager.origin")} value={form.origin} onChange={setField("origin")} />
+            <Field label={t("admin.monographManager.region")} value={form.region} onChange={setField("region")} />
+            <Field label={t("admin.monographManager.therapeuticCategory")} value={form.therapeuticCategory} onChange={setField("therapeuticCategory")} />
+            <Field label={t("admin.monographManager.illustration")} value={form.illustration} onChange={setField("illustration")} />
           </div>
 
-          <TextArea label="Noms vernaculaires (un par ligne)" value={form.vernacularNames} onChange={setField("vernacularNames")} rows={2} />
-          <TextArea label="Résumé" value={form.summary} onChange={setField("summary")} rows={2} />
-          <TextArea label="Indications (une par ligne)" value={form.indications} onChange={setField("indications")} rows={3} />
-          <TextArea label="Description botanique *" value={form.botanicalDescription} onChange={setField("botanicalDescription")} rows={3} />
-          <TextArea label="Principes actifs *" value={form.activeCompounds} onChange={setField("activeCompounds")} rows={3} />
-          <TextArea label="Indications thérapeutiques *" value={form.therapeuticIndications} onChange={setField("therapeuticIndications")} rows={3} />
-          <TextArea label="Posologie *" value={form.dosage} onChange={setField("dosage")} rows={2} />
-          <TextArea label="Contre-indications *" value={form.contraindications} onChange={setField("contraindications")} rows={2} />
-          <TextArea label="Interactions médicamenteuses" value={form.drugInteractions} onChange={setField("drugInteractions")} rows={2} />
-          <TextArea label="Études cliniques" value={form.clinicalStudies} onChange={setField("clinicalStudies")} rows={2} />
-          <TextArea label="Méthodes de préparation *" value={form.preparationMethods} onChange={setField("preparationMethods")} rows={3} />
-          <TextArea label="Préparations (une par ligne)" value={form.preparations} onChange={setField("preparations")} rows={2} />
-          <TextArea label="Précautions (une par ligne)" value={form.precautions} onChange={setField("precautions")} rows={2} />
-          <TextArea label="Références (une par ligne)" value={form.references} onChange={setField("references")} rows={2} />
+          <TextArea label={t("admin.monographManager.vernacularNames")} value={form.vernacularNames} onChange={setField("vernacularNames")} rows={2} />
+          <TextArea label={t("admin.monographManager.summary")} value={form.summary} onChange={setField("summary")} rows={2} />
+          <TextArea label={t("admin.monographManager.indications")} value={form.indications} onChange={setField("indications")} rows={3} />
+          <TextArea label={t("admin.monographManager.botanicalDescriptionLabel")} value={form.botanicalDescription} onChange={setField("botanicalDescription")} rows={3} />
+          <TextArea label={t("admin.monographManager.activeCompoundsLabel")} value={form.activeCompounds} onChange={setField("activeCompounds")} rows={3} />
+          <TextArea label={t("admin.monographManager.therapeuticIndicationsLabel")} value={form.therapeuticIndications} onChange={setField("therapeuticIndications")} rows={3} />
+          <TextArea label={t("admin.monographManager.dosageLabel")} value={form.dosage} onChange={setField("dosage")} rows={2} />
+          <TextArea label={t("admin.monographManager.contraindicationsLabel")} value={form.contraindications} onChange={setField("contraindications")} rows={2} />
+          <TextArea label={t("admin.monographManager.drugInteractions")} value={form.drugInteractions} onChange={setField("drugInteractions")} rows={2} />
+          <TextArea label={t("admin.monographManager.clinicalStudies")} value={form.clinicalStudies} onChange={setField("clinicalStudies")} rows={2} />
+          <TextArea label={t("admin.monographManager.preparationMethodsLabel")} value={form.preparationMethods} onChange={setField("preparationMethods")} rows={3} />
+          <TextArea label={t("admin.monographManager.preparations")} value={form.preparations} onChange={setField("preparations")} rows={2} />
+          <TextArea label={t("admin.monographManager.precautions")} value={form.precautions} onChange={setField("precautions")} rows={2} />
+          <TextArea label={t("admin.monographManager.references")} value={form.references} onChange={setField("references")} rows={2} />
           <TextArea
-            label="Propriétés médicinales — une par ligne, format : propriété | usage | preuve"
+            label={t("admin.monographManager.medicinalProperties")}
             value={form.medicinalProperties}
             onChange={setField("medicinalProperties")}
             rows={3}
           />
-          <TextArea label="Photos de terrain (une URL par ligne)" value={form.fieldPhotos} onChange={setField("fieldPhotos")} rows={2} />
+          <TextArea label={t("admin.monographManager.fieldPhotos")} value={form.fieldPhotos} onChange={setField("fieldPhotos")} rows={2} />
 
           <label className="mt-4 flex items-center gap-2 text-[13px] text-slate-300">
             <input type="checkbox" checked={form.isPublished} onChange={(event) => setField("isPublished")(event.target.checked)} />
-            Publier immédiatement (visible sur le site public)
+            {t("admin.monographManager.publishImmediately")}
           </label>
 
           {error && <p className="mt-3 text-[13px] font-semibold text-red-400">{error}</p>}
@@ -302,10 +308,10 @@ export function MonographManager() {
               onClick={submit}
               className="rounded-full bg-emerald-400 px-5 py-2 text-[13px] font-bold text-[#111827] disabled:opacity-50"
             >
-              {isPending ? "Enregistrement..." : editingId ? "Enregistrer" : "Créer la monographie"}
+              {isPending ? t("admin.monographManager.saving") : editingId ? t("admin.monographManager.save") : t("admin.monographManager.createMonograph")}
             </button>
             <button type="button" onClick={cancel} className="rounded-full border border-white/15 px-5 py-2 text-[13px] font-semibold text-white/80">
-              Annuler
+              {t("admin.monographManager.cancel")}
             </button>
           </div>
         </div>
@@ -314,12 +320,18 @@ export function MonographManager() {
       <div className="overflow-x-auto rounded-[12px] border border-white/10">
         <table className="w-full min-w-[720px] text-left text-[13px]">
           <thead className="bg-white/10 text-slate-300">
-            <tr>{["Nom scientifique", "Catégorie", "Statut", "Créée le", "Actions"].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
+            <tr>{[
+              t("admin.monographManager.headerScientificName"),
+              t("admin.monographManager.headerCategory"),
+              t("admin.monographManager.headerStatus"),
+              t("admin.monographManager.headerCreatedAt"),
+              t("admin.monographManager.headerActions"),
+            ].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
           </thead>
           <tbody>
-            {monographsQuery.isLoading && <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Chargement...</td></tr>}
+            {monographsQuery.isLoading && <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">{t("admin.monographManager.loading")}</td></tr>}
             {!monographsQuery.isLoading && monographs.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Aucune monographie pour le moment.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">{t("admin.monographManager.noMonographs")}</td></tr>
             )}
             {monographs.map((monograph) => (
               <tr key={monograph.id} className="border-t border-white/10">
@@ -327,17 +339,17 @@ export function MonographManager() {
                 <td className="px-4 py-3 text-slate-200">{monograph.therapeuticCategory ?? "—"}</td>
                 <td className="px-4 py-3">
                   <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${monograph.isPublished ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-slate-300"}`}>
-                    {monograph.isPublished ? "Publiée" : "Brouillon"}
+                    {monograph.isPublished ? t("admin.monographManager.published") : t("admin.monographManager.draft")}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-slate-200">{new Date(monograph.createdAt).toLocaleDateString("fr-FR")}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
                     <button type="button" onClick={() => startEdit(monograph.id)} className="rounded-full bg-white/10 px-3 py-1 text-[12px] font-bold text-white">
-                      Modifier
+                      {t("admin.monographManager.edit")}
                     </button>
                     <button type="button" onClick={() => setDeleteTarget(monograph)} className="rounded-full bg-red-500/80 px-3 py-1 text-[12px] font-bold text-white">
-                      Supprimer
+                      {t("admin.monographManager.delete")}
                     </button>
                   </div>
                 </td>
@@ -350,16 +362,16 @@ export function MonographManager() {
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
-        title={`Supprimer « ${deleteTarget?.scientificName ?? ""} » ?`}
-        description="Cette monographie sera définitivement supprimée."
+        title={t("admin.monographManager.deleteConfirmTitle", { name: deleteTarget?.scientificName ?? "" })}
+        description={t("admin.monographManager.deleteConfirmDescription")}
         danger
-        confirmLabel="Supprimer"
+        confirmLabel={t("admin.monographManager.delete")}
         pending={deleteMonograph.isPending}
         onConfirm={() => {
           if (!deleteTarget) return;
           deleteMonograph.mutate(deleteTarget.id, {
             onSuccess: () => {
-              setNotice(`« ${deleteTarget.scientificName} » supprimée.`);
+              setNotice(t("admin.monographManager.deleted", { name: deleteTarget.scientificName }));
               setDeleteTarget(null);
             },
           });

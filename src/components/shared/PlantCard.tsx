@@ -1,9 +1,11 @@
 import type { Plant } from "@/types";
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function PlantCard({ plant, dark = false }: { plant: Plant; dark?: boolean }) {
+  const { t } = useTranslation();
   return (
     <article
       className={cn(
@@ -56,7 +58,7 @@ export function PlantCard({ plant, dark = false }: { plant: Plant; dark?: boolea
             dark ? "text-[var(--brand-gold)]" : "text-[var(--brand-primary)]",
           )}
         >
-          Lire la monographie <ArrowRight size={14} />
+          {t("plantCard.readMonograph")} <ArrowRight size={14} />
         </Link>
       </div>
     </article>

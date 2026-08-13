@@ -2,11 +2,11 @@ import { Role } from "@prisma/client";
 import type { Request } from "express";
 import { prisma } from "../config/db.js";
 import { env } from "../config/env.js";
-import { sendEmail } from "../services/email.service.js";
+import { EMAIL_TEMPLATE_DEFAULTS, sendEmail } from "../services/email.service.js";
 import { writeAuditLog } from "../services/audit.service.js";
 import { invalidateRolePermissionsCache } from "../services/permissions.service.js";
 import { isSuperAdmin, superAdminOnlySpaces } from "./content.controller.js";
-import { invalidatePublicSiteConfigCache } from "./publicSite.controller.js";
+import { invalidatePublicSiteConfigCache, invalidatePublicTranslationsCache } from "./publicSite.controller.js";
 import { withCategoryLabels } from "./product.controller.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -706,6 +706,54 @@ export const updateConfig = asyncHandler(async (req, res) => {
   invalidatePublicSiteConfigCache();
   await writeAuditLog(req, { action: "SITE_CONFIG_UPDATED", metadata: { keys: Object.keys(req.body) } });
   res.json(apiResponse(true, entries, "Config updated"));
+});
+
+// Only override rows are returned — the frontend already holds the static
+// fr/en JSON bundles in memory and merges "override ?? static default"
+// itself, so the backend never needs to know the full key set.
+export const listTranslations = asyncHandler(async (req, res) => {
+  const locale = typeof req.query.locale === "string" ? req.query.locale : "fr";
+  const rows = await prisma.translationOverride.findMany({ where: { locale }, orderBy: { key: "asc" } });
+  res.json(apiResponse(true, rows, "Translations retrieved"));
+});
+
+export const upsertTranslations = asyncHandler(async (req, res) => {
+  const { locale, entries } = req.body as { locale: string; entries: Record<string, string> };
+  if (locale !== "fr" && locale !== "en") throw new ApiError(400, "Invalid locale");
+
+  const rows = await Promise.all(
+    Object.entries(entries ?? {}).map(([key, value]) =>
+      prisma.translationOverride.upsert({
+        where: { locale_key: { locale, key } },
+        update: { value: String(value) },
+        create: { locale, key, value: String(value) },
+      }),
+    ),
+  );
+  invalidatePublicTranslationsCache();
+  await writeAuditLog(req, { action: "TRANSLATIONS_UPDATED", metadata: { locale, keys: Object.keys(entries ?? {}) } });
+  res.json(apiResponse(true, rows, "Translations updated"));
+});
+
+export const listEmailTemplates = asyncHandler(async (_req, res) => {
+  const rows = await prisma.emailTemplate.findMany();
+  const byKey = new Map(rows.map((row) => [row.key, row]));
+  const merged = Object.entries(EMAIL_TEMPLATE_DEFAULTS).map(([key, fallback]) => byKey.get(key) ?? { id: null, key, ...fallback, updatedAt: null });
+  res.json(apiResponse(true, merged, "Email templates retrieved"));
+});
+
+export const upsertEmailTemplate = asyncHandler(async (req, res) => {
+  const key = req.params.key;
+  if (!(key in EMAIL_TEMPLATE_DEFAULTS)) throw new ApiError(404, "Unknown email template");
+  const { subject, html } = req.body as { subject: string; html: string };
+
+  const template = await prisma.emailTemplate.upsert({
+    where: { key },
+    update: { subject, html },
+    create: { key, subject, html },
+  });
+  await writeAuditLog(req, { action: "EMAIL_TEMPLATE_UPDATED", targetId: key, targetType: "EmailTemplate" });
+  res.json(apiResponse(true, template, "Email template updated"));
 });
 
 export const maintenance = asyncHandler(async (req, res) => {

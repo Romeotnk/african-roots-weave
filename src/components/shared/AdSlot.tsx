@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useAdsByPosition } from "@/hooks/useSiteConfig";
 
 // Ad code is admin-authored embed markup (e.g. Google AdSense snippets) that
@@ -5,6 +6,7 @@ import { useAdsByPosition } from "@/hooks/useSiteConfig";
 // it in its own browsing context, isolated from the host page's DOM, cookies
 // and CSP, instead of injecting it directly into the main document.
 export function AdSlot({ position, className }: { position: string; className?: string }) {
+  const { t } = useTranslation();
   const { data } = useAdsByPosition(position);
   const ads = data?.data ?? [];
 
@@ -15,7 +17,7 @@ export function AdSlot({ position, className }: { position: string; className?: 
       {ads.map((ad) => (
         <iframe
           key={ad.id}
-          title={`Publicité ${position}`}
+          title={t("adSlot.iframeTitle", { position })}
           srcDoc={ad.code}
           sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
           loading="lazy"

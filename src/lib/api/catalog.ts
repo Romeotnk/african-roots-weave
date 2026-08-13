@@ -27,6 +27,7 @@ type BackendProduct = {
   expiresAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
+  distanceKm?: number | null;
   seller?: {
     id: string;
     firstName: string;
@@ -112,6 +113,7 @@ type BackendProfessional = {
     lastName: string;
     country: string;
   };
+  distanceKm?: number | null;
 };
 
 const fallbackImage = "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=80&w=1200&auto=format&fit=crop";
@@ -169,6 +171,7 @@ export const toProduct = (product: BackendProduct): Product => ({
     typeof product.seller?.professionalProfile?.longitude === "number"
       ? { lat: product.seller.professionalProfile.latitude, lng: product.seller.professionalProfile.longitude }
       : undefined,
+  distanceKm: product.distanceKm ?? undefined,
 });
 
 export const toProfessional = (professional: BackendProfessional): Professional => ({
@@ -196,6 +199,7 @@ export const toProfessional = (professional: BackendProfessional): Professional 
   latitude: professional.latitude ?? undefined,
   longitude: professional.longitude ?? undefined,
   serviceBookingEnabled: professional.serviceBookingEnabled ?? false,
+  distanceKm: professional.distanceKm ?? undefined,
 });
 
 export const getProducts = async (params: URLSearchParams) => {

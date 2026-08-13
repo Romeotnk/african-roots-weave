@@ -1,4 +1,5 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { getSitePage } from "@/lib/api/site";
 
 export const Route = createFileRoute("/$slug")({
@@ -21,15 +22,16 @@ export const Route = createFileRoute("/$slug")({
 });
 
 function CmsPageView() {
+  const { t } = useTranslation();
   const page = Route.useLoaderData();
 
   return (
     <main className="bg-[var(--brand-bg)]">
       <section className="border-b border-[var(--brand-border-light)] bg-[var(--color-surface)] py-14">
         <div className="container-iwosan max-w-4xl">
-          <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[var(--brand-primary)]">Page</p>
+          <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[var(--brand-primary)]">{t("cmsPage.eyebrow")}</p>
           <h1 className="mt-3 text-[34px] md:text-[48px]">{page.title}</h1>
-          <p className="mt-3 text-[13px] text-[var(--color-text-muted)]">Dernière mise à jour : {page.updatedAt}</p>
+          <p className="mt-3 text-[13px] text-[var(--color-text-muted)]">{t("cmsPage.lastUpdated", { date: page.updatedAt })}</p>
         </div>
       </section>
       <section className="container-iwosan max-w-4xl py-10">

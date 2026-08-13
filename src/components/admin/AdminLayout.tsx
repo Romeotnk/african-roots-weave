@@ -1,5 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import {
   ArrowLeft,
   BarChart3,
@@ -8,6 +10,7 @@ import {
   FileText,
   Home,
   KeyRound,
+  Languages,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -30,44 +33,54 @@ type NavGroup = { label: string; roles?: AppRole[]; links: NavLink[] };
 // Omitting `roles` means "visible to any admin-panel role". Kept in sync with the
 // backend's own checkRole() gates so the menu never promises an action a role
 // can't actually perform.
-const navGroups: NavGroup[] = [
-  {
-    label: "Tableau de bord",
-    links: [{ to: "/admin", label: "Vue d'ensemble", icon: LayoutDashboard }],
-  },
-  {
-    label: "Site & apparence",
-    roles: ["super_admin"],
-    links: [
-      { to: "/admin/site/accueil", label: "Accueil", icon: Home },
-      { to: "/admin/site/menus", label: "Menus", icon: Menu },
-      { to: "/admin/site/pages", label: "Pages", icon: FileText },
-      { to: "/admin/site/identite", label: "Identité", icon: Palette },
-      { to: "/admin/site/publicites", label: "Publicités", icon: Bell },
-      { to: "/admin/roles-permissions", label: "Rôles & permissions", icon: KeyRound },
-    ],
-  },
-  {
-    label: "Opérations",
-    links: [
-      { to: "/admin/contenus", label: "Contenus", icon: FileText, roles: ["super_admin", "admin"] },
-      { to: "/admin/marketplace", label: "Marketplace", icon: Store, roles: ["super_admin", "admin"] },
-      { to: "/admin/utilisateurs", label: "Utilisateurs", icon: Users, roles: ["super_admin", "admin"] },
-      { to: "/admin/finances", label: "Finances", icon: CreditCard, roles: ["super_admin", "admin"] },
-    ],
-  },
-  {
-    label: "Communication",
-    links: [
-      { to: "/admin/communication", label: "Communication", icon: MessageSquare },
-      { to: "/admin/communaute", label: "Communauté", icon: ShieldCheck, roles: ["super_admin", "admin"] },
-      { to: "/admin/affiliation", label: "Affiliation", icon: BarChart3, roles: ["super_admin", "admin"] },
-      { to: "/admin/logs", label: "Logs", icon: FileText, roles: ["super_admin"] },
-    ],
-  },
-];
+function buildNavGroups(t: TFunction): NavGroup[] {
+  return [
+    {
+      label: t("admin.layout.navDashboard"),
+      links: [{ to: "/admin", label: t("admin.layout.navOverview"), icon: LayoutDashboard }],
+    },
+    {
+      // No group-level role restriction: unlike Accueil/Menus/Identité/
+      // Publicités/Rôles & permissions (gated by "system.config", SUPER_ADMIN
+      // only), the backend grants "content.pages.manage" to ADMIN too — so
+      // Pages needs its own, broader roles list rather than inheriting the
+      // group's super_admin-only gate.
+      label: t("admin.layout.navSiteAppearance"),
+      links: [
+        { to: "/admin/site/accueil", label: t("admin.layout.navHome"), icon: Home, roles: ["super_admin"] },
+        { to: "/admin/site/menus", label: t("admin.layout.navMenus"), icon: Menu, roles: ["super_admin"] },
+        { to: "/admin/site/pages", label: t("admin.layout.navPages"), icon: FileText, roles: ["super_admin", "admin"] },
+        { to: "/admin/site/textes", label: t("admin.layout.navSiteTexts"), icon: Languages, roles: ["super_admin"] },
+        { to: "/admin/site/identite", label: t("admin.layout.navIdentity"), icon: Palette, roles: ["super_admin"] },
+        { to: "/admin/site/publicites", label: t("admin.layout.navAds"), icon: Bell, roles: ["super_admin"] },
+        { to: "/admin/roles-permissions", label: t("admin.layout.navRolesPermissions"), icon: KeyRound, roles: ["super_admin"] },
+      ],
+    },
+    {
+      label: t("admin.layout.navOperations"),
+      links: [
+        { to: "/admin/contenus", label: t("admin.layout.navContent"), icon: FileText, roles: ["super_admin", "admin"] },
+        { to: "/admin/marketplace", label: t("admin.layout.navMarketplace"), icon: Store, roles: ["super_admin", "admin"] },
+        { to: "/admin/utilisateurs", label: t("admin.layout.navUsers"), icon: Users, roles: ["super_admin", "admin"] },
+        { to: "/admin/utilisateurs/kyc", label: t("admin.layout.navKycQueue"), icon: ShieldCheck, roles: ["super_admin", "admin"] },
+        { to: "/admin/finances", label: t("admin.layout.navFinances"), icon: CreditCard, roles: ["super_admin", "admin"] },
+      ],
+    },
+    {
+      label: t("admin.layout.navCommunication"),
+      links: [
+        { to: "/admin/communication", label: t("admin.layout.navCommunication"), icon: MessageSquare },
+        { to: "/admin/communaute", label: t("admin.layout.navCommunity"), icon: ShieldCheck, roles: ["super_admin", "admin"] },
+        { to: "/admin/affiliation", label: t("admin.layout.navAffiliation"), icon: BarChart3, roles: ["super_admin", "admin"] },
+        { to: "/admin/logs", label: t("admin.layout.navLogs"), icon: FileText, roles: ["super_admin"] },
+      ],
+    },
+  ];
+}
 
 export function AdminLayout({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
+  const { t } = useTranslation();
+  const navGroups = buildNavGroups(t);
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const navigate = useNavigate();
@@ -88,9 +101,9 @@ export function AdminLayout({ title, description, children }: { title: string; d
       <div className="flex h-16 items-center justify-between border-b border-white/10 px-5">
         <div>
           <p className="text-[18px] font-black tracking-wide">IWOSAN</p>
-          <p className="text-[11px] uppercase tracking-[0.16em] text-emerald-300">Admin</p>
+          <p className="text-[11px] uppercase tracking-[0.16em] text-emerald-300">{t("admin.layout.adminBadge")}</p>
         </div>
-        <button className="lg:hidden" onClick={() => setOpen(false)} aria-label="Fermer le menu admin">
+        <button className="lg:hidden" onClick={() => setOpen(false)} aria-label={t("admin.layout.closeAdminMenu")}>
           <X size={20} />
         </button>
       </div>
@@ -142,7 +155,7 @@ export function AdminLayout({ title, description, children }: { title: string; d
       </div>
       {open && (
         <div className="fixed inset-0 z-[100] lg:hidden" id="admin-mobile-menu">
-          <button className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} aria-label="Fermer" />
+          <button className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} aria-label={t("admin.layout.close")} />
           <div className="relative h-full">{sidebar}</div>
         </div>
       )}
@@ -155,7 +168,7 @@ export function AdminLayout({ title, description, children }: { title: string; d
                 to="/admin"
                 className="mb-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-white/60 transition hover:text-white"
               >
-                <ArrowLeft size={15} /> Retour
+                <ArrowLeft size={15} /> {t("admin.layout.back")}
               </Link>
             )}
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -165,16 +178,16 @@ export function AdminLayout({ title, description, children }: { title: string; d
               </div>
               <div className="flex items-center gap-3">
                 <Link to="/" className="rounded-full border border-white/15 px-4 py-2 text-[13px] font-semibold text-white/80">
-                  Voir le site
+                  {t("admin.layout.viewSite")}
                 </Link>
                 <div className="hidden text-right sm:block">
-                  <p className="text-[13px] font-bold">{user?.email ?? "Admin Iwosan"}</p>
+                  <p className="text-[13px] font-bold">{user?.email ?? t("admin.layout.defaultAdminName")}</p>
                   <p className="text-[11px] text-emerald-300">{roles[0]?.toUpperCase().replaceAll("_", " ") ?? "ADMIN"}</p>
                 </div>
                 <button
                   onClick={handleLogout}
                   className="grid h-10 w-10 place-items-center rounded-full border border-white/15"
-                  aria-label="Déconnexion"
+                  aria-label={t("admin.layout.logout")}
                 >
                   <LogOut size={16} />
                 </button>
@@ -190,8 +203,8 @@ export function AdminLayout({ title, description, children }: { title: string; d
               )}
             >
               {adminState === "admin"
-                ? "Session admin active : accès autorisé aux outils de pilotage."
-                : "Accès admin requis pour utiliser cette interface."}
+                ? t("admin.layout.adminSessionActive")
+                : t("admin.layout.adminAccessRequired")}
             </div>
             {children}
           </div>

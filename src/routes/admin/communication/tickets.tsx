@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminTicketActions, useAdminTickets } from "@/hooks/useAdminApi";
 
@@ -14,6 +15,7 @@ type Ticket = { id: string; subject: string; category: string; status: string; c
 const statuses = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"];
 
 function AdminTicketsPage() {
+  const { t } = useTranslation();
   const ticketsQuery = useAdminTickets();
   const { updateStatus, reply } = useAdminTicketActions();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -23,15 +25,15 @@ function AdminTicketsPage() {
   const active = tickets.find((ticket) => ticket.id === activeId) ?? tickets[0] ?? null;
 
   return (
-    <AdminLayout title="Tickets support" description="Liste, statut et réponses aux demandes utilisateurs.">
-      {ticketsQuery.isLoading && <p className="text-[13px] text-slate-400">Chargement...</p>}
-      {ticketsQuery.isError && <p className="text-[13px] text-red-300">Impossible de charger les tickets.</p>}
+    <AdminLayout title={t("admin.supportTickets.title")} description={t("admin.supportTickets.description")}>
+      {ticketsQuery.isLoading && <p className="text-[13px] text-slate-400">{t("admin.supportTickets.loading")}</p>}
+      {ticketsQuery.isError && <p className="text-[13px] text-red-300">{t("admin.supportTickets.loadError")}</p>}
 
       {!ticketsQuery.isLoading && !ticketsQuery.isError && (
         <div className="grid gap-6 xl:grid-cols-[1fr_1.2fr]">
           <AdminCard className="p-0">
             <div className="max-h-[560px] overflow-y-auto">
-              {tickets.length === 0 && <p className="p-5 text-[13px] text-slate-400">Aucun ticket pour le moment.</p>}
+              {tickets.length === 0 && <p className="p-5 text-[13px] text-slate-400">{t("admin.supportTickets.noTickets")}</p>}
               {tickets.map((ticket) => (
                 <button
                   key={ticket.id}
@@ -64,7 +66,7 @@ function AdminTicketsPage() {
               </div>
 
               <div className="mt-4 max-h-72 space-y-3 overflow-y-auto">
-                {active.messages.length === 0 && <p className="text-[13px] text-slate-500">Aucun message échangé.</p>}
+                {active.messages.length === 0 && <p className="text-[13px] text-slate-500">{t("admin.supportTickets.noMessages")}</p>}
                 {active.messages.map((message) => (
                   <div key={message.id} className="rounded-lg bg-white/5 p-3 text-[13px] text-slate-200">
                     <p>{message.content}</p>
@@ -77,7 +79,7 @@ function AdminTicketsPage() {
                 <textarea
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
-                  placeholder="Écrire une réponse..."
+                  placeholder={t("admin.supportTickets.replyPlaceholder")}
                   className="min-h-20 flex-1 rounded-lg border border-white/10 bg-white/5 p-3 text-[13px] text-white outline-none"
                 />
                 <button
@@ -86,12 +88,12 @@ function AdminTicketsPage() {
                   onClick={() => reply.mutate({ id: active.id, content: draft.trim() }, { onSuccess: () => setDraft("") })}
                   className="rounded-lg bg-emerald-400 px-4 text-[13px] font-bold text-[#111827] disabled:opacity-50"
                 >
-                  Répondre
+                  {t("admin.supportTickets.reply")}
                 </button>
               </div>
             </AdminCard>
           ) : (
-            <AdminCard><p className="text-[13px] text-slate-400">Sélectionnez un ticket pour voir la conversation.</p></AdminCard>
+            <AdminCard><p className="text-[13px] text-slate-400">{t("admin.supportTickets.selectTicket")}</p></AdminCard>
           )}
         </div>
       )}

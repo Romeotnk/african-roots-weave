@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import {
@@ -42,6 +43,7 @@ type Comment = {
 };
 
 function AdminForum() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<"questions" | "comments" | "categories" | "reglages">("questions");
   const questionsQuery = useAdminForumQuestions();
   const commentsQuery = useAdminForumComments();
@@ -54,21 +56,21 @@ function AdminForum() {
   const comments = (commentsQuery.data?.data ?? []) as Comment[];
 
   return (
-    <AdminLayout title="Forum" description="Questions, réponses et commentaires de la communauté.">
+    <AdminLayout title={t("admin.forum.title")} description={t("admin.forum.description")}>
       {notice && <div className="mb-4 rounded-lg bg-emerald-500/15 p-3 text-[13px] text-emerald-200">{notice}</div>}
 
       <div className="mb-4 flex flex-wrap gap-2">
         <button type="button" onClick={() => setTab("questions")} className={`rounded-full px-4 py-1.5 text-[12px] font-bold ${tab === "questions" ? "bg-emerald-400 text-[#111827]" : "bg-white/10 text-slate-300"}`}>
-          Questions
+          {t("admin.forum.tabQuestions")}
         </button>
         <button type="button" onClick={() => setTab("comments")} className={`rounded-full px-4 py-1.5 text-[12px] font-bold ${tab === "comments" ? "bg-emerald-400 text-[#111827]" : "bg-white/10 text-slate-300"}`}>
-          Commentaires
+          {t("admin.forum.tabComments")}
         </button>
         <button type="button" onClick={() => setTab("categories")} className={`rounded-full px-4 py-1.5 text-[12px] font-bold ${tab === "categories" ? "bg-emerald-400 text-[#111827]" : "bg-white/10 text-slate-300"}`}>
-          Catégories
+          {t("admin.forum.tabCategories")}
         </button>
         <button type="button" onClick={() => setTab("reglages")} className={`rounded-full px-4 py-1.5 text-[12px] font-bold ${tab === "reglages" ? "bg-emerald-400 text-[#111827]" : "bg-white/10 text-slate-300"}`}>
-          Réglages
+          {t("admin.forum.tabSettings")}
         </button>
       </div>
 
@@ -76,12 +78,12 @@ function AdminForum() {
         <div className="overflow-x-auto rounded-[12px] border border-white/10">
           <table className="w-full min-w-[760px] text-left text-[13px]">
             <thead className="bg-white/10 text-slate-300">
-              <tr>{["Titre", "Auteur", "Catégorie", "Votes", "Statut", "Actions"].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
+              <tr>{[t("admin.forum.colTitle"), t("admin.forum.colAuthor"), t("admin.forum.colCategory"), t("admin.forum.colVotes"), t("admin.forum.colStatus"), t("admin.forum.colActions")].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
             </thead>
             <tbody>
-              {questionsQuery.isLoading && <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400">Chargement...</td></tr>}
+              {questionsQuery.isLoading && <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400">{t("admin.forum.loading")}</td></tr>}
               {!questionsQuery.isLoading && questions.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400">Aucune question.</td></tr>
+                <tr><td colSpan={6} className="px-4 py-6 text-center text-slate-400">{t("admin.forum.noQuestions")}</td></tr>
               )}
               {questions.map((question) => (
                 <tr key={question.id} className="border-t border-white/10">
@@ -92,10 +94,10 @@ function AdminForum() {
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1.5">
                       <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${question.isHidden ? "bg-red-500/20 text-red-300" : "bg-emerald-500/20 text-emerald-300"}`}>
-                        {question.isHidden ? "Masquée" : "Visible"}
+                        {question.isHidden ? t("admin.forum.hidden") : t("admin.forum.visible")}
                       </span>
-                      {question.isClosed && <span className="rounded-full bg-slate-500/20 px-2 py-1 text-[11px] font-bold text-slate-300">Fermée</span>}
-                      {question.isFeatured && <span className="rounded-full bg-amber-500/20 px-2 py-1 text-[11px] font-bold text-amber-300">En vedette</span>}
+                      {question.isClosed && <span className="rounded-full bg-slate-500/20 px-2 py-1 text-[11px] font-bold text-slate-300">{t("admin.forum.closed")}</span>}
+                      {question.isFeatured && <span className="rounded-full bg-amber-500/20 px-2 py-1 text-[11px] font-bold text-amber-300">{t("admin.forum.featured")}</span>}
                     </div>
                   </td>
                   <td className="px-4 py-3">
@@ -106,12 +108,12 @@ function AdminForum() {
                         onClick={() =>
                           hideQuestion.mutate(
                             { id: question.id, hidden: !question.isHidden },
-                            { onSuccess: () => setNotice(question.isHidden ? "Question republiée." : "Question masquée.") },
+                            { onSuccess: () => setNotice(question.isHidden ? t("admin.forum.questionRepublished") : t("admin.forum.questionHidden")) },
                           )
                         }
                         className={`rounded-full px-3 py-1 text-[12px] font-bold text-white disabled:opacity-50 ${question.isHidden ? "bg-emerald-500/80" : "bg-red-500/80"}`}
                       >
-                        {question.isHidden ? "Republier" : "Masquer"}
+                        {question.isHidden ? t("admin.forum.republish") : t("admin.forum.hide")}
                       </button>
                       <button
                         type="button"
@@ -119,12 +121,12 @@ function AdminForum() {
                         onClick={() =>
                           closeQuestion.mutate(
                             { id: question.id, isClosed: !question.isClosed },
-                            { onSuccess: () => setNotice(question.isClosed ? "Question rouverte." : "Question fermée.") },
+                            { onSuccess: () => setNotice(question.isClosed ? t("admin.forum.questionReopened") : t("admin.forum.questionClosed")) },
                           )
                         }
                         className="rounded-full bg-white/10 px-3 py-1 text-[12px] font-bold text-slate-200 disabled:opacity-50"
                       >
-                        {question.isClosed ? "Rouvrir" : "Fermer"}
+                        {question.isClosed ? t("admin.forum.reopen") : t("admin.forum.close")}
                       </button>
                       <button
                         type="button"
@@ -132,12 +134,12 @@ function AdminForum() {
                         onClick={() =>
                           featureQuestion.mutate(
                             { id: question.id, isFeatured: !question.isFeatured },
-                            { onSuccess: () => setNotice(question.isFeatured ? "Question retirée de la vedette." : "Question mise en vedette.") },
+                            { onSuccess: () => setNotice(question.isFeatured ? t("admin.forum.questionUnfeatured") : t("admin.forum.questionFeatured")) },
                           )
                         }
                         className="rounded-full bg-white/10 px-3 py-1 text-[12px] font-bold text-slate-200 disabled:opacity-50"
                       >
-                        {question.isFeatured ? "Retirer vedette" : "Mettre en vedette"}
+                        {question.isFeatured ? t("admin.forum.unfeature") : t("admin.forum.feature")}
                       </button>
                     </div>
                   </td>
@@ -152,12 +154,12 @@ function AdminForum() {
         <div className="overflow-x-auto rounded-[12px] border border-white/10">
           <table className="w-full min-w-[760px] text-left text-[13px]">
             <thead className="bg-white/10 text-slate-300">
-              <tr>{["Contenu", "Auteur", "Cible", "Statut", "Actions"].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
+              <tr>{[t("admin.forum.colContent"), t("admin.forum.colAuthor"), t("admin.forum.colTarget"), t("admin.forum.colStatus"), t("admin.forum.colActions")].map((header) => <th key={header} className="px-4 py-3 font-bold">{header}</th>)}</tr>
             </thead>
             <tbody>
-              {commentsQuery.isLoading && <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Chargement...</td></tr>}
+              {commentsQuery.isLoading && <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">{t("admin.forum.loading")}</td></tr>}
               {!commentsQuery.isLoading && comments.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">Aucun commentaire.</td></tr>
+                <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-400">{t("admin.forum.noComments")}</td></tr>
               )}
               {comments.map((comment) => (
                 <tr key={comment.id} className="border-t border-white/10">
@@ -166,7 +168,7 @@ function AdminForum() {
                   <td className="px-4 py-3 text-slate-400">{comment.targetType}</td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${comment.isHidden ? "bg-red-500/20 text-red-300" : "bg-emerald-500/20 text-emerald-300"}`}>
-                      {comment.isHidden ? "Masqué" : "Visible"}
+                      {comment.isHidden ? t("admin.forum.hiddenMasc") : t("admin.forum.visible")}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -176,12 +178,12 @@ function AdminForum() {
                       onClick={() =>
                         hideComment.mutate(
                           { id: comment.id, hidden: !comment.isHidden },
-                          { onSuccess: () => setNotice(comment.isHidden ? "Commentaire republié." : "Commentaire masqué.") },
+                          { onSuccess: () => setNotice(comment.isHidden ? t("admin.forum.commentRepublished") : t("admin.forum.commentHidden")) },
                         )
                       }
                       className={`rounded-full px-3 py-1 text-[12px] font-bold text-white disabled:opacity-50 ${comment.isHidden ? "bg-emerald-500/80" : "bg-red-500/80"}`}
                     >
-                      {comment.isHidden ? "Republier" : "Masquer"}
+                      {comment.isHidden ? t("admin.forum.republish") : t("admin.forum.hide")}
                     </button>
                   </td>
                 </tr>
@@ -198,6 +200,7 @@ function AdminForum() {
 }
 
 function CategoriesPanel({ onNotice }: { onNotice: (message: string) => void }) {
+  const { t } = useTranslation();
   const categoriesQuery = useAdminForumCategories();
   const { create, remove } = useAdminForumCategoryActions();
   const [newName, setNewName] = useState("");
@@ -215,7 +218,7 @@ function CategoriesPanel({ onNotice }: { onNotice: (message: string) => void }) 
       { name, parentId: newParentId || undefined },
       {
         onSuccess: () => {
-          onNotice(`Catégorie « ${name} » créée.`);
+          onNotice(t("admin.forum.categoryCreated", { name }));
           setNewName("");
         },
       },
@@ -226,7 +229,7 @@ function CategoriesPanel({ onNotice }: { onNotice: (message: string) => void }) 
     <div>
       <div className="mb-5 flex flex-wrap items-end gap-3 rounded-[12px] border border-white/10 bg-white/[0.04] p-4">
         <label className="block text-[12px] font-semibold text-slate-300">
-          Nouvelle catégorie
+          {t("admin.forum.newCategory")}
           <input
             value={newName}
             onChange={(event) => setNewName(event.target.value)}
@@ -234,13 +237,13 @@ function CategoriesPanel({ onNotice }: { onNotice: (message: string) => void }) 
           />
         </label>
         <label className="block text-[12px] font-semibold text-slate-300">
-          Catégorie parente (facultatif)
+          {t("admin.forum.parentCategoryOptional")}
           <select
             value={newParentId}
             onChange={(event) => setNewParentId(event.target.value)}
             className="mt-1 h-10 w-56 rounded-lg border border-white/10 bg-[#1a1a2e] px-3 text-[13px] text-white"
           >
-            <option value="">— Catégorie racine —</option>
+            <option value="">{t("admin.forum.rootCategoryOption")}</option>
             {roots.map((root) => (
               <option key={root.id} value={root.id}>
                 {root.name}
@@ -254,42 +257,42 @@ function CategoriesPanel({ onNotice }: { onNotice: (message: string) => void }) 
           onClick={addCategory}
           className="h-10 rounded-full bg-emerald-400 px-4 text-[12px] font-bold text-[#111827] disabled:opacity-50"
         >
-          Ajouter
+          {t("admin.forum.add")}
         </button>
       </div>
 
       <div className="space-y-3">
-        {categoriesQuery.isLoading && <p className="text-[13px] text-slate-400">Chargement...</p>}
+        {categoriesQuery.isLoading && <p className="text-[13px] text-slate-400">{t("admin.forum.loading")}</p>}
         {roots.map((root) => (
           <div key={root.id} className="rounded-[12px] border border-white/10 bg-white/[0.04] p-4">
             <div className="flex items-center justify-between gap-3">
               <p className="font-bold text-white">
-                {root.name} <span className="text-[12px] font-normal text-slate-400">({root._count.questions} questions)</span>
+                {root.name} <span className="text-[12px] font-normal text-slate-400">{t("admin.forum.questionsCount", { count: root._count.questions })}</span>
               </p>
               <button
                 type="button"
                 onClick={() => setDeleteTarget({ id: root.id, name: root.name })}
                 className="rounded-full bg-red-500/80 px-3 py-1 text-[12px] font-bold text-white"
               >
-                Supprimer
+                {t("admin.forum.delete")}
               </button>
             </div>
             <div className="mt-3 ml-4 space-y-2 border-l border-white/10 pl-4">
               {childrenOf(root.id).map((child) => (
                 <div key={child.id} className="flex items-center justify-between gap-3">
                   <p className="text-[13px] text-slate-300">
-                    {child.name} <span className="text-[12px] text-slate-500">({child._count.questions} questions)</span>
+                    {child.name} <span className="text-[12px] text-slate-500">{t("admin.forum.questionsCount", { count: child._count.questions })}</span>
                   </p>
                   <button
                     type="button"
                     onClick={() => setDeleteTarget({ id: child.id, name: child.name })}
                     className="rounded-full bg-red-500/80 px-3 py-1 text-[11px] font-bold text-white"
                   >
-                    Supprimer
+                    {t("admin.forum.delete")}
                   </button>
                 </div>
               ))}
-              {childrenOf(root.id).length === 0 && <p className="text-[12px] text-slate-500">Aucune sous-catégorie.</p>}
+              {childrenOf(root.id).length === 0 && <p className="text-[12px] text-slate-500">{t("admin.forum.noSubcategories")}</p>}
             </div>
           </div>
         ))}
@@ -298,16 +301,16 @@ function CategoriesPanel({ onNotice }: { onNotice: (message: string) => void }) 
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
-        title={`Supprimer « ${deleteTarget?.name ?? ""} » ?`}
-        description="Les questions déjà classées dans cette catégorie garderont leur nom de catégorie mais perdront le lien vers cette entrée."
+        title={t("admin.forum.deleteCategoryTitle", { name: deleteTarget?.name ?? "" })}
+        description={t("admin.forum.deleteCategoryDesc")}
         danger
-        confirmLabel="Supprimer"
+        confirmLabel={t("admin.forum.delete")}
         pending={remove.isPending}
         onConfirm={() => {
           if (!deleteTarget) return;
           remove.mutate(deleteTarget.id, {
             onSuccess: () => {
-              onNotice(`Catégorie « ${deleteTarget.name} » supprimée.`);
+              onNotice(t("admin.forum.categoryDeleted", { name: deleteTarget.name }));
               setDeleteTarget(null);
             },
           });
@@ -318,6 +321,7 @@ function CategoriesPanel({ onNotice }: { onNotice: (message: string) => void }) 
 }
 
 function SettingsPanel({ onNotice }: { onNotice: (message: string) => void }) {
+  const { t } = useTranslation();
   const configQuery = useAdminConfig();
   const updateConfig = useUpdateAdminConfig();
   const [restrictPosting, setRestrictPosting] = useState(false);
@@ -344,19 +348,18 @@ function SettingsPanel({ onNotice }: { onNotice: (message: string) => void }) {
         "forum.allowedRoles": allowedRoles.join(","),
         "forum.autoHideReportThreshold": String(threshold),
       },
-      { onSuccess: () => onNotice("Réglages du forum mis à jour.") },
+      { onSuccess: () => onNotice(t("admin.forum.settingsUpdated")) },
     );
   };
 
   return (
     <div className="rounded-[12px] border border-white/10 bg-white/[0.04] p-5">
-      <h2 className="text-[16px] font-bold text-white">Restriction de publication</h2>
+      <h2 className="text-[16px] font-bold text-white">{t("admin.forum.postingRestrictionTitle")}</h2>
       <p className="mt-2 text-[13px] text-slate-400">
-        Par défaut, tout utilisateur vérifié peut poser une question, répondre ou commenter. Activez cette option pour
-        restreindre la publication à certains rôles uniquement.
+        {t("admin.forum.postingRestrictionDesc")}
       </p>
       <label className="mt-4 flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-3 text-[13px] text-slate-300">
-        Restreindre la publication sur le forum
+        {t("admin.forum.restrictPostingLabel")}
         <input
           type="checkbox"
           checked={restrictPosting}
@@ -366,7 +369,7 @@ function SettingsPanel({ onNotice }: { onNotice: (message: string) => void }) {
       </label>
       {restrictPosting && (
         <div className="mt-4">
-          <p className="mb-2 text-[12px] font-bold uppercase tracking-[0.08em] text-slate-400">Rôles autorisés à publier</p>
+          <p className="mb-2 text-[12px] font-bold uppercase tracking-[0.08em] text-slate-400">{t("admin.forum.allowedRolesLabel")}</p>
           <div className="flex flex-wrap gap-2">
             {ROLE_OPTIONS.map((role) => (
               <button
@@ -383,12 +386,12 @@ function SettingsPanel({ onNotice }: { onNotice: (message: string) => void }) {
       )}
 
       <div className="mt-6 border-t border-white/10 pt-5">
-        <h2 className="text-[16px] font-bold text-white">Modération anti-spam</h2>
+        <h2 className="text-[16px] font-bold text-white">{t("admin.forum.antiSpamTitle")}</h2>
         <p className="mt-2 text-[13px] text-slate-400">
-          Une question, réponse ou commentaire est automatiquement masqué dès qu'il atteint ce nombre de signalements.
+          {t("admin.forum.antiSpamDesc")}
         </p>
         <label className="mt-4 flex items-center justify-between gap-4 rounded-lg border border-white/10 bg-white/5 px-3 py-3 text-[13px] text-slate-300">
-          Seuil de signalements avant masquage automatique
+          {t("admin.forum.reportThresholdLabel")}
           <input
             type="number"
             min={1}
@@ -405,7 +408,7 @@ function SettingsPanel({ onNotice }: { onNotice: (message: string) => void }) {
         onClick={save}
         className="mt-5 rounded-full bg-emerald-400 px-5 py-2 text-[13px] font-bold text-[#111827] disabled:opacity-50"
       >
-        {updateConfig.isPending ? "Enregistrement..." : "Enregistrer"}
+        {updateConfig.isPending ? t("admin.forum.saving") : t("admin.forum.save")}
       </button>
     </div>
   );

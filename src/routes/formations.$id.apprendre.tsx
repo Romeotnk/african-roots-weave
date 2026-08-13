@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { CheckCircle2, Download, FileText, Loader2, Lock, MessageCircle, PlayCircle } from "lucide-react";
 import { useMeQuery } from "@/hooks/useAuthApi";
 import {
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/formations/$id/apprendre")({
 });
 
 function Learn() {
+  const { t } = useTranslation();
   const { id } = Route.useParams();
   const formationQuery = useFormation(id);
   const downloadFormation = useDownloadFormation();
@@ -51,7 +53,7 @@ function Learn() {
           // instead of leaving a phantom "done" state that isn't persisted.
           onError: (error) => {
             setDone((current) => current.filter((item) => item !== lessonId));
-            setProgressError(error instanceof Error ? error.message : "La progression n'a pas pu etre enregistree.");
+            setProgressError(error instanceof Error ? error.message : t("formations.learn.progressError"));
           },
         },
       );
@@ -71,12 +73,12 @@ function Learn() {
       <main className="min-h-screen bg-[var(--brand-bg)]">
         <section className="container-iwosan py-16 text-center">
           <FileText size={48} className="mx-auto text-[var(--brand-primary)]" />
-          <h1 className="mt-4 text-[24px] font-bold">Formation introuvable</h1>
+          <h1 className="mt-4 text-[24px] font-bold">{t("formations.learn.notFoundTitle")}</h1>
           <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-            Cette formation n'existe pas ou n'est plus disponible sur Iwosan.
+            {t("formations.learn.notFoundDesc")}
           </p>
           <Link to="/formations" className="mt-6 inline-flex h-11 items-center rounded-full bg-[var(--brand-primary)] px-6 text-[13px] font-semibold text-white">
-            Retour aux formations
+            {t("formations.learn.backToFormations")}
           </Link>
         </section>
       </main>
@@ -90,10 +92,10 @@ function Learn() {
       <main className="min-h-screen bg-[var(--brand-bg)]">
         <section className="container-iwosan py-16 text-center">
           <Lock size={48} className="mx-auto text-[var(--brand-primary)]" />
-          <h1 className="mt-4 text-[24px] font-bold">Connexion requise</h1>
-          <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Connectez-vous pour accéder à cette formation.</p>
+          <h1 className="mt-4 text-[24px] font-bold">{t("formations.learn.loginRequiredTitle")}</h1>
+          <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">{t("formations.learn.loginRequiredDesc")}</p>
           <Link to="/connexion" className="mt-6 inline-flex h-11 items-center rounded-full bg-[var(--brand-primary)] px-6 text-[13px] font-semibold text-white">
-            Se connecter
+            {t("formations.learn.login")}
           </Link>
         </section>
       </main>
@@ -113,16 +115,16 @@ function Learn() {
       <main className="min-h-screen bg-[var(--brand-bg)]">
         <section className="container-iwosan py-16 text-center">
           <Lock size={48} className="mx-auto text-[var(--brand-primary)]" />
-          <h1 className="mt-4 text-[24px] font-bold">Inscription requise</h1>
+          <h1 className="mt-4 text-[24px] font-bold">{t("formations.learn.enrollRequiredTitle")}</h1>
           <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-            Vous devez vous inscrire à cette formation pour accéder à son contenu.
+            {t("formations.learn.enrollRequiredDesc")}
           </p>
           <Link
             to="/formations/$id"
             params={{ id }}
             className="mt-6 inline-flex h-11 items-center rounded-full bg-[var(--brand-primary)] px-6 text-[13px] font-semibold text-white"
           >
-            Voir la formation
+            {t("formations.learn.viewFormation")}
           </Link>
         </section>
       </main>
@@ -133,12 +135,12 @@ function Learn() {
     return (
       <main className="min-h-screen bg-[var(--brand-bg)]">
         <section className="container-iwosan py-16">
-          <Link to="/formations/$id" params={{ id: course.id }} className="text-[13px] font-semibold text-[var(--brand-primary)]">Retour au cours</Link>
+          <Link to="/formations/$id" params={{ id: course.id }} className="text-[13px] font-semibold text-[var(--brand-primary)]">{t("formations.learn.backToCourse")}</Link>
           <div className="mt-6 rounded-[12px] border border-[var(--brand-border-light)] bg-white p-8 text-center">
             <FileText size={48} className="mx-auto text-[var(--brand-primary)]" />
             <h1 className="mt-4 text-[24px] font-bold">{course.title}</h1>
             <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-              Cette ressource est une documentation à télécharger, sans découpage en leçons.
+              {t("formations.learn.documentOnlyDesc")}
             </p>
             <button
               type="button"
@@ -147,13 +149,13 @@ function Learn() {
                 if (!rawFileUrl) return;
                 downloadFormation.mutate(course.id, {
                   onSuccess: () => window.open(rawFileUrl, "_blank", "noopener,noreferrer"),
-                  onError: (error) => setDownloadError(error instanceof Error ? error.message : "Telechargement impossible."),
+                  onError: (error) => setDownloadError(error instanceof Error ? error.message : t("formations.learn.downloadError")),
                 });
               }}
               disabled={downloadFormation.isPending}
               className="mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-6 text-[13px] font-semibold text-white disabled:opacity-50"
             >
-              <Download size={16} /> {downloadFormation.isPending ? "Préparation..." : "Télécharger la ressource"}
+              <Download size={16} /> {downloadFormation.isPending ? t("formations.learn.preparing") : t("formations.learn.downloadResource")}
             </button>
             {downloadError && <p className="mt-3 text-[13px] font-semibold text-red-700">{downloadError}</p>}
           </div>
@@ -166,10 +168,10 @@ function Learn() {
     <main className="min-h-screen bg-[var(--brand-bg)]">
       <section className="grid min-h-screen lg:grid-cols-[320px_1fr]">
         <aside className="border-r border-[var(--brand-border-light)] bg-white p-5">
-          <Link to="/formations/$id" params={{ id: course.id }} className="text-[13px] font-semibold text-[var(--brand-primary)]">Retour au cours</Link>
+          <Link to="/formations/$id" params={{ id: course.id }} className="text-[13px] font-semibold text-[var(--brand-primary)]">{t("formations.learn.backToCourse")}</Link>
           <h1 className="mt-4 text-[22px] font-bold">{course.title}</h1>
           <div className="mt-5">
-            <div className="flex justify-between text-[12px] font-semibold"><span>Progression</span><span>{progress}%</span></div>
+            <div className="flex justify-between text-[12px] font-semibold"><span>{t("formations.learn.progress")}</span><span>{progress}%</span></div>
             <div className="mt-2 h-2 rounded-full bg-[var(--brand-surface-alt)]"><div className="h-2 rounded-full bg-[var(--brand-primary)]" style={{ width: `${progress}%` }} /></div>
           </div>
           <div className="mt-6 space-y-2">
@@ -194,7 +196,7 @@ function Learn() {
               <div>
                 {activeLesson.type === "video" ? <PlayCircle size={54} className="mx-auto text-[var(--brand-gold)]" /> : <FileText size={54} className="mx-auto text-[var(--brand-gold)]" />}
                 <h2 className="mt-4 text-[26px] text-white">{activeLesson.title}</h2>
-                <p className="mt-2 text-white/70">{activeLesson.type === "video" ? "Lecteur vidéo" : "Visionneuse document"} · {activeLesson.duration}</p>
+                <p className="mt-2 text-white/70">{activeLesson.type === "video" ? t("formations.learn.videoPlayer") : t("formations.learn.documentViewer")} · {activeLesson.duration}</p>
               </div>
             </div>
           </div>
@@ -204,10 +206,10 @@ function Learn() {
               disabled={done.includes(activeLesson.id)}
               className="h-11 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white disabled:opacity-60"
             >
-              {done.includes(activeLesson.id) ? "Leçon terminée" : "Marquer comme terminé"}
+              {done.includes(activeLesson.id) ? t("formations.learn.lessonDone") : t("formations.learn.markAsDone")}
             </button>
             <Link to="/forum" className="inline-flex h-11 items-center gap-2 rounded-full border border-[var(--brand-border)] px-5 text-[13px] font-semibold">
-              <MessageCircle size={15} /> Questions sur la lecon
+              <MessageCircle size={15} /> {t("formations.learn.lessonQuestions")}
             </Link>
           </div>
           {progressError && <p className="mt-3 text-[13px] font-semibold text-red-700">{progressError}</p>}

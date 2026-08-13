@@ -2,17 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { Calendar, CheckCircle2, Clock, Loader2, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { useMyBookings, useUpdateBookingStatus } from "@/hooks/useBookingsApi";
 import type { Booking, BookingStatus } from "@/lib/api/bookings";
-
-const statusLabels: Record<BookingStatus, string> = {
-  PENDING: "En attente",
-  CONFIRMED: "Confirmée",
-  CANCELLED: "Annulée",
-  COMPLETED: "Terminée",
-};
 
 const statusClasses: Record<BookingStatus, string> = {
   PENDING: "bg-amber-50 text-amber-700 border-amber-100",
@@ -25,6 +19,13 @@ const formatDateTime = (value: string) =>
   new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 
 function ReservationsPage() {
+  const { t } = useTranslation();
+  const statusLabels: Record<BookingStatus, string> = {
+    PENDING: t("dashboard.proBookings.statusPending"),
+    CONFIRMED: t("dashboard.proBookings.statusConfirmed"),
+    CANCELLED: t("dashboard.proBookings.statusCancelled"),
+    COMPLETED: t("dashboard.proBookings.statusCompleted"),
+  };
   const { data: bookings, isLoading, isError } = useMyBookings("professional");
   const updateStatus = useUpdateBookingStatus();
   const [statusFilter, setStatusFilter] = useState<"all" | BookingStatus>("all");
@@ -51,8 +52,8 @@ function ReservationsPage() {
     updateStatus.mutate(
       { id: booking.id, status },
       {
-        onSuccess: () => setMessage(`Réservation ${statusLabels[status].toLowerCase()}.`),
-        onError: (error) => setMessage(error instanceof Error ? error.message : "Action impossible."),
+        onSuccess: () => setMessage(t("dashboard.proBookings.actionSuccess", { status: statusLabels[status].toLowerCase() })),
+        onError: (error) => setMessage(error instanceof Error ? error.message : t("dashboard.proBookings.actionError")),
       },
     );
   };
@@ -60,13 +61,13 @@ function ReservationsPage() {
   return (
     <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
       <AccountLayout
-        title="Réservations"
-        description={'Confirmez, annulez ou clôturez les demandes de réservation de vos services. Configurez vos disponibilités depuis "Devenir professionnel".'}
+        title={t("dashboard.proBookings.title")}
+        description={t("dashboard.proBookings.description")}
       >
           <div className="grid gap-4 md:grid-cols-3">
-            <StatCard icon={Clock} label="En attente" value={String(pendingCount)} />
-            <StatCard icon={CheckCircle2} label="Confirmées" value={String(confirmedCount)} />
-            <StatCard icon={Calendar} label="Total" value={String(list.length)} />
+            <StatCard icon={Clock} label={t("dashboard.proBookings.pending")} value={String(pendingCount)} />
+            <StatCard icon={CheckCircle2} label={t("dashboard.proBookings.confirmed")} value={String(confirmedCount)} />
+            <StatCard icon={Calendar} label={t("dashboard.proBookings.total")} value={String(list.length)} />
           </div>
 
           <div className="mt-6 rounded-[8px] border border-[var(--brand-border-light)] bg-white p-4">
@@ -76,7 +77,7 @@ function ReservationsPage() {
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Rechercher un client ou un service"
+                  placeholder={t("dashboard.proBookings.searchPlaceholder")}
                   className="h-11 w-full rounded-[8px] border border-[var(--brand-border-light)] bg-white pl-10 pr-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
                 />
               </label>
@@ -92,7 +93,7 @@ function ReservationsPage() {
                         : "bg-[var(--brand-surface-alt)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
                     }`}
                   >
-                    {status === "all" ? "Toutes" : statusLabels[status]}
+                    {status === "all" ? t("dashboard.proBookings.all") : statusLabels[status]}
                   </button>
                 ))}
               </div>
@@ -107,13 +108,13 @@ function ReservationsPage() {
               </div>
             ) : isError ? (
               <div className="rounded-[8px] border border-red-100 bg-red-50 p-6 text-center text-[14px] text-red-700">
-                Impossible de charger vos réservations pour le moment.
+                {t("dashboard.proBookings.loadError")}
               </div>
             ) : filtered.length === 0 ? (
               <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-8 text-center">
                 <Calendar className="mx-auto text-[var(--brand-primary)]" size={34} />
-                <h2 className="mt-4 text-[20px] font-bold">Aucune réservation</h2>
-                <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Les demandes de vos clients apparaîtront ici.</p>
+                <h2 className="mt-4 text-[20px] font-bold">{t("dashboard.proBookings.emptyTitle")}</h2>
+                <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">{t("dashboard.proBookings.emptyDesc")}</p>
               </div>
             ) : (
               filtered.map((booking) => (
@@ -136,20 +137,20 @@ function ReservationsPage() {
                     {booking.status === "PENDING" && (
                       <>
                         <button type="button" onClick={() => act(booking, "CONFIRMED")} disabled={updateStatus.isPending} className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-50">
-                          <CheckCircle2 size={16} /> Confirmer
+                          <CheckCircle2 size={16} /> {t("dashboard.proBookings.confirm")}
                         </button>
                         <button type="button" onClick={() => act(booking, "CANCELLED")} disabled={updateStatus.isPending} className="inline-flex h-10 items-center gap-2 rounded-full bg-red-50 px-4 text-[13px] font-semibold text-red-700 disabled:opacity-50">
-                          <X size={16} /> Refuser
+                          <X size={16} /> {t("dashboard.proBookings.decline")}
                         </button>
                       </>
                     )}
                     {booking.status === "CONFIRMED" && (
                       <>
                         <button type="button" onClick={() => act(booking, "COMPLETED")} disabled={updateStatus.isPending} className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-50">
-                          <CheckCircle2 size={16} /> Marquer terminée
+                          <CheckCircle2 size={16} /> {t("dashboard.proBookings.markCompleted")}
                         </button>
                         <button type="button" onClick={() => act(booking, "CANCELLED")} disabled={updateStatus.isPending} className="inline-flex h-10 items-center gap-2 rounded-full bg-red-50 px-4 text-[13px] font-semibold text-red-700 disabled:opacity-50">
-                          <X size={16} /> Annuler
+                          <X size={16} /> {t("dashboard.proBookings.cancel")}
                         </button>
                       </>
                     )}

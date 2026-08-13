@@ -50,8 +50,8 @@ function Agenda() {
   }, []);
 
   const apiEvents = useMemo(
-    () => ((eventsQuery.data?.events ?? []) as BackendEvent[]).map(toEventItem).filter((item): item is EventItem => Boolean(item)),
-    [eventsQuery.data],
+    () => ((eventsQuery.data?.events ?? []) as BackendEvent[]).map((event) => toEventItem(event, t)).filter((item): item is EventItem => Boolean(item)),
+    [eventsQuery.data, t],
   );
 
   const eventList = apiEvents;

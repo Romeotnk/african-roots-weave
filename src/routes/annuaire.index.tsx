@@ -1,5 +1,5 @@
 ﻿import { createFileRoute } from "@tanstack/react-router";
-import { Grid2X2, Map as MapIcon } from "lucide-react";
+import { Grid2X2, Map as MapIcon, Navigation } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HeroSection } from "@/components/shared/HeroSection";
@@ -37,14 +37,37 @@ function Annuaire() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
+  const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationMessage, setLocationMessage] = useState("");
+
+  const findNearby = () => {
+    if (!navigator.geolocation) {
+      setLocationMessage(t("annuaire.results.geoUnavailable"));
+      return;
+    }
+    setLocationMessage(t("annuaire.results.geoSearching"));
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserPosition({ lat: position.coords.latitude, lng: position.coords.longitude });
+        setLocationMessage("");
+      },
+      () => setLocationMessage(t("annuaire.results.geoDenied")),
+      { enableHighAccuracy: true, timeout: 8000 },
+    );
+  };
 
   const query = useMemo(() => {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (verifiedOnly) params.set("verified", "true");
+    if (userPosition) {
+      params.set("sort", "distance");
+      params.set("lat", String(userPosition.lat));
+      params.set("lng", String(userPosition.lng));
+    }
     params.set("limit", "24");
     return params;
-  }, [search, verifiedOnly]);
+  }, [search, verifiedOnly, userPosition]);
 
   const specialties = useMemo(
     () =>
@@ -99,13 +122,15 @@ function Annuaire() {
     [filteredItems],
   );
 
-  const hasActiveFilters = Boolean(search || specialty || country || verifiedOnly);
+  const hasActiveFilters = Boolean(search || specialty || country || verifiedOnly || userPosition);
 
   const resetFilters = () => {
     setSearch("");
     setSpecialty("");
     setCountry("");
     setVerifiedOnly(false);
+    setUserPosition(null);
+    setLocationMessage("");
   };
 
   useEffect(() => {
@@ -180,6 +205,13 @@ function Annuaire() {
           >
             {t("annuaire.filters.verifiedOnly")}
           </button>
+          <button
+            type="button"
+            onClick={findNearby}
+            className={`inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold border ${userPosition ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]" : "border-[var(--brand-border)] text-[var(--color-text-secondary)]"}`}
+          >
+            <Navigation size={14} /> {t("annuaire.filters.nearby")}
+          </button>
           {hasActiveFilters && (
             <button
               type="button"
@@ -224,6 +256,11 @@ function Annuaire() {
           {error && (
             <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] text-amber-800">
               {error}
+            </p>
+          )}
+          {locationMessage && (
+            <p className="mb-4 rounded-lg border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] px-3 py-2 text-[13px] text-[var(--color-text-secondary)]">
+              {locationMessage}
             </p>
           )}
           <AdSlot position="annuaire_top" className="mb-6" />

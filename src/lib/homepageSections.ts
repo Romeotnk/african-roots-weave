@@ -1,14 +1,18 @@
+import type { TFunction } from "i18next";
+
 export type HomepageSectionKey = "modules" | "portrait" | "products" | "professionals" | "events";
 
 export type HomepageSectionConfig = { key: HomepageSectionKey; enabled: boolean };
 
-export const HOMEPAGE_SECTION_LABELS: Record<HomepageSectionKey, string> = {
-  modules: "Tout l'écosystème (modules)",
-  portrait: "Portrait de la semaine",
-  products: "Produits en avant",
-  professionals: "Praticiens en vedette",
-  events: "Événements à venir",
-};
+export function buildHomepageSectionLabels(t: TFunction): Record<HomepageSectionKey, string> {
+  return {
+    modules: t("admin.homepageAdmin.sectionModules"),
+    portrait: t("admin.homepageAdmin.sectionPortrait"),
+    products: t("admin.homepageAdmin.sectionProducts"),
+    professionals: t("admin.homepageAdmin.sectionProfessionals"),
+    events: t("admin.homepageAdmin.sectionEvents"),
+  };
+}
 
 export const DEFAULT_HOMEPAGE_SECTIONS: HomepageSectionConfig[] = [
   { key: "modules", enabled: true },

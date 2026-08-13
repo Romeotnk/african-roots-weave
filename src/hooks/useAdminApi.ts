@@ -71,11 +71,16 @@ import {
   updateAdminBanner,
   updateAdminPartnerLogo,
   updateAdminCommissionConfig,
+  getAdminEmailTemplates,
+  getAdminTranslations,
   updateAdminConfig,
+  updateAdminEmailTemplate,
   updateAdminSubscription,
   updateAdminTicketStatus,
+  updateAdminTranslations,
   updateAdminUserRole,
   updateMaintenanceMode,
+  setProfessionalPortraitOfWeek,
   updateProfessionalCommissionRate,
   verifyProfessional,
   type AdminUsersQuery,
@@ -112,6 +117,8 @@ export const adminKeys = {
   transactions: (params: Record<string, unknown> = {}) => ["admin", "transactions", params] as const,
   subscriptions: (params: Record<string, unknown> = {}) => ["admin", "subscriptions", params] as const,
   mlmOverview: ["admin", "mlm", "overview"] as const,
+  translations: (locale: string) => ["admin", "translations", locale] as const,
+  emailTemplates: ["admin", "email-templates"] as const,
 };
 
 const adminEnabled = () => typeof window !== "undefined" && isAdminToken();
@@ -191,6 +198,35 @@ export function useAdminConfig() {
   return useQuery({ queryKey: adminKeys.config, queryFn: getAdminConfig, enabled: adminEnabled(), retry: false });
 }
 
+export function useAdminTranslations(locale: string) {
+  return useQuery({
+    queryKey: adminKeys.translations(locale),
+    queryFn: () => getAdminTranslations(locale),
+    enabled: adminEnabled(),
+    retry: false,
+  });
+}
+
+export function useUpdateAdminTranslations() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ locale, entries }: { locale: string; entries: Record<string, string> }) => updateAdminTranslations(locale, entries),
+    onSuccess: (_data, variables) => queryClient.invalidateQueries({ queryKey: adminKeys.translations(variables.locale) }),
+  });
+}
+
+export function useAdminEmailTemplates() {
+  return useQuery({ queryKey: adminKeys.emailTemplates, queryFn: getAdminEmailTemplates, enabled: adminEnabled(), retry: false });
+}
+
+export function useUpdateAdminEmailTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ key, subject, html }: { key: string; subject: string; html: string }) => updateAdminEmailTemplate(key, subject, html),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: adminKeys.emailTemplates }),
+  });
+}
+
 export function useAdminCommissionConfig() {
   return useQuery({ queryKey: adminKeys.commissionConfig, queryFn: getAdminCommissionConfig, enabled: adminEnabled(), retry: false });
 }
@@ -221,6 +257,11 @@ export function useAdminUserActions() {
     updateCommissionRate: useMutation({
       mutationFn: ({ profileId, userId, defaultCommissionRate }: { profileId: string; userId: string; defaultCommissionRate: number | null }) =>
         updateProfessionalCommissionRate(profileId, defaultCommissionRate),
+      onSuccess: (_data, variables) => refresh(variables.userId),
+    }),
+    setPortraitOfWeek: useMutation({
+      mutationFn: ({ profileId, userId, startDate, endDate }: { profileId: string; userId: string; startDate: string; endDate: string }) =>
+        setProfessionalPortraitOfWeek(profileId, startDate, endDate),
       onSuccess: (_data, variables) => refresh(variables.userId),
     }),
   };

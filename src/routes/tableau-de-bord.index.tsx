@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, MessageSquare, Package } from "lucide-react";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { Reveal, staggerDelay } from "@/components/shared/Reveal";
@@ -12,6 +14,15 @@ import { listConversations } from "@/lib/api/messages";
 import { authTokenStore } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { PROFESSIONAL_ACCOUNT_ROLES } from "@/lib/auth/roles";
+
+function buildRoleDisplayLabels(t: TFunction): Record<string, string> {
+  return {
+    super_admin: t("dashboardHome.roleSuperAdmin"),
+    admin: t("dashboardHome.roleAdmin"),
+    professional: t("dashboardHome.roleProfessional"),
+    user: t("dashboardHome.roleUser"),
+  };
+}
 
 export const Route = createFileRoute("/tableau-de-bord/")({
   head: () => ({ meta: [{ title: "Tableau de bord - IWOSAN" }] }),
@@ -33,15 +44,17 @@ type BackendOrder = {
   buyer?: { firstName: string; lastName: string } | null;
 };
 
-const orderStatusLabels: Record<PrismaOrderStatus, string> = {
-  PENDING: "En attente de paiement",
-  PAID: "A expedier",
-  SHIPPED: "Expediee",
-  DELIVERED: "Livree",
-  DISPUTED: "En litige",
-  REFUNDED: "Remboursee",
-  CANCELLED: "Annulee",
-};
+function buildOrderStatusLabels(t: TFunction): Record<PrismaOrderStatus, string> {
+  return {
+    PENDING: t("dashboardHome.orderStatusPending"),
+    PAID: t("dashboardHome.orderStatusPaid"),
+    SHIPPED: t("dashboardHome.orderStatusShipped"),
+    DELIVERED: t("dashboardHome.orderStatusDelivered"),
+    DISPUTED: t("dashboardHome.orderStatusDisputed"),
+    REFUNDED: t("dashboardHome.orderStatusRefunded"),
+    CANCELLED: t("dashboardHome.orderStatusCancelled"),
+  };
+}
 
 const orderStatusClasses: Record<PrismaOrderStatus, string> = {
   PENDING: "bg-slate-100 text-slate-700",
@@ -58,7 +71,11 @@ const formatDateTime = (value: string) =>
   new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 
 function Dashboard() {
-  const { user } = useAuth();
+  const { t } = useTranslation();
+  const roleDisplayLabels = buildRoleDisplayLabels(t);
+  const orderStatusLabels = buildOrderStatusLabels(t);
+  const { user, roles } = useAuth();
+  const roleLabel = roleDisplayLabels[roles[0]] ?? t("dashboardHome.defaultRole");
   const { data: profile } = useMeQuery();
   const hasBackendAuth = Boolean(authTokenStore.get());
 
@@ -87,10 +104,10 @@ function Dashboard() {
   const unreadMessagesCount = conversations.reduce((sum, conversation) => sum + conversation.unreadCount, 0);
 
   const stats = [
-    { label: "Revenus du mois", value: formatMoney(monthlyRevenue) },
-    { label: "Commandes actives", value: String(activeOrdersCount) },
-    { label: "Produits publies", value: String(publishedProductsCount) },
-    { label: "Messages non lus", value: String(unreadMessagesCount) },
+    { label: t("dashboardHome.statMonthlyRevenue"), value: formatMoney(monthlyRevenue) },
+    { label: t("dashboardHome.statActiveOrders"), value: String(activeOrdersCount) },
+    { label: t("dashboardHome.statPublishedProducts"), value: String(publishedProductsCount) },
+    { label: t("dashboardHome.statUnreadMessages"), value: String(unreadMessagesCount) },
   ];
 
   const recentOrders = useMemo(
@@ -109,36 +126,36 @@ function Dashboard() {
 
   const isLoading = ordersQuery.isLoading || productsQuery.isLoading || conversationsQuery.isLoading;
 
-  const fallbackName = (user?.user_metadata?.first_name as string) || user?.email?.split("@")[0] || "Invite";
+  const fallbackName = (user?.user_metadata?.first_name as string) || user?.email?.split("@")[0] || t("dashboardHome.defaultGuestName");
   const displayName = profile ? `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim() || fallbackName : fallbackName;
-  const firstName = displayName.split(" ")[0] || "cher utilisateur";
-  const accountStatus = profile?.isBanned ? "Bloque" : profile?.isActive ? "Actif" : "Inactif";
+  const firstName = displayName.split(" ")[0] || t("dashboardHome.defaultUserName");
+  const accountStatus = profile?.isBanned ? t("dashboardHome.statusBlocked") : profile?.isActive ? t("dashboardHome.statusActive") : t("dashboardHome.statusInactive");
   const joinedAt = profile?.createdAt
     ? new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(profile.createdAt))
-    : "A definir";
+    : t("dashboardHome.toBeDefined");
   const lastLoginAt = profile?.lastLoginAt
     ? new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(profile.lastLoginAt))
-    : "A definir";
+    : t("dashboardHome.toBeDefined");
 
   return (
-    <AccountLayout title={`Bonjour, ${firstName}`} description={profile?.email ?? user?.email ?? "Compte connecte"}>
+    <AccountLayout title={t("dashboardHome.greeting", { name: firstName })} description={profile?.email ?? user?.email ?? t("dashboardHome.connectedAccount")}>
       <div className="space-y-6">
         <section className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">Profil connecte</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">{t("dashboardHome.connectedProfile")}</p>
               <h2 className="mt-1 text-[20px] font-bold text-[var(--color-text-primary)]">{displayName}</h2>
               <p className="mt-1 text-[13px] text-[var(--color-text-secondary)]">{profile?.email ?? user?.email ?? "-"}</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
-              <MiniInfo label="Role" value="Professionnel" />
-              <MiniInfo label="Statut" value={accountStatus} />
-              <MiniInfo label="KYC" value={profile?.kycStatus ?? "NON_DEMARRE"} />
+              <MiniInfo label={t("dashboardHome.role")} value={roleLabel} />
+              <MiniInfo label={t("dashboardHome.status")} value={accountStatus} />
+              <MiniInfo label="KYC" value={profile?.kycStatus ?? t("dashboardHome.kycNotStarted")} />
             </div>
           </div>
           <div className="mt-4 flex flex-wrap gap-4 border-t border-[var(--brand-border-light)] pt-4 text-[12px] text-[var(--color-text-muted)]">
-            <span>Inscrit le {joinedAt}</span>
-            <span>Derniere connexion {lastLoginAt}</span>
+            <span>{t("dashboardHome.registeredOn", { date: joinedAt })}</span>
+            <span>{t("dashboardHome.lastLogin", { date: lastLoginAt })}</span>
           </div>
         </section>
 
@@ -155,16 +172,16 @@ function Dashboard() {
         </section>
 
         <section className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-          <ActionLink to="/marketplace/deposer" primary label="Ajouter un produit" />
-          <ActionLink to="/tableau-de-bord/mes-produits" label="Gerer mes annonces" />
-          <ActionLink to="/messages" label="Voir mes messages" />
+          <ActionLink to="/marketplace/deposer" primary label={t("dashboardHome.addProduct")} />
+          <ActionLink to="/tableau-de-bord/mes-produits" label={t("dashboardHome.manageListings")} />
+          <ActionLink to="/messages" label={t("dashboardHome.viewMessages")} />
         </section>
 
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="overflow-hidden rounded-[12px] border border-[var(--brand-border-light)] bg-white">
             <div className="flex items-center justify-between border-b border-[var(--brand-border-light)] px-5 py-4">
-              <h3 className="text-[15px] font-bold">Commandes recentes</h3>
-              <Link to="/tableau-de-bord/commandes" className="text-[12px] font-semibold text-[var(--brand-primary)]">Tout voir</Link>
+              <h3 className="text-[15px] font-bold">{t("dashboardHome.recentOrders")}</h3>
+              <Link to="/tableau-de-bord/commandes" className="text-[12px] font-semibold text-[var(--brand-primary)]">{t("dashboardHome.seeAll")}</Link>
             </div>
             {ordersQuery.isLoading ? (
               <div className="flex items-center justify-center p-8">
@@ -173,20 +190,20 @@ function Dashboard() {
             ) : recentOrders.length === 0 ? (
               <div className="p-8 text-center">
                 <Package className="mx-auto text-[var(--brand-primary)]" size={28} />
-                <p className="mt-3 text-[13px] text-[var(--color-text-muted)]">Aucune commande pour le moment.</p>
+                <p className="mt-3 text-[13px] text-[var(--color-text-muted)]">{t("dashboardHome.noOrdersYet")}</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-[13px]">
                   <thead className="bg-[var(--brand-surface-alt)] text-[11px] uppercase tracking-wider text-[var(--color-text-muted)]">
-                    <tr><th className="px-5 py-3 text-left">ID</th><th className="px-5 py-3 text-left">Produit</th><th className="px-5 py-3 text-left">Acheteur</th><th className="px-5 py-3 text-left">Montant</th><th className="px-5 py-3 text-left">Statut</th></tr>
+                    <tr><th className="px-5 py-3 text-left">{t("dashboardHome.colId")}</th><th className="px-5 py-3 text-left">{t("dashboardHome.colProduct")}</th><th className="px-5 py-3 text-left">{t("dashboardHome.colBuyer")}</th><th className="px-5 py-3 text-left">{t("dashboardHome.colAmount")}</th><th className="px-5 py-3 text-left">{t("dashboardHome.colStatus")}</th></tr>
                   </thead>
                   <tbody>
                     {recentOrders.map((order) => (
                       <tr key={order.id} className="border-t border-[var(--brand-border-light)]">
                         <td className="px-5 py-3 font-mono text-[12px]">{order.id.slice(0, 8)}</td>
-                        <td className="px-5 py-3">{order.product?.title ?? "Commande"}</td>
-                        <td className="px-5 py-3 text-[var(--color-text-muted)]">{order.buyer ? `${order.buyer.firstName} ${order.buyer.lastName}` : "Client"}</td>
+                        <td className="px-5 py-3">{order.product?.title ?? t("dashboardHome.defaultOrderTitle")}</td>
+                        <td className="px-5 py-3 text-[var(--color-text-muted)]">{order.buyer ? `${order.buyer.firstName} ${order.buyer.lastName}` : t("dashboardHome.defaultBuyer")}</td>
                         <td className="px-5 py-3 font-semibold">{formatMoney(Number(order.totalAmount))}</td>
                         <td className="px-5 py-3"><span className={`rounded px-2 py-1 text-[11px] font-semibold ${orderStatusClasses[order.status]}`}>{orderStatusLabels[order.status]}</span></td>
                       </tr>
@@ -199,8 +216,8 @@ function Dashboard() {
 
           <div className="overflow-hidden rounded-[12px] border border-[var(--brand-border-light)] bg-white">
             <div className="flex items-center justify-between border-b border-[var(--brand-border-light)] px-5 py-4">
-              <h3 className="text-[15px] font-bold">Messages recents</h3>
-              <Link to="/messages" className="text-[12px] font-semibold text-[var(--brand-primary)]">Tout voir</Link>
+              <h3 className="text-[15px] font-bold">{t("dashboardHome.recentMessages")}</h3>
+              <Link to="/messages" className="text-[12px] font-semibold text-[var(--brand-primary)]">{t("dashboardHome.seeAll")}</Link>
             </div>
             {conversationsQuery.isLoading ? (
               <div className="flex items-center justify-center p-8">
@@ -209,7 +226,7 @@ function Dashboard() {
             ) : recentConversations.length === 0 ? (
               <div className="p-8 text-center">
                 <MessageSquare className="mx-auto text-[var(--brand-primary)]" size={28} />
-                <p className="mt-3 text-[13px] text-[var(--color-text-muted)]">Aucun message pour le moment.</p>
+                <p className="mt-3 text-[13px] text-[var(--color-text-muted)]">{t("dashboardHome.noMessagesYet")}</p>
               </div>
             ) : (
               <ul>

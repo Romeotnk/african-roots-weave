@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { MessageCircle, Send } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { useMyTickets, useReplyTicket } from "@/hooks/useTicketsApi";
@@ -15,12 +16,6 @@ export const Route = createFileRoute("/mon-compte/tickets")({
     </ProtectedRoute>
   ),
 });
-
-const statusLabels: Record<SupportTicketStatus, string> = {
-  open: "Ouvert",
-  pending: "En cours",
-  resolved: "Resolu",
-};
 
 const statusClasses: Record<SupportTicketStatus, string> = {
   open: "bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]",
@@ -64,9 +59,16 @@ function toSupportTicket(ticket: BackendTicket, myUserId: string | undefined): S
 }
 
 function TicketsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const ticketsQuery = useMyTickets();
   const replyTicket = useReplyTicket();
+
+  const statusLabels: Record<SupportTicketStatus, string> = {
+    open: t("account.tickets.statusOpen"),
+    pending: t("account.tickets.statusPending"),
+    resolved: t("account.tickets.statusResolved"),
+  };
 
   const apiTickets = useMemo(() => {
     const raw = (ticketsQuery.data?.data ?? []) as BackendTicket[];
@@ -85,13 +87,13 @@ function TicketsPage() {
 
   const sendReply = () => {
     if (!active) {
-      setActionMessage("Selectionnez un ticket avant de repondre.");
+      setActionMessage(t("account.tickets.selectTicketFirst"));
       return;
     }
 
     const content = draft.trim();
     if (content.length < 3) {
-      setActionMessage("Votre reponse doit contenir au moins 3 caracteres.");
+      setActionMessage(t("account.tickets.replyTooShort"));
       return;
     }
 
@@ -100,18 +102,18 @@ function TicketsPage() {
       {
         onSuccess: () => {
           setDraft("");
-          setActionMessage("Reponse envoyee au support. Le ticket repasse en cours de traitement.");
+          setActionMessage(t("account.tickets.replySent"));
         },
-        onError: (error) => setActionMessage(error instanceof Error ? error.message : "Impossible d'envoyer la reponse."),
+        onError: (error) => setActionMessage(error instanceof Error ? error.message : t("account.tickets.replyError")),
       },
     );
   };
 
   return (
-    <AccountLayout title="Mes tickets" description="Suivez vos échanges avec le support Iwosan.">
+    <AccountLayout title={t("account.tickets.title")} description={t("account.tickets.description")}>
         <div className="flex flex-wrap items-center gap-3">
           <label className="text-[13px] font-semibold text-[var(--color-text-muted)]" htmlFor="ticket-status-filter">
-            Filtrer
+            {t("account.tickets.filter")}
           </label>
           <select
             id="ticket-status-filter"
@@ -122,10 +124,10 @@ function TicketsPage() {
             }}
             className="h-10 rounded-full border border-[var(--brand-border)] bg-white px-4 text-[13px] font-semibold"
           >
-            <option value="all">Tous les tickets</option>
-            <option value="open">Ouverts</option>
-            <option value="pending">En cours</option>
-            <option value="resolved">Resolus</option>
+            <option value="all">{t("account.tickets.filterAll")}</option>
+            <option value="open">{t("account.tickets.filterOpen")}</option>
+            <option value="pending">{t("account.tickets.filterPending")}</option>
+            <option value="resolved">{t("account.tickets.filterResolved")}</option>
           </select>
         </div>
 
@@ -135,10 +137,10 @@ function TicketsPage() {
           </p>
         )}
 
-        {ticketsQuery.isLoading && <p className="mt-6 text-[13px] text-[var(--color-text-muted)]">Chargement de vos tickets...</p>}
+        {ticketsQuery.isLoading && <p className="mt-6 text-[13px] text-[var(--color-text-muted)]">{t("account.tickets.loading")}</p>}
         {ticketsQuery.isError && (
           <p className="mt-6 rounded-[8px] border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700">
-            Impossible de charger vos tickets. Réessayez dans un instant.
+            {t("account.tickets.loadError")}
           </p>
         )}
 
@@ -147,7 +149,7 @@ function TicketsPage() {
           <aside className="space-y-3">
             {filteredTickets.length === 0 && (
               <div className="rounded-[12px] border border-dashed border-[var(--brand-border)] bg-white p-5 text-[13px] text-[var(--color-text-muted)]">
-                Aucun ticket ne correspond a ce filtre.
+                {t("account.tickets.noMatch")}
               </div>
             )}
 
@@ -170,7 +172,7 @@ function TicketsPage() {
                   </span>
                 </div>
                 <p className="mt-1 text-[12px] text-[var(--color-text-muted)]">
-                  {ticket.id} - {ticket.category} - {ticket.createdAt}
+                  {t("account.tickets.ticketSummary", { id: ticket.id, category: ticket.category, date: ticket.createdAt })}
                 </p>
               </button>
             ))}
@@ -181,9 +183,9 @@ function TicketsPage() {
               <div className="grid min-h-[280px] place-items-center text-center">
                 <div>
                   <MessageCircle className="mx-auto text-[var(--brand-primary)]" size={28} />
-                  <h2 className="mt-3 text-[20px] font-bold">Aucun ticket selectionne</h2>
+                  <h2 className="mt-3 text-[20px] font-bold">{t("account.tickets.noTicketSelected")}</h2>
                   <p className="mt-2 text-[13px] text-[var(--color-text-muted)]">
-                    Changez le filtre ou creez un ticket depuis le centre d'aide.
+                    {t("account.tickets.changeFilterHint")}
                   </p>
                 </div>
               </div>
@@ -216,7 +218,7 @@ function TicketsPage() {
                     onKeyDown={(event) => {
                       if (event.key === "Enter") sendReply();
                     }}
-                    placeholder="Repondre au support..."
+                    placeholder={t("account.tickets.replyPlaceholder")}
                     className="h-11 min-w-0 flex-1 rounded-full border border-[var(--brand-border)] px-4"
                   />
                   <button
@@ -225,7 +227,7 @@ function TicketsPage() {
                     disabled={draft.trim().length < 3 || replyTicket.isPending}
                     className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:bg-[var(--brand-surface-alt)] disabled:text-[var(--color-text-muted)]"
                   >
-                    <Send size={15} /> {replyTicket.isPending ? "Envoi..." : "Envoyer"}
+                    <Send size={15} /> {replyTicket.isPending ? t("account.tickets.sending") : t("account.tickets.send")}
                   </button>
                 </div>
               </>

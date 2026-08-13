@@ -34,6 +34,8 @@ export interface Professional {
   socialLinks?: ProfessionalSocialLinks;
   latitude?: number;
   longitude?: number;
+  /** Only present when the list was fetched with sort=distance + lat/lng. */
+  distanceKm?: number;
 }
 
 export interface ProfessionalBooking {
@@ -106,6 +108,8 @@ export interface Product {
     lat: number;
     lng: number;
   };
+  /** Only present when the list was fetched with sort=distance + lat/lng. */
+  distanceKm?: number;
   description?: string;
   dosage?: string;
   composition?: string;

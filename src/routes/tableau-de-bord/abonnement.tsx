@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { CheckCircle2, CreditCard, Download, Layers, Loader2, RefreshCw } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useMySubscription, useSubscriptionPlans, useUpgradeSubscription } from "@/hooks/useSubscriptionApi";
@@ -17,10 +18,11 @@ export const Route = createFileRoute("/tableau-de-bord/abonnement")({
 });
 
 const PLAN_ORDER: SubscriptionPlanKey[] = ["FREE", "BASIC", "PRO", "EXPERT"];
-const formatMoney = (amount: number) => (amount === 0 ? "Gratuit" : `${amount.toLocaleString("fr-FR")} FCFA/mois`);
 const formatDate = (value: string | null) => (value ? new Date(value).toLocaleDateString("fr-FR") : "-");
 
 function SubscriptionPage() {
+  const { t } = useTranslation();
+  const formatMoney = (amount: number) => (amount === 0 ? t("dashboard.subscription.free") : t("dashboard.subscription.priceMonthly", { amount: amount.toLocaleString("fr-FR") }));
   const { data: plans, isLoading: plansLoading } = useSubscriptionPlans();
   const { data: subscription, isLoading: subscriptionLoading } = useMySubscription();
   const upgrade = useUpgradeSubscription();
@@ -35,7 +37,7 @@ function SubscriptionPage() {
 
     if (plan.price > 0) {
       const confirmed = window.confirm(
-        `Confirmer le passage au forfait ${plan.label} pour ${formatMoney(plan.price)} ? Le montant sera débité de votre portefeuille.`,
+        t("dashboard.subscription.confirmUpgrade", { plan: plan.label, price: formatMoney(plan.price) }),
       );
       if (!confirmed) return;
     }
@@ -45,11 +47,11 @@ function SubscriptionPage() {
       { plan: planKey, autoRenew },
       {
         onSuccess: () => {
-          setFeedback(`Forfait ${plan.label} activé.`);
+          setFeedback(t("dashboard.subscription.planActivated", { plan: plan.label }));
           setPendingPlan(null);
         },
         onError: (error: unknown) => {
-          setFeedback(error instanceof Error ? error.message : "Échec de la mise à jour de l'abonnement.");
+          setFeedback(error instanceof Error ? error.message : t("dashboard.subscription.upgradeError"));
           setPendingPlan(null);
         },
       },
@@ -60,29 +62,29 @@ function SubscriptionPage() {
 
   return (
     <AccountLayout
-      title="Mon abonnement"
-      description="Choisissez le forfait adapté à votre activité : nombre d'annonces actives et de téléchargements de produits numériques."
+      title={t("dashboard.subscription.title")}
+      description={t("dashboard.subscription.description")}
     >
         {isLoading ? (
-          <p className="text-[14px] text-[var(--color-text-muted)]">Chargement...</p>
+          <p className="text-[14px] text-[var(--color-text-muted)]">{t("dashboard.subscription.loading")}</p>
         ) : (
           <>
             {subscription && (
               <div className="grid gap-4 md:grid-cols-3">
                 <StatCard
                   icon={Layers}
-                  label="Forfait actuel"
+                  label={t("dashboard.subscription.currentPlan")}
                   value={plans?.[subscription.plan]?.label ?? subscription.plan}
                 />
                 <StatCard
                   icon={CheckCircle2}
-                  label="Annonces actives"
+                  label={t("dashboard.subscription.activeListings")}
                   value={`${subscription.activeListings} / ${subscription.maxListings}`}
                 />
                 <StatCard
                   icon={RefreshCw}
-                  label="Renouvellement"
-                  value={subscription.plan === "FREE" ? "-" : subscription.autoRenew ? `Auto — ${formatDate(subscription.endDate)}` : formatDate(subscription.endDate)}
+                  label={t("dashboard.subscription.renewal")}
+                  value={subscription.plan === "FREE" ? "-" : subscription.autoRenew ? t("dashboard.subscription.autoRenewal", { date: formatDate(subscription.endDate) }) : formatDate(subscription.endDate)}
                 />
               </div>
             )}
@@ -101,7 +103,7 @@ function SubscriptionPage() {
                 onChange={(event) => setAutoRenew(event.target.checked)}
                 className="h-4 w-4"
               />
-              <label htmlFor="autoRenew">Activer le renouvellement automatique (débit du portefeuille tous les 30 jours)</label>
+              <label htmlFor="autoRenew">{t("dashboard.subscription.autoRenewLabel")}</label>
             </div>
 
             <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -122,10 +124,10 @@ function SubscriptionPage() {
                       <p className="mt-1 text-[22px] font-extrabold text-[var(--brand-primary)]">{formatMoney(plan.price)}</p>
                       <ul className="mt-4 flex-1 space-y-2 text-[13px] text-[var(--color-text-secondary)]">
                         <li className="flex items-center gap-2">
-                          <Layers size={14} /> {plan.maxListings} annonces actives
+                          <Layers size={14} /> {t("dashboard.subscription.listingsCount", { count: plan.maxListings })}
                         </li>
                         <li className="flex items-center gap-2">
-                          <Download size={14} /> {plan.maxDownloads} téléchargements / produit numérique
+                          <Download size={14} /> {t("dashboard.subscription.downloadsCount", { count: plan.maxDownloads })}
                         </li>
                       </ul>
                       <button
@@ -141,10 +143,10 @@ function SubscriptionPage() {
                         {isPending ? (
                           <Loader2 size={16} className="animate-spin" />
                         ) : isCurrent ? (
-                          "Forfait actuel"
+                          t("dashboard.subscription.currentPlan")
                         ) : (
                           <>
-                            <CreditCard size={16} /> Choisir
+                            <CreditCard size={16} /> {t("dashboard.subscription.choose")}
                           </>
                         )}
                       </button>

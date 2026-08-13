@@ -1,18 +1,21 @@
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { ArrowUp, Award, CheckCircle2, Eye, MessageCircle, Star } from "lucide-react";
 import type { Question } from "@/types";
 
-function formatQuestionDate(date: string) {
+function formatQuestionDate(date: string, t: TFunction) {
   const diff = Date.now() - new Date(date).getTime();
   const minutes = Math.max(1, Math.floor(diff / 60000));
-  if (minutes < 60) return `il y a ${minutes} min`;
+  if (minutes < 60) return t("questionCard.minutesAgo", { count: minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `il y a ${hours} h`;
+  if (hours < 24) return t("questionCard.hoursAgo", { count: hours });
   const days = Math.floor(hours / 24);
-  return `il y a ${days} j`;
+  return t("questionCard.daysAgo", { count: days });
 }
 
 export function QuestionCard({ question }: { question: Question }) {
+  const { t } = useTranslation();
   return (
     <article className="flex gap-5 rounded-[12px] border border-[var(--brand-border)] bg-[var(--color-surface)] p-5 transition hover:border-[var(--brand-primary)]">
       <div className="hidden w-16 shrink-0 flex-col items-center gap-3 text-center sm:flex">
@@ -29,7 +32,7 @@ export function QuestionCard({ question }: { question: Question }) {
               : "bg-[var(--brand-surface-alt)] text-[var(--color-text-secondary)]"
           }`}
         >
-          {question.answers} rep.
+          {question.answers} {t("questionCard.answersAbbr")}
         </div>
         <div className="inline-flex items-center gap-1 text-[11px] text-[var(--color-text-muted)]">
           <Eye size={11} /> {question.views}
@@ -43,12 +46,12 @@ export function QuestionCard({ question }: { question: Question }) {
           </span>
           {question.resolved && (
             <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-700">
-              <CheckCircle2 size={13} /> Repondue
+              <CheckCircle2 size={13} /> {t("questionCard.answered")}
             </span>
           )}
           {question.featured && (
             <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-2 py-1 text-[11px] font-bold text-amber-700">
-              <Star size={13} /> Vedette
+              <Star size={13} /> {t("questionCard.featured")}
             </span>
           )}
         </div>
@@ -89,11 +92,11 @@ export function QuestionCard({ question }: { question: Question }) {
               height={24}
               className="h-6 w-6 rounded-full object-cover"
             />
-            <span>par {question.authorName}</span>
+            <span>{t("questionCard.byAuthor", { name: question.authorName })}</span>
             <span className="inline-flex items-center gap-1">
               <Award size={12} /> {question.authorReputation ?? 0}
             </span>
-            <span>{formatQuestionDate(question.date)}</span>
+            <span>{formatQuestionDate(question.date, t)}</span>
           </div>
         </div>
       </div>

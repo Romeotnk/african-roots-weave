@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useMyOrders, useOpenOrderDispute, useRequestOrderRefund } from "@/hooks/useOrdersApi";
 
@@ -27,14 +29,29 @@ const reasons = [
   "Autre problème",
 ];
 
-const refundStatusLabels: Record<string, string> = {
-  REQUESTED: "Demande en attente d'examen",
-  APPROVED: "Approuvée par l'administration",
-  REJECTED: "Rejetée par l'administration",
-  PROCESSED: "Remboursement effectué",
-};
+function buildReasonLabels(t: TFunction): Record<string, string> {
+  return {
+    "Produit non reçu": t("dispute.reasonNotReceived"),
+    "Produit différent de l'annonce": t("dispute.reasonDifferentFromListing"),
+    "Produit endommagé": t("dispute.reasonDamaged"),
+    "Service non réalisé": t("dispute.reasonServiceNotDone"),
+    "Autre problème": t("dispute.reasonOther"),
+  };
+}
+
+function buildRefundStatusLabels(t: TFunction): Record<string, string> {
+  return {
+    REQUESTED: t("dispute.refundStatusRequested"),
+    APPROVED: t("dispute.refundStatusApproved"),
+    REJECTED: t("dispute.refundStatusRejected"),
+    PROCESSED: t("dispute.refundStatusProcessed"),
+  };
+}
 
 function DisputePage() {
+  const { t } = useTranslation();
+  const reasonLabels = buildReasonLabels(t);
+  const refundStatusLabels = buildRefundStatusLabels(t);
   const { id } = Route.useParams();
   const ordersQuery = useMyOrders("buyer");
   const openDispute = useOpenOrderDispute();
@@ -54,12 +71,12 @@ function DisputePage() {
     setFormMessage("");
 
     if (!reason) {
-      setFormError("Sélectionnez une raison pour ouvrir la demande.");
+      setFormError(t("dispute.reasonRequired"));
       return;
     }
 
     if (cleanDescription.length < 25) {
-      setFormError("Ajoutez une description plus précise, au moins 25 caractères.");
+      setFormError(t("dispute.descriptionTooShort"));
       return;
     }
 
@@ -71,10 +88,10 @@ function DisputePage() {
         onSuccess: () =>
           setFormMessage(
             action === "dispute"
-              ? "Litige soumis. Le statut passe à « En litige »."
-              : "Demande de remboursement soumise. Elle sera examinée par l'équipe Iwosan.",
+              ? t("dispute.disputeSubmitted")
+              : t("dispute.refundSubmitted"),
           ),
-        onError: (error) => setFormError(error instanceof Error ? error.message : "Impossible de soumettre la demande."),
+        onError: (error) => setFormError(error instanceof Error ? error.message : t("dispute.submitError")),
       },
     );
   };
@@ -87,11 +104,11 @@ function DisputePage() {
       <section className="border-b border-[var(--brand-border-light)] bg-white">
         <div className="container-iwosan py-8">
           <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--brand-primary)]">
-            Commande {id}
+            {t("dispute.orderLabel", { id })}
           </p>
-          <h1 className="mt-2 text-[32px] md:text-[42px]">Ouvrir un litige ou demander un remboursement</h1>
+          <h1 className="mt-2 text-[32px] md:text-[42px]">{t("dispute.title")}</h1>
           <p className="mt-2 max-w-2xl text-[14px] text-[var(--color-text-muted)]">
-            Décrivez clairement le problème pour accélérer la médiation entre acheteur, vendeur et support IWOSAN.
+            {t("dispute.description")}
           </p>
         </div>
       </section>
@@ -99,51 +116,51 @@ function DisputePage() {
       <section className="container-iwosan grid gap-6 py-8 lg:grid-cols-[1fr_320px]">
         <form onSubmit={submitDispute} className="space-y-5 rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
           <div>
-            <p className="text-[13px] font-semibold">Type de demande</p>
+            <p className="text-[13px] font-semibold">{t("dispute.requestType")}</p>
             <div className="mt-2 flex gap-2">
               <button
                 type="button"
                 onClick={() => setAction("dispute")}
                 className={`h-11 flex-1 rounded-lg border text-[13px] font-semibold ${action === "dispute" ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]" : "border-[var(--brand-border)]"}`}
               >
-                Signaler un litige
+                {t("dispute.reportDispute")}
               </button>
               <button
                 type="button"
                 onClick={() => setAction("refund")}
                 className={`h-11 flex-1 rounded-lg border text-[13px] font-semibold ${action === "refund" ? "border-[var(--brand-primary)] bg-[var(--brand-primary-subtle)] text-[var(--brand-primary)]" : "border-[var(--brand-border)]"}`}
               >
-                Demander un remboursement
+                {t("dispute.requestRefund")}
               </button>
             </div>
           </div>
 
           <div>
-            <label className="text-[13px] font-semibold" htmlFor="dispute-reason">Raison</label>
+            <label className="text-[13px] font-semibold" htmlFor="dispute-reason">{t("dispute.reasonLabel")}</label>
             <select
               id="dispute-reason"
               value={reason}
               onChange={(event) => setReason(event.target.value)}
               className="mt-2 h-11 w-full rounded-lg border border-[var(--brand-border)] bg-white px-4"
             >
-              <option value="">Selectionner une raison</option>
+              <option value="">{t("dispute.selectReason")}</option>
               {reasons.map((item) => (
-                <option key={item} value={item}>{item}</option>
+                <option key={item} value={item}>{reasonLabels[item]}</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="text-[13px] font-semibold" htmlFor="dispute-description">Description détaillée</label>
+            <label className="text-[13px] font-semibold" htmlFor="dispute-description">{t("dispute.detailedDescription")}</label>
             <textarea
               id="dispute-description"
               rows={7}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              placeholder="Expliquez ce qui s'est passé, les dates, les échanges et ce que vous attendez comme résolution."
+              placeholder={t("dispute.descriptionPlaceholder")}
               className="mt-2 w-full rounded-lg border border-[var(--brand-border)] px-4 py-3"
             />
-            <p className="mt-1 text-[12px] text-[var(--color-text-muted)]">{description.trim().length}/25 caractères minimum</p>
+            <p className="mt-1 text-[12px] text-[var(--color-text-muted)]">{t("dispute.minChars", { count: description.trim().length })}</p>
           </div>
 
           {formError && (
@@ -154,34 +171,34 @@ function DisputePage() {
           )}
 
           <button type="submit" disabled={isPending} className="h-11 rounded-full bg-[var(--brand-primary)] px-5 font-semibold text-white disabled:opacity-60">
-            {isPending ? "Envoi..." : "Soumettre"}
+            {isPending ? t("dispute.sending") : t("dispute.submit")}
           </button>
         </form>
 
         <aside className="h-fit rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-          <h2 className="font-bold">Suivi</h2>
+          <h2 className="font-bold">{t("dispute.tracking")}</h2>
           {order?.disputeReason && (
             <p className="mt-3 rounded-lg bg-[var(--brand-surface-alt)] p-3 text-[13px]">
-              <span className="font-semibold">Motif enregistré :</span> {order.disputeReason}
+              <span className="font-semibold">{t("dispute.recordedReason")}</span> {order.disputeReason}
             </p>
           )}
           <div className="mt-4 space-y-2 text-[13px]">
             <p>
-              <span className="font-semibold">Statut commande :</span>{" "}
-              {order?.status === "DISPUTED" ? "En litige" : order?.status ?? "—"}
+              <span className="font-semibold">{t("dispute.orderStatus")}</span>{" "}
+              {order?.status === "DISPUTED" ? t("dispute.orderStatusDisputed") : order?.status ?? "—"}
             </p>
             {order?.refundStatus && (
               <p>
-                <span className="font-semibold">Remboursement :</span>{" "}
+                <span className="font-semibold">{t("dispute.refundLabel")}</span>{" "}
                 {refundStatusLabels[order.refundStatus] ?? order.refundStatus}
               </p>
             )}
           </div>
           <div className="mt-5 rounded-lg bg-[var(--brand-surface-alt)] p-4 text-[13px]">
-            {submitted ? "Votre dossier est enregistré et sera traité par l'équipe Iwosan." : "Aucune demande en cours pour cette commande."}
+            {submitted ? t("dispute.caseRecorded") : t("dispute.noActiveRequest")}
           </div>
           <Link to="/mes-commandes" className="mt-5 inline-flex h-10 items-center rounded-full border border-[var(--brand-border)] px-4 text-[13px] font-semibold">
-            Retour commandes
+            {t("dispute.backToOrders")}
           </Link>
         </aside>
       </section>

@@ -1,5 +1,7 @@
 ﻿import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { ArrowRight, ChevronLeft, ChevronRight, Leaf, MapPin, MessagesSquare, BookOpen, Stethoscope, FlaskConical, ChefHat, GraduationCap, ShoppingBag, Users, CalendarDays, Contact2, BadgeCheck, Search, ShieldCheck, Wallet, ReceiptText, MessageCircleMore, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SectionHeader } from "@/components/shared/SectionHeader";
@@ -51,82 +53,84 @@ type Slide = {
 // Same figures as the full stats section further down the page — repeated
 // here, condensed, so the trust signal lands immediately in the hero instead
 // of only after scrolling.
-const heroTrustStats = [
-  { icon: Users, value: "50+", label: "Praticiens documentés" },
-  { icon: Leaf, value: "120+", label: "Plantes médicinales" },
-  { icon: MapPin, value: "10+", label: "Pays africains" },
+const buildHeroTrustStats = (t: TFunction) => [
+  { icon: Users, value: "50+", label: t("home.hero.trustPractitioners") },
+  { icon: Leaf, value: "120+", label: t("home.hero.trustPlants") },
+  { icon: MapPin, value: "10+", label: t("home.hero.trustCountries") },
 ];
 
-const fallbackHeroSlides: Slide[] = [
+const buildFallbackHeroSlides = (t: TFunction): Slide[] => [
   {
     img: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1920&q=80&auto=format&fit=crop',
-    eyebrow: 'PLATEFORME PANAFRICAINE',
-    kicker: 'Savoir endogène africain',
-    title: 'Le savoir endogène africain, documenté, transmis, vivant.',
-    desc: 'Iwosan documente, valorise et met en relation les détenteurs de savoirs endogènes africains - dans le respect du sacré, des cadres scientifiques et des communautés qui les portent.',
-    tags: ['Tout l’écosystème', 'Annuaire', 'Marketplace'],
-    primary: { label: 'Explorer l’annuaire →', href: '/annuaire' },
-    secondary: { label: 'Voir la marketplace', href: '/marketplace' },
+    eyebrow: t("home.hero.slide1.eyebrow"),
+    kicker: t("home.hero.slide1.kicker"),
+    title: t("home.hero.slide1.title"),
+    desc: t("home.hero.slide1.desc"),
+    tags: [t("home.hero.slide1.tag1"), t("home.hero.slide1.tag2"), t("home.hero.slide1.tag3")],
+    primary: { label: t("home.hero.slide1.primaryLabel"), href: '/annuaire' },
+    secondary: { label: t("home.hero.slide1.secondaryLabel"), href: '/marketplace' },
   },
   {
     img: 'https://images.unsplash.com/photo-1532634922-8fe0b757fb13?w=1920&q=80&auto=format&fit=crop',
-    eyebrow: 'MARKETPLACE',
-    kicker: 'Produits & services',
-    title: 'Des produits certifiés et des services réservables.',
-    desc: 'Chaque fiche peut être ouverte, partagée et reliée à la page officielle du professionnel pour réserver en confiance.',
-    tags: ['Produits', 'Réservation', 'Profil pro'],
-    primary: { label: 'Découvrir les produits', href: '/marketplace' },
-    secondary: { label: 'Voir les pros', href: '/annuaire' },
+    eyebrow: t("home.hero.slide2.eyebrow"),
+    kicker: t("home.hero.slide2.kicker"),
+    title: t("home.hero.slide2.title"),
+    desc: t("home.hero.slide2.desc"),
+    tags: [t("home.hero.slide2.tag1"), t("home.hero.slide2.tag2"), t("home.hero.slide2.tag3")],
+    primary: { label: t("home.hero.slide2.primaryLabel"), href: '/marketplace' },
+    secondary: { label: t("home.hero.slide2.secondaryLabel"), href: '/annuaire' },
   },
   {
     img: 'https://images.unsplash.com/photo-1526256262350-7da7584cf5eb?w=1920&q=80&auto=format&fit=crop',
-    eyebrow: 'CONNAISSANCE',
-    kicker: 'Articles & dossiers',
-    title: 'Un accès éditorial plus riche, plus lisible.',
-    desc: 'Santé au quotidien, pharmacopée, recettes et rites culturels sont regroupés pour une navigation plus simple.',
-    tags: ['Santé', 'Pharmacopée', 'Rites'],
-    primary: { label: 'Lire les contenus', href: '/sante-au-quotidien' },
-    secondary: { label: 'Explorer les recettes', href: '/recettes-sante' },
+    eyebrow: t("home.hero.slide3.eyebrow"),
+    kicker: t("home.hero.slide3.kicker"),
+    title: t("home.hero.slide3.title"),
+    desc: t("home.hero.slide3.desc"),
+    tags: [t("home.hero.slide3.tag1"), t("home.hero.slide3.tag2"), t("home.hero.slide3.tag3")],
+    primary: { label: t("home.hero.slide3.primaryLabel"), href: '/sante-au-quotidien' },
+    secondary: { label: t("home.hero.slide3.secondaryLabel"), href: '/recettes-sante' },
   },
   {
     img: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=1920&q=80&auto=format&fit=crop',
-    eyebrow: 'COMMUNAUTÉ',
-    kicker: 'Formations & agenda',
-    title: 'Ateliers, formations et événements en une seule vue.',
-    desc: 'Le site rassemble les rendez-vous utiles pour apprendre, échanger et rejoindre les bons espaces au bon moment.',
-    tags: ['Agenda', 'Formations', 'Support'],
-    primary: { label: 'Voir l’agenda', href: '/agenda' },
-    secondary: { label: 'Découvrir les formations', href: '/formations' },
+    eyebrow: t("home.hero.slide4.eyebrow"),
+    kicker: t("home.hero.slide4.kicker"),
+    title: t("home.hero.slide4.title"),
+    desc: t("home.hero.slide4.desc"),
+    tags: [t("home.hero.slide4.tag1"), t("home.hero.slide4.tag2"), t("home.hero.slide4.tag3")],
+    primary: { label: t("home.hero.slide4.primaryLabel"), href: '/agenda' },
+    secondary: { label: t("home.hero.slide4.secondaryLabel"), href: '/formations' },
   },
 ];
 
-const modules = [
-  { title: "Marketplace", desc: "Petites annonces : produits, services, digital", icon: ShoppingBag, to: '/marketplace' },
-  { title: "Annuaire pro", desc: "Fiches détaillées des détenteurs de savoirs", icon: Users, to: '/annuaire' },
-  { title: "Recettes santé", desc: "Centre d'aide : base de connaissances + tickets", icon: ReceiptText, to: '/recettes-sante' },
-  { title: "Portrait de la semaine", desc: "Un professionnel mis à l'honneur en accueil", icon: BadgeCheck, to: '/annuaire' },
-  { title: "Santé au quotidien", desc: "Blog communautaire par catégories", icon: Stethoscope, to: '/sante-au-quotidien' },
-  { title: "Pharmacopée vivante", desc: "Monographies de plantes médicinales", icon: Leaf, to: '/pharmacopee' },
-  { title: "Rites & Cultures", desc: "Exploration anthropologique et spirituelle", icon: FlaskConical, to: '/rites-cultures' },
-  { title: "Discutons-en", desc: "Questions-réponses communautaires", icon: MessageCircleMore, to: '/discutons-en' },
-  { title: "Agenda & Événements", desc: "Webconférences, formations, salons", icon: CalendarDays, to: '/agenda' },
-  { title: "Espace Formations", desc: "Bibliothèque de documents et vidéos", icon: GraduationCap, to: '/formations' },
+const buildModules = (t: TFunction) => [
+  { title: t("home.modules.marketplace.title"), desc: t("home.modules.marketplace.desc"), icon: ShoppingBag, to: '/marketplace' },
+  { title: t("home.modules.annuaire.title"), desc: t("home.modules.annuaire.desc"), icon: Users, to: '/annuaire' },
+  { title: t("home.modules.recettes.title"), desc: t("home.modules.recettes.desc"), icon: ReceiptText, to: '/recettes-sante' },
+  { title: t("home.modules.portrait.title"), desc: t("home.modules.portrait.desc"), icon: BadgeCheck, to: '/annuaire' },
+  { title: t("home.modules.quotidien.title"), desc: t("home.modules.quotidien.desc"), icon: Stethoscope, to: '/sante-au-quotidien' },
+  { title: t("home.modules.pharmacopee.title"), desc: t("home.modules.pharmacopee.desc"), icon: Leaf, to: '/pharmacopee' },
+  { title: t("home.modules.rites.title"), desc: t("home.modules.rites.desc"), icon: FlaskConical, to: '/rites-cultures' },
+  { title: t("home.modules.forum.title"), desc: t("home.modules.forum.desc"), icon: MessageCircleMore, to: '/discutons-en' },
+  { title: t("home.modules.agenda.title"), desc: t("home.modules.agenda.desc"), icon: CalendarDays, to: '/agenda' },
+  { title: t("home.modules.formations.title"), desc: t("home.modules.formations.desc"), icon: GraduationCap, to: '/formations' },
 ] as const;
 
 function HeroCarousel() {
+  const { t } = useTranslation();
   const { data: bannersResponse } = useHomeBanners();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const heroTrustStats = useMemo(() => buildHeroTrustStats(t), [t]);
 
   const heroSlides = useMemo<Slide[]>(() => {
     const banners = bannersResponse?.data ?? [];
-    if (banners.length === 0) return fallbackHeroSlides;
+    if (banners.length === 0) return buildFallbackHeroSlides(t);
     return banners.map((banner) => ({
       img: banner.imageUrl,
-      title: banner.title || "Découvrez Iwosan",
-      primary: { label: "Découvrir", href: banner.link || "/annuaire" },
+      title: banner.title || t("home.hero.defaultBannerTitle"),
+      primary: { label: t("home.hero.defaultBannerCta"), href: banner.link || "/annuaire" },
     }));
-  }, [bannersResponse]);
+  }, [bannersResponse, t]);
 
   useEffect(() => {
     setIndex(0);
@@ -152,8 +156,8 @@ function HeroCarousel() {
       </AnimatePresence>
       {heroSlides.length > 1 && (
         <>
-          <button onClick={() => setIndex((index - 1 + heroSlides.length) % heroSlides.length)} className="absolute left-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-white/60 transition hover:bg-white/10 hover:text-white" aria-label="Slide précédente"><ChevronLeft size={18} /></button>
-          <button onClick={() => setIndex((index + 1) % heroSlides.length)} className="absolute right-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-white/60 transition hover:bg-white/10 hover:text-white" aria-label="Slide suivante"><ChevronRight size={18} /></button>
+          <button onClick={() => setIndex((index - 1 + heroSlides.length) % heroSlides.length)} className="absolute left-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-white/60 transition hover:bg-white/10 hover:text-white" aria-label={t("home.hero.prevSlide")}><ChevronLeft size={18} /></button>
+          <button onClick={() => setIndex((index + 1) % heroSlides.length)} className="absolute right-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-white/60 transition hover:bg-white/10 hover:text-white" aria-label={t("home.hero.nextSlide")}><ChevronRight size={18} /></button>
         </>
       )}
       <div className="relative container-iwosan grid min-h-[92vh] items-center gap-10 py-24 lg:grid-cols-[1fr_320px]">
@@ -180,7 +184,7 @@ function HeroCarousel() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="hidden rounded-[24px] border border-white/15 bg-white/[0.07] p-6 backdrop-blur-md lg:block"
         >
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/60">En chiffres</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/60">{t("home.hero.inFigures")}</p>
           <div className="mt-5 space-y-5">
             {heroTrustStats.map((stat) => (
               <div key={stat.label} className="flex items-center gap-3">
@@ -197,12 +201,14 @@ function HeroCarousel() {
         </motion.div>
       </div>
       {heroSlides.length > 1 && (
-        <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 gap-2">{heroSlides.map((_, dotIndex) => <button key={dotIndex} onClick={() => setIndex(dotIndex)} className={`h-2.5 rounded-full transition-all ${index === dotIndex ? "w-8 bg-white" : "w-2.5 bg-white/45"}`} aria-label={`Aller à la slide ${dotIndex + 1}`} />)}</div>
+        <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 gap-2">{heroSlides.map((_, dotIndex) => <button key={dotIndex} onClick={() => setIndex(dotIndex)} className={`h-2.5 rounded-full transition-all ${index === dotIndex ? "w-8 bg-white" : "w-2.5 bg-white/45"}`} aria-label={t("home.hero.goToSlide", { n: dotIndex + 1 })} />)}</div>
       )}
     </section>
   );
 }
 function ModulesStrip() {
+  const { t } = useTranslation();
+  const modules = useMemo(() => buildModules(t), [t]);
   const slides = useMemo(() => {
     const chunkSize = 4;
     const chunks = [];
@@ -210,7 +216,7 @@ function ModulesStrip() {
       chunks.push(modules.slice(i, i + chunkSize));
     }
     return chunks;
-  }, []);
+  }, [modules]);
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -222,7 +228,7 @@ function ModulesStrip() {
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
         <button onClick={() => setIndex((i) => (i - 1 + slides.length) % slides.length)} className="grid h-11 w-11 place-items-center rounded-full border border-[var(--brand-border)] bg-white"><ChevronLeft size={18} /></button>
-        <div className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">Slide {index + 1} / {slides.length}</div>
+        <div className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)]">{t("home.modules.slideCounter", { current: index + 1, total: slides.length })}</div>
         <button onClick={() => setIndex((i) => (i + 1) % slides.length)} className="grid h-11 w-11 place-items-center rounded-full border border-[var(--brand-border)] bg-white"><ChevronRight size={18} /></button>
       </div>
       <div className="overflow-hidden rounded-[24px] border border-[var(--brand-border-light)] bg-white shadow-iwosan-md">
@@ -246,13 +252,14 @@ function ModulesStrip() {
         </AnimatePresence>
       </div>
       <div className="flex justify-center">
-        <Link to="/annuaire" className="inline-flex h-12 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-6 font-semibold text-white">Explorer tout l’écosystème <ArrowRight size={18} /></Link>
+        <Link to="/annuaire" className="inline-flex h-12 items-center gap-2 rounded-full bg-[var(--brand-primary)] px-6 font-semibold text-white">{t("home.modules.exploreAll")} <ArrowRight size={18} /></Link>
       </div>
     </div>
   );
 }
 
 function Home() {
+  const { t } = useTranslation();
   const siteConfigQuery = useSiteConfig();
   const announcement = siteConfigQuery.data?.data?.["site.home.announcement"]?.trim();
   const sectionsConfig = useMemo(
@@ -268,8 +275,8 @@ function Home() {
   const eventsQuery = useEvents();
 
   const apiEvents = useMemo(
-    () => ((eventsQuery.data?.events ?? []) as BackendEvent[]).map(toEventItem).filter((item): item is EventItem => Boolean(item)),
-    [eventsQuery.data],
+    () => ((eventsQuery.data?.events ?? []) as BackendEvent[]).map((event) => toEventItem(event, t)).filter((item): item is EventItem => Boolean(item)),
+    [eventsQuery.data, t],
   );
 
   const apiProducts = productsQuery.data?.products ?? [];
@@ -283,7 +290,7 @@ function Home() {
     modules: () => (
       <section key="modules" className="py-20 md:py-24 bg-[var(--brand-surface-alt)]">
         <div className="container-iwosan">
-          <SectionHeader label="Modules" title="Tout l’écosystème du site" subtitle="Une lecture claire des espaces publics utiles, avec navigation verticale et accès rapide à chaque univers." align="center" />
+          <SectionHeader label={t("home.modules.sectionLabel")} title={t("home.modules.sectionTitle")} subtitle={t("home.modules.sectionSubtitle")} align="center" />
           <ModulesStrip />
         </div>
       </section>
@@ -291,20 +298,20 @@ function Home() {
     portrait: () => !portraitOfWeek ? null : (
       <section key="portrait" className="py-20 md:py-24">
         <div className="container-iwosan">
-          <SectionHeader label="Mise en lumière" title="Portrait de la semaine" />
+          <SectionHeader label={t("home.portraitSection.sectionLabel")} title={t("home.portraitSection.sectionTitle")} />
           <div className="grid gap-6 md:grid-cols-[40%_60%] rounded-[24px] border border-[var(--brand-border-light)] bg-white overflow-hidden shadow-iwosan-md">
             <div className="h-[300px] md:h-auto">
               <img src={portraitOfWeek.cover} alt="" className="h-full w-full object-cover" />
             </div>
             <div className="p-7 md:p-10">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-gold)] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-white">Praticien de la semaine</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-gold)] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-white">{t("home.portraitSection.badge")}</span>
               <h3 className="mt-4 text-[28px] md:text-[32px] text-[var(--brand-primary)] font-bold">{portraitOfWeek.name}</h3>
               <p className="mt-1 text-[15px] text-[var(--color-text-secondary)]">{portraitOfWeek.specialty}</p>
               <p className="mt-2 inline-flex items-center gap-1.5 text-[14px] text-[var(--color-text-muted)]"><MapPin size={14} /> {portraitOfWeek.location}, {portraitOfWeek.country}</p>
               <p className="mt-5 text-[15px] leading-[1.7] text-[var(--color-text-secondary)]">{portraitOfWeek.bio}</p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <Link to="/pro/$id" params={{ id: portraitOfWeek.id }} className="h-11 inline-flex items-center justify-center px-5 rounded-full bg-[var(--brand-primary)] text-white font-semibold">Voir le profil complet</Link>
-                <Link to="/annuaire" className="h-11 inline-flex items-center justify-center px-5 rounded-full border border-[var(--brand-border)] font-semibold">Explorer</Link>
+                <Link to="/pro/$id" params={{ id: portraitOfWeek.id }} className="h-11 inline-flex items-center justify-center px-5 rounded-full bg-[var(--brand-primary)] text-white font-semibold">{t("home.portraitSection.viewProfile")}</Link>
+                <Link to="/annuaire" className="h-11 inline-flex items-center justify-center px-5 rounded-full border border-[var(--brand-border)] font-semibold">{t("home.portraitSection.explore")}</Link>
               </div>
             </div>
           </div>
@@ -314,7 +321,7 @@ function Home() {
     products: () => featuredProducts.length === 0 ? null : (
       <section key="products" className="py-20 md:py-24 bg-[var(--brand-surface-alt)]">
         <div className="container-iwosan">
-          <SectionHeader label="Marketplace" title="Produits en avant" align="center" />
+          <SectionHeader label={t("home.sections.productsLabel")} title={t("home.sections.productsTitle")} align="center" />
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">{featuredProducts.map((product) => <ProductCard key={product.id} product={product} />)}</div>
         </div>
       </section>
@@ -322,7 +329,7 @@ function Home() {
     professionals: () => featuredProfessionals.length === 0 ? null : (
       <section key="professionals" className="py-20 md:py-24">
         <div className="container-iwosan">
-          <SectionHeader label="Annuaire" title="Praticiens en vedette" align="center" />
+          <SectionHeader label={t("home.sections.professionalsLabel")} title={t("home.sections.professionalsTitle")} align="center" />
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">{featuredProfessionals.map((pro) => <ProfessionalCard key={pro.id} pro={pro} />)}</div>
         </div>
       </section>
@@ -330,8 +337,8 @@ function Home() {
     events: () => featuredEvents.length === 0 ? null : (
       <section key="events" className="py-20 md:py-24 bg-[var(--brand-surface-alt)]">
         <div className="container-iwosan">
-          <SectionHeader label="Agenda" title="Événements à venir" align="center" />
-          <div className="space-y-4">{featuredEvents.map((event) => <EventCard key={event.id} event={event} actionLabel="S'inscrire" />)}</div>
+          <SectionHeader label={t("home.sections.eventsLabel")} title={t("home.sections.eventsTitle")} align="center" />
+          <div className="space-y-4">{featuredEvents.map((event) => <EventCard key={event.id} event={event} actionLabel={t("home.sections.eventsAction")} />)}</div>
         </div>
       </section>
     ),
@@ -353,19 +360,19 @@ function Home() {
         <div className="container-iwosan grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-[20px] border border-white/10 bg-white/5 p-5 text-center backdrop-blur">
             <div className="text-[38px] font-bold leading-none">50+</div>
-            <p className="mt-2 text-[12px] font-semibold tracking-[0.18em] text-white/72">Praticiens documentés</p>
+            <p className="mt-2 text-[12px] font-semibold tracking-[0.18em] text-white/72">{t("home.stats.practitioners")}</p>
           </div>
           <div className="rounded-[20px] border border-white/10 bg-white/5 p-5 text-center backdrop-blur">
             <div className="text-[38px] font-bold leading-none">120+</div>
-            <p className="mt-2 text-[12px] font-semibold tracking-[0.18em] text-white/72">Plantes médicinales</p>
+            <p className="mt-2 text-[12px] font-semibold tracking-[0.18em] text-white/72">{t("home.stats.plants")}</p>
           </div>
           <div className="rounded-[20px] border border-white/10 bg-white/5 p-5 text-center backdrop-blur">
             <div className="text-[38px] font-bold leading-none">4000+</div>
-            <p className="mt-2 text-[12px] font-semibold tracking-[0.18em] text-white/72">Utilisateurs actifs</p>
+            <p className="mt-2 text-[12px] font-semibold tracking-[0.18em] text-white/72">{t("home.stats.users")}</p>
           </div>
           <div className="rounded-[20px] border border-white/10 bg-white/5 p-5 text-center backdrop-blur">
             <div className="text-[38px] font-bold leading-none">10+</div>
-            <p className="mt-2 text-[12px] font-semibold tracking-[0.18em] text-white/72">Pays africains</p>
+            <p className="mt-2 text-[12px] font-semibold tracking-[0.18em] text-white/72">{t("home.stats.countries")}</p>
           </div>
         </div>
       </section>

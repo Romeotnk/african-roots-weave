@@ -22,10 +22,12 @@ import {
   kycApprove,
   kycDocuments,
   kycReject,
+  listEmailTemplates,
   listPages,
   listPermissions,
   listSubscriptions,
   listTickets,
+  listTranslations,
   listUsers,
   maintenance,
   newsletterSubscribers,
@@ -56,6 +58,8 @@ import {
   updateTicketStatus,
   updateUserPermissionOverrides,
   unbanUser,
+  upsertEmailTemplate,
+  upsertTranslations,
   verifyProfessional,
 } from "../controllers/admin.controller.js";
 import {
@@ -194,6 +198,10 @@ adminRouter.put("/config", checkPermission("system.config"), updateConfig);
 adminRouter.post("/maintenance", checkPermission("system.config"), maintenance);
 adminRouter.post("/custom-css", checkPermission("system.config"), updateConfig);
 adminRouter.post("/custom-js", checkPermission("system.config"), updateConfig);
+adminRouter.get("/translations", checkPermission("content.translations.manage"), listTranslations);
+adminRouter.put("/translations", checkPermission("content.translations.manage"), upsertTranslations);
+adminRouter.get("/email-templates", checkPermission("content.translations.manage"), listEmailTemplates);
+adminRouter.put("/email-templates/:key", checkPermission("content.translations.manage"), upsertEmailTemplate);
 
 // Community moderation: reports, forum, reviews.
 adminRouter.get("/reports", checkPermission("forum.moderate"), listReports);

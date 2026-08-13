@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ArrowLeft, Copy, Facebook, MessageCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ArticleCard } from "@/components/shared/ArticleCard";
 import { AdSlot } from "@/components/shared/AdSlot";
 import { useArticle, useArticleComments, useArticles, useCreateArticleComment } from "@/hooks/useContentApi";
@@ -9,20 +10,21 @@ import type { ArticleSpace } from "@/lib/api/content";
 import { useAuth } from "@/lib/auth/AuthContext";
 
 export function ArticleDetailPage({ slug, fallbackSpace, backTo }: { slug: string; fallbackSpace?: string; backTo: string }) {
+  const { t } = useTranslation();
   const articleQuery = useArticle(slug);
   const apiArticle = useMemo(() => {
     const data = articleQuery.data as BackendArticle | undefined;
-    return data ? toArticle(data, fallbackSpace ?? data.space ?? "") : null;
-  }, [articleQuery.data, fallbackSpace]);
+    return data ? toArticle(data, fallbackSpace ?? data.space ?? "", t) : null;
+  }, [articleQuery.data, fallbackSpace, t]);
 
   const relatedQuery = useArticles(apiArticle ? { space: apiArticle.space as ArticleSpace } : {});
   const apiRelated = useMemo(
     () =>
       ((relatedQuery.data?.articles ?? []) as BackendArticle[])
-        .map((item) => toArticle(item, apiArticle?.space ?? ""))
+        .map((item) => toArticle(item, apiArticle?.space ?? "", t))
         .filter((item): item is NonNullable<typeof item> => Boolean(item) && item!.id !== apiArticle?.id)
         .slice(0, 3),
-    [relatedQuery.data, apiArticle],
+    [relatedQuery.data, apiArticle, t],
   );
 
   const { user } = useAuth();
@@ -35,7 +37,7 @@ export function ArticleDetailPage({ slug, fallbackSpace, backTo }: { slug: strin
   if (articleQuery.isLoading) {
     return (
       <main className="grid min-h-[60vh] place-items-center bg-[var(--brand-bg)] px-6 text-center">
-        <p className="text-[14px] text-[var(--color-text-muted)]">Chargement...</p>
+        <p className="text-[14px] text-[var(--color-text-muted)]">{t("articleDetail.loading")}</p>
       </main>
     );
   }
@@ -44,12 +46,12 @@ export function ArticleDetailPage({ slug, fallbackSpace, backTo }: { slug: strin
     return (
       <main className="grid min-h-[60vh] place-items-center bg-[var(--brand-bg)] px-6 text-center">
         <div>
-          <h1 className="text-[28px] font-bold">Article introuvable</h1>
+          <h1 className="text-[28px] font-bold">{t("articleDetail.notFoundTitle")}</h1>
           <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">
-            Cet article n'existe pas ou n'est plus disponible sur Iwosan.
+            {t("articleDetail.notFoundDesc")}
           </p>
           <Link to={backTo as never} className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white">
-            Retour
+            {t("articleDetail.back")}
           </Link>
         </div>
       </main>
@@ -58,13 +60,13 @@ export function ArticleDetailPage({ slug, fallbackSpace, backTo }: { slug: strin
 
   const article = apiArticle;
   const related = apiRelated;
-  const breadcrumbSpace = article.space === "Sante au quotidien" ? "Sante" : article.space;
+  const breadcrumbSpace = article.space === "Sante au quotidien" ? t("articleDetail.shortHealthSpace") : article.space;
 
   const submitComment = () => {
     if (!apiArticle) return;
     const content = commentBody.trim();
     if (content.length < 2) {
-      setCommentNotice("Ecrivez un commentaire avant de le publier.");
+      setCommentNotice(t("articleDetail.commentTooShort"));
       return;
     }
     createComment.mutate(
@@ -72,24 +74,24 @@ export function ArticleDetailPage({ slug, fallbackSpace, backTo }: { slug: strin
       {
         onSuccess: () => {
           setCommentBody("");
-          setCommentNotice("Commentaire publie.");
+          setCommentNotice(t("articleDetail.commentPublished"));
         },
-        onError: (error) => setCommentNotice(error instanceof Error ? error.message : "Impossible de publier le commentaire."),
+        onError: (error) => setCommentNotice(error instanceof Error ? error.message : t("articleDetail.commentPublishError")),
       },
     );
   };
-  const shareArticle = (label: string) => {
+  const shareArticle = (id: "whatsapp" | "facebook" | "copy", label: string) => {
     const url = typeof window !== "undefined" ? window.location.href : "";
     const encodedUrl = encodeURIComponent(url);
     const encodedTitle = encodeURIComponent(article.title);
-    if (label === "Copier") {
+    if (id === "copy") {
       navigator.clipboard?.writeText(url).catch(() => undefined);
-      setShareNotice("Lien copié.");
+      setShareNotice(t("articleDetail.linkCopied"));
       return;
     }
-    const target = label === "WhatsApp" ? `https://wa.me/?text=${encodedTitle}%20${encodedUrl}` : `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+    const target = id === "whatsapp" ? `https://wa.me/?text=${encodedTitle}%20${encodedUrl}` : `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
     window.open(target, "_blank", "noopener,noreferrer");
-    setShareNotice(`Ouverture du partage ${label}.`);
+    setShareNotice(t("articleDetail.shareOpening", { label }));
   };
 
   return (
@@ -101,10 +103,10 @@ export function ArticleDetailPage({ slug, fallbackSpace, backTo }: { slug: strin
             to={backTo as never}
             className="mb-4 inline-flex items-center gap-1.5 text-[13px] font-semibold text-white/75 transition hover:text-white"
           >
-            <ArrowLeft size={15} /> Retour
+            <ArrowLeft size={15} /> {t("articleDetail.back")}
           </Link>
           <nav className="flex flex-wrap gap-2 text-[13px] text-white/75">
-            <Link to="/">Accueil</Link>
+            <Link to="/">{t("articleDetail.home")}</Link>
             <span>&gt;</span>
             <span>{breadcrumbSpace}</span>
             <span>&gt;</span>
@@ -132,7 +134,7 @@ export function ArticleDetailPage({ slug, fallbackSpace, backTo }: { slug: strin
           <AdSlot position="article_bottom" className="mt-8" />
 
           <div className="mt-8 rounded-[12px] bg-[var(--brand-surface-alt)] p-5">
-            <h2 className="text-[18px] font-bold">Auteur</h2>
+            <h2 className="text-[18px] font-bold">{t("articleDetail.author")}</h2>
             <div className="mt-4 flex gap-4">
               <img src={article.authorAvatar} alt="" className="h-16 w-16 rounded-full object-cover" />
               <div>
@@ -140,7 +142,7 @@ export function ArticleDetailPage({ slug, fallbackSpace, backTo }: { slug: strin
                 <p className="text-[13px] text-[var(--color-text-muted)]">{article.authorSpecialty}</p>
                 {article.authorProfileId && (
                   <Link to="/pro/$id" params={{ id: article.authorProfileId }} className="mt-2 inline-flex text-[13px] font-semibold text-[var(--brand-primary)]">
-                    Voir le profil
+                    {t("articleDetail.viewProfile")}
                   </Link>
                 )}
               </div>
@@ -148,13 +150,13 @@ export function ArticleDetailPage({ slug, fallbackSpace, backTo }: { slug: strin
           </div>
 
           <div className="mt-8">
-            <h2 className="text-[18px] font-bold">Commentaires</h2>
+            <h2 className="text-[18px] font-bold">{t("articleDetail.comments")}</h2>
             <div className="mt-4 space-y-3">
               {apiArticle ? (
                 <>
-                  {commentsQuery.isLoading && <p className="text-[13px] text-[var(--color-text-muted)]">Chargement des commentaires...</p>}
+                  {commentsQuery.isLoading && <p className="text-[13px] text-[var(--color-text-muted)]">{t("articleDetail.loadingComments")}</p>}
                   {!commentsQuery.isLoading && (commentsQuery.data ?? []).length === 0 && (
-                    <p className="text-[13px] text-[var(--color-text-muted)]">Aucun commentaire pour le moment. Soyez le premier a reagir.</p>
+                    <p className="text-[13px] text-[var(--color-text-muted)]">{t("articleDetail.noComments")}</p>
                   )}
                   {(commentsQuery.data ?? []).map((comment) => (
                     <div key={comment.id} className="rounded-lg bg-[var(--brand-surface-alt)] p-4 text-[13px]">
@@ -174,18 +176,18 @@ export function ArticleDetailPage({ slug, fallbackSpace, backTo }: { slug: strin
               {apiArticle && (
                 user ? (
                   <div className="rounded-lg border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-4">
-                    <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--brand-primary)]">Laisser un commentaire</p>
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--brand-primary)]">{t("articleDetail.leaveComment")}</p>
                     <div className="mt-3 grid gap-3">
-                      <textarea value={commentBody} onChange={(event) => setCommentBody(event.target.value)} rows={4} placeholder="Votre commentaire" className="w-full rounded-2xl border border-[var(--brand-border)] px-4 py-3" />
+                      <textarea value={commentBody} onChange={(event) => setCommentBody(event.target.value)} rows={4} placeholder={t("articleDetail.commentPlaceholder")} className="w-full rounded-2xl border border-[var(--brand-border)] px-4 py-3" />
                       <button type="button" onClick={submitComment} disabled={createComment.isPending} className="h-11 rounded-full bg-[var(--brand-primary)] px-4 font-semibold text-white disabled:opacity-50">
-                        {createComment.isPending ? "Publication..." : "Publier"}
+                        {createComment.isPending ? t("articleDetail.publishing") : t("articleDetail.publish")}
                       </button>
                       {commentNotice && <p className="text-[13px] text-[var(--brand-primary)]">{commentNotice}</p>}
                     </div>
                   </div>
                 ) : (
                   <div className="rounded-lg border border-dashed border-[var(--brand-border)] bg-[var(--brand-surface-alt)] p-4 text-center text-[13px] text-[var(--color-text-muted)]">
-                    <Link to="/connexion" className="font-semibold text-[var(--brand-primary)]">Connectez-vous</Link> pour laisser un commentaire.
+                    <Link to="/connexion" className="font-semibold text-[var(--brand-primary)]">{t("articleDetail.loginToComment")}</Link>{t("articleDetail.loginToCommentSuffix")}
                   </div>
                 )
               )}
@@ -196,14 +198,14 @@ export function ArticleDetailPage({ slug, fallbackSpace, backTo }: { slug: strin
         <aside className="h-fit space-y-5">
           <AdSlot position="article_sidebar" />
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="mb-3 text-[15px] font-bold">Partager</h2>
+            <h2 className="mb-3 text-[15px] font-bold">{t("articleDetail.share")}</h2>
             <div className="flex flex-wrap gap-2">
               {[
-                { icon: MessageCircle, label: "WhatsApp" },
-                { icon: Facebook, label: "Facebook" },
-                { icon: Copy, label: "Copier" },
-              ].map(({ icon: Icon, label }) => (
-                <button key={label} type="button" onClick={() => shareArticle(label)} className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-3 text-[12px] font-semibold">
+                { icon: MessageCircle, id: "whatsapp" as const, label: "WhatsApp" },
+                { icon: Facebook, id: "facebook" as const, label: "Facebook" },
+                { icon: Copy, id: "copy" as const, label: t("articleDetail.copy") },
+              ].map(({ icon: Icon, id, label }) => (
+                <button key={id} type="button" onClick={() => shareArticle(id, label)} className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--brand-border)] px-3 text-[12px] font-semibold">
                   <Icon size={14} /> {label}
                 </button>
               ))}
@@ -211,7 +213,7 @@ export function ArticleDetailPage({ slug, fallbackSpace, backTo }: { slug: strin
             {shareNotice && <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-[12px] text-emerald-800">{shareNotice}</p>}
           </div>
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
-            <h2 className="mb-4 text-[15px] font-bold">Articles connexes</h2>
+            <h2 className="mb-4 text-[15px] font-bold">{t("articleDetail.relatedArticles")}</h2>
             <div className="space-y-4">
               {related.map((item) => (
                 <ArticleCard key={item.id} article={item} />

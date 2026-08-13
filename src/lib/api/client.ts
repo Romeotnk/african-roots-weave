@@ -1,4 +1,5 @@
 import { BASE_URL } from "@/config/api";
+import i18n from "@/lib/i18n";
 
 const API_BASE_URL = BASE_URL;
 
@@ -25,36 +26,36 @@ const translateApiMessage = (message: string) => {
   const normalized = message.trim();
   const lower = normalized.toLowerCase();
 
-  if (lower.includes("invalid credentials")) return "Email ou mot de passe incorrect.";
-  if (lower.includes("email already registered") || lower.includes("user already registered")) return "Cette adresse email est déjà utilisée.";
-  if (lower.includes("valid email required")) return "Adresse email invalide.";
-  if (lower.includes("password required")) return "Le mot de passe est requis.";
-  if (lower.includes("current password required")) return "Saisissez votre mot de passe actuel.";
-  if (lower.includes("current password is invalid")) return "Le mot de passe actuel est incorrect.";
-  if (lower.includes("password must be at least 8 characters")) return "Le mot de passe doit contenir au moins 8 caractères.";
-  if (lower.includes("password must include an uppercase letter")) return "Le mot de passe doit contenir une majuscule.";
-  if (lower.includes("password must include a lowercase letter")) return "Le mot de passe doit contenir une minuscule.";
-  if (lower.includes("password must include a number")) return "Le mot de passe doit contenir un chiffre.";
-  if (lower.includes("password must include a special character")) return "Le mot de passe doit contenir un caractère spécial.";
-  if (lower.includes("too many authentication attempts")) return "Trop de tentatives de connexion. Réessayez plus tard.";
-  if (lower.includes("too many requests")) return "Trop de requêtes. Réessayez plus tard.";
-  if (lower.includes("turnstile verification failed")) return "La vérification anti-robot a échoué.";
-  if (lower.includes("authentication required")) return "Vous devez être connecté pour continuer.";
-  if (lower.includes("invalid or expired token")) return "Session expirée. Veuillez vous reconnecter.";
-  if (lower.includes("invalid or expired reset token")) return "Ce lien de réinitialisation est invalide ou expiré.";
-  if (lower.includes("invalid or expired verification token")) return "Ce lien de vérification est invalide ou expiré.";
-  if (lower.includes("account unavailable")) return "Ce compte est indisponible.";
-  if (lower.includes("email verification required")) return "Vous devez vérifier votre email avant de continuer.";
-  if (lower.includes("kyc verification required")) return "Votre vérification KYC doit être validée avant de continuer.";
-  if (lower.includes("account created. please verify your email")) return "Compte créé. Vérifiez votre email pour l'activer.";
-  if (lower.includes("email verification is disabled in local development")) return "Compte créé. En local, la vérification email est désactivée : vous pouvez vous connecter.";
-  if (lower.includes("login successful")) return "Connexion réussie.";
-  if (lower.includes("supabase oauth is not configured")) return "OAuth Supabase n'est pas configuré côté serveur.";
-  if (lower.includes("invalid supabase session")) return "Session Supabase invalide. Réessayez la connexion.";
-  if (lower.includes("route not found")) return "Route API introuvable.";
-  if (lower.includes("internal server error")) return "Erreur serveur. Réessayez dans un instant.";
+  if (lower.includes("invalid credentials")) return i18n.t("apiClient.invalidCredentials");
+  if (lower.includes("email already registered") || lower.includes("user already registered")) return i18n.t("apiClient.emailAlreadyUsed");
+  if (lower.includes("valid email required")) return i18n.t("apiClient.invalidEmail");
+  if (lower.includes("password required")) return i18n.t("apiClient.passwordRequired");
+  if (lower.includes("current password required")) return i18n.t("apiClient.currentPasswordRequired");
+  if (lower.includes("current password is invalid")) return i18n.t("apiClient.currentPasswordInvalid");
+  if (lower.includes("password must be at least 8 characters")) return i18n.t("apiClient.passwordMinLength");
+  if (lower.includes("password must include an uppercase letter")) return i18n.t("apiClient.passwordUppercase");
+  if (lower.includes("password must include a lowercase letter")) return i18n.t("apiClient.passwordLowercase");
+  if (lower.includes("password must include a number")) return i18n.t("apiClient.passwordNumber");
+  if (lower.includes("password must include a special character")) return i18n.t("apiClient.passwordSpecialChar");
+  if (lower.includes("too many authentication attempts")) return i18n.t("apiClient.tooManyAuthAttempts");
+  if (lower.includes("too many requests")) return i18n.t("apiClient.tooManyRequests");
+  if (lower.includes("turnstile verification failed")) return i18n.t("apiClient.turnstileFailed");
+  if (lower.includes("authentication required")) return i18n.t("apiClient.authRequired");
+  if (lower.includes("invalid or expired token")) return i18n.t("apiClient.sessionExpired");
+  if (lower.includes("invalid or expired reset token")) return i18n.t("apiClient.resetLinkInvalid");
+  if (lower.includes("invalid or expired verification token")) return i18n.t("apiClient.verificationLinkInvalid");
+  if (lower.includes("account unavailable")) return i18n.t("apiClient.accountUnavailable");
+  if (lower.includes("email verification required")) return i18n.t("apiClient.emailVerificationRequired");
+  if (lower.includes("kyc verification required")) return i18n.t("apiClient.kycVerificationRequired");
+  if (lower.includes("account created. please verify your email")) return i18n.t("apiClient.accountCreatedVerifyEmail");
+  if (lower.includes("email verification is disabled in local development")) return i18n.t("apiClient.accountCreatedLocalDevNoVerification");
+  if (lower.includes("login successful")) return i18n.t("apiClient.loginSuccessful");
+  if (lower.includes("supabase oauth is not configured")) return i18n.t("apiClient.oauthNotConfigured");
+  if (lower.includes("invalid supabase session")) return i18n.t("apiClient.invalidSupabaseSession");
+  if (lower.includes("route not found")) return i18n.t("apiClient.routeNotFound");
+  if (lower.includes("internal server error")) return i18n.t("apiClient.internalServerError");
 
-  return normalized || "Erreur API Iwosan";
+  return normalized || i18n.t("apiClient.genericApiError");
 };
 
 const translateNetworkError = (error: unknown) => {
@@ -67,7 +68,7 @@ const translateNetworkError = (error: unknown) => {
     lower.includes("networkerror") ||
     lower.includes("network request failed")
   ) {
-    return "Impossible de joindre le serveur. Vérifiez votre connexion ou réessayez dans un instant.";
+    return i18n.t("apiClient.networkUnreachable");
   }
 
   return translateApiMessage(message);
@@ -81,8 +82,8 @@ const parseApiEnvelope = async <T>(response: Response): Promise<ApiEnvelope<T>> 
       success: false,
       data: null,
       message: response.ok
-        ? "Réponse API vide."
-        : "API indisponible. Vérifiez que le serveur backend est lancé.",
+        ? i18n.t("apiClient.emptyApiResponse")
+        : i18n.t("apiClient.apiUnavailableServerDown"),
     };
   }
 
@@ -91,8 +92,8 @@ const parseApiEnvelope = async <T>(response: Response): Promise<ApiEnvelope<T>> 
       success: false,
       data: null,
       message: response.ok
-        ? "Réponse API invalide."
-        : "API indisponible ou mauvaise route API.",
+        ? i18n.t("apiClient.invalidApiResponse")
+        : i18n.t("apiClient.apiUnavailableOrWrongRoute"),
     };
   }
 
@@ -103,7 +104,7 @@ const parseApiEnvelope = async <T>(response: Response): Promise<ApiEnvelope<T>> 
     return {
       success: false,
       data: null,
-      message: "Réponse API JSON invalide.",
+      message: i18n.t("apiClient.invalidJsonResponse"),
     };
   }
 };
@@ -212,7 +213,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   const payload = await parseApiEnvelope<T>(response);
 
   if (!response.ok || !payload.success) {
-    throw new Error(payload.message || "Erreur API Iwosan");
+    throw new Error(payload.message || i18n.t("apiClient.genericApiError"));
   }
 
   return payload;

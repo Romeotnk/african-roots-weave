@@ -5,7 +5,14 @@ import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { isDemoHidden } from "../utils/demoMode.js";
 import { ApiError } from "../utils/errors.js";
+import { haversineKm, parseCoordinate } from "../utils/geo.js";
 import { getPagination, paginationMeta } from "../utils/pagination.js";
+
+// Distance sort has no PostGIS extension to lean on, so it's computed in
+// application code rather than the database. This cap keeps that bounded —
+// comfortably above the platform's real professional count, but not
+// unbounded — rather than pulling every row unconditionally.
+const DISTANCE_SORT_FETCH_CAP = 1000;
 
 export const listProfessionals = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
@@ -38,22 +45,50 @@ export const listProfessionals = asyncHandler(async (req, res) => {
       : {}),
   };
 
+  const lat = parseCoordinate(req.query.lat);
+  const lng = parseCoordinate(req.query.lng);
+  const sortByDistance = req.query.sort === "distance" && lat !== undefined && lng !== undefined;
+
+  const include = {
+    user: {
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        country: true,
+      },
+    },
+  } satisfies Prisma.ProfessionalProfileInclude;
+
+  if (sortByDistance) {
+    const [matches, total] = await prisma.$transaction([
+      prisma.professionalProfile.findMany({ where, take: DISTANCE_SORT_FETCH_CAP, include }),
+      prisma.professionalProfile.count({ where }),
+    ]);
+
+    const origin = { lat: lat!, lng: lng! };
+    const ranked = matches
+      .map((profile) => ({
+        ...profile,
+        distanceKm:
+          profile.latitude != null && profile.longitude != null
+            ? haversineKm(origin, { lat: profile.latitude, lng: profile.longitude })
+            : null,
+      }))
+      .sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+
+    const page_ = ranked.slice(skip, skip + limit);
+    res.json(apiResponse(true, page_, "Professionals retrieved", paginationMeta(page, limit, total)));
+    return;
+  }
+
   const [professionals, total] = await prisma.$transaction([
     prisma.professionalProfile.findMany({
       where,
       skip,
       take: limit,
       orderBy: [{ isVerified: "desc" }, { averageRating: "desc" }],
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            country: true,
-          },
-        },
-      },
+      include,
     }),
     prisma.professionalProfile.count({ where }),
   ]);

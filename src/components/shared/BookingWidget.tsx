@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { CalendarClock, Loader2 } from "lucide-react";
 import { useAvailability, useCreateBooking } from "@/hooks/useBookingsApi";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -7,6 +8,7 @@ import { useAuth } from "@/lib/auth/AuthContext";
 const toDateInputValue = (date: Date) => date.toISOString().slice(0, 10);
 
 export function BookingWidget({ professionalId, professionalName }: { professionalId: string; professionalName: string }) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const today = useMemo(() => toDateInputValue(new Date()), []);
   const maxDate = useMemo(() => toDateInputValue(new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)), []);
@@ -25,15 +27,15 @@ export function BookingWidget({ professionalId, professionalName }: { profession
   const submitBooking = () => {
     setError("");
     if (!user) {
-      setError("Connectez-vous pour réserver un créneau.");
+      setError(t("bookingWidget.loginRequired"));
       return;
     }
     if (!selectedSlot) {
-      setError("Choisissez un créneau disponible.");
+      setError(t("bookingWidget.slotRequired"));
       return;
     }
     if (serviceName.trim().length < 3) {
-      setError("Précisez le service souhaité.");
+      setError(t("bookingWidget.serviceRequired"));
       return;
     }
 
@@ -47,12 +49,12 @@ export function BookingWidget({ professionalId, professionalName }: { profession
       },
       {
         onSuccess: () => {
-          setSuccess("Demande de réservation envoyée. Vous recevrez une confirmation du professionnel.");
+          setSuccess(t("bookingWidget.bookingSent"));
           setSelectedSlot(null);
           setNotes("");
         },
         onError: (mutationError) =>
-          setError(mutationError instanceof Error ? mutationError.message : "Impossible de réserver ce créneau."),
+          setError(mutationError instanceof Error ? mutationError.message : t("bookingWidget.bookingError")),
       },
     );
   };
@@ -60,14 +62,14 @@ export function BookingWidget({ professionalId, professionalName }: { profession
   return (
     <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
       <p className="flex items-center gap-2 font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">
-        <CalendarClock size={15} /> RÉSERVER UN SERVICE
+        <CalendarClock size={15} /> {t("bookingWidget.heading")}
       </p>
       <p className="mt-3 text-[14px] text-[var(--color-text-secondary)]">
-        Choisissez une date pour voir les créneaux disponibles auprès de {professionalName}.
+        {t("bookingWidget.chooseDate", { name: professionalName })}
       </p>
 
       <label className="mt-5 block text-[13px] font-bold text-[var(--color-text-primary)]">
-        Date
+        {t("bookingWidget.date")}
         <input
           type="date"
           value={date}
@@ -85,11 +87,11 @@ export function BookingWidget({ professionalId, professionalName }: { profession
       <div className="mt-4">
         {availabilityQuery.isLoading ? (
           <div className="flex items-center gap-2 text-[13px] text-[var(--color-text-muted)]">
-            <Loader2 size={16} className="animate-spin" /> Recherche des créneaux...
+            <Loader2 size={16} className="animate-spin" /> {t("bookingWidget.searchingSlots")}
           </div>
         ) : slots.length === 0 ? (
           <p className="rounded-lg border border-dashed border-[var(--brand-border)] bg-[var(--brand-surface-alt)] p-4 text-[13px] text-[var(--color-text-muted)]">
-            Aucun créneau disponible ce jour-là. Essayez une autre date.
+            {t("bookingWidget.noSlotsAvailable")}
           </p>
         ) : (
           <div className="flex flex-wrap gap-2">
@@ -122,7 +124,7 @@ export function BookingWidget({ professionalId, professionalName }: { profession
           <input
             value={serviceName}
             onChange={(event) => setServiceName(event.target.value)}
-            placeholder="Service souhaité (ex: consultation, bilan...)"
+            placeholder={t("bookingWidget.servicePlaceholder")}
             className="h-11 w-full rounded-lg border border-[var(--brand-border)] px-3 text-[14px]"
           />
           <select
@@ -130,15 +132,15 @@ export function BookingWidget({ professionalId, professionalName }: { profession
             onChange={(event) => setDurationMinutes(Number(event.target.value))}
             className="h-11 w-full rounded-lg border border-[var(--brand-border)] bg-white px-3 text-[14px]"
           >
-            <option value={30}>30 minutes</option>
-            <option value={60}>1 heure</option>
-            <option value={90}>1h30</option>
+            <option value={30}>{t("bookingWidget.duration30")}</option>
+            <option value={60}>{t("bookingWidget.duration60")}</option>
+            <option value={90}>{t("bookingWidget.duration90")}</option>
           </select>
           <textarea
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
             rows={3}
-            placeholder="Contexte utile pour le professionnel (facultatif)"
+            placeholder={t("bookingWidget.notesPlaceholder")}
             className="w-full rounded-lg border border-[var(--brand-border)] px-3 py-2 text-[14px]"
           />
           {user ? (
@@ -148,11 +150,11 @@ export function BookingWidget({ professionalId, professionalName }: { profession
               disabled={createBooking.isPending}
               className="h-11 w-full rounded-full bg-[var(--brand-primary)] text-[14px] font-semibold text-white disabled:opacity-60"
             >
-              {createBooking.isPending ? "Envoi..." : "Demander ce créneau"}
+              {createBooking.isPending ? t("bookingWidget.sending") : t("bookingWidget.requestSlot")}
             </button>
           ) : (
             <Link to="/connexion" className="block h-11 rounded-full bg-[var(--brand-primary)] text-center text-[14px] font-semibold leading-[44px] text-white">
-              Se connecter pour réserver
+              {t("bookingWidget.loginToBook")}
             </Link>
           )}
         </div>

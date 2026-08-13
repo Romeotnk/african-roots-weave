@@ -6,6 +6,7 @@ import {
   getPublicPartnerLogos,
   getPublicSiteConfig,
   getPublicTaxonomy,
+  getPublicTranslations,
 } from "../controllers/publicSite.controller.js";
 
 export const publicSiteRouter = Router();
@@ -16,3 +17,4 @@ publicSiteRouter.get("/banners", getPublicBanners);
 publicSiteRouter.get("/partner-logos", getPublicPartnerLogos);
 publicSiteRouter.get("/ads", getPublicAds);
 publicSiteRouter.get("/taxonomy", getPublicTaxonomy);
+publicSiteRouter.get("/translations", getPublicTranslations);

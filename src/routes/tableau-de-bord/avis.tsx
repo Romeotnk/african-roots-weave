@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MessageSquareReply, Search, Star } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { RatingStars } from "@/components/shared/RatingStars";
@@ -15,14 +16,14 @@ export const Route = createFileRoute("/tableau-de-bord/avis")({
   ),
 });
 
-const targetLabels: Record<string, string> = {
-  PRODUCT: "Produit",
-  PROFESSIONAL: "Profil professionnel",
-  FORMATION: "Formation",
-  BUYER: "Client",
-};
-
 function ReviewsPage() {
+  const { t } = useTranslation();
+  const targetLabels: Record<string, string> = {
+    PRODUCT: t("dashboard.reviews.targetProduct"),
+    PROFESSIONAL: t("dashboard.reviews.targetProfessional"),
+    FORMATION: t("dashboard.reviews.targetFormation"),
+    BUYER: t("dashboard.reviews.targetBuyer"),
+  };
   const reviewsQuery = useMyReceivedReviews();
   const replyToReview = useReplyToReview();
   const [query, setQuery] = useState("");
@@ -48,7 +49,7 @@ function ReviewsPage() {
     const content = replyDrafts[id]?.trim() ?? "";
     setMessage("");
     if (content.length < 5) {
-      setMessage("Ajoutez une réponse plus précise avant d'enregistrer.");
+      setMessage(t("dashboard.reviews.replyTooShort"));
       return;
     }
     replyToReview.mutate(
@@ -56,21 +57,21 @@ function ReviewsPage() {
       {
         onSuccess: () => {
           setReplyDrafts((current) => ({ ...current, [id]: "" }));
-          setMessage("Réponse publique enregistrée.");
+          setMessage(t("dashboard.reviews.replySaved"));
         },
-        onError: (error) => setMessage(error instanceof Error ? error.message : "Impossible d'enregistrer la réponse."),
+        onError: (error) => setMessage(error instanceof Error ? error.message : t("dashboard.reviews.replyError")),
       },
     );
   };
 
   return (
     <AccountLayout
-      title="Avis reçus"
-      description="Suivez les retours clients sur vos produits et votre profil, et répondez-y publiquement."
+      title={t("dashboard.reviews.title")}
+      description={t("dashboard.reviews.description")}
     >
-        {reviewsQuery.isLoading && <p className="text-[14px] text-[var(--color-text-muted)]">Chargement...</p>}
+        {reviewsQuery.isLoading && <p className="text-[14px] text-[var(--color-text-muted)]">{t("dashboard.reviews.loading")}</p>}
         {reviewsQuery.isError && (
-          <p className="rounded-[8px] border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700">Impossible de charger vos avis.</p>
+          <p className="rounded-[8px] border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700">{t("dashboard.reviews.loadError")}</p>
         )}
 
         {!reviewsQuery.isLoading && !reviewsQuery.isError && (
@@ -78,17 +79,17 @@ function ReviewsPage() {
             <div className="grid gap-4 md:grid-cols-3">
               <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
                 <Star size={22} className="text-[var(--brand-primary)]" />
-                <p className="mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">Moyenne</p>
+                <p className="mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">{t("dashboard.reviews.average")}</p>
                 <p className="mt-1 text-[28px] font-extrabold">{average.toFixed(1)}/5</p>
               </div>
-              <StatBox label="Total" value={reviews.length} />
-              <StatBox label="Sans réponse" value={withoutReply} />
+              <StatBox label={t("dashboard.reviews.total")} value={reviews.length} />
+              <StatBox label={t("dashboard.reviews.withoutReply")} value={withoutReply} />
             </div>
 
             <div className="mt-6">
               <label className="relative block max-w-md">
                 <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
-                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Rechercher un avis..." className="h-10 w-full rounded-full border border-[var(--brand-border)] bg-white pl-10 pr-4 text-[13px]" />
+                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("dashboard.reviews.searchPlaceholder")} className="h-10 w-full rounded-full border border-[var(--brand-border)] bg-white pl-10 pr-4 text-[13px]" />
               </label>
             </div>
 
@@ -98,8 +99,8 @@ function ReviewsPage() {
               {filteredReviews.length === 0 && (
                 <div className="rounded-[8px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">
                   <Star className="mx-auto text-[var(--brand-primary)]" size={32} />
-                  <h2 className="mt-3 text-[20px] font-bold">Aucun avis trouvé</h2>
-                  <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">Les prochains avis clients apparaîtront ici.</p>
+                  <h2 className="mt-3 text-[20px] font-bold">{t("dashboard.reviews.emptyTitle")}</h2>
+                  <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">{t("dashboard.reviews.emptyDesc")}</p>
                 </div>
               )}
 
@@ -122,14 +123,14 @@ function ReviewsPage() {
 
                   {review.sellerReply ? (
                     <div className="mt-4 rounded-[8px] bg-[var(--brand-primary-subtle)] p-4 text-[13px] text-[var(--brand-primary)]">
-                      <strong>Votre réponse :</strong> {review.sellerReply}
+                      <strong>{t("dashboard.reviews.yourReply")}</strong> {review.sellerReply}
                     </div>
                   ) : (
                     <div className="mt-4 flex flex-col gap-2 md:flex-row">
                       <input
                         value={replyDrafts[review.id] ?? ""}
                         onChange={(event) => setReplyDrafts((current) => ({ ...current, [review.id]: event.target.value }))}
-                        placeholder="Répondre publiquement à cet avis..."
+                        placeholder={t("dashboard.reviews.replyPlaceholder")}
                         className="h-11 min-w-0 flex-1 rounded-full border border-[var(--brand-border)] px-4 text-[14px]"
                       />
                       <button
@@ -138,7 +139,7 @@ function ReviewsPage() {
                         onClick={() => submitReply(review.id)}
                         className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white disabled:opacity-60"
                       >
-                        <MessageSquareReply size={15} /> Répondre
+                        <MessageSquareReply size={15} /> {t("dashboard.reviews.reply")}
                       </button>
                     </div>
                   )}
