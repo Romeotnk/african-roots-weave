@@ -15,9 +15,13 @@ export interface Professional {
   location: string;
   country: string;
   bio: string;
+  initiationPath?: string;
+  therapeuticSuccessRate?: number;
   innovations?: string;
   communityImpact?: string;
   philosophy?: string;
+  patientTestimonials?: string;
+  caseStudies?: string;
   avatar: string;
   cover: string;
   verified: boolean;
@@ -65,7 +69,10 @@ export interface ChatMessage {
   content: string;
   createdAt: string;
   read: boolean;
-  attachment?: string;
+  attachments?: string[];
+  /** emoji -> userIds who reacted with it */
+  reactions?: Record<string, string[]>;
+  deletedAt?: string | null;
 }
 
 export interface Conversation {
@@ -233,6 +240,7 @@ export interface Article {
   cover: string;
   space: string;
   category?: string;
+  tags?: string[];
   readTime: number;
   date: string;
   authorName: string;

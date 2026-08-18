@@ -170,7 +170,13 @@ export const register = asyncHandler(async (req, res) => {
  * - 403 banned or inactive account
  */
 export const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, turnstileToken } = req.body;
+
+  const turnstileOk = await verifyTurnstile(turnstileToken, req.ip);
+  if (!turnstileOk) {
+    throw new ApiError(400, "Turnstile verification failed");
+  }
+
   const user = await prisma.user.findUnique({
     where: { email },
     select: {
@@ -210,10 +216,11 @@ export const login = asyncHandler(async (req, res) => {
   }
 
   if (!user.isEmailVerified) {
-    throw new ApiError(
-      403,
-      "Veuillez vérifier votre adresse email avant de vous connecter. Utilisez le lien 'Renvoyer l'email de vérification' si nécessaire.",
-    );
+    // Kept in English (not the operator's own French) so the frontend's
+    // translateApiMessage() in src/lib/api/client.ts recognizes and localizes
+    // it, instead of a raw French string leaking through untranslated to an
+    // English-language session.
+    throw new ApiError(403, "Email verification required");
   }
 
   await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });

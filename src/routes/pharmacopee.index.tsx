@@ -9,15 +9,13 @@ import { ArrowRight, Leaf } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useMonographs } from "@/hooks/useContentApi";
 import { mapMonographsToPlants } from "@/lib/mappers/plantMonograph";
+import i18n from "@/lib/i18n";
 
 export const Route = createFileRoute("/pharmacopee/")({
   head: () => ({
     meta: [
       { title: "Pharmacopée vivante — IWOSAN" },
-      {
-        name: "description",
-        content: "Monographies scientifiques des plantes médicinales africaines.",
-      },
+      { name: "description", content: i18n.t("meta.pharmacopeeDescription") },
     ],
   }),
   component: Pharmacopee,

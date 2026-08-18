@@ -1,6 +1,7 @@
 import { Role } from "@prisma/client";
 import { Router } from "express";
 import {
+  applyCustomRole,
   approveArticle,
   approveEvent,
   approveFormation,
@@ -10,18 +11,21 @@ import {
   commissionConfig,
   createAd,
   createBanner,
+  createCustomRole,
   createPage,
   createPartnerLogo,
   crudList,
   dashboard,
   deleteAd,
   deleteBanner,
+  deleteCustomRole,
   deletePage,
   deletePartnerLogo,
   getUser,
   kycApprove,
   kycDocuments,
   kycReject,
+  listCustomRoles,
   listEmailTemplates,
   listPages,
   listPermissions,
@@ -45,10 +49,12 @@ import {
   rejectProfessional,
   replyTicket,
   sendNewsletter,
+  unassignCustomRole,
   updateAd,
   updateBanner,
   updateCommissionConfig,
   updateConfig,
+  updateCustomRole,
   updatePage,
   updatePartnerLogo,
   updateProfessionalCommissionRate,
@@ -124,6 +130,16 @@ adminRouter.get("/permissions", checkRole(Role.SUPER_ADMIN), listPermissions);
 adminRouter.put("/permissions/role/:role", checkRole(Role.SUPER_ADMIN), updateRolePermissions);
 adminRouter.patch("/users/:id/permissions", checkRole(Role.SUPER_ADMIN), updateUserPermissionOverrides);
 
+// Custom roles: named, admin-composable permission bundles applied to
+// ADMIN-tier accounts. Same SUPER_ADMIN-only rationale as the permission
+// routes above — this configures the permission system itself.
+adminRouter.get("/custom-roles", checkRole(Role.SUPER_ADMIN), listCustomRoles);
+adminRouter.post("/custom-roles", checkRole(Role.SUPER_ADMIN), createCustomRole);
+adminRouter.put("/custom-roles/:id", checkRole(Role.SUPER_ADMIN), updateCustomRole);
+adminRouter.delete("/custom-roles/:id", checkRole(Role.SUPER_ADMIN), deleteCustomRole);
+adminRouter.post("/users/:id/custom-role", checkRole(Role.SUPER_ADMIN), applyCustomRole);
+adminRouter.delete("/users/:id/custom-role", checkRole(Role.SUPER_ADMIN), unassignCustomRole);
+
 // Moderation.
 adminRouter.get("/products/pending", checkPermission("product.moderate"), pendingProducts);
 adminRouter.put("/products/:id/approve", checkPermission("product.moderate"), approveProduct);
@@ -196,8 +212,6 @@ adminRouter.delete("/pages/:id", checkPermission("content.pages.manage"), delete
 adminRouter.get("/config", crudList("siteConfig"));
 adminRouter.put("/config", checkPermission("system.config"), updateConfig);
 adminRouter.post("/maintenance", checkPermission("system.config"), maintenance);
-adminRouter.post("/custom-css", checkPermission("system.config"), updateConfig);
-adminRouter.post("/custom-js", checkPermission("system.config"), updateConfig);
 adminRouter.get("/translations", checkPermission("content.translations.manage"), listTranslations);
 adminRouter.put("/translations", checkPermission("content.translations.manage"), upsertTranslations);
 adminRouter.get("/email-templates", checkPermission("content.translations.manage"), listEmailTemplates);

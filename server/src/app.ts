@@ -69,7 +69,19 @@ app.use(
         frameAncestors: ["'self'"],
         imgSrc: ["'self'", "data:", "https:"],
         objectSrc: ["'none'"],
-        scriptSrc: ["'self'", (_req, res) => `'nonce-${(res as express.Response).locals.cspNonce}'`],
+        // Only these two specific, well-known analytics hosts are allowed —
+        // this is NOT a general third-party script allowance. The admin
+        // "Identité" panel only lets an admin paste a Google Analytics
+        // measurement ID / Facebook Pixel ID (validated format, no free-form
+        // script), which __root.tsx uses to conditionally load these exact
+        // vendor loaders. This is the controlled replacement for the removed
+        // free-form custom-JS field.
+        scriptSrc: [
+          "'self'",
+          "https://www.googletagmanager.com",
+          "https://connect.facebook.net",
+          (_req, res) => `'nonce-${(res as express.Response).locals.cspNonce}'`,
+        ],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       },
     },

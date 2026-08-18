@@ -36,6 +36,10 @@ const specialties = [
 const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
 const slots = ["Matin", "Apres-midi", "Soir"];
 
+// Cahier des charges: "Format narratif immersif avec galerie photos (5-10 visuels)".
+const MIN_GALLERY_PHOTOS = 5;
+const MAX_GALLERY_PHOTOS = 10;
+
 function BecomePro() {
   const { t } = useTranslation();
   const profileQuery = useMyProfessionalProfile();
@@ -54,11 +58,11 @@ function BecomePro() {
     setMainSpecialty((current) => (specialtyOptions.includes(current) ? current : specialtyOptions[0]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [specialtyTaxonomyQuery.data]);
-  const [online, setOnline] = useState(true);
+  const [online, setOnline] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
   const [consultationPrice, setConsultationPrice] = useState("");
-  const [selectedSlots, setSelectedSlots] = useState<string[]>(["Lundi-Matin", "Mercredi-Apres-midi"]);
-  const [treated, setTreated] = useState(["Postpartum", "Digestion"]);
+  const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
+  const [treated, setTreated] = useState<string[]>([]);
   const [treatedInput, setTreatedInput] = useState("");
   const [profileName, setProfileName] = useState("");
   const [bio, setBio] = useState("");
@@ -67,6 +71,8 @@ function BecomePro() {
   const [innovations, setInnovations] = useState("");
   const [communityImpact, setCommunityImpact] = useState("");
   const [philosophy, setPhilosophy] = useState("");
+  const [patientTestimonials, setPatientTestimonials] = useState("");
+  const [caseStudies, setCaseStudies] = useState("");
   const [facebookUrl, setFacebookUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
@@ -91,6 +97,8 @@ function BecomePro() {
     setInnovations(existingProfile.innovations ?? "");
     setCommunityImpact(existingProfile.communityImpact ?? "");
     setPhilosophy(existingProfile.philosophy ?? "");
+    setPatientTestimonials(existingProfile.patientTestimonials ?? "");
+    setCaseStudies(existingProfile.caseStudies ?? "");
     setFacebookUrl(existingProfile.socialLinks?.facebook ?? "");
     setInstagramUrl(existingProfile.socialLinks?.instagram ?? "");
     setWhatsapp(existingProfile.socialLinks?.whatsapp ?? "");
@@ -157,6 +165,11 @@ function BecomePro() {
       setFormMessage(t("becomePro.documentRequired"));
       return;
     }
+    const projectedGalleryCount = (existingProfile?.photos.length ?? 0) + (avatarFile ? 1 : 0) + galleryFiles.length;
+    if (projectedGalleryCount < MIN_GALLERY_PHOTOS) {
+      setFormMessage(t("becomePro.galleryTooSmall", { min: MIN_GALLERY_PHOTOS, count: projectedGalleryCount }));
+      return;
+    }
 
     try {
       const socialLinks: Record<string, string> = {};
@@ -173,6 +186,8 @@ function BecomePro() {
         innovations: innovations.trim() || undefined,
         communityImpact: communityImpact.trim() || undefined,
         philosophy: philosophy.trim() || undefined,
+        patientTestimonials: patientTestimonials.trim() || undefined,
+        caseStudies: caseStudies.trim() || undefined,
         location: city.trim(),
         latitude: latitude ?? undefined,
         longitude: longitude ?? undefined,
@@ -240,9 +255,46 @@ function BecomePro() {
                 <Upload size={26} className="text-[var(--brand-primary)]" />
                 <span className="mt-2 text-[13px] font-semibold">{t("becomePro.gallery5to10")}</span>
                 <span className="mt-1 max-w-full truncate px-3 text-[11px] text-[var(--color-text-muted)]">{galleryFiles.length ? t("becomePro.fileCount", { count: galleryFiles.length }) : t("becomePro.noFile")}</span>
-                <input type="file" multiple accept="image/*" className="sr-only" onChange={(event) => setGalleryFiles(Array.from(event.target.files ?? []).slice(0, 10))} />
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={(event) => {
+                    const remaining = Math.max(0, MAX_GALLERY_PHOTOS - (existingProfile?.photos.length ?? 0));
+                    setGalleryFiles(Array.from(event.target.files ?? []).slice(0, remaining));
+                  }}
+                />
               </label>
             </div>
+            <p className="mt-2 text-[12px] text-[var(--color-text-muted)]">
+              {t("becomePro.galleryCount", { count: existingProfile?.photos.length ?? 0, max: MAX_GALLERY_PHOTOS, min: MIN_GALLERY_PHOTOS })}
+            </p>
+            {existingProfile && existingProfile.photos.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {existingProfile.photos.map((url) => (
+                  <div key={url} className="group relative h-16 w-16 overflow-hidden rounded-[8px] border border-[var(--brand-border-light)]">
+                    <img src={url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        upsertProfile.mutate({
+                          displayName: existingProfile.displayName,
+                          specialty: existingProfile.specialty,
+                          biography: existingProfile.biography,
+                          location: existingProfile.location,
+                          photos: existingProfile.photos.filter((photo) => photo !== url),
+                        })
+                      }
+                      aria-label={t("becomePro.removePhoto")}
+                      className="absolute right-0.5 top-0.5 grid h-5 w-5 place-items-center rounded-full bg-black/60 text-white opacity-0 transition group-hover:opacity-100"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="rounded-[12px] border border-[var(--brand-border-light)] bg-white p-5">
@@ -267,6 +319,8 @@ function BecomePro() {
               <textarea value={innovations} onChange={(event) => setInnovations(event.target.value)} rows={3} placeholder={t("becomePro.innovationsPlaceholder")} className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
               <textarea value={communityImpact} onChange={(event) => setCommunityImpact(event.target.value)} rows={3} placeholder={t("becomePro.communityImpactPlaceholder")} className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
               <textarea value={philosophy} onChange={(event) => setPhilosophy(event.target.value)} rows={3} placeholder={t("becomePro.philosophyPlaceholder")} className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
+              <textarea value={patientTestimonials} onChange={(event) => setPatientTestimonials(event.target.value)} rows={3} placeholder={t("becomePro.patientTestimonialsPlaceholder")} className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
+              <textarea value={caseStudies} onChange={(event) => setCaseStudies(event.target.value)} rows={3} placeholder={t("becomePro.caseStudiesPlaceholder")} className="w-full rounded-lg border border-[var(--brand-border)] px-4 py-3" />
               <div className="grid gap-3 md:grid-cols-3">
                 <input value={facebookUrl} onChange={(event) => setFacebookUrl(event.target.value)} placeholder={t("becomePro.facebookPlaceholder")} className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />
                 <input value={instagramUrl} onChange={(event) => setInstagramUrl(event.target.value)} placeholder={t("becomePro.instagramPlaceholder")} className="h-11 rounded-lg border border-[var(--brand-border)] px-4" />

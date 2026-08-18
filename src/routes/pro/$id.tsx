@@ -73,6 +73,9 @@ function ProfessionalShowcase() {
             [products.length, t("pro.about.statsProducts")],
             [formations.length, t("pro.about.statsFormations")],
             [pro.reviewCount, t("pro.about.statsReviews")],
+            ...(typeof pro.therapeuticSuccessRate === "number"
+              ? [[`${pro.therapeuticSuccessRate}%`, t("pro.about.statsSuccessRate")]]
+              : []),
           ]
         : [],
     [pro, products.length, formations.length, t],
@@ -200,6 +203,12 @@ function ProfessionalShowcase() {
               <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
                 <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">{t("pro.about.label")}</p>
                 <p className="mt-4 text-[16px] leading-8 text-[var(--color-text-secondary)]">{pro.bio}</p>
+                {pro.initiationPath && (
+                  <div className="mt-6">
+                    <p className="font-mono text-[12px] tracking-[0.14em] text-[var(--brand-primary)]">{t("pro.about.initiationPath")}</p>
+                    <p className="mt-2 text-[14px] leading-7 text-[var(--color-text-secondary)]">{pro.initiationPath}</p>
+                  </div>
+                )}
                 {pro.innovations && (
                   <div className="mt-6">
                     <p className="font-mono text-[12px] tracking-[0.14em] text-[var(--brand-primary)]">{t("pro.about.innovations")}</p>
@@ -216,6 +225,18 @@ function ProfessionalShowcase() {
                   <div className="mt-6">
                     <p className="font-mono text-[12px] tracking-[0.14em] text-[var(--brand-primary)]">{t("pro.about.philosophy")}</p>
                     <p className="mt-2 text-[14px] leading-7 text-[var(--color-text-secondary)]">{pro.philosophy}</p>
+                  </div>
+                )}
+                {pro.patientTestimonials && (
+                  <div className="mt-6">
+                    <p className="font-mono text-[12px] tracking-[0.14em] text-[var(--brand-primary)]">{t("pro.about.patientTestimonials")}</p>
+                    <p className="mt-2 whitespace-pre-line text-[14px] leading-7 text-[var(--color-text-secondary)]">{pro.patientTestimonials}</p>
+                  </div>
+                )}
+                {pro.caseStudies && (
+                  <div className="mt-6">
+                    <p className="font-mono text-[12px] tracking-[0.14em] text-[var(--brand-primary)]">{t("pro.about.caseStudies")}</p>
+                    <p className="mt-2 whitespace-pre-line text-[14px] leading-7 text-[var(--color-text-secondary)]">{pro.caseStudies}</p>
                   </div>
                 )}
                 {pro.socialLinks && Object.values(pro.socialLinks).some(Boolean) && (

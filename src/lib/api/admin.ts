@@ -35,8 +35,12 @@ export type AdminUser = {
     isPortraitOfWeek: boolean;
     portraitStartDate: string | null;
     portraitEndDate: string | null;
+    isVerified: boolean;
+    verificationDocs: string[] | null;
   } | null;
   permissionOverrides: { grant?: string[]; revoke?: string[] } | null;
+  customRoleId: string | null;
+  customRole: { id: string; name: string } | null;
 };
 
 export type AdminUsersQuery = {
@@ -83,6 +87,20 @@ export const updateAdminRolePermissions = (role: string, permissions: string[]) 
   apiRequest<unknown>(`/admin/permissions/role/${role}`, { method: "PUT", body: { permissions } });
 export const updateAdminUserPermissionOverrides = (id: string, body: { grant: string[]; revoke: string[] }) =>
   apiRequest<AdminUser>(`/admin/users/${id}/permissions`, { method: "PATCH", body });
+
+export type CustomRole = { id: string; name: string; permissions: string[]; createdAt: string; updatedAt: string };
+
+export const getAdminCustomRoles = () => apiRequest<CustomRole[]>("/admin/custom-roles");
+export const createAdminCustomRole = (name: string, permissions: string[]) =>
+  apiRequest<CustomRole>("/admin/custom-roles", { method: "POST", body: { name, permissions } });
+export const updateAdminCustomRole = (id: string, body: { name?: string; permissions?: string[] }) =>
+  apiRequest<CustomRole>(`/admin/custom-roles/${id}`, { method: "PUT", body });
+export const deleteAdminCustomRole = (id: string) =>
+  apiRequest<null>(`/admin/custom-roles/${id}`, { method: "DELETE" });
+export const applyAdminCustomRoleToUser = (userId: string, customRoleId: string) =>
+  apiRequest<AdminUser>(`/admin/users/${userId}/custom-role`, { method: "POST", body: { customRoleId } });
+export const unassignAdminCustomRoleFromUser = (userId: string) =>
+  apiRequest<AdminUser>(`/admin/users/${userId}/custom-role`, { method: "DELETE" });
 
 export const getPendingProducts = () => apiRequest<unknown[]>("/admin/products/pending");
 export const approveProduct = (id: string) =>

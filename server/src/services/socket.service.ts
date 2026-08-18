@@ -1,5 +1,6 @@
 import type { Server as HttpServer } from "node:http";
 import { Server, type Socket } from "socket.io";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../config/db.js";
 import { allowedOrigins } from "../config/corsOrigins.js";
 import { redisDel, redisSet } from "../config/redis.js";
@@ -187,6 +188,92 @@ export const initSocket = (server: HttpServer) => {
 
     socket.on("typing:stop", (payload: { receiverId?: string }) => {
       if (typeof payload?.receiverId === "string") io?.to(payload.receiverId).emit("typing:stop", { userId });
+    });
+
+    // One reaction per user per message (picking a new emoji replaces their
+    // previous one), same convention as Messenger — keeps the reaction pill
+    // row simple (a user's avatar/count never appears under two different
+    // emojis on the same message at once).
+    socket.on(
+      "message:react",
+      async (payload: { messageId?: string; emoji?: string }, ack?: (data: unknown) => void) => {
+        try {
+          const messageId = typeof payload?.messageId === "string" ? payload.messageId : null;
+          const emoji = typeof payload?.emoji === "string" ? payload.emoji.trim() : null;
+          if (!messageId || !emoji) {
+            ack?.({ success: false });
+            return;
+          }
+
+          const existing = await prisma.message.findUnique({
+            where: { id: messageId },
+            select: { senderId: true, receiverId: true, reactions: true },
+          });
+          if (!existing || (existing.senderId !== userId && existing.receiverId !== userId)) {
+            ack?.({ success: false, message: "Message not found" });
+            return;
+          }
+
+          const current = (existing.reactions as Record<string, string[]> | null) ?? {};
+          const next: Record<string, string[]> = {};
+          let alreadyHadThisEmoji = false;
+          for (const [key, userIds] of Object.entries(current)) {
+            const withoutMe = userIds.filter((id) => id !== userId);
+            if (key === emoji && userIds.includes(userId)) alreadyHadThisEmoji = true;
+            if (withoutMe.length > 0) next[key] = withoutMe;
+          }
+          if (!alreadyHadThisEmoji) {
+            next[emoji] = [...(next[emoji] ?? []), userId];
+          }
+
+          const message = await prisma.message.update({
+            where: { id: messageId },
+            data: { reactions: next },
+          });
+          const otherParticipant = existing.senderId === userId ? existing.receiverId : existing.senderId;
+          const eventPayload = { messageId, reactions: message.reactions };
+          io?.to(userId).emit("message:reaction", eventPayload);
+          io?.to(otherParticipant).emit("message:reaction", eventPayload);
+          ack?.({ success: true, data: eventPayload });
+        } catch (error) {
+          console.error("[socket] message:react failed:", error);
+          ack?.({ success: false });
+        }
+      },
+    );
+
+    // "Unsend" — soft delete, sender only. The row stays (so both threads
+    // keep their scroll position / ordering) but content is cleared server
+    // side, not just hidden client side.
+    socket.on("message:delete", async (payload: { messageId?: string }, ack?: (data: unknown) => void) => {
+      try {
+        const messageId = typeof payload?.messageId === "string" ? payload.messageId : null;
+        if (!messageId) {
+          ack?.({ success: false });
+          return;
+        }
+
+        const existing = await prisma.message.findUnique({
+          where: { id: messageId },
+          select: { senderId: true, receiverId: true },
+        });
+        if (!existing || existing.senderId !== userId) {
+          ack?.({ success: false, message: "Message not found" });
+          return;
+        }
+
+        await prisma.message.update({
+          where: { id: messageId },
+          data: { deletedAt: new Date(), content: "", attachments: [], reactions: Prisma.JsonNull },
+        });
+        const eventPayload = { messageId };
+        io?.to(existing.senderId).emit("message:deleted", eventPayload);
+        io?.to(existing.receiverId).emit("message:deleted", eventPayload);
+        ack?.({ success: true });
+      } catch (error) {
+        console.error("[socket] message:delete failed:", error);
+        ack?.({ success: false });
+      }
     });
 
     socket.on("disconnect", async () => {

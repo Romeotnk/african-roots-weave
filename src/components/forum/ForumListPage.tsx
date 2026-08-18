@@ -6,7 +6,7 @@ import { QuestionCard } from "@/components/shared/QuestionCard";
 import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { SimplePager } from "@/components/shared/SimplePager";
-import { useForumCategories, useForumQuestions } from "@/hooks/useForumApi";
+import { useForumCategories, useForumQuestions, useForumSearch } from "@/hooks/useForumApi";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useDebounce } from "@/hooks/useDebounce";
 import { toQuestion, type BackendQuestion } from "@/lib/forumMappers";
@@ -26,7 +26,10 @@ export function ForumListPage() {
   const [selectedTag, setSelectedTag] = useState("");
   const [selectedSeverity, setSelectedSeverity] = useState("");
   const [sortBy, setSortBy] = useState("featured");
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const debouncedSearch = useDebounce(search, 300);
+  const suggestionsQuery = useForumSearch(debouncedSearch);
+  const suggestions = (showSuggestions ? (suggestionsQuery.data ?? []) : []) as { id: string; title: string }[];
   const { user } = useAuth();
   const categoriesQuery = useForumCategories();
   const categories = categoriesQuery.data ?? [];
@@ -140,7 +143,36 @@ export function ForumListPage() {
           <div className="space-y-5">
             <div className="rounded-[20px] border border-[var(--brand-border-light)] bg-white p-4">
               <div className="grid gap-4 md:grid-cols-[1fr_220px]">
-                <SearchBar placeholder={t("forum.searchPlaceholder")} value={search} onChange={setSearch} />
+                <div
+                  className="relative"
+                  onBlur={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setShowSuggestions(false);
+                  }}
+                >
+                  <SearchBar
+                    placeholder={t("forum.searchPlaceholder")}
+                    value={search}
+                    onChange={(value) => {
+                      setSearch(value);
+                      setShowSuggestions(true);
+                    }}
+                  />
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div className="absolute inset-x-0 top-[calc(100%+4px)] z-20 overflow-hidden rounded-[16px] border border-[var(--brand-border-light)] bg-white shadow-iwosan-lg">
+                      {suggestions.map((question) => (
+                        <Link
+                          key={question.id}
+                          to="/forum/$id"
+                          params={{ id: question.id }}
+                          onClick={() => setShowSuggestions(false)}
+                          className="block truncate border-b border-[var(--brand-border-light)] px-4 py-2.5 text-[13px] font-semibold text-[var(--color-text-primary)] last:border-b-0 hover:bg-[var(--brand-primary-subtle)]"
+                        >
+                          {question.title}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <select value={sortBy} onChange={(event) => setSortBy(event.target.value)} className="h-12 rounded-full border border-[var(--brand-border)] bg-white px-4 text-[13px] font-semibold">{sortOptions.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}</select>
               </div>
             </div>

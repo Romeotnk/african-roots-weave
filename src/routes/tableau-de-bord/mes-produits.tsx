@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-import { Archive, Eye, Flame, Loader2, PackageCheck, Plus, RefreshCw, Search, ShoppingBag, Sparkles, ToggleLeft, ToggleRight } from "lucide-react";
+import { Archive, Eye, Flame, Loader2, PackageCheck, Pencil, Plus, RefreshCw, Search, ShoppingBag, Sparkles, ToggleLeft, ToggleRight, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
-import { useBoostProduct, useMarkProductUrgent, useMyProducts, useRenewProduct, useUpdateProduct } from "@/hooks/useApiCatalog";
+import { useBoostProduct, useMarkProductUrgent, useMyProducts, useRenewProduct, useUpdateProduct, useUploadProductImages } from "@/hooks/useApiCatalog";
+import { useTaxonomy } from "@/hooks/useTaxonomyApi";
 import type { MyProduct } from "@/lib/api/catalog";
 
 type DisplayStatus = "published" | "review" | "paused";
@@ -46,6 +47,7 @@ function MesProduitsPage() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | DisplayStatus>("all");
   const [message, setMessage] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -216,6 +218,13 @@ function MesProduitsPage() {
                     <div className="mt-4 flex flex-wrap gap-2">
                       <button
                         type="button"
+                        onClick={() => setEditingId((current) => (current === product.id ? null : product.id))}
+                        className="btn-secondary h-10 px-4 text-[13px]"
+                      >
+                        <Pencil size={16} /> {t("dashboard.myProducts.edit")}
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => togglePublish(product)}
                         disabled={updateProduct.isPending}
                         className="btn-secondary h-10 px-4 text-[13px]"
@@ -272,6 +281,17 @@ function MesProduitsPage() {
                         </button>
                       )}
                     </div>
+
+                    {editingId === product.id && (
+                      <ProductEditForm
+                        product={product}
+                        onClose={() => setEditingId(null)}
+                        onSaved={() => {
+                          setEditingId(null);
+                          setMessage(t("dashboard.myProducts.updated"));
+                        }}
+                      />
+                    )}
                   </article>
                 );
               })
@@ -279,6 +299,204 @@ function MesProduitsPage() {
           </div>
       </AccountLayout>
     </ProtectedRoute>
+  );
+}
+
+function ProductEditForm({
+  product,
+  onClose,
+  onSaved,
+}: {
+  product: MyProduct;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const { t } = useTranslation();
+  const updateProduct = useUpdateProduct();
+  const uploadImages = useUploadProductImages();
+  const taxonomyQuery = useTaxonomy("PRODUCT_CATEGORY");
+  const allCategories = useMemo(() => taxonomyQuery.data ?? [], [taxonomyQuery.data]);
+  const parentCategories = useMemo(() => allCategories.filter((item) => !item.parentId), [allCategories]);
+
+  const [title, setTitle] = useState(product.title);
+  const [description, setDescription] = useState(product.description);
+  const [price, setPrice] = useState(String(product.price));
+  const [stock, setStock] = useState(String(product.stock));
+  const [images, setImages] = useState(product.images);
+  const initialCategory = allCategories.find((item) => item.slug === product.categorySlug);
+  const [parentCategoryId, setParentCategoryId] = useState(
+    initialCategory?.parentId ?? initialCategory?.id ?? "",
+  );
+  const [categoryId, setCategoryId] = useState(initialCategory?.id ?? "");
+  const subcategories = useMemo(
+    () => allCategories.filter((item) => item.parentId === parentCategoryId),
+    [allCategories, parentCategoryId],
+  );
+  const selectedCategory = allCategories.find((item) => item.id === categoryId) ?? allCategories.find((item) => item.id === parentCategoryId);
+  const [error, setError] = useState("");
+
+  const addPhotos = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    uploadImages.mutate(
+      { id: product.id, files: Array.from(files) },
+      {
+        onSuccess: (updated) => setImages(updated?.images ?? images),
+        onError: (err) => setError(err instanceof Error ? err.message : t("dashboard.myProducts.genericError")),
+      },
+    );
+  };
+
+  const removePhoto = (url: string) => setImages((current) => current.filter((image) => image !== url));
+
+  const save = () => {
+    setError("");
+    if (title.trim().length < 3) {
+      setError(t("dashboard.myProducts.titleTooShort"));
+      return;
+    }
+    if (description.trim().length < 10) {
+      setError(t("dashboard.myProducts.descriptionTooShort"));
+      return;
+    }
+    updateProduct.mutate(
+      {
+        id: product.id,
+        payload: {
+          title: title.trim(),
+          description: description.trim(),
+          price: Number(price) || 0,
+          category: selectedCategory?.slug ?? product.categorySlug,
+          stock: product.type !== "digital" ? Number(stock) || 0 : undefined,
+          images,
+        },
+      },
+      {
+        onSuccess: () => onSaved(),
+        onError: (err) => setError(err instanceof Error ? err.message : t("dashboard.myProducts.genericError")),
+      },
+    );
+  };
+
+  return (
+    <div className="mt-4 space-y-3 rounded-[8px] border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-4">
+      <h3 className="text-[14px] font-bold text-[var(--color-text-primary)]">{t("dashboard.myProducts.editTitle")}</h3>
+
+      <label className="block text-[12px] font-semibold text-[var(--color-text-secondary)]">
+        {t("dashboard.myProducts.fieldTitle")}
+        <input
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          className="mt-1 h-10 w-full rounded-[8px] border border-[var(--brand-border-light)] bg-white px-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
+        />
+      </label>
+
+      <label className="block text-[12px] font-semibold text-[var(--color-text-secondary)]">
+        {t("dashboard.myProducts.fieldDescription")}
+        <textarea
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          rows={3}
+          className="mt-1 w-full rounded-[8px] border border-[var(--brand-border-light)] bg-white px-3 py-2 text-[14px] outline-none focus:border-[var(--brand-primary)]"
+        />
+      </label>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="block text-[12px] font-semibold text-[var(--color-text-secondary)]">
+          {t("dashboard.myProducts.fieldPrice")}
+          <input
+            type="number"
+            min={0}
+            value={price}
+            onChange={(event) => setPrice(event.target.value)}
+            className="mt-1 h-10 w-full rounded-[8px] border border-[var(--brand-border-light)] bg-white px-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
+          />
+        </label>
+        {product.type !== "digital" && (
+          <label className="block text-[12px] font-semibold text-[var(--color-text-secondary)]">
+            {t("dashboard.myProducts.fieldStock")}
+            <input
+              type="number"
+              min={0}
+              value={stock}
+              onChange={(event) => setStock(event.target.value)}
+              className="mt-1 h-10 w-full rounded-[8px] border border-[var(--brand-border-light)] bg-white px-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
+            />
+          </label>
+        )}
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="block text-[12px] font-semibold text-[var(--color-text-secondary)]">
+          {t("dashboard.myProducts.fieldCategory")}
+          <select
+            value={parentCategoryId}
+            onChange={(event) => {
+              setParentCategoryId(event.target.value);
+              setCategoryId(event.target.value);
+            }}
+            className="mt-1 h-10 w-full rounded-[8px] border border-[var(--brand-border-light)] bg-white px-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
+          >
+            {parentCategories.map((parent) => (
+              <option key={parent.id} value={parent.id}>{parent.name}</option>
+            ))}
+          </select>
+        </label>
+        {subcategories.length > 0 && (
+          <label className="block text-[12px] font-semibold text-[var(--color-text-secondary)]">
+            {t("dashboard.myProducts.fieldSubcategory")}
+            <select
+              value={categoryId}
+              onChange={(event) => setCategoryId(event.target.value)}
+              className="mt-1 h-10 w-full rounded-[8px] border border-[var(--brand-border-light)] bg-white px-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
+            >
+              {subcategories.map((item) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
+              ))}
+            </select>
+          </label>
+        )}
+      </div>
+
+      <div>
+        <p className="text-[12px] font-semibold text-[var(--color-text-secondary)]">{t("dashboard.myProducts.fieldImages")}</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {images.map((url) => (
+            <div key={url} className="group relative h-16 w-16 overflow-hidden rounded-[8px] border border-[var(--brand-border-light)]">
+              <img src={url} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+              <button
+                type="button"
+                onClick={() => removePhoto(url)}
+                aria-label={t("dashboard.myProducts.removePhoto")}
+                className="absolute right-0.5 top-0.5 grid h-5 w-5 place-items-center rounded-full bg-black/60 text-white"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ))}
+          <label className="grid h-16 w-16 cursor-pointer place-items-center rounded-[8px] border border-dashed border-[var(--brand-border)] text-[var(--color-text-muted)] hover:border-[var(--brand-primary)]">
+            <Plus size={18} />
+            <input type="file" accept="image/*" multiple hidden onChange={(event) => addPhotos(event.target.files)} />
+          </label>
+        </div>
+        {uploadImages.isPending && <p className="mt-2 text-[12px] text-[var(--color-text-muted)]">{t("dashboard.myProducts.uploadingPhotos")}</p>}
+      </div>
+
+      {error && <p className="text-[13px] font-semibold text-red-600">{error}</p>}
+
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={save}
+          disabled={updateProduct.isPending}
+          className="btn-primary h-10 px-5 text-[13px]"
+        >
+          {updateProduct.isPending ? t("dashboard.myProducts.saving") : t("dashboard.myProducts.save")}
+        </button>
+        <button type="button" onClick={onClose} className="btn-secondary h-10 px-5 text-[13px]">
+          {t("dashboard.myProducts.cancel")}
+        </button>
+      </div>
+    </div>
   );
 }
 

@@ -57,7 +57,7 @@ function DepositListing() {
     t("deposer.steps.summary"),
   ];
   const [step, setStep] = useState(0);
-  const [title, setTitle] = useState(t("deposer.defaults.title"));
+  const [title, setTitle] = useState("");
   const [type, setType] = useState<(typeof productTypes)[number]["id"]>("physical");
   const taxonomyQuery = useTaxonomy("PRODUCT_CATEGORY");
   const allCategories = useMemo(() => taxonomyQuery.data ?? [], [taxonomyQuery.data]);
@@ -81,15 +81,15 @@ function DepositListing() {
     setCategoryId(subcategories[0].id);
   }, [subcategories, categoryId]);
   const selectedCategory = allCategories.find((item) => item.id === categoryId);
-  const [description, setDescription] = useState(t("deposer.defaults.description"));
-  const [price, setPrice] = useState("8500");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("XOF");
-  const [quantity, setQuantity] = useState("25");
+  const [quantity, setQuantity] = useState("");
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const media = useMemo(() => mediaFiles.map((file) => URL.createObjectURL(file)), [mediaFiles]);
   const [digitalUrl, setDigitalUrl] = useState("");
   const [quoteRequest, setQuoteRequest] = useState(false);
-  const [tags, setTags] = useState(["kinkeliba", "digestion"]);
+  const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [specialConditions, setSpecialConditions] = useState("");
   const [terms, setTerms] = useState(false);

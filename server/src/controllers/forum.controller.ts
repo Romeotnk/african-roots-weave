@@ -95,7 +95,7 @@ export const getQuestion = asyncHandler(async (req, res) => {
       categoryRef: { include: { parent: true } },
     },
   });
-  if (question.author.isDemoAccount && (await isDemoHidden())) {
+  if (question.isHidden || (question.author.isDemoAccount && (await isDemoHidden()))) {
     throw new ApiError(404, "Question not found");
   }
   const comments = await prisma.forumComment.findMany({

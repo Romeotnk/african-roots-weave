@@ -14,6 +14,9 @@ import { getPagination, paginationMeta } from "../utils/pagination.js";
 // unbounded — rather than pulling every row unconditionally.
 const DISTANCE_SORT_FETCH_CAP = 1000;
 
+// Cahier des charges: "Format narratif immersif avec galerie photos (5-10 visuels)".
+const MAX_GALLERY_PHOTOS = 10;
+
 export const listProfessionals = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
   const search = typeof req.query.search === "string" ? req.query.search : undefined;
@@ -172,6 +175,9 @@ export const upsertMyProfile = asyncHandler(async (req, res) => {
     innovations,
     communityImpact,
     philosophy,
+    patientTestimonials,
+    caseStudies,
+    photos,
     location,
     latitude,
     longitude,
@@ -187,6 +193,9 @@ export const upsertMyProfile = asyncHandler(async (req, res) => {
     innovations?: string;
     communityImpact?: string;
     philosophy?: string;
+    patientTestimonials?: string;
+    caseStudies?: string;
+    photos?: string[];
     location: string;
     latitude?: number;
     longitude?: number;
@@ -194,6 +203,16 @@ export const upsertMyProfile = asyncHandler(async (req, res) => {
     serviceBookingEnabled?: boolean;
     socialLinks?: Prisma.InputJsonValue;
   };
+
+  // Only accept a photos array here to let the profile owner REMOVE photos
+  // (e.g. filter one out client-side then save) — adding new photos still
+  // goes through uploadMyProfilePhotos, which uploads to Cloudinary first.
+  if (photos !== undefined && photos.length > MAX_GALLERY_PHOTOS) {
+    // English + a stable "gallery limit" phrase so the frontend's
+    // translateApiMessage() (src/lib/api/client.ts) can localize it, same
+    // convention as the login/email-verification error.
+    throw new ApiError(400, `Gallery limit exceeded: maximum ${MAX_GALLERY_PHOTOS} photos.`);
+  }
 
   const data: Prisma.ProfessionalProfileUncheckedCreateInput = {
     userId: req.user.id,
@@ -205,6 +224,9 @@ export const upsertMyProfile = asyncHandler(async (req, res) => {
     innovations: innovations || null,
     communityImpact: communityImpact || null,
     philosophy: philosophy || null,
+    photos: photos ?? undefined,
+    patientTestimonials: patientTestimonials || null,
+    caseStudies: caseStudies || null,
     location,
     latitude: typeof latitude === "number" ? latitude : null,
     longitude: typeof longitude === "number" ? longitude : null,
@@ -237,6 +259,11 @@ export const uploadMyProfilePhotos = asyncHandler(async (req, res) => {
 
   const files = (req.files as Express.Multer.File[] | undefined) ?? [];
   if (files.length === 0) throw new ApiError(400, "Aucun fichier fourni");
+  // Cahier des charges: "galerie photos (5-10 visuels)" — cap the total
+  // gallery size regardless of how many upload calls it took to get there.
+  if (profile.photos.length + files.length > MAX_GALLERY_PHOTOS) {
+    throw new ApiError(400, `Gallery limit exceeded: maximum ${MAX_GALLERY_PHOTOS} photos (${profile.photos.length} already uploaded).`);
+  }
 
   const urls = await Promise.all(
     files.map((file) => uploadBufferToCloudinary(file.buffer, "iwosan/professionals", "image")),

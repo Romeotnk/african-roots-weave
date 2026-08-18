@@ -1,4 +1,3 @@
-import { Role } from "@prisma/client";
 import { Router } from "express";
 import { listBids, placeBid } from "../controllers/bid.controller.js";
 import {
@@ -15,7 +14,7 @@ import {
 } from "../controllers/product.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { kycMiddleware } from "../middlewares/kyc.middleware.js";
-import { requireEmailVerified, roleMiddleware } from "../middlewares/role.middleware.js";
+import { checkPermission, requireEmailVerified } from "../middlewares/role.middleware.js";
 import { upload } from "../middlewares/upload.middleware.js";
 import { validateRequest } from "../middlewares/validation.middleware.js";
 import {
@@ -37,7 +36,7 @@ productRouter.post(
   "/",
   authMiddleware,
   requireEmailVerified,
-  roleMiddleware([Role.PROFESSIONAL, Role.SUPER_ADMIN, Role.ADMIN]),
+  checkPermission("product.create"),
   kycMiddleware,
   createProductValidator,
   validateRequest,

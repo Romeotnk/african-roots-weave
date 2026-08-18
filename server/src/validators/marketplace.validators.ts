@@ -37,6 +37,7 @@ export const updateProductValidator = [
   body("price").optional().isFloat({ min: 0 }),
   body("category").optional().isString().trim().notEmpty(),
   body("type").optional().isIn(Object.values(ProductType)),
+  body("images").optional().isArray(),
   body("stock").optional().isInt({ min: 0 }),
   body("isActive").optional().isBoolean(),
   body("isApproved").optional().isBoolean(),
@@ -89,6 +90,13 @@ export const couponValidator = [
 
 export const couponValidateValidator = [
   body("code").isString().isLength({ min: 3, max: 40 }).trim().escape(),
+];
+
+export const couponUpdateValidator = [
+  body("isActive").optional().isBoolean(),
+  body("discount").optional().isFloat({ min: 0 }),
+  body("maxUses").optional().isInt({ min: 1 }),
+  body("expiresAt").optional().isISO8601(),
 ];
 
 export const bidValidator = [param("id").isString().notEmpty(), body("amount").isFloat({ min: 0 })];

@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArticleListPage } from "@/components/editorial/ArticleListPage";
+import i18n from "@/lib/i18n";
 
 export const Route = createFileRoute("/rites-cultures/")({
   head: () => ({
     meta: [
       { title: "Rites & Cultures - IWOSAN" },
-      { name: "description", content: "Ceremonies de guerison, symboliques vegetales et transmission ancestrale." },
+      { name: "description", content: i18n.t("meta.ritesCulturesDescription") },
     ],
   }),
   component: RitesCulturesPage,

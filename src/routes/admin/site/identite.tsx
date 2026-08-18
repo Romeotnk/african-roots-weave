@@ -17,6 +17,8 @@ const defaults = {
   "site.primaryColor": "#1A5C2A",
   "site.secondaryColor": "#D4AF37",
   "site.customCss": "",
+  "site.gaId": "",
+  "site.fbPixelId": "",
   "maintenance.enabled": "false",
   "maintenance.message": "Le site est actuellement en maintenance. Merci de revenir bientôt.",
   "maintenance.returnAt": "",
@@ -109,6 +111,31 @@ function AdminIdentite() {
               className="mt-1 min-h-32 w-full rounded-lg border border-red-400/40 bg-red-500/10 p-3 text-[13px] text-white outline-none"
             />
           </label>
+        </AdminCard>
+
+        <AdminCard>
+          <h2 className="mb-4 text-[18px] font-bold text-white">{t("admin.identity.analyticsTitle")}</h2>
+          <p className="mb-4 text-[12px] text-slate-400">{t("admin.identity.analyticsDescription")}</p>
+          <div className="space-y-4">
+            <label className="block text-[13px] text-slate-300">
+              {t("admin.identity.gaIdLabel")}
+              <input
+                {...field("site.gaId")}
+                placeholder="G-XXXXXXXXXX"
+                pattern="^(G-[A-Z0-9]+|UA-\d+-\d+)?$"
+                className="mt-1 h-10 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none"
+              />
+            </label>
+            <label className="block text-[13px] text-slate-300">
+              {t("admin.identity.fbPixelIdLabel")}
+              <input
+                {...field("site.fbPixelId")}
+                placeholder="123456789012345"
+                pattern="^\d*$"
+                className="mt-1 h-10 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-[13px] text-white outline-none"
+              />
+            </label>
+          </div>
         </AdminCard>
 
         <AdminCard>

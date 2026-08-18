@@ -3,10 +3,13 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SocialAuthButtons } from "@/components/shared/SocialAuthButtons";
+import { TurnstileWidget } from "@/components/shared/TurnstileWidget";
 import { login, resendVerificationEmail } from "@/lib/api/auth";
 import { consumePendingSocialAccountType, signInWithSocialProvider, type SocialAuthProvider } from "@/lib/auth/social";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { getAccountHomePath } from "@/lib/auth/roles";
+
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined;
 
 export const Route = createFileRoute("/connexion")({
   head: () => ({ meta: [{ title: "Connexion - IWOSAN" }] }),
@@ -26,6 +29,8 @@ function Connexion() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [isSocialSubmitting, setIsSocialSubmitting] = useState<SocialAuthProvider | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const accountTarget = getAccountHomePath(roles);
 
   useEffect(() => {
@@ -44,9 +49,15 @@ function Connexion() {
     setError(null);
     setNeedsVerification(false);
     setResendStatus(null);
+
+    if (TURNSTILE_SITE_KEY && !turnstileToken) {
+      setError(t("auth.register.captchaRequired"));
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const response = await login(email, password);
+      const response = await login(email, password, turnstileToken ?? undefined);
       const backendRole = response.data?.user.role;
       const backendIsStaff = ["ADMIN", "SUPER_ADMIN"].includes(backendRole ?? "");
       const backendIsPro = backendRole === "PROFESSIONAL";
@@ -54,9 +65,11 @@ function Connexion() {
     } catch (apiError) {
       const message = apiError instanceof Error ? apiError.message : t("auth.login.genericError");
       setError(message);
-      setNeedsVerification(message.includes("vérifier votre adresse email"));
+      setNeedsVerification(message === t("apiClient.emailVerificationRequired"));
     } finally {
       setIsSubmitting(false);
+      setTurnstileToken(null);
+      setTurnstileResetKey((current) => current + 1);
     }
   };
 
@@ -143,6 +156,14 @@ function Connexion() {
                 </button>
                 {resendStatus && <p className="mt-1">{resendStatus}</p>}
               </div>
+            )}
+            {TURNSTILE_SITE_KEY && (
+              <TurnstileWidget
+                key={turnstileResetKey}
+                siteKey={TURNSTILE_SITE_KEY}
+                onVerify={setTurnstileToken}
+                onExpire={() => setTurnstileToken(null)}
+              />
             )}
             <button disabled={isSubmitting} className="w-full h-12 rounded-full bg-[var(--brand-primary)] text-white font-semibold hover:bg-[var(--brand-primary-dark)] disabled:opacity-70 transition">
               {isSubmitting ? t("auth.login.submitting") : t("auth.login.submit")}

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  applyAdminCustomRoleToUser,
   approveArticle,
   approveEvent,
   approveFormation,
@@ -10,9 +11,11 @@ import {
   broadcastAdminNotification,
   createAdminAd,
   createAdminBanner,
+  createAdminCustomRole,
   createAdminPartnerLogo,
   deleteAdminAd,
   deleteAdminBanner,
+  deleteAdminCustomRole,
   deleteAdminPartnerLogo,
   getAdminAds,
   getAdminAuditLog,
@@ -20,6 +23,7 @@ import {
   getAdminPartnerLogos,
   getAdminCommissionConfig,
   getAdminConfig,
+  getAdminCustomRoles,
   getAdminDashboard,
   getAdminDisputes,
   createAdminForumCategory,
@@ -66,9 +70,11 @@ import {
   resolveAdminDispute,
   resolveAdminReport,
   sendAdminNewsletter,
+  unassignAdminCustomRoleFromUser,
   unbanAdminUser,
   updateAdminAd,
   updateAdminBanner,
+  updateAdminCustomRole,
   updateAdminPartnerLogo,
   updateAdminCommissionConfig,
   getAdminEmailTemplates,
@@ -106,6 +112,7 @@ export const adminKeys = {
   config: ["admin", "config"] as const,
   commissionConfig: ["admin", "commissions", "config"] as const,
   permissions: ["admin", "permissions"] as const,
+  customRoles: ["admin", "custom-roles"] as const,
   newsletterSubscribers: ["admin", "newsletter", "subscribers"] as const,
   reports: (params: Record<string, unknown> = {}) => ["admin", "reports", params] as const,
   forumQuestions: (params: Record<string, unknown> = {}) => ["admin", "forum", "questions", params] as const,
@@ -410,6 +417,42 @@ export function useUpdateUserPermissionOverrides() {
       queryClient.invalidateQueries({ queryKey: adminKeys.user(variables.id) });
     },
   });
+}
+
+export function useAdminCustomRoles() {
+  return useQuery({ queryKey: adminKeys.customRoles, queryFn: getAdminCustomRoles, enabled: adminEnabled(), retry: false });
+}
+
+export function useAdminCustomRoleActions() {
+  const queryClient = useQueryClient();
+  const refresh = () => queryClient.invalidateQueries({ queryKey: adminKeys.customRoles });
+  return {
+    create: useMutation({
+      mutationFn: ({ name, permissions }: { name: string; permissions: string[] }) => createAdminCustomRole(name, permissions),
+      onSuccess: refresh,
+    }),
+    update: useMutation({
+      mutationFn: ({ id, name, permissions }: { id: string; name?: string; permissions?: string[] }) =>
+        updateAdminCustomRole(id, { name, permissions }),
+      onSuccess: refresh,
+    }),
+    remove: useMutation({ mutationFn: deleteAdminCustomRole, onSuccess: refresh }),
+  };
+}
+
+export function useAdminUserCustomRoleActions() {
+  const queryClient = useQueryClient();
+  const refresh = (userId: string) => queryClient.invalidateQueries({ queryKey: adminKeys.user(userId) });
+  return {
+    apply: useMutation({
+      mutationFn: ({ userId, customRoleId }: { userId: string; customRoleId: string }) => applyAdminCustomRoleToUser(userId, customRoleId),
+      onSuccess: (_data, variables) => refresh(variables.userId),
+    }),
+    unassign: useMutation({
+      mutationFn: (userId: string) => unassignAdminCustomRoleFromUser(userId),
+      onSuccess: (_data, userId) => refresh(userId),
+    }),
+  };
 }
 
 export function useUpdateAdminConfig() {

@@ -52,6 +52,14 @@ function BlogPage() {
   const [content, setContent] = useState("");
   const [space, setSpace] = useState<ArticleSpace>("SANTE_QUOTIDIEN");
   const [category, setCategory] = useState("");
+  const [tagsInput, setTagsInput] = useState("");
+  const [recipeType, setRecipeType] = useState("Infusion");
+  const [recipeDifficulty, setRecipeDifficulty] = useState("Facile");
+  const [recipePrepTime, setRecipePrepTime] = useState("");
+  const [recipePlants, setRecipePlants] = useState("");
+  const [recipeIngredients, setRecipeIngredients] = useState("");
+  const [recipeSteps, setRecipeSteps] = useState("");
+  const [recipeCautions, setRecipeCautions] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const categoriesQuery = useTaxonomy("ARTICLE_CATEGORY");
@@ -88,13 +96,34 @@ function BlogPage() {
       return;
     }
 
+    const tags = tagsInput.split(",").map((tag) => tag.trim()).filter(Boolean);
+    const linesToArray = (value: string) => value.split("\n").map((line) => line.trim()).filter(Boolean);
+    const recipeData =
+      space === "RECETTES_SANTE"
+        ? {
+            type: recipeType,
+            difficulty: recipeDifficulty,
+            prepTime: recipePrepTime.trim() || undefined,
+            plants: recipePlants.split(",").map((name) => name.trim()).filter(Boolean).map((name) => ({ name, slug: "" })),
+            ingredients: linesToArray(recipeIngredients),
+            steps: linesToArray(recipeSteps),
+            cautions: linesToArray(recipeCautions),
+          }
+        : undefined;
+
     createArticle.mutate(
-      { space, title: title.trim(), content: content.trim(), category: category || undefined },
+      { space, title: title.trim(), content: content.trim(), category: category || undefined, tags: tags.length > 0 ? tags : undefined, recipeData },
       {
         onSuccess: () => {
           setTitle("");
           setContent("");
           setCategory("");
+          setTagsInput("");
+          setRecipePrepTime("");
+          setRecipePlants("");
+          setRecipeIngredients("");
+          setRecipeSteps("");
+          setRecipeCautions("");
           setMessage(t("dashboard.blog.sentToModeration"));
         },
         onError: (mutationError) =>
@@ -168,6 +197,67 @@ function BlogPage() {
                   ))}
                 </select>
               </label>
+              <label className="mt-4 block text-[13px] font-bold text-[var(--color-text-primary)]">
+                {t("dashboard.blog.tagsLabel")}
+                <input
+                  value={tagsInput}
+                  onChange={(event) => setTagsInput(event.target.value)}
+                  placeholder={t("dashboard.blog.tagsPlaceholder")}
+                  className="mt-2 h-11 w-full rounded-[8px] border border-[var(--brand-border-light)] px-3 text-[14px] outline-none focus:border-[var(--brand-primary)]"
+                />
+              </label>
+
+              {space === "RECETTES_SANTE" && (
+                <div className="mt-4 space-y-3 rounded-[8px] border border-[var(--brand-border-light)] bg-[var(--brand-surface-alt)] p-3">
+                  <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">{t("dashboard.blog.recipeSection")}</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <select value={recipeType} onChange={(event) => setRecipeType(event.target.value)} className="h-10 w-full rounded-[8px] border border-[var(--brand-border-light)] bg-white px-3 text-[13px]">
+                      {["Infusion", "Decoction", "Cataplasme", "Baume", "Preparation culinaire"].map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                    <select value={recipeDifficulty} onChange={(event) => setRecipeDifficulty(event.target.value)} className="h-10 w-full rounded-[8px] border border-[var(--brand-border-light)] bg-white px-3 text-[13px]">
+                      {["Facile", "Intermediaire", "Avance"].map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <input
+                    value={recipePrepTime}
+                    onChange={(event) => setRecipePrepTime(event.target.value)}
+                    placeholder={t("dashboard.blog.recipePrepTimePlaceholder")}
+                    className="h-10 w-full rounded-[8px] border border-[var(--brand-border-light)] px-3 text-[13px]"
+                  />
+                  <input
+                    value={recipePlants}
+                    onChange={(event) => setRecipePlants(event.target.value)}
+                    placeholder={t("dashboard.blog.recipePlantsPlaceholder")}
+                    className="h-10 w-full rounded-[8px] border border-[var(--brand-border-light)] px-3 text-[13px]"
+                  />
+                  <textarea
+                    value={recipeIngredients}
+                    onChange={(event) => setRecipeIngredients(event.target.value)}
+                    rows={3}
+                    placeholder={t("dashboard.blog.recipeIngredientsPlaceholder")}
+                    className="w-full rounded-[8px] border border-[var(--brand-border-light)] px-3 py-2 text-[13px]"
+                  />
+                  <textarea
+                    value={recipeSteps}
+                    onChange={(event) => setRecipeSteps(event.target.value)}
+                    rows={3}
+                    placeholder={t("dashboard.blog.recipeStepsPlaceholder")}
+                    className="w-full rounded-[8px] border border-[var(--brand-border-light)] px-3 py-2 text-[13px]"
+                  />
+                  <textarea
+                    value={recipeCautions}
+                    onChange={(event) => setRecipeCautions(event.target.value)}
+                    rows={2}
+                    placeholder={t("dashboard.blog.recipeCautionsPlaceholder")}
+                    className="w-full rounded-[8px] border border-[var(--brand-border-light)] px-3 py-2 text-[13px]"
+                  />
+                </div>
+              )}
+
               <label className="mt-4 block text-[13px] font-bold text-[var(--color-text-primary)]">
                 {t("dashboard.blog.contentLabel")}
                 <textarea

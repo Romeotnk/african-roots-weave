@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArticleListPage } from "@/components/editorial/ArticleListPage";
+import i18n from "@/lib/i18n";
 
 export const Route = createFileRoute("/sante-au-quotidien/")({
   head: () => ({
     meta: [
       { title: "Sante au quotidien - IWOSAN" },
-      { name: "description", content: "Conseils et articles de santé au quotidien issus de la médecine traditionnelle africaine, rédigés par des praticiens vérifiés." },
+      { name: "description", content: i18n.t("meta.santeQuotidienDescription") },
     ],
   }),
   component: SanteQuotidienPage,

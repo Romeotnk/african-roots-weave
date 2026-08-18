@@ -16,6 +16,10 @@ type UseMessagesSocketOptions = {
   onMessageReceived?: (message: BackendMessage) => void;
   onMessageRead?: (payload: { messageId: string }) => void;
   onUserStatus?: (payload: { userId: string; isOnline: boolean; lastSeen?: string | null }) => void;
+  onTypingStart?: (payload: { userId: string }) => void;
+  onTypingStop?: (payload: { userId: string }) => void;
+  onMessageReaction?: (payload: { messageId: string; reactions: Record<string, string[]> | null }) => void;
+  onMessageDeleted?: (payload: { messageId: string }) => void;
 };
 
 const getSocketUrl = () => {
@@ -77,6 +81,12 @@ export function useMessagesSocket(options: UseMessagesSocketOptions = {}) {
     socket.on("user:status", (payload: { userId: string; isOnline: boolean; lastSeen?: string | null }) =>
       optionsRef.current.onUserStatus?.(payload),
     );
+    socket.on("typing:start", (payload: { userId: string }) => optionsRef.current.onTypingStart?.(payload));
+    socket.on("typing:stop", (payload: { userId: string }) => optionsRef.current.onTypingStop?.(payload));
+    socket.on("message:reaction", (payload: { messageId: string; reactions: Record<string, string[]> | null }) =>
+      optionsRef.current.onMessageReaction?.(payload),
+    );
+    socket.on("message:deleted", (payload: { messageId: string }) => optionsRef.current.onMessageDeleted?.(payload));
 
     return () => {
       socket.disconnect();
@@ -109,5 +119,27 @@ export function useMessagesSocket(options: UseMessagesSocketOptions = {}) {
     socketRef.current?.emit(typing ? "typing:start" : "typing:stop", { receiverId });
   }, []);
 
-  return { connected, authenticated, sendMessage, markRead, setTyping };
+  const react = useCallback((messageId: string, emoji: string) => {
+    const socket = socketRef.current;
+    if (!socket) return Promise.resolve(null);
+    return new Promise<{ messageId: string; reactions: Record<string, string[]> | null } | null>((resolve) => {
+      socket.emit(
+        "message:react",
+        { messageId, emoji },
+        (payload: { success?: boolean; data?: { messageId: string; reactions: Record<string, string[]> | null } }) => {
+          resolve(payload?.success && payload.data ? payload.data : null);
+        },
+      );
+    });
+  }, []);
+
+  const deleteMessage = useCallback((messageId: string) => {
+    const socket = socketRef.current;
+    if (!socket) return Promise.resolve(false);
+    return new Promise<boolean>((resolve) => {
+      socket.emit("message:delete", { messageId }, (payload: { success?: boolean }) => resolve(Boolean(payload?.success)));
+    });
+  }, []);
+
+  return { connected, authenticated, sendMessage, markRead, setTyping, react, deleteMessage };
 }

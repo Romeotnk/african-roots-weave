@@ -79,6 +79,8 @@ export const listConversations = asyncHandler(async (req, res) => {
           attachments: message.attachments,
           isRead: message.isRead,
           createdAt: message.createdAt,
+          reactions: message.reactions,
+          deletedAt: message.deletedAt,
         })),
       };
     })

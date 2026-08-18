@@ -11,6 +11,8 @@ export type MyProfessionalProfile = {
   innovations: string | null;
   communityImpact: string | null;
   philosophy: string | null;
+  patientTestimonials: string | null;
+  caseStudies: string | null;
   location: string;
   latitude: number | null;
   longitude: number | null;
@@ -33,6 +35,9 @@ export type UpsertProfilePayload = {
   innovations?: string;
   communityImpact?: string;
   philosophy?: string;
+  patientTestimonials?: string;
+  caseStudies?: string;
+  photos?: string[];
   location: string;
   latitude?: number;
   longitude?: number;

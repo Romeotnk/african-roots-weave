@@ -25,6 +25,13 @@ import { getSiteConfig } from "@/lib/api/site";
 import { AFFILIATE_CODE_STORAGE_KEY, trackAffiliateClick } from "@/lib/api/affiliate";
 
 const isHexColor = (value: string | undefined): value is string => Boolean(value && /^#[0-9a-fA-F]{3,8}$/.test(value));
+// Defense-in-depth: these values come from the admin "Identité" panel, not
+// end-user input, but are still validated before being interpolated into an
+// injected <script> — the whole point of replacing the old free-form JS
+// field with dedicated ID inputs is that only a known-safe ID shape ever
+// reaches the page, never arbitrary script content.
+const isGaId = (value: string | undefined): value is string => Boolean(value && /^(G-[A-Z0-9]+|UA-\d+-\d+)$/.test(value));
+const isFbPixelId = (value: string | undefined): value is string => Boolean(value && /^\d+$/.test(value));
 
 function NotFoundComponent() {
   const { t } = useTranslation();
@@ -172,11 +179,14 @@ function AppShell() {
   const isMinimal = ["/connexion", "/inscription", "/mot-de-passe-oublie", "/reset-password"].includes(pathname) || pathname.startsWith("/reset-password/");
   const isDashboard = pathname.startsWith("/tableau-de-bord");
   const siteConfigQuery = useSiteConfig();
+  const loaderData = Route.useLoaderData();
   const maintenanceEnabled = siteConfigQuery.data?.data?.["maintenance.enabled"] === "true";
   const showMaintenance = maintenanceEnabled && !pathname.startsWith("/admin");
   const primaryColor = siteConfigQuery.data?.data?.["site.primaryColor"];
   const goldColor = siteConfigQuery.data?.data?.["site.secondaryColor"];
   const customCss = siteConfigQuery.data?.data?.["site.customCss"]?.replace(/<\/style/gi, "");
+  const gaId = siteConfigQuery.data?.data?.["site.gaId"];
+  const fbPixelId = siteConfigQuery.data?.data?.["site.fbPixelId"];
 
   useEffect(() => {
     const code = new URLSearchParams(window.location.search).get("aff");
@@ -191,6 +201,25 @@ function AppShell() {
         <style>{`:root{${isHexColor(primaryColor) ? `--brand-primary:${primaryColor};--brand-primary-dark:${primaryColor};` : ""}${isHexColor(goldColor) ? `--brand-gold:${goldColor};` : ""}}`}</style>
       )}
       {customCss && <style>{customCss}</style>}
+      {isGaId(gaId) && (
+        <>
+          <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
+          <script
+            nonce={loaderData?.cspNonce}
+            dangerouslySetInnerHTML={{
+              __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}');`,
+            }}
+          />
+        </>
+      )}
+      {isFbPixelId(fbPixelId) && (
+        <script
+          nonce={loaderData?.cspNonce}
+          dangerouslySetInnerHTML={{
+            __html: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${fbPixelId}');fbq('track','PageView');`,
+          }}
+        />
+      )}
       {!showMaintenance && !isMinimal && !isDashboard && <Navbar />}
       <main className="flex-1">{showMaintenance ? <MaintenancePage config={siteConfigQuery.data?.data} /> : <Outlet />}</main>
       {!showMaintenance && !isMinimal && !isDashboard && <Footer />}

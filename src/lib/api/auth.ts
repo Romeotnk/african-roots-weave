@@ -55,10 +55,10 @@ export type RegisterPayload = {
   turnstileToken?: string;
 };
 
-export const login = async (email: string, password: string) => {
+export const login = async (email: string, password: string, turnstileToken?: string) => {
   const response = await apiRequest<{ accessToken: string; user: AuthUser; csrfToken?: string }>("/auth/login", {
     method: "POST",
-    body: { email, password },
+    body: { email, password, turnstileToken },
   });
 
   if (response.data?.accessToken) {

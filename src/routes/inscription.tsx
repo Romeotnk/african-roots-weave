@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, BriefcaseBusiness, CheckCircle2, Eye, EyeOff, ShieldCheck, Sparkles, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { CountrySelect } from "@/components/shared/CountrySelect";
@@ -75,6 +75,12 @@ function Inscription() {
   const [isSocialSubmitting, setIsSocialSubmitting] = useState<"google" | "facebook" | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("ref");
+    if (code) setReferralCode(code);
+  }, []);
 
   const selectedType = accountTypes.find((item) => item.id === accountType) ?? accountTypes[0];
 
@@ -115,6 +121,7 @@ function Inscription() {
         role: accountType === "professional" ? "PROFESSIONAL" : "USER",
         language,
         turnstileToken: turnstileToken ?? undefined,
+        referralCode: referralCode ?? undefined,
       });
       setMessage(
         accountType === "professional"
@@ -218,6 +225,11 @@ function Inscription() {
             </div>
 
             <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+              {referralCode && (
+                <p className="inline-flex items-center gap-2 rounded-full bg-[var(--brand-primary-subtle)] px-4 py-2 text-[13px] font-semibold text-[var(--brand-primary)]">
+                  {t("auth.register.referredBy", { code: referralCode })}
+                </p>
+              )}
               <div className="grid gap-3 sm:grid-cols-2">
                 <input placeholder={t("auth.register.firstNamePlaceholder")} value={firstName} onChange={(event) => setFirstName(event.target.value)} required className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 outline-none focus:border-[var(--brand-primary)]" />
                 <input placeholder={t("auth.register.lastNamePlaceholder")} value={lastName} onChange={(event) => setLastName(event.target.value)} required className="h-11 rounded-[8px] border border-[var(--brand-border)] px-4 outline-none focus:border-[var(--brand-primary)]" />

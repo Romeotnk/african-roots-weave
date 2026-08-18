@@ -19,6 +19,12 @@ model User {
   // Role enum value for every edge case (e.g. "this one PROFESSIONAL also
   // triages support tickets").
   permissionOverrides Json?
+  // Optional named permission template applied on top of the base Role's
+  // defaults + permissionOverrides above — lets a SUPER_ADMIN hand an ADMIN
+  // account a labeled role like "Support Manager" instead of only raw,
+  // unnamed permission toggles. Applying one recomputes permissionOverrides
+  // to match the template (see admin.controller.ts applyCustomRole).
+  customRoleId    String?
   firstName       String
   lastName        String
   avatarUrl       String?
@@ -94,12 +100,29 @@ model User {
   quoteRequestsAsBuyer    QuoteRequest[]            @relation("QuoteBuyer")
   quoteRequestsAsSeller   QuoteRequest[]            @relation("QuoteSeller")
   affiliateLink           AffiliateLink?
+  customRole              CustomRole?               @relation(fields: [customRoleId], references: [id], onDelete: SetNull)
 
   @@index([email])
   @@index([role])
   @@index([kycStatus])
   @@index([country])
   @@index([createdAt(sort: Desc)])
+  @@index([customRoleId])
+}
+
+// Named, admin-composable permission bundle — satisfies "create different
+// admin roles with specific permissions" without touching the Role enum
+// (which stays the fixed access tier: USER/PROFESSIONAL/ADMIN/SUPER_ADMIN).
+// A CustomRole is applied to an ADMIN-tier account by recomputing that
+// user's permissionOverrides to match the template (see applyCustomRole).
+model CustomRole {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  permissions String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users User[]
 }
 
 model RefreshToken {
@@ -155,6 +178,8 @@ model ProfessionalProfile {
   innovations            String?   @db.Text
   communityImpact        String?   @db.Text
   philosophy             String?   @db.Text
+  patientTestimonials    String?   @db.Text
+  caseStudies            String?   @db.Text
   location               String
   latitude               Float?
   longitude              Float?
@@ -878,13 +903,21 @@ model SavedSearch {
 }
 
 model Message {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   senderId    String
   receiverId  String
-  content     String   @db.Text
-  isRead      Boolean  @default(false)
+  content     String    @db.Text
+  isRead      Boolean   @default(false)
   attachments String[]
-  createdAt   DateTime @default(now())
+  // emoji -> list of userIds who reacted with it (max ~6 quick-reaction
+  // emojis surfaced in the UI, but stored generically so that isn't a
+  // hard schema constraint).
+  reactions   Json?
+  // Soft delete ("unsend"): the row stays so both participants still see a
+  // "Message deleted" placeholder in place, instead of a confusing gap /
+  // re-ordering in the thread.
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
 
   sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
   receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)

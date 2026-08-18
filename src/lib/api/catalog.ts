@@ -69,9 +69,12 @@ export type UpdateProductPayload = Partial<ProductPayload> & {
 export type MyProduct = {
   id: string;
   title: string;
+  description: string;
   category: string;
+  categorySlug: string;
   type: "physical" | "service" | "digital";
   price: number;
+  images: string[];
   stock: number;
   viewCount: number;
   isActive: boolean;
@@ -89,9 +92,13 @@ type BackendProfessional = {
   displayName: string;
   specialty: string[];
   biography: string;
+  initiationPath?: string | null;
+  therapeuticSuccessRate?: number | null;
   innovations?: string | null;
   communityImpact?: string | null;
   philosophy?: string | null;
+  patientTestimonials?: string | null;
+  caseStudies?: string | null;
   location: string;
   latitude?: number | null;
   longitude?: number | null;
@@ -186,9 +193,13 @@ export const toProfessional = (professional: BackendProfessional): Professional 
   location: professional.location,
   country: professional.user.country,
   bio: professional.biography,
+  initiationPath: professional.initiationPath ?? undefined,
+  therapeuticSuccessRate: professional.therapeuticSuccessRate ?? undefined,
   innovations: professional.innovations ?? undefined,
   communityImpact: professional.communityImpact ?? undefined,
   philosophy: professional.philosophy ?? undefined,
+  patientTestimonials: professional.patientTestimonials ?? undefined,
+  caseStudies: professional.caseStudies ?? undefined,
   avatar: professional.photos[0] ?? fallbackAvatar,
   cover: professional.photos[1] ?? professional.photos[0] ?? fallbackImage,
   gallery: professional.photos.length > 0 ? professional.photos : undefined,
@@ -248,9 +259,12 @@ export const getProfessionalById = async (id: string) => {
 export const toMyProduct = (product: BackendProduct): MyProduct => ({
   id: product.id,
   title: product.title,
+  description: product.description ?? "",
   category: product.categoryLabel ?? product.category,
+  categorySlug: product.category,
   type: productTypeMap[product.type],
   price: Number(product.price),
+  images: product.images ?? [],
   stock: product.stock ?? 0,
   viewCount: product.viewCount ?? 0,
   isActive: product.isActive ?? true,

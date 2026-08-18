@@ -1,7 +1,8 @@
 import { Search, SlidersHorizontal } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export function SearchBar({
-  placeholder = "Rechercher...",
+  placeholder,
   showFilters = true,
   onChange,
   value,
@@ -13,6 +14,8 @@ export function SearchBar({
   value?: string;
   onFilterClick?: () => void;
 }) {
+  const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t("searchBar.placeholder");
   const handleFilterClick = () => {
     if (onFilterClick) {
       onFilterClick();
@@ -32,8 +35,8 @@ export function SearchBar({
         type="text"
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
-        placeholder={placeholder}
-        aria-label={placeholder}
+        placeholder={resolvedPlaceholder}
+        aria-label={resolvedPlaceholder}
         className="flex-1 h-full bg-transparent text-[15px] outline-none placeholder:text-[var(--color-text-muted)]"
       />
       {showFilters && (
@@ -41,7 +44,7 @@ export function SearchBar({
           <div className="h-6 w-px bg-[var(--brand-border)]" />
           <button type="button" onClick={handleFilterClick} className="flex items-center gap-2 px-5 text-[14px] font-medium text-[var(--color-text-secondary)] hover:text-[var(--brand-primary)]">
             <SlidersHorizontal size={16} />
-            <span className="hidden sm:inline">Filtres</span>
+            <span className="hidden sm:inline">{t("searchBar.filters")}</span>
           </button>
         </>
       )}

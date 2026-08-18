@@ -11,6 +11,16 @@ export type ArticleQuery = {
   tag?: string;
 };
 
+export type ArticleRecipeData = {
+  type?: string;
+  difficulty?: string;
+  prepTime?: string;
+  plants?: { name: string; slug: string }[];
+  ingredients?: string[];
+  steps?: string[];
+  cautions?: string[];
+};
+
 export type ArticlePayload = {
   space: ArticleSpace;
   title: string;
@@ -19,6 +29,7 @@ export type ArticlePayload = {
   category?: string;
   tags?: string[];
   isPublished?: boolean;
+  recipeData?: ArticleRecipeData;
 };
 
 export type MonographPayload = {

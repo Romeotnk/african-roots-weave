@@ -18,6 +18,8 @@ type BackendConversation = {
     isRead: boolean;
     createdAt: string;
     attachments?: string[];
+    reactions?: Record<string, string[]> | null;
+    deletedAt?: string | null;
   }[];
 };
 
@@ -39,7 +41,9 @@ export const listConversations = async () => {
         content: message.content,
         createdAt: message.createdAt,
         read: message.isRead,
-        attachment: message.attachments?.[0],
+        attachments: message.attachments,
+        reactions: message.reactions ?? undefined,
+        deletedAt: message.deletedAt,
       })),
     }),
   );

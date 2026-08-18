@@ -12,16 +12,13 @@ import { AdSlot } from "@/components/shared/AdSlot";
 import { professionals as fallbackProfessionals } from "@/data/professionals";
 import type { Professional } from "@/types";
 import { getProfessionals } from "@/lib/api/catalog";
+import i18n from "@/lib/i18n";
 
 export const Route = createFileRoute("/annuaire/")({
   head: () => ({
     meta: [
       { title: "Annuaire des praticiens - IWOSAN" },
-      {
-        name: "description",
-        content:
-          "Decouvrez nos praticiens traditionnels vérifiés, documentés et évalués par la communaute.",
-      },
+      { name: "description", content: i18n.t("meta.annuaireDescription") },
     ],
   }),
   component: Annuaire,

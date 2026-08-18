@@ -272,7 +272,7 @@ function SectionCard({
   return (
     <Link
       to={section.to as never}
-      className={`group rounded-[8px] border bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[var(--brand-primary)] hover:shadow-iwosan-md ${
+      className={`group block rounded-[8px] border bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[var(--brand-primary)] hover:shadow-iwosan-md ${
         featured ? "border-[var(--brand-primary)] shadow-iwosan-sm" : "border-[var(--brand-border-light)]"
       }`}
     >

@@ -302,6 +302,7 @@ export const updateProduct = asyncHandler(async (req, res) => {
       price: req.body.price ? new Prisma.Decimal(req.body.price) : undefined,
       category: req.body.category,
       type: req.body.type,
+      images: req.body.images,
       stock: req.body.stock,
       isActive: req.body.isActive,
       auctionEnabled: req.body.auctionEnabled,
@@ -310,7 +311,11 @@ export const updateProduct = asyncHandler(async (req, res) => {
       downloadLimit,
       fileUrl: req.body.fileUrl,
       isQuoteOnly: typeof req.body.isQuoteOnly === "boolean" ? req.body.isQuoteOnly : undefined,
-      isApproved: canModerateProducts(req.user.role) ? req.body.isApproved : false,
+      // A seller pausing/resuming a listing or adjusting stock must not
+      // silently revoke an admin's prior approval and send it back to
+      // moderation — only moderators may change isApproved; everyone else's
+      // update leaves it untouched (Prisma `undefined` = field omitted).
+      isApproved: canModerateProducts(req.user.role) ? req.body.isApproved : undefined,
     },
     select: productSelect,
   });

@@ -4,7 +4,7 @@ import { prisma } from "../config/db.js";
 import { env } from "../config/env.js";
 import { EMAIL_TEMPLATE_DEFAULTS, sendEmail } from "../services/email.service.js";
 import { writeAuditLog } from "../services/audit.service.js";
-import { invalidateRolePermissionsCache } from "../services/permissions.service.js";
+import { getRoleDefaultPermissions, invalidateRolePermissionsCache } from "../services/permissions.service.js";
 import { isSuperAdmin, superAdminOnlySpaces } from "./content.controller.js";
 import { invalidatePublicSiteConfigCache, invalidatePublicTranslationsCache } from "./publicSite.controller.js";
 import { withCategoryLabels } from "./product.controller.js";
@@ -128,7 +128,7 @@ export const getUser = asyncHandler(async (req, res) => {
       passwordHash: true,
       kycDocuments: true,
     },
-    include: { professionalProfile: true, subscription: true, mlmNode: true },
+    include: { professionalProfile: true, subscription: true, mlmNode: true, customRole: true },
   });
   res.json(apiResponse(true, user, "User retrieved"));
 });
@@ -229,8 +229,12 @@ export const updateUserPermissionOverrides = asyncHandler(async (req, res) => {
 
   const user = await prisma.user.update({
     where: { id: req.params.id },
-    data: { permissionOverrides: { grant, revoke } },
-    select: { id: true, permissionOverrides: true },
+    // Manually editing individual permissions moves the account off whatever
+    // named CustomRole it was on — otherwise the UI would keep showing a
+    // role label ("Support Manager") that no longer matches this user's
+    // actual effective permissions.
+    data: { permissionOverrides: { grant, revoke }, customRoleId: null },
+    select: { id: true, permissionOverrides: true, customRoleId: true },
   });
   await writeAuditLog(req, {
     action: "USER_PERMISSION_OVERRIDES_UPDATED",
@@ -239,6 +243,86 @@ export const updateUserPermissionOverrides = asyncHandler(async (req, res) => {
     metadata: { grant, revoke },
   });
   res.json(apiResponse(true, user, "User permission overrides updated"));
+});
+
+export const listCustomRoles = asyncHandler(async (_req, res) => {
+  const roles = await prisma.customRole.findMany({ orderBy: { name: "asc" } });
+  res.json(apiResponse(true, roles, "Custom roles retrieved"));
+});
+
+export const createCustomRole = asyncHandler(async (req, res) => {
+  const name = String(req.body.name ?? "").trim();
+  if (!name) throw new ApiError(400, "Role name is required");
+  const permissions = Array.isArray(req.body.permissions)
+    ? (req.body.permissions as unknown[]).filter((value): value is string => PERMISSION_KEYS.includes(String(value)))
+    : [];
+
+  const role = await prisma.customRole.create({ data: { name, permissions } });
+  await writeAuditLog(req, { action: "CUSTOM_ROLE_CREATED", targetId: role.id, targetType: "CustomRole", metadata: { name, permissions } });
+  res.status(201).json(apiResponse(true, role, "Custom role created"));
+});
+
+export const updateCustomRole = asyncHandler(async (req, res) => {
+  const data: { name?: string; permissions?: string[] } = {};
+  if (typeof req.body.name === "string" && req.body.name.trim()) data.name = req.body.name.trim();
+  if (Array.isArray(req.body.permissions)) {
+    data.permissions = (req.body.permissions as unknown[]).filter((value): value is string => PERMISSION_KEYS.includes(String(value)));
+  }
+
+  const role = await prisma.customRole.update({ where: { id: req.params.id }, data });
+  await writeAuditLog(req, { action: "CUSTOM_ROLE_UPDATED", targetId: role.id, targetType: "CustomRole", metadata: data });
+  res.json(apiResponse(true, role, "Custom role updated"));
+});
+
+export const deleteCustomRole = asyncHandler(async (req, res) => {
+  // onDelete: SetNull on User.customRoleId — deleting a template only
+  // detaches it from whoever had it applied, their permissionOverrides
+  // (already computed at apply-time) keep working exactly as they were.
+  await prisma.customRole.delete({ where: { id: req.params.id } });
+  await writeAuditLog(req, { action: "CUSTOM_ROLE_DELETED", targetId: req.params.id, targetType: "CustomRole" });
+  res.json(apiResponse(true, null, "Custom role deleted"));
+});
+
+export const applyCustomRole = asyncHandler(async (req, res) => {
+  const targetUser = await prisma.user.findUnique({ where: { id: req.params.id }, select: { role: true } });
+  if (!targetUser) throw new ApiError(404, "User not found");
+
+  const role = await prisma.customRole.findUnique({ where: { id: req.body.customRoleId } });
+  if (!role) throw new ApiError(404, "Custom role not found");
+
+  // Recompute this user's permissionOverrides so the template's permission
+  // set becomes their effective permissions, expressed relative to their
+  // base Role's defaults (grant what the template adds, revoke what it
+  // removes) — reuses the exact same grant/revoke mechanism individual
+  // toggles already use, so every other permission check in the app needs
+  // no special-casing for "this account is on a custom role".
+  const roleDefaults = await getRoleDefaultPermissions(targetUser.role);
+  const templatePermissions = new Set(role.permissions);
+  const grant = role.permissions.filter((permission) => !roleDefaults.has(permission));
+  const revoke = [...roleDefaults].filter((permission) => !templatePermissions.has(permission));
+
+  const user = await prisma.user.update({
+    where: { id: req.params.id },
+    data: { customRoleId: role.id, permissionOverrides: { grant, revoke } },
+    select: { id: true, customRoleId: true, permissionOverrides: true },
+  });
+  await writeAuditLog(req, {
+    action: "CUSTOM_ROLE_APPLIED",
+    targetId: user.id,
+    targetType: "User",
+    metadata: { customRoleId: role.id, customRoleName: role.name },
+  });
+  res.json(apiResponse(true, user, "Custom role applied"));
+});
+
+export const unassignCustomRole = asyncHandler(async (req, res) => {
+  const user = await prisma.user.update({
+    where: { id: req.params.id },
+    data: { customRoleId: null },
+    select: { id: true, customRoleId: true },
+  });
+  await writeAuditLog(req, { action: "CUSTOM_ROLE_UNASSIGNED", targetId: user.id, targetType: "User" });
+  res.json(apiResponse(true, user, "Custom role unassigned"));
 });
 
 export const auditLog = asyncHandler(async (req, res) => {

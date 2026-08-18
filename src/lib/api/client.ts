@@ -54,6 +54,10 @@ const translateApiMessage = (message: string) => {
   if (lower.includes("invalid supabase session")) return i18n.t("apiClient.invalidSupabaseSession");
   if (lower.includes("route not found")) return i18n.t("apiClient.routeNotFound");
   if (lower.includes("internal server error")) return i18n.t("apiClient.internalServerError");
+  if (lower.includes("gallery limit exceeded")) {
+    const max = normalized.match(/maximum (\d+)/)?.[1] ?? "10";
+    return i18n.t("apiClient.galleryLimitExceeded", { max });
+  }
 
   return normalized || i18n.t("apiClient.genericApiError");
 };

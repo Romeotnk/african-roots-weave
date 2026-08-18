@@ -4,11 +4,13 @@ import { useTranslation } from "react-i18next";
 import { AdminCard, AdminLayout } from "@/components/admin/AdminLayout";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import {
+  useAdminCustomRoles,
   useAdminKycActions,
   useAdminKycDocuments,
   useAdminPermissions,
   useAdminUser,
   useAdminUserActions,
+  useAdminUserCustomRoleActions,
   useUpdateUserPermissionOverrides,
 } from "@/hooks/useAdminApi";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -95,7 +97,7 @@ function AdminUserDetail() {
           </div>
 
           <div className="mt-6 space-y-3 text-[13px]">
-            <InfoRow label={t("admin.userDetail.role")} value={user.role} />
+            <InfoRow label={t("admin.userDetail.role")} value={user.customRole ? `${user.role} · ${user.customRole.name}` : user.role} />
             <InfoRow label={t("admin.userDetail.country")} value={user.country} />
             <InfoRow label={t("admin.userDetail.status")} value={user.isBanned ? `${t("admin.userDetail.banned")}${user.banReason ? ` — ${user.banReason}` : ""}` : t("admin.userDetail.active")} />
             <InfoRow label={t("admin.userDetail.registration")} value={new Date(user.createdAt).toLocaleDateString("fr-FR")} />
@@ -310,6 +312,31 @@ function AdminUserDetail() {
             </AdminCard>
           )}
 
+          {user.professionalProfile && (
+            <AdminCard>
+              <h2 className="mb-4 text-[18px] font-bold text-white">{t("admin.userDetail.proVerificationDocuments")}</h2>
+              {user.professionalProfile.verificationDocs && user.professionalProfile.verificationDocs.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {user.professionalProfile.verificationDocs.map((url, index) => (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-lg bg-white/10 px-3 py-2 text-[13px] font-semibold text-emerald-300 hover:text-emerald-200"
+                    >
+                      {t("admin.userDetail.view", { label: t("admin.userDetail.proDocumentNumbered", { index: index + 1 }) })}
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[13px] text-slate-400">{t("admin.userDetail.noProDocumentsAvailable")}</p>
+              )}
+            </AdminCard>
+          )}
+
+          {user.role === "ADMIN" && actorRoles.includes("super_admin") && <CustomRoleAssignmentPanel user={user} />}
+
           <UserPermissionsPanel user={user} canEdit={actorRoles.includes("super_admin")} />
         </div>
       </div>
@@ -330,6 +357,63 @@ function AdminUserDetail() {
         }}
       />
     </AdminLayout>
+  );
+}
+
+function CustomRoleAssignmentPanel({ user }: { user: AdminUser }) {
+  const { t } = useTranslation();
+  const customRolesQuery = useAdminCustomRoles();
+  const { apply, unassign } = useAdminUserCustomRoleActions();
+  const [selected, setSelected] = useState(user.customRoleId ?? "");
+  const [notice, setNotice] = useState("");
+
+  const roles = customRolesQuery.data?.data ?? [];
+
+  return (
+    <AdminCard>
+      <h2 className="mb-2 text-[18px] font-bold text-white">{t("admin.userDetail.customRoleTitle")}</h2>
+      <p className="mb-4 text-[13px] text-slate-400">
+        {user.customRole
+          ? t("admin.userDetail.customRoleCurrent", { name: user.customRole.name })
+          : t("admin.userDetail.customRoleNone")}
+      </p>
+      <div className="flex gap-2">
+        <select
+          value={selected}
+          onChange={(event) => setSelected(event.target.value)}
+          className="h-10 flex-1 rounded-lg border border-white/10 bg-[#1a1a2e] px-3 text-[13px] text-white"
+        >
+          <option value="">{t("admin.userDetail.customRoleSelectPlaceholder")}</option>
+          {roles.map((role) => (
+            <option key={role.id} value={role.id}>{role.name}</option>
+          ))}
+        </select>
+        <button
+          type="button"
+          disabled={!selected || apply.isPending}
+          onClick={() =>
+            apply.mutate(
+              { userId: user.id, customRoleId: selected },
+              { onSuccess: () => setNotice(t("admin.userDetail.customRoleApplied")) },
+            )
+          }
+          className="rounded-lg bg-emerald-400 px-4 text-[13px] font-bold text-[#111827] disabled:opacity-50"
+        >
+          {t("admin.userDetail.customRoleApply")}
+        </button>
+        {user.customRoleId && (
+          <button
+            type="button"
+            disabled={unassign.isPending}
+            onClick={() => unassign.mutate(user.id, { onSuccess: () => { setSelected(""); setNotice(t("admin.userDetail.customRoleUnassigned")); } })}
+            className="rounded-lg border border-white/15 px-4 text-[13px] font-semibold text-white/80 disabled:opacity-50"
+          >
+            {t("admin.userDetail.customRoleRemove")}
+          </button>
+        )}
+      </div>
+      {notice && <p className="mt-3 text-[12px] font-semibold text-emerald-300">{notice}</p>}
+    </AdminCard>
   );
 }
 

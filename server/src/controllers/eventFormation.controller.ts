@@ -47,7 +47,7 @@ export const getEvent = asyncHandler(async (req, res) => {
     where: { id: req.params.id },
     include: { registrations: true, createdBy: { select: { isDemoAccount: true } } },
   });
-  if (!event || (event.createdBy.isDemoAccount && (await isDemoHidden()))) {
+  if (!event || !event.isPublished || (event.createdBy.isDemoAccount && (await isDemoHidden()))) {
     throw new ApiError(404, "Event not found");
   }
   const { createdBy: _createdBy, ...eventData } = event;
@@ -194,7 +194,7 @@ export const getFormation = asyncHandler(async (req, res) => {
       },
     },
   });
-  if (!formation || (formation.createdBy.isDemoAccount && (await isDemoHidden()))) {
+  if (!formation || !formation.isPublished || (formation.createdBy.isDemoAccount && (await isDemoHidden()))) {
     throw new ApiError(404, "Formation not found");
   }
   const { isDemoAccount: _isDemoAccount, ...createdBy } = formation.createdBy;

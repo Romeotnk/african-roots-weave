@@ -75,6 +75,7 @@ export function toArticle(article: BackendArticle, fallbackSpace: string, t: TFu
     cover: article.coverImage ?? fallbackCover,
     space: fallbackSpace,
     category: article.category ?? article.tags?.[0] ?? fallbackSpace,
+    tags: article.tags ?? [],
     readTime: Math.max(3, Math.ceil(body.length / 900)),
     date: article.publishedAt ?? article.createdAt ?? new Date().toISOString(),
     authorName: authorName || t("articleList.defaultAuthor"),
@@ -91,13 +92,14 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
   const articlesQuery = useArticles(apiSpace ? { space: apiSpace, page } : { page });
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Toutes");
+  const [tag, setTag] = useState<string | null>(null);
   const debouncedSearch = useDebounce(search, 300);
-  const isUnfiltered = category === "Toutes" && !debouncedSearch;
+  const isUnfiltered = category === "Toutes" && !tag && !debouncedSearch;
   const pagination = articlesQuery.data?.pagination;
 
   useEffect(() => {
     setPage(1);
-  }, [category, debouncedSearch]);
+  }, [category, tag, debouncedSearch]);
 
   const apiArticles = useMemo(
     () => ((articlesQuery.data?.articles ?? []) as BackendArticle[]).map((article) => toArticle(article, space, t)).filter(Boolean) as Article[],
@@ -105,6 +107,7 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
   );
   const spaceArticles = apiArticles;
   const categories = ["Toutes", ...Array.from(new Set(spaceArticles.map((article) => article.category ?? article.space)))];
+  const tags = Array.from(new Set(spaceArticles.flatMap((article) => article.tags ?? [])));
 
   const filteredArticles = useMemo(() => {
     const normalized = debouncedSearch.trim().toLowerCase();
@@ -116,9 +119,10 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
           .toLowerCase()
           .includes(normalized);
       const matchesCategory = category === "Toutes" || article.category === category;
-      return matchesSearch && matchesCategory;
+      const matchesTag = !tag || (article.tags ?? []).includes(tag);
+      return matchesSearch && matchesCategory && matchesTag;
     });
-  }, [category, debouncedSearch, spaceArticles]);
+  }, [category, tag, debouncedSearch, spaceArticles]);
 
   return (
     <>
@@ -154,6 +158,24 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
               ))}
             </div>
 
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {tags.map((item) => (
+                  <button
+                    key={item}
+                    onClick={() => setTag((current) => (current === item ? null : item))}
+                    className={`rounded-full px-3 py-1.5 text-[12px] font-semibold ${
+                      tag === item
+                        ? "bg-[var(--brand-primary)] text-white"
+                        : "border border-[var(--brand-border)] bg-white text-[var(--color-text-secondary)]"
+                    }`}
+                  >
+                    #{item}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <p className="text-[14px] text-[var(--color-text-muted)]">
               <strong className="text-[var(--color-text-primary)]">{filteredArticles.length}</strong> {t("articleList.articlesFound")}
               {debouncedSearch ? t("articleList.articlesFoundFor", { query: debouncedSearch }) : ""}
@@ -178,6 +200,7 @@ export function ArticleListPage({ space, title, badge, subtitle, image, warning 
                   onClick={() => {
                     setSearch("");
                     setCategory("Toutes");
+                    setTag(null);
                   }}
                   className="mt-4 h-10 rounded-full bg-[var(--brand-primary)] px-5 text-[13px] font-semibold text-white"
                 >

@@ -27,6 +27,7 @@ export const registerValidator = [
 export const loginValidator = [
   body("email").isEmail().normalizeEmail().withMessage("Valid email required"),
   body("password").isString().notEmpty().withMessage("Password required"),
+  body("turnstileToken").optional().isString(),
 ];
 
 export const emailValidator = [

@@ -27,16 +27,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import i18n from "@/lib/i18n";
 
 export const Route = createFileRoute("/marketplace/")({
   head: () => ({
     meta: [
       { title: "Marketplace - IWOSAN" },
-      {
-        name: "description",
-        content:
-          "Produits, services et ressources numériques de la médecine traditionnelle africaine.",
-      },
+      { name: "description", content: i18n.t("meta.marketplaceDescription") },
     ],
   }),
   component: Marketplace,

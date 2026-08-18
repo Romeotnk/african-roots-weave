@@ -82,6 +82,7 @@ import { Route as RecettesSanteSlugRouteImport } from './routes/recettes-sante.$
 import { Route as ProfilUsernameRouteImport } from './routes/profil/$username'
 import { Route as ProIdRouteImport } from './routes/pro/$id'
 import { Route as PharmacopeeSlugRouteImport } from './routes/pharmacopee.$slug'
+import { Route as ParrainageCodeRouteImport } from './routes/parrainage.$code'
 import { Route as MonCompteTicketsRouteImport } from './routes/mon-compte/tickets'
 import { Route as MonCompteReservationsRouteImport } from './routes/mon-compte/reservations'
 import { Route as MonCompteQuestionsRouteImport } from './routes/mon-compte/questions'
@@ -512,6 +513,11 @@ const PharmacopeeSlugRoute = PharmacopeeSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => PharmacopeeRoute,
 } as any)
+const ParrainageCodeRoute = ParrainageCodeRouteImport.update({
+  id: '/parrainage/$code',
+  path: '/parrainage/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MonCompteTicketsRoute = MonCompteTicketsRouteImport.update({
   id: '/tickets',
   path: '/tickets',
@@ -877,6 +883,7 @@ export interface FileRoutesByFullPath {
   '/mon-compte/questions': typeof MonCompteQuestionsRoute
   '/mon-compte/reservations': typeof MonCompteReservationsRoute
   '/mon-compte/tickets': typeof MonCompteTicketsRoute
+  '/parrainage/$code': typeof ParrainageCodeRoute
   '/pharmacopee/$slug': typeof PharmacopeeSlugRoute
   '/pro/$id': typeof ProIdRoute
   '/profil/$username': typeof ProfilUsernameRoute
@@ -989,6 +996,7 @@ export interface FileRoutesByTo {
   '/mon-compte/questions': typeof MonCompteQuestionsRoute
   '/mon-compte/reservations': typeof MonCompteReservationsRoute
   '/mon-compte/tickets': typeof MonCompteTicketsRoute
+  '/parrainage/$code': typeof ParrainageCodeRoute
   '/pharmacopee/$slug': typeof PharmacopeeSlugRoute
   '/pro/$id': typeof ProIdRoute
   '/profil/$username': typeof ProfilUsernameRoute
@@ -1124,6 +1132,7 @@ export interface FileRoutesById {
   '/mon-compte/questions': typeof MonCompteQuestionsRoute
   '/mon-compte/reservations': typeof MonCompteReservationsRoute
   '/mon-compte/tickets': typeof MonCompteTicketsRoute
+  '/parrainage/$code': typeof ParrainageCodeRoute
   '/pharmacopee/$slug': typeof PharmacopeeSlugRoute
   '/pro/$id': typeof ProIdRoute
   '/profil/$username': typeof ProfilUsernameRoute
@@ -1260,6 +1269,7 @@ export interface FileRouteTypes {
     | '/mon-compte/questions'
     | '/mon-compte/reservations'
     | '/mon-compte/tickets'
+    | '/parrainage/$code'
     | '/pharmacopee/$slug'
     | '/pro/$id'
     | '/profil/$username'
@@ -1372,6 +1382,7 @@ export interface FileRouteTypes {
     | '/mon-compte/questions'
     | '/mon-compte/reservations'
     | '/mon-compte/tickets'
+    | '/parrainage/$code'
     | '/pharmacopee/$slug'
     | '/pro/$id'
     | '/profil/$username'
@@ -1506,6 +1517,7 @@ export interface FileRouteTypes {
     | '/mon-compte/questions'
     | '/mon-compte/reservations'
     | '/mon-compte/tickets'
+    | '/parrainage/$code'
     | '/pharmacopee/$slug'
     | '/pro/$id'
     | '/profil/$username'
@@ -1609,6 +1621,7 @@ export interface RootRouteChildren {
   SanteAuQuotidienRoute: typeof SanteAuQuotidienRouteWithChildren
   SanteQuotidienRoute: typeof SanteQuotidienRouteWithChildren
   TableauDeBordRoute: typeof TableauDeBordRouteWithChildren
+  ParrainageCodeRoute: typeof ParrainageCodeRoute
   ProIdRoute: typeof ProIdRoute
   ProfilUsernameRoute: typeof ProfilUsernameRoute
   VerifyEmailTokenRoute: typeof VerifyEmailTokenRoute
@@ -2127,6 +2140,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/pharmacopee/$slug'
       preLoaderRoute: typeof PharmacopeeSlugRouteImport
       parentRoute: typeof PharmacopeeRoute
+    }
+    '/parrainage/$code': {
+      id: '/parrainage/$code'
+      path: '/parrainage/$code'
+      fullPath: '/parrainage/$code'
+      preLoaderRoute: typeof ParrainageCodeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/mon-compte/tickets': {
       id: '/mon-compte/tickets'
@@ -2986,6 +3006,7 @@ const rootRouteChildren: RootRouteChildren = {
   SanteAuQuotidienRoute: SanteAuQuotidienRouteWithChildren,
   SanteQuotidienRoute: SanteQuotidienRouteWithChildren,
   TableauDeBordRoute: TableauDeBordRouteWithChildren,
+  ParrainageCodeRoute: ParrainageCodeRoute,
   ProIdRoute: ProIdRoute,
   ProfilUsernameRoute: ProfilUsernameRoute,
   VerifyEmailTokenRoute: VerifyEmailTokenRoute,
