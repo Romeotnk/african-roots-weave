@@ -213,8 +213,8 @@ export function Navbar() {
       </div>
 
       <div className="border-b-[3px] border-[var(--brand-gold)] bg-[var(--brand-primary)] text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)]">
-        <div className="container-iwosan flex h-14 items-center justify-between gap-4 overflow-x-auto">
-          <nav className="hidden items-center gap-5 lg:flex">
+        <div className="container-iwosan flex min-h-14 items-center justify-between gap-4 py-1">
+          <nav className="hidden flex-wrap items-center gap-x-5 gap-y-1 lg:flex">
             {navLinks.map((link, idx) => {
               const showSeparator = customHeaderLinks ? idx > 0 : idx > 0 && idx !== 3 && idx !== 7 && idx !== 10;
               return (
