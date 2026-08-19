@@ -18,6 +18,8 @@ import { useEvents } from "@/hooks/useEventsFormationsApi";
 import { toEventItem, type BackendEvent } from "@/lib/eventMappers";
 import type { EventItem } from "@/types";
 
+const FALLBACK_HERO_IMAGE = "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1920&q=80&auto=format&fit=crop";
+
 export const Route = createFileRoute("/")({
   loader: async () => {
     try {
@@ -35,6 +37,12 @@ export const Route = createFileRoute("/")({
         content: loaderData?.["site.home.metaDescription"] || "Le savoir endogène africain, documenté, transmis, vivant.",
       },
     ],
+    // The hero's background photo is the page's LCP element — preload the
+    // fallback image (what actually paints first, before the client-side
+    // CMS banner fetch resolves) so the browser starts fetching it
+    // immediately instead of waiting for React to mount and the <img> tag
+    // to appear in the DOM.
+    links: [{ rel: "preload", as: "image", href: FALLBACK_HERO_IMAGE, fetchPriority: "high" }],
   }),
   component: Home,
 });
@@ -61,7 +69,7 @@ const buildHeroTrustStats = (t: TFunction) => [
 
 const buildFallbackHeroSlides = (t: TFunction): Slide[] => [
   {
-    img: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1920&q=80&auto=format&fit=crop',
+    img: FALLBACK_HERO_IMAGE,
     eyebrow: t("home.hero.slide1.eyebrow"),
     kicker: t("home.hero.slide1.kicker"),
     title: t("home.hero.slide1.title"),
@@ -146,11 +154,11 @@ function HeroCarousel() {
   if (!slide) return null;
 
   return (
-    <section className="relative isolate min-h-[92vh] overflow-hidden bg-[var(--brand-primary-dark)] text-white" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+    <section className="relative isolate min-h-[64vh] overflow-hidden bg-[var(--brand-primary-dark)] text-white" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={index} initial={{ opacity: 0, scale: 1.02 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.02 }} transition={{ duration: 0.55 }} className="absolute inset-0">
-          <img src={slide.img} alt="" className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(11,39,24,0.92)_0%,rgba(31,90,57,0.72)_42%,rgba(45,122,79,0.36)_100%)]" />
+          <img src={slide.img} alt="" className="h-full w-full object-cover" fetchPriority={index === 0 ? "high" : "auto"} decoding="async" />
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(11,39,24,0.8)_0%,rgba(31,90,57,0.55)_42%,rgba(45,122,79,0.26)_100%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.08),transparent_28%)]" />
         </motion.div>
       </AnimatePresence>
@@ -160,7 +168,7 @@ function HeroCarousel() {
           <button onClick={() => setIndex((index + 1) % heroSlides.length)} className="absolute right-3 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md text-white/60 transition hover:bg-white/10 hover:text-white" aria-label={t("home.hero.nextSlide")}><ChevronRight size={18} /></button>
         </>
       )}
-      <div className="relative container-iwosan grid min-h-[92vh] items-center gap-10 py-24 lg:grid-cols-[1fr_320px]">
+      <div className="relative container-iwosan grid min-h-[64vh] items-center gap-10 py-16 lg:grid-cols-[1fr_320px]">
         <div className="max-w-5xl">
           {(slide.eyebrow || slide.kicker) && (
             <div className="flex flex-wrap gap-3">
