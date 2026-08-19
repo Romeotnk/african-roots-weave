@@ -201,7 +201,7 @@ function ProfessionalShowcase() {
 
             {tab === "about" && (
               <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
-                <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">{t("pro.about.label")}</p>
+                <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-gold)]">{t("pro.about.label")}</p>
                 <p className="mt-4 text-[16px] leading-8 text-[var(--color-text-secondary)]">{pro.bio}</p>
                 {pro.initiationPath && (
                   <div className="mt-6">
@@ -259,7 +259,7 @@ function ProfessionalShowcase() {
 
             {tab === "location" && (
               <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
-                <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">{t("pro.location.label")}</p>
+                <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-gold)]">{t("pro.location.label")}</p>
                 <p className="mt-4 text-[14px] text-[var(--color-text-secondary)]">{pro.location}, {pro.country}</p>
                 {pro.latitude && pro.longitude ? (
                   <div className="mt-4 overflow-hidden rounded-2xl border border-[var(--brand-border-light)]">
@@ -276,7 +276,7 @@ function ProfessionalShowcase() {
             {tab === "products" && (
               <section className="space-y-5">
                 <div className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
-                  <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">{t("pro.products.label")}</p>
+                  <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-gold)]">{t("pro.products.label")}</p>
                   {products.length > 0 ? (
                     <div className="mt-5 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                       {products.map((product) => <ProductCard key={product.id} product={product} />)}
@@ -290,7 +290,7 @@ function ProfessionalShowcase() {
 
             {tab === "training" && (
               <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
-                <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">{t("pro.training.label")}</p>
+                <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-gold)]">{t("pro.training.label")}</p>
                 {formations.length > 0 ? (
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     {formations.map((course) => (
@@ -316,7 +316,7 @@ function ProfessionalShowcase() {
               <section className="space-y-5">
                 {user && user.id !== id && (
                   <div className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
-                    <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">{t("pro.reviews.leaveReview")}</p>
+                    <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-gold)]">{t("pro.reviews.leaveReview")}</p>
                     <div className="mt-4 flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map((value) => (
                         <button
@@ -376,7 +376,7 @@ function ProfessionalShowcase() {
                 )}
 
                 <div className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
-                  <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">{t("pro.reviews.patientReviews", { count: pro.reviewCount })}</p>
+                  <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-gold)]">{t("pro.reviews.patientReviews", { count: pro.reviewCount })}</p>
                   {reviewsQuery.isLoading && <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">{t("pro.reviews.loading")}</p>}
                   {!reviewsQuery.isLoading && ((reviewsQuery.data as ProfessionalReview[] | undefined)?.length ?? 0) === 0 && (
                     <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">{t("pro.reviews.empty")}</p>
@@ -410,7 +410,7 @@ function ProfessionalShowcase() {
 
           <aside className="lg:sticky lg:top-24 h-fit space-y-5 rounded-[24px] border border-[var(--brand-border-light)] bg-white p-6">
             <div>
-              <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[var(--brand-terracotta)]">{t("pro.contact.label")}</p>
+              <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[var(--brand-gold)]">{t("pro.contact.label")}</p>
               <h2 className="mt-2 text-[26px]">{t("pro.contact.title", { name: pro.name.split(" ")[0] })}</h2>
               <p className="mt-1 text-[13px] text-[var(--color-text-secondary)]">{t("pro.contact.subtitle")}</p>
             </div>

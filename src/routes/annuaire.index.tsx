@@ -157,7 +157,7 @@ function Annuaire() {
   return (
     <>
       <HeroSection
-        image="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=1920&q=80"
+        image="https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=1920&q=80"
         badge={t("annuaire.hero.badge")}
         title={t("annuaire.hero.title")}
         subtitle={t("annuaire.hero.subtitle")}

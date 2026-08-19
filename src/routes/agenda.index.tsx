@@ -78,9 +78,9 @@ function Agenda() {
 
         <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
           <div className="space-y-7">
-            <div className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-6">
-              <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--brand-terracotta)]">{t("agenda.currentDate")}</p>
-              <h2 className="mt-2 text-[28px]">{now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} {t("agenda.dateTimeSeparator")} {now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</h2>
+            <div className="flex items-center gap-2 text-[13px] text-[var(--color-text-muted)]">
+              <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--brand-gold)]">{t("agenda.currentDate")}</span>
+              <span>{now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</span>
             </div>
             {grouped.length === 0 && (
               <div className="rounded-[16px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center">

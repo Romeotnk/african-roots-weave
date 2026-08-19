@@ -231,7 +231,7 @@ export function ProductCard({ product }: { product: Product }) {
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto space-y-5 p-5 sm:p-7">
             <DialogHeader>
-              <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-[var(--brand-terracotta)]">{categoryLabel}</p>
+              <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-[var(--brand-gold)]">{categoryLabel}</p>
               <DialogTitle className="text-[24px] font-semibold sm:text-[30px]">{product.title}</DialogTitle>
               <DialogDescription>{t("productCard.detailedProductAndReservation")}</DialogDescription>
             </DialogHeader>
@@ -250,7 +250,7 @@ export function ProductCard({ product }: { product: Product }) {
               <BuyProductPanel productId={product.id} maxQuantity={product.stock} isDigital={product.type === "digital"} />
             )}
             <div className="rounded-2xl border p-4 sm:p-5">
-              <p className="font-mono text-[12px] text-[var(--brand-terracotta)]">{t("productCard.seller")}</p>
+              <p className="font-mono text-[12px] text-[var(--brand-gold)]">{t("productCard.seller")}</p>
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <img src={product.sellerAvatar} alt={product.sellerName} loading="lazy" decoding="async" width={48} height={48} className="h-12 w-12 rounded-full object-cover" />
                 <div className="min-w-0 flex-1">

@@ -61,7 +61,7 @@ export function BookingWidget({ professionalId, professionalName }: { profession
 
   return (
     <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
-      <p className="flex items-center gap-2 font-mono text-[12px] tracking-[0.18em] text-[var(--brand-terracotta)]">
+      <p className="flex items-center gap-2 font-mono text-[12px] tracking-[0.18em] text-[var(--brand-gold)]">
         <CalendarClock size={15} /> {t("bookingWidget.heading")}
       </p>
       <p className="mt-3 text-[14px] text-[var(--color-text-secondary)]">

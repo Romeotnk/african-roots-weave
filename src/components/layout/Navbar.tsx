@@ -146,7 +146,7 @@ export function Navbar() {
   );
   const navLinks = customHeaderLinks ?? mainLinks;
   const siteName = siteConfigQuery.data?.data?.["site.name"] || "IWOSAN";
-  const siteTagline = siteConfigQuery.data?.data?.["site.tagline"] || t("nav.defaultTagline");
+  const siteTagline = siteConfigQuery.data?.data?.["site.tagline"] || (siteConfigQuery.isLoading ? "" : t("nav.defaultTagline"));
   const logoUrl = siteConfigQuery.data?.data?.["site.logoUrl"];
 
   useEffect(() => setOpen(false), [pathname]);

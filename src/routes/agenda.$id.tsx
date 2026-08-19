@@ -177,7 +177,7 @@ function EventDetail() {
         </div>
 
         <aside className="h-fit rounded-[24px] border border-[var(--brand-border-light)] bg-white p-6">
-          <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-[var(--brand-terracotta)]">{t("agenda.detail.practicalInfo")}</p>
+          <p className="font-mono text-[12px] uppercase tracking-[0.18em] text-[var(--brand-gold)]">{t("agenda.detail.practicalInfo")}</p>
           <div className="mt-4 space-y-3 text-[14px] text-[var(--color-text-secondary)]">
             <p><strong>{t("agenda.detail.location")}</strong> {event.location}</p>
             {event.address && <p><strong>{t("agenda.detail.address")}</strong> {event.address}</p>}

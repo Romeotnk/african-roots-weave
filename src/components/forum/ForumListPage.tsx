@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Filter, Plus, RotateCcw } from "lucide-react";
+import { Filter, Loader2, Plus, RotateCcw } from "lucide-react";
 import { QuestionCard } from "@/components/shared/QuestionCard";
 import { Reveal, staggerDelay } from "@/components/shared/Reveal";
 import { SearchBar } from "@/components/shared/SearchBar";
@@ -85,7 +85,7 @@ export function ForumListPage() {
         <div className="container-iwosan py-10">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--brand-terracotta)]">{t("forum.eyebrow")}</p>
+              <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--brand-gold)]">{t("forum.eyebrow")}</p>
               <h1 className="mt-2 text-[34px] md:text-[46px]">{t("forum.title")}</h1>
               <p className="mt-3 max-w-2xl text-[var(--color-text-secondary)]">{t("forum.subtitle")}</p>
             </div>
@@ -183,7 +183,13 @@ export function ForumListPage() {
                 </Reveal>
               ))}
             </div>
-            {filteredQuestions.length === 0 && <div className="rounded-[20px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center"><p className="font-bold">{t("forum.notFound")}</p></div>}
+            {questionsQuery.isLoading ? (
+              <div className="flex items-center justify-center rounded-[20px] border border-dashed border-[var(--brand-border)] bg-white p-8">
+                <Loader2 className="animate-spin text-[var(--brand-primary)]" size={28} />
+              </div>
+            ) : (
+              filteredQuestions.length === 0 && <div className="rounded-[20px] border border-dashed border-[var(--brand-border)] bg-white p-8 text-center"><p className="font-bold">{t("forum.notFound")}</p></div>
+            )}
             {!hasFilters && pagination && (
               <SimplePager page={pagination.page} totalPages={pagination.totalPages} onChange={setPage} />
             )}

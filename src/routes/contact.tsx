@@ -63,7 +63,7 @@ function ContactPage() {
         <div className="grid gap-8 lg:grid-cols-[420px_1fr]">
           <aside className="space-y-6 rounded-[24px] border border-[var(--brand-border-light)] bg-white p-6">
             <div>
-              <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--brand-terracotta)]">{t("contact.coordinatesEyebrow")}</p>
+              <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-[var(--brand-gold)]">{t("contact.coordinatesEyebrow")}</p>
               <h1 className="mt-2 text-[34px]">{t("contact.title")}</h1>
             </div>
             <div className="space-y-4 text-[14px] text-[var(--color-text-secondary)]">
@@ -168,7 +168,7 @@ function MessageForm() {
       <button
         type="submit"
         disabled={sendMessage.isPending}
-        className="inline-flex h-12 items-center gap-2 rounded-full bg-[var(--brand-terracotta)] px-5 font-semibold text-white disabled:opacity-60"
+        className="inline-flex h-12 items-center gap-2 rounded-full bg-[var(--brand-gold)] px-5 font-semibold text-white disabled:opacity-60"
       >
         {sendMessage.isPending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
         {sendMessage.isPending ? t("contact.sending") : t("contact.sendMessage")}
@@ -303,7 +303,7 @@ function TicketForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="inline-flex h-12 items-center gap-2 rounded-full bg-[var(--brand-terracotta)] px-5 font-semibold text-white disabled:opacity-60"
+        className="inline-flex h-12 items-center gap-2 rounded-full bg-[var(--brand-gold)] px-5 font-semibold text-white disabled:opacity-60"
       >
         {isPending && <Loader2 size={16} className="animate-spin" />}
         {isPending ? (uploadAttachments.isPending ? t("contact.uploadingAttachment") : t("contact.creating")) : t("contact.openTicketButton")}
