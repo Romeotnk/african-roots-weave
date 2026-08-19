@@ -53,7 +53,7 @@ function MesFormationsPage() {
               <article key={enrollment.id} className="overflow-hidden rounded-[12px] border border-[var(--brand-border-light)] bg-white">
                 <div className="aspect-[16/9] w-full bg-[var(--brand-surface-alt)]">
                   {enrollment.formation.coverImage ? (
-                    <img src={enrollment.formation.coverImage} alt={enrollment.formation.title} className="h-full w-full object-cover" />
+                    <img src={enrollment.formation.coverImage} alt={enrollment.formation.title} className="h-full w-full object-cover" loading="lazy" />
                   ) : (
                     <div className="grid h-full w-full place-items-center">
                       <GraduationCap className="text-[var(--brand-primary)]" size={32} />
