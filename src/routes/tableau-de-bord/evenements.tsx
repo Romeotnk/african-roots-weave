@@ -4,6 +4,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
+import { StatCard } from "@/components/shared/StatCard";
 import { useCreateEvent, useMyEvents, useUpdateEvent } from "@/hooks/useEventsFormationsApi";
 import { toEventItem, type BackendEvent } from "@/lib/eventMappers";
 import type { EventItem } from "@/types";
@@ -320,12 +321,3 @@ function EventsDashboard() {
   );
 }
 
-function StatCard({ label, value, icon: Icon }: { label: string; value: number; icon: typeof Calendar }) {
-  return (
-    <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
-      <Icon size={22} className="text-[var(--brand-primary)]" />
-      <p className="mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">{label}</p>
-      <p className="mt-1 text-[28px] font-extrabold">{value.toLocaleString("fr-FR")}</p>
-    </div>
-  );
-}

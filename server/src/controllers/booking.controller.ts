@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../config/db.js";
+import { createNotification } from "../services/notification.service.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
@@ -238,5 +239,26 @@ export const updateBookingStatus = asyncHandler(async (req, res) => {
     },
     select: bookingSelect,
   });
+
+  if (nextStatus === "CONFIRMED") {
+    await createNotification({
+      userId: existing.clientId,
+      type: "BOOKING_CONFIRMED",
+      title: "Réservation confirmée",
+      message: `Votre réservation « ${booking.serviceName} » a été confirmée.`,
+      link: "/mon-compte/reservations",
+    });
+  } else if (nextStatus === "CANCELLED") {
+    const cancelledByClient = req.user.id === existing.clientId;
+    const otherPartyId = cancelledByClient ? existing.professionalId : existing.clientId;
+    await createNotification({
+      userId: otherPartyId,
+      type: "BOOKING_CANCELLED",
+      title: "Réservation annulée",
+      message: `La réservation « ${booking.serviceName} » a été annulée.`,
+      link: cancelledByClient ? "/tableau-de-bord/reservations" : "/mon-compte/reservations",
+    });
+  }
+
   res.json(apiResponse(true, booking, "Booking updated"));
 });

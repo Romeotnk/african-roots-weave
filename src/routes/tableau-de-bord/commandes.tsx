@@ -3,10 +3,18 @@ import type { LucideIcon } from "lucide-react";
 import { AlertTriangle, CheckCircle2, Clock, MessageSquare, Package, Search, ShieldCheck, Star, Truck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
+import { StatCard } from "@/components/shared/StatCard";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { useAcknowledgeOrderRefund, useMarkOrderShipped, useMyOrders, useOpenOrderDispute } from "@/hooks/useOrdersApi";
 import { useCreateReview } from "@/hooks/useReviewsApi";
+
+const REVENUE_TREND_DAYS = 14;
+const revenueChartConfig: ChartConfig = {
+  revenue: { label: "Revenu", color: "var(--brand-primary)" },
+};
 
 type PrismaOrderStatus = "PENDING" | "PAID" | "SHIPPED" | "DELIVERED" | "DISPUTED" | "REFUNDED" | "CANCELLED";
 type RefundStatus = "REQUESTED" | "APPROVED" | "REJECTED" | "PROCESSED";
@@ -76,6 +84,22 @@ function CommandesPage() {
     .reduce((sum, order) => sum + Number(order.totalAmount), 0);
   const toShipCount = orders.filter((order) => order.status === "PAID").length;
 
+  const revenueTrend = useMemo(() => {
+    const today = new Date(new Date().toDateString());
+    const days = Array.from({ length: REVENUE_TREND_DAYS }, (_, i) => {
+      const date = new Date(today.getTime() - (REVENUE_TREND_DAYS - 1 - i) * 24 * 60 * 60 * 1000);
+      return { key: date.toISOString().slice(0, 10), label: date.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }), revenue: 0 };
+    });
+    const byDay = new Map(days.map((day) => [day.key, day]));
+    for (const order of orders) {
+      if (["CANCELLED", "REFUNDED"].includes(order.status)) continue;
+      const key = order.createdAt.slice(0, 10);
+      const bucket = byDay.get(key);
+      if (bucket) bucket.revenue += Number(order.totalAmount);
+    }
+    return days;
+  }, [orders]);
+
   const shipOrder = (id: string) => {
     markShipped.mutate(id, {
       onSuccess: () => setMessage(t("dashboard.orders.shipped")),
@@ -112,9 +136,9 @@ function CommandesPage() {
           {!ordersQuery.isLoading && !ordersQuery.isError && (
             <>
               <div className="grid gap-4 md:grid-cols-3">
-                <StatCard icon={Package} label={t("dashboard.orders.statOrders")} value={String(orders.length)} />
-                <StatCard icon={Clock} label={t("dashboard.orders.statToShip")} value={String(toShipCount)} />
-                <StatCard icon={CheckCircle2} label={t("dashboard.orders.statActiveAmount")} value={formatMoney(activeRevenue)} />
+                <StatCard icon={Package} label={t("dashboard.orders.statOrders")} value={orders.length} />
+                <StatCard icon={Clock} label={t("dashboard.orders.statToShip")} value={toShipCount} tone="warning" />
+                <StatCard icon={CheckCircle2} label={t("dashboard.orders.statActiveAmount")} value={formatMoney(activeRevenue)} tone="success" />
               </div>
 
               <div className="mt-6 rounded-[8px] border border-[var(--brand-border-light)] bg-white p-4">
@@ -146,6 +170,30 @@ function CommandesPage() {
                   </div>
                 </div>
                 {message && <p className="mt-3 rounded-[8px] bg-emerald-50 px-4 py-3 text-[13px] font-semibold text-emerald-700">{message}</p>}
+              </div>
+
+              <div className="mt-6 rounded-[8px] border border-[var(--brand-border-light)] bg-white p-4">
+                <div className="flex items-baseline justify-between gap-2">
+                  <h2 className="text-[15px] font-bold text-[var(--color-text-primary)]">{t("dashboard.orders.revenueTrendTitle")}</h2>
+                  <p className="text-[12px] text-[var(--color-text-muted)]">{t("dashboard.orders.revenueTrendCaption")}</p>
+                </div>
+                <ChartContainer config={revenueChartConfig} className="mt-3 aspect-auto h-[180px] w-full">
+                  <AreaChart data={revenueTrend} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--brand-primary)" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="var(--brand-primary)" stopOpacity={0.03} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid vertical={false} stroke="var(--brand-border-light)" />
+                    <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "var(--color-text-muted)" }} interval={2} />
+                    <ChartTooltip
+                      cursor={{ stroke: "var(--brand-primary)", strokeWidth: 1 }}
+                      content={<ChartTooltipContent hideLabel formatter={(value) => `${formatMoney(Number(value))}`} />}
+                    />
+                    <Area type="monotone" dataKey="revenue" stroke="var(--brand-primary)" strokeWidth={2} fill="url(#revenueFill)" />
+                  </AreaChart>
+                </ChartContainer>
               </div>
 
               <div className="mt-5 space-y-3">
@@ -340,15 +388,6 @@ function RefundPanel({ order, onDone }: { order: BackendOrder; onDone: (message:
   );
 }
 
-function StatCard({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
-  return (
-    <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
-      <Icon size={22} className="text-[var(--brand-primary)]" />
-      <p className="mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">{label}</p>
-      <p className="mt-1 text-[24px] font-extrabold text-[var(--color-text-primary)]">{value}</p>
-    </div>
-  );
-}
 
 function EmptyState() {
   const { t } = useTranslation();

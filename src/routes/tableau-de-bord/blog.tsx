@@ -5,6 +5,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
+import { StatCard } from "@/components/shared/StatCard";
 import { useCreateArticle, useDeleteArticle, useMyArticles } from "@/hooks/useContentApi";
 import { useTaxonomy } from "@/hooks/useTaxonomyApi";
 import type { ArticleSpace, MyArticle } from "@/lib/api/content";
@@ -363,15 +364,6 @@ function BlogPage() {
   );
 }
 
-function StatCard({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
-  return (
-    <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
-      <Icon size={22} className="text-[var(--brand-primary)]" />
-      <p className="mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">{label}</p>
-      <p className="mt-1 text-[24px] font-extrabold text-[var(--color-text-primary)]">{value}</p>
-    </div>
-  );
-}
 
 export const Route = createFileRoute("/tableau-de-bord/blog")({
   head: () => ({ meta: [{ title: "Mon blog - IWOSAN" }] }),

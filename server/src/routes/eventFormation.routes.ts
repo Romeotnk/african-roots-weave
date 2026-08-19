@@ -10,6 +10,7 @@ import {
   listEvents,
   listFormations,
   listMyEvents,
+  listMyFormationEnrollments,
   listMyFormations,
   listMyRegistrations,
   registerEvent,
@@ -43,6 +44,7 @@ eventRouter.delete("/:id/register", authMiddleware, requireEmailVerified, unregi
 // Training resource library.
 formationRouter.get("/", listFormations);
 formationRouter.get("/mine", authMiddleware, listMyFormations);
+formationRouter.get("/enrollments/mine", authMiddleware, listMyFormationEnrollments);
 formationRouter.get("/:id", getFormation);
 formationRouter.post(
   "/",

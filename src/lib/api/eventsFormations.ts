@@ -182,3 +182,22 @@ export async function updateFormationProgress(id: string, lessonId: string, comp
   });
   return response.data;
 }
+
+export type MyFormationEnrollment = FormationEnrollment & {
+  lessonCount: number;
+  progressPercent: number;
+  formation: {
+    id: string;
+    slug: string | null;
+    title: string;
+    coverImage: string | null;
+    category: string;
+    duration: string | null;
+    createdBy: { firstName: string; lastName: string };
+  };
+};
+
+export async function listMyFormationEnrollments() {
+  const response = await apiRequest<unknown>("/formations/enrollments/mine");
+  return asList(response.data) as MyFormationEnrollment[];
+}

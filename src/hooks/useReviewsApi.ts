@@ -32,6 +32,11 @@ export function useReplyToReview() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, content }: { id: string; content: string }) => replyToReview(id, content),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["reviews", "received", "mine"] }),
+    // Prefix match, not the narrower ["reviews","received","mine"] key: a reply
+    // can be posted from the dashboard (that key) or from the professional's own
+    // public profile (useTargetReviews's ["reviews", targetType, targetId] key)
+    // — invalidating the whole "reviews" prefix refreshes both instead of only
+    // whichever one this hook happened to be written against first.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["reviews"] }),
   });
 }

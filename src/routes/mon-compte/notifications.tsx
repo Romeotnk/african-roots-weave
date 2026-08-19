@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bell, CheckCircle2, MessageSquare, PackageCheck, Star, Store, Users } from "lucide-react";
+import { Bell, CheckCircle2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
-import type { NotificationType } from "@/data/notifications";
+import { NOTIFICATION_ICONS } from "@/data/notifications";
 import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from "@/hooks/useNotificationsApi";
 
 export const Route = createFileRoute("/mon-compte/notifications")({
@@ -16,31 +16,25 @@ export const Route = createFileRoute("/mon-compte/notifications")({
   ),
 });
 
-const icons: Record<NotificationType, typeof Bell> = {
-  message: MessageSquare,
-  listing: Store,
-  order: PackageCheck,
-  review: Star,
-  forum: Users,
-};
+type ReadFilter = "all" | "unread" | "read";
 
 function NotificationsPage() {
   const { t } = useTranslation();
-  const [filter, setFilter] = useState<"all" | NotificationType>("all");
+  const [filter, setFilter] = useState<ReadFilter>("all");
   const [actionMessage, setActionMessage] = useState("");
   const { data: items = [] } = useNotifications();
   const markRead = useMarkNotificationRead();
   const markAllReadMutation = useMarkAllNotificationsRead();
-  const filtered = useMemo(() => items.filter((item) => filter === "all" || item.type === filter), [filter, items]);
+  const filtered = useMemo(
+    () => items.filter((item) => filter === "all" || (filter === "unread" ? !item.read : item.read)),
+    [filter, items],
+  );
   const unreadCount = items.filter((item) => !item.read).length;
 
-  const filterLabels: Record<"all" | NotificationType, string> = {
+  const filterLabels: Record<ReadFilter, string> = {
     all: t("account.notifications.filterAll"),
-    message: t("account.notifications.filterMessage"),
-    listing: t("account.notifications.filterListing"),
-    order: t("account.notifications.filterOrder"),
-    review: t("account.notifications.filterReview"),
-    forum: t("account.notifications.filterForum"),
+    unread: t("account.notifications.filterUnread"),
+    read: t("account.notifications.filterRead"),
   };
 
   const updateReadState = (id: string, read: boolean) => {
@@ -77,7 +71,7 @@ function NotificationsPage() {
     >
       <div className="max-w-4xl">
         <div className="flex flex-wrap gap-2">
-          {(["all", "message", "listing", "order", "review", "forum"] as const).map((item) => (
+          {(["all", "unread", "read"] as const).map((item) => (
             <button
               key={item}
               type="button"
@@ -107,7 +101,7 @@ function NotificationsPage() {
           )}
 
           {filtered.map((item) => {
-            const Icon = icons[item.type];
+            const Icon = NOTIFICATION_ICONS[item.type];
             return (
               <div key={item.id} className={`rounded-[12px] border bg-white p-4 shadow-iwosan-sm ${item.read ? "border-[var(--brand-border-light)]" : "border-[var(--brand-primary)]"}`}>
                 <div className="flex gap-4">

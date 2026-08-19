@@ -90,6 +90,7 @@ import { Route as MonCompteProfilRouteImport } from './routes/mon-compte/profil'
 import { Route as MonComptePortefeuilleRouteImport } from './routes/mon-compte/portefeuille'
 import { Route as MonCompteParametresRouteImport } from './routes/mon-compte/parametres'
 import { Route as MonCompteNotificationsRouteImport } from './routes/mon-compte/notifications'
+import { Route as MonCompteMesFormationsRouteImport } from './routes/mon-compte/mes-formations'
 import { Route as MonCompteKycRouteImport } from './routes/mon-compte/kyc'
 import { Route as MonCompteInscriptionsRouteImport } from './routes/mon-compte/inscriptions'
 import { Route as MonCompteFavorisRouteImport } from './routes/mon-compte/favoris'
@@ -553,6 +554,11 @@ const MonCompteNotificationsRoute = MonCompteNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => MonCompteRoute,
 } as any)
+const MonCompteMesFormationsRoute = MonCompteMesFormationsRouteImport.update({
+  id: '/mes-formations',
+  path: '/mes-formations',
+  getParentRoute: () => MonCompteRoute,
+} as any)
 const MonCompteKycRoute = MonCompteKycRouteImport.update({
   id: '/kyc',
   path: '/kyc',
@@ -876,6 +882,7 @@ export interface FileRoutesByFullPath {
   '/mon-compte/favoris': typeof MonCompteFavorisRoute
   '/mon-compte/inscriptions': typeof MonCompteInscriptionsRoute
   '/mon-compte/kyc': typeof MonCompteKycRoute
+  '/mon-compte/mes-formations': typeof MonCompteMesFormationsRoute
   '/mon-compte/notifications': typeof MonCompteNotificationsRoute
   '/mon-compte/parametres': typeof MonCompteParametresRoute
   '/mon-compte/portefeuille': typeof MonComptePortefeuilleRoute
@@ -989,6 +996,7 @@ export interface FileRoutesByTo {
   '/mon-compte/favoris': typeof MonCompteFavorisRoute
   '/mon-compte/inscriptions': typeof MonCompteInscriptionsRoute
   '/mon-compte/kyc': typeof MonCompteKycRoute
+  '/mon-compte/mes-formations': typeof MonCompteMesFormationsRoute
   '/mon-compte/notifications': typeof MonCompteNotificationsRoute
   '/mon-compte/parametres': typeof MonCompteParametresRoute
   '/mon-compte/portefeuille': typeof MonComptePortefeuilleRoute
@@ -1125,6 +1133,7 @@ export interface FileRoutesById {
   '/mon-compte/favoris': typeof MonCompteFavorisRoute
   '/mon-compte/inscriptions': typeof MonCompteInscriptionsRoute
   '/mon-compte/kyc': typeof MonCompteKycRoute
+  '/mon-compte/mes-formations': typeof MonCompteMesFormationsRoute
   '/mon-compte/notifications': typeof MonCompteNotificationsRoute
   '/mon-compte/parametres': typeof MonCompteParametresRoute
   '/mon-compte/portefeuille': typeof MonComptePortefeuilleRoute
@@ -1262,6 +1271,7 @@ export interface FileRouteTypes {
     | '/mon-compte/favoris'
     | '/mon-compte/inscriptions'
     | '/mon-compte/kyc'
+    | '/mon-compte/mes-formations'
     | '/mon-compte/notifications'
     | '/mon-compte/parametres'
     | '/mon-compte/portefeuille'
@@ -1375,6 +1385,7 @@ export interface FileRouteTypes {
     | '/mon-compte/favoris'
     | '/mon-compte/inscriptions'
     | '/mon-compte/kyc'
+    | '/mon-compte/mes-formations'
     | '/mon-compte/notifications'
     | '/mon-compte/parametres'
     | '/mon-compte/portefeuille'
@@ -1510,6 +1521,7 @@ export interface FileRouteTypes {
     | '/mon-compte/favoris'
     | '/mon-compte/inscriptions'
     | '/mon-compte/kyc'
+    | '/mon-compte/mes-formations'
     | '/mon-compte/notifications'
     | '/mon-compte/parametres'
     | '/mon-compte/portefeuille'
@@ -2197,6 +2209,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MonCompteNotificationsRouteImport
       parentRoute: typeof MonCompteRoute
     }
+    '/mon-compte/mes-formations': {
+      id: '/mon-compte/mes-formations'
+      path: '/mes-formations'
+      fullPath: '/mon-compte/mes-formations'
+      preLoaderRoute: typeof MonCompteMesFormationsRouteImport
+      parentRoute: typeof MonCompteRoute
+    }
     '/mon-compte/kyc': {
       id: '/mon-compte/kyc'
       path: '/kyc'
@@ -2800,6 +2819,7 @@ interface MonCompteRouteChildren {
   MonCompteFavorisRoute: typeof MonCompteFavorisRoute
   MonCompteInscriptionsRoute: typeof MonCompteInscriptionsRoute
   MonCompteKycRoute: typeof MonCompteKycRoute
+  MonCompteMesFormationsRoute: typeof MonCompteMesFormationsRoute
   MonCompteNotificationsRoute: typeof MonCompteNotificationsRoute
   MonCompteParametresRoute: typeof MonCompteParametresRoute
   MonComptePortefeuilleRoute: typeof MonComptePortefeuilleRoute
@@ -2817,6 +2837,7 @@ const MonCompteRouteChildren: MonCompteRouteChildren = {
   MonCompteFavorisRoute: MonCompteFavorisRoute,
   MonCompteInscriptionsRoute: MonCompteInscriptionsRoute,
   MonCompteKycRoute: MonCompteKycRoute,
+  MonCompteMesFormationsRoute: MonCompteMesFormationsRoute,
   MonCompteNotificationsRoute: MonCompteNotificationsRoute,
   MonCompteParametresRoute: MonCompteParametresRoute,
   MonComptePortefeuilleRoute: MonComptePortefeuilleRoute,

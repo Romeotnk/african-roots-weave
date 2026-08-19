@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { RatingStars } from "@/components/shared/RatingStars";
+import { StatCard } from "@/components/shared/StatCard";
 import { useMyReceivedReviews, useReplyToReview } from "@/hooks/useReviewsApi";
 
 export const Route = createFileRoute("/tableau-de-bord/avis")({
@@ -77,13 +78,9 @@ function ReviewsPage() {
         {!reviewsQuery.isLoading && !reviewsQuery.isError && (
           <>
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
-                <Star size={22} className="text-[var(--brand-primary)]" />
-                <p className="mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">{t("dashboard.reviews.average")}</p>
-                <p className="mt-1 text-[28px] font-extrabold">{average.toFixed(1)}/5</p>
-              </div>
-              <StatBox label={t("dashboard.reviews.total")} value={reviews.length} />
-              <StatBox label={t("dashboard.reviews.withoutReply")} value={withoutReply} />
+              <StatCard icon={Star} tone="warning" label={t("dashboard.reviews.average")} value={`${average.toFixed(1)}/5`} />
+              <StatCard label={t("dashboard.reviews.total")} value={reviews.length} />
+              <StatCard label={t("dashboard.reviews.withoutReply")} value={withoutReply} tone="info" />
             </div>
 
             <div className="mt-6">
@@ -152,11 +149,3 @@ function ReviewsPage() {
   );
 }
 
-function StatBox({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
-      <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">{label}</p>
-      <p className="mt-2 text-[28px] font-extrabold">{value}</p>
-    </div>
-  );
-}

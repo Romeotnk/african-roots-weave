@@ -11,11 +11,25 @@ export type BackendNotification = {
   createdAt: string;
 };
 
-const knownTypes: NotificationType[] = ["message", "listing", "order", "review", "forum"];
+const knownTypes: readonly NotificationType[] = [
+  "ORDER_CREATED", "ORDER_PAID", "ORDER_SHIPPED", "ORDER_REFUNDED",
+  "AUCTION_WON", "AUCTION_CLOSED", "BID_OUTBID",
+  "SYSTEM", "SAVED_SEARCH_MATCH", "NEW_MESSAGE", "COMMISSION_EARNED",
+  "QUOTE_REQUESTED", "QUOTE_PROPOSED", "QUOTE_DECLINED", "QUOTE_ACCEPTED",
+  "FORMATION_ENROLLED", "FORMATION_SOLD",
+  "KYC_SUBMITTED", "KYC_APPROVED", "KYC_REJECTED",
+  "BOOKING_CONFIRMED", "BOOKING_CANCELLED", "REVIEW_RECEIVED",
+  "ADMIN_BROADCAST", "TICKET_REPLY",
+];
 
 export const toNotification = (item: BackendNotification): AppNotification => {
-  const lowerType = item.type.toLowerCase();
-  const type = knownTypes.includes(lowerType as NotificationType) ? (lowerType as NotificationType) : "forum";
+  // The backend's Notification.type is a free-text String, not an enum — pass a
+  // recognized value through as-is so NotificationBell can render its real icon;
+  // fall back to the neutral "SYSTEM" bell icon (not the old "forum" default,
+  // which misleadingly implied a forum-community icon) for any future type this
+  // list hasn't caught up with yet.
+  const upperType = item.type.toUpperCase();
+  const type = knownTypes.includes(upperType as NotificationType) ? (upperType as NotificationType) : "SYSTEM";
   return {
     id: item.id,
     type,

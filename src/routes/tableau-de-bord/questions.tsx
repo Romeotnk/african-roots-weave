@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import type { AppRole } from "@/lib/auth/AuthContext";
 import { AccountLayout } from "@/components/account/AccountLayout";
+import { StatCard } from "@/components/shared/StatCard";
 import { useMyFavorites, useMyForumQuestions, useToggleFavorite } from "@/hooks/useForumApi";
 import { toQuestion, type BackendQuestion } from "@/lib/forumMappers";
 import { PROFESSIONAL_ACCOUNT_ROLES } from "@/lib/auth/roles";
@@ -157,12 +158,3 @@ export function QuestionsPage({ allowedRoles = PROFESSIONAL_ACCOUNT_ROLES }: { a
   );
 }
 
-function StatCard({ label, value, icon: Icon }: { label: string; value: number; icon: typeof MessageSquare }) {
-  return (
-    <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
-      <Icon size={22} className="text-[var(--brand-primary)]" />
-      <p className="mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">{label}</p>
-      <p className="mt-1 text-[28px] font-extrabold">{value.toLocaleString("fr-FR")}</p>
-    </div>
-  );
-}

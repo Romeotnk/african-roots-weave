@@ -1,20 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { Bell, CheckCheck, MessageSquare, PackageCheck, Star, Store, Users } from "lucide-react";
+import { Bell, CheckCheck } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
-import type { AppNotification, NotificationType } from "@/data/notifications";
+import { NOTIFICATION_ICONS, type AppNotification } from "@/data/notifications";
 import { notificationKeys, useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from "@/hooks/useNotificationsApi";
 import { useNotificationsSocket } from "@/hooks/useNotificationsSocket";
 import { toNotification, type BackendNotification } from "@/lib/api/notifications";
-
-const icons: Record<NotificationType, typeof Bell> = {
-  message: MessageSquare,
-  listing: Store,
-  order: PackageCheck,
-  review: Star,
-  forum: Users,
-};
 
 // item.href comes from the backend Notification.link field — free text, not
 // validated against the frontend's route list. Only follow it if it's an
@@ -83,7 +75,7 @@ export function NotificationBell({ compact = false }: { compact?: boolean }) {
           </div>
           <div className="max-h-[340px] space-y-2 overflow-y-auto">
             {notifications.slice(0, 4).map((item) => {
-              const Icon = icons[item.type];
+              const Icon = NOTIFICATION_ICONS[item.type];
               const unread = !readIds.has(item.id);
               const target = isSafeInternalPath(item.href) ? item.href : "/";
               return (

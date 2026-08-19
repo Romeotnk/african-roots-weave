@@ -10,6 +10,7 @@ import {
   listEvents,
   listFormations,
   listMyEvents,
+  listMyFormationEnrollments,
   listMyFormations,
   listMyRegistrations,
   registerEvent,
@@ -181,6 +182,16 @@ export function useUpdateFormationProgress() {
       updateFormationProgress(id, lessonId, completed),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["formations", variables.id, "enrollment"] });
+      queryClient.invalidateQueries({ queryKey: ["formations", "enrollments", "mine"] });
     },
+  });
+}
+
+export function useMyFormationEnrollments() {
+  return useQuery({
+    queryKey: ["formations", "enrollments", "mine"] as const,
+    queryFn: listMyFormationEnrollments,
+    enabled: isBrowser,
+    retry: false,
   });
 }

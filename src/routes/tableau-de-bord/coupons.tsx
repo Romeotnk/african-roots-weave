@@ -5,6 +5,8 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AccountLayout } from "@/components/account/AccountLayout";
+import { CouponTicketCard } from "@/components/shared/CouponTicketCard";
+import { StatCard } from "@/components/shared/StatCard";
 import { useCoupons, useCreateCoupon, useUpdateCoupon } from "@/hooks/useCouponsApi";
 
 type CouponForm = {
@@ -109,9 +111,9 @@ function CouponsPage() {
     <ProtectedRoute requireAnyRole={["professional", "admin", "super_admin"]}>
       <AccountLayout title={t("dashboard.coupons.title")} description={t("dashboard.coupons.description")}>
           <div className="grid gap-4 md:grid-cols-3">
-            <StatCard icon={Tag} label={t("dashboard.coupons.statCoupons")} value={String(coupons.length)} />
-            <StatCard icon={Percent} label={t("dashboard.coupons.statActive")} value={String(activeCount)} />
-            <StatCard icon={Copy} label={t("dashboard.coupons.statUses")} value={String(totalUses)} />
+            <StatCard icon={Tag} label={t("dashboard.coupons.statCoupons")} value={coupons.length} />
+            <StatCard icon={Percent} label={t("dashboard.coupons.statActive")} value={activeCount} tone="success" />
+            <StatCard icon={Copy} label={t("dashboard.coupons.statUses")} value={totalUses} />
           </div>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-[360px_1fr]">
@@ -185,36 +187,18 @@ function CouponsPage() {
                     <p className="mt-2 text-[14px] text-[var(--color-text-muted)]">{t("dashboard.coupons.emptyDesc")}</p>
                   </div>
                 ) : (
-                  filteredCoupons.map((coupon) => (
-                    <article key={coupon.id} className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-4">
-                      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h2 className="text-[17px] font-extrabold tracking-[0.08em] text-[var(--color-text-primary)]">{coupon.code}</h2>
-                            <span className={`rounded-full px-3 py-1 text-[12px] font-bold ${coupon.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
-                              {coupon.isActive ? t("dashboard.coupons.active") : t("dashboard.coupons.inactive")}
-                            </span>
-                          </div>
-                          <p className="mt-1 text-[13px] text-[var(--color-text-muted)]">
-                            {t("dashboard.coupons.usageSummary", { discount: coupon.discount, used: coupon.usedCount, max: coupon.maxUses ? `/${coupon.maxUses}` : "", date: formatDate(coupon.expiresAt) })}
-                          </p>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <button type="button" onClick={() => copyCode(coupon.code)} className="btn-secondary h-10 px-4 text-[13px]">
-                            <Copy size={16} /> {t("dashboard.coupons.copy")}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => toggleCoupon(coupon.id, coupon.isActive)}
-                            disabled={updateCoupon.isPending}
-                            className="btn-secondary h-10 px-4 text-[13px]"
-                          >
-                            {coupon.isActive ? t("dashboard.coupons.deactivate") : t("dashboard.coupons.activate")}
-                          </button>
-                        </div>
-                      </div>
-                    </article>
-                  ))
+                  <div className="space-y-3">
+                    {filteredCoupons.map((coupon) => (
+                      <CouponTicketCard
+                        key={coupon.id}
+                        coupon={coupon}
+                        onCopy={() => copyCode(coupon.code)}
+                        onToggle={() => toggleCoupon(coupon.id, coupon.isActive)}
+                        toggling={updateCoupon.isPending}
+                        formatDate={formatDate}
+                      />
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
@@ -233,15 +217,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function StatCard({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
-  return (
-    <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
-      <Icon size={22} className="text-[var(--brand-primary)]" />
-      <p className="mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">{label}</p>
-      <p className="mt-1 text-[24px] font-extrabold text-[var(--color-text-primary)]">{value}</p>
-    </div>
-  );
-}
 
 export const Route = createFileRoute("/tableau-de-bord/coupons")({
   head: () => ({ meta: [{ title: "Coupons - IWOSAN" }] }),

@@ -4,6 +4,7 @@ import { prisma } from "../config/db.js";
 import { env } from "../config/env.js";
 import { EMAIL_TEMPLATE_DEFAULTS, sendEmail } from "../services/email.service.js";
 import { writeAuditLog } from "../services/audit.service.js";
+import { createNotification } from "../services/notification.service.js";
 import { getRoleDefaultPermissions, invalidateRolePermissionsCache } from "../services/permissions.service.js";
 import { isSuperAdmin, superAdminOnlySpaces } from "./content.controller.js";
 import { invalidatePublicSiteConfigCache, invalidatePublicTranslationsCache } from "./publicSite.controller.js";
@@ -360,6 +361,13 @@ export const kycApprove = asyncHandler(async (req, res) => {
     data: { kycStatus: "VERIFIED" },
   });
   await writeAuditLog(req, { action: "KYC_APPROVED", targetId: user.id, targetType: "User" });
+  await createNotification({
+    userId: user.id,
+    type: "KYC_APPROVED",
+    title: "Vérification approuvée",
+    message: "Votre vérification d'identité (KYC) a été approuvée.",
+    link: "/mon-compte/kyc",
+  });
   res.json(apiResponse(true, user, "KYC approved"));
 });
 
@@ -373,6 +381,13 @@ export const kycReject = asyncHandler(async (req, res) => {
     targetId: user.id,
     targetType: "User",
     metadata: { reason: req.body.reason },
+  });
+  await createNotification({
+    userId: user.id,
+    type: "KYC_REJECTED",
+    title: "Vérification refusée",
+    message: typeof req.body.reason === "string" && req.body.reason.trim() ? `Votre vérification d'identité (KYC) a été refusée : ${req.body.reason.trim()}` : "Votre vérification d'identité (KYC) a été refusée.",
+    link: "/mon-compte/kyc",
   });
   res.json(apiResponse(true, user, "KYC rejected"));
 });

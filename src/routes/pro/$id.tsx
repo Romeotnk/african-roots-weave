@@ -4,10 +4,11 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft, BadgeCheck, Facebook, Instagram, Linkedin, MapPin, MessageCircle, Smartphone, Star } from "lucide-react";
 import { useProducts, useProfessional } from "@/hooks/useApiCatalog";
 import { useFormations } from "@/hooks/useEventsFormationsApi";
-import { useCreateReview, useTargetReviews } from "@/hooks/useReviewsApi";
+import { useCreateReview, useReplyToReview, useTargetReviews } from "@/hooks/useReviewsApi";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { RatingStars } from "@/components/shared/RatingStars";
 import { PractitionerAvatar } from "@/components/shared/PractitionerAvatar";
+import { ProfileGallery } from "@/components/shared/ProfileGallery";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { BookingWidget } from "@/components/shared/BookingWidget";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -48,9 +49,30 @@ function ProfessionalShowcase() {
   const reviewsQuery = useTargetReviews(professionalQuery.data?.profileId ?? "", "PROFESSIONAL", tab === "reviews");
   const createReview = useCreateReview();
   const [reviewRating, setReviewRating] = useState(0);
-  const [reviewHoverRating, setReviewHoverRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
   const [reviewNotice, setReviewNotice] = useState("");
+  const replyToReview = useReplyToReview();
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [replyMessage, setReplyMessage] = useState("");
+
+  const submitReviewReply = (reviewId: string) => {
+    const content = replyDrafts[reviewId]?.trim() ?? "";
+    setReplyMessage("");
+    if (content.length < 3) {
+      setReplyMessage(t("dashboard.reviews.replyTooShort"));
+      return;
+    }
+    replyToReview.mutate(
+      { id: reviewId, content },
+      {
+        onSuccess: () => {
+          setReplyDrafts((current) => ({ ...current, [reviewId]: "" }));
+          setReplyMessage(t("dashboard.reviews.replySaved"));
+        },
+        onError: (error) => setReplyMessage(error instanceof Error ? error.message : t("dashboard.reviews.replyError")),
+      },
+    );
+  };
 
   // "Réserver ce produit" lands here with a prefilled message — the
   // conversation must open automatically, not require an extra click.
@@ -203,6 +225,14 @@ function ProfessionalShowcase() {
               <section className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
                 <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-gold)]">{t("pro.about.label")}</p>
                 <p className="mt-4 text-[16px] leading-8 text-[var(--color-text-secondary)]">{pro.bio}</p>
+                {pro.gallery && pro.gallery.length > 1 && (
+                  <div className="mt-6">
+                    <p className="font-mono text-[12px] tracking-[0.14em] text-[var(--brand-primary)]">{t("pro.about.gallery")}</p>
+                    <div className="mt-2">
+                      <ProfileGallery images={pro.gallery} alt={pro.name} />
+                    </div>
+                  </div>
+                )}
                 {pro.initiationPath && (
                   <div className="mt-6">
                     <p className="font-mono text-[12px] tracking-[0.14em] text-[var(--brand-primary)]">{t("pro.about.initiationPath")}</p>
@@ -317,26 +347,8 @@ function ProfessionalShowcase() {
                 {user && user.id !== id && (
                   <div className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
                     <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-gold)]">{t("pro.reviews.leaveReview")}</p>
-                    <div className="mt-4 flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((value) => (
-                        <button
-                          key={value}
-                          type="button"
-                          onMouseEnter={() => setReviewHoverRating(value)}
-                          onMouseLeave={() => setReviewHoverRating(0)}
-                          onClick={() => setReviewRating(value)}
-                          aria-label={t("pro.reviews.starLabel", { count: value })}
-                        >
-                          <Star
-                            size={26}
-                            className={
-                              value <= (reviewHoverRating || reviewRating)
-                                ? "fill-[var(--brand-gold)] text-[var(--brand-gold)]"
-                                : "text-[var(--brand-border)]"
-                            }
-                          />
-                        </button>
-                      ))}
+                    <div className="mt-4">
+                      <RatingStars interactive rating={reviewRating} onChange={setReviewRating} size="lg" showCount={false} />
                     </div>
                     <textarea
                       rows={3}
@@ -377,6 +389,7 @@ function ProfessionalShowcase() {
 
                 <div className="rounded-[24px] border border-[var(--brand-border-light)] bg-white p-5 sm:p-7">
                   <p className="font-mono text-[12px] tracking-[0.18em] text-[var(--brand-gold)]">{t("pro.reviews.patientReviews", { count: pro.reviewCount })}</p>
+                  {replyMessage && <p className="mt-3 text-[13px] font-semibold text-[var(--color-text-secondary)]">{replyMessage}</p>}
                   {reviewsQuery.isLoading && <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">{t("pro.reviews.loading")}</p>}
                   {!reviewsQuery.isLoading && ((reviewsQuery.data as ProfessionalReview[] | undefined)?.length ?? 0) === 0 && (
                     <p className="mt-4 text-[13px] text-[var(--color-text-muted)]">{t("pro.reviews.empty")}</p>
@@ -394,6 +407,24 @@ function ProfessionalShowcase() {
                           <div className="mt-3 rounded-lg bg-[var(--brand-surface-alt)] p-3">
                             <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--brand-primary)]">{t("pro.reviews.replyFrom", { name: pro.name })}</p>
                             <p className="mt-1 text-[13px] text-[var(--color-text-secondary)]">{review.sellerReply}</p>
+                          </div>
+                        )}
+                        {!review.sellerReply && user?.id === id && (
+                          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                            <input
+                              value={replyDrafts[review.id] ?? ""}
+                              onChange={(event) => setReplyDrafts((current) => ({ ...current, [review.id]: event.target.value }))}
+                              placeholder={t("dashboard.reviews.replyPlaceholder")}
+                              className="h-10 min-w-0 flex-1 rounded-full border border-[var(--brand-border)] px-4 text-[13px]"
+                            />
+                            <button
+                              type="button"
+                              disabled={replyToReview.isPending}
+                              onClick={() => submitReviewReply(review.id)}
+                              className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 text-[13px] font-semibold text-white disabled:opacity-60"
+                            >
+                              {t("dashboard.reviews.reply")}
+                            </button>
                           </div>
                         )}
                       </div>

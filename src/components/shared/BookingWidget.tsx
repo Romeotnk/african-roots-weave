@@ -1,18 +1,51 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { CalendarClock, Loader2 } from "lucide-react";
-import { useAvailability, useCreateBooking } from "@/hooks/useBookingsApi";
+import { useQueries } from "@tanstack/react-query";
+import { CalendarClock, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { bookingKeys, useCreateBooking } from "@/hooks/useBookingsApi";
+import { getAvailability } from "@/lib/api/bookings";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { cn } from "@/lib/utils";
 
 const toDateInputValue = (date: Date) => date.toISOString().slice(0, 10);
+const DAY_MS = 24 * 60 * 60 * 1000;
+const MAX_DAYS_AHEAD = 60;
+
+// Seven parallel calls to the existing single-day availability endpoint
+// instead of a new backend week-range endpoint: getAvailability's slot
+// computation (schedule parsing, overlap-checking against existing bookings)
+// stays the single source of truth, so this strip can never silently drift
+// from what the day-by-day picker would show.
+function useWeekAvailability(professionalId: string, dates: string[]) {
+  return useQueries({
+    queries: dates.map((date) => ({
+      queryKey: bookingKeys.availability(professionalId, date),
+      queryFn: () => getAvailability(professionalId, date),
+      enabled: Boolean(professionalId) && Boolean(date),
+      retry: false as const,
+    })),
+  });
+}
 
 export function BookingWidget({ professionalId, professionalName }: { professionalId: string; professionalName: string }) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const today = useMemo(() => toDateInputValue(new Date()), []);
-  const maxDate = useMemo(() => toDateInputValue(new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)), []);
-  const [date, setDate] = useState(today);
+  const today = useMemo(() => new Date(new Date().toDateString()), []);
+  const maxDate = useMemo(() => new Date(today.getTime() + MAX_DAYS_AHEAD * DAY_MS), [today]);
+  const [weekOffset, setWeekOffset] = useState(0);
+
+  const weekDates = useMemo(() => {
+    const start = new Date(today.getTime() + weekOffset * 7 * DAY_MS);
+    return Array.from({ length: 7 }, (_, i) => new Date(start.getTime() + i * DAY_MS));
+  }, [today, weekOffset]);
+  const weekDateStrings = useMemo(() => weekDates.map(toDateInputValue), [weekDates]);
+
+  const [selectedDate, setSelectedDate] = useState(weekDateStrings[0]);
+  useEffect(() => {
+    if (!weekDateStrings.includes(selectedDate)) setSelectedDate(weekDateStrings[0]);
+  }, [weekDateStrings, selectedDate]);
+
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [serviceName, setServiceName] = useState("Consultation");
   const [durationMinutes, setDurationMinutes] = useState(30);
@@ -20,9 +53,15 @@ export function BookingWidget({ professionalId, professionalName }: { profession
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const availabilityQuery = useAvailability(professionalId, date);
+  const weekQueries = useWeekAvailability(professionalId, weekDateStrings);
   const createBooking = useCreateBooking();
-  const slots = availabilityQuery.data ?? [];
+
+  const canGoBack = weekOffset > 0;
+  const canGoForward = weekDates[0].getTime() + 7 * DAY_MS <= maxDate.getTime();
+
+  const selectedIndex = weekDateStrings.indexOf(selectedDate);
+  const selectedQuery = weekQueries[selectedIndex];
+  const slots = selectedQuery?.data ?? [];
 
   const submitBooking = () => {
     setError("");
@@ -68,24 +107,62 @@ export function BookingWidget({ professionalId, professionalName }: { profession
         {t("bookingWidget.chooseDate", { name: professionalName })}
       </p>
 
-      <label className="mt-5 block text-[13px] font-bold text-[var(--color-text-primary)]">
-        {t("bookingWidget.date")}
-        <input
-          type="date"
-          value={date}
-          min={today}
-          max={maxDate}
-          onChange={(event) => {
-            setDate(event.target.value);
-            setSelectedSlot(null);
-            setSuccess("");
-          }}
-          className="mt-2 h-11 w-full max-w-xs rounded-lg border border-[var(--brand-border)] px-3 text-[14px]"
-        />
-      </label>
+      <div className="mt-5 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setWeekOffset((value) => Math.max(0, value - 1))}
+          disabled={!canGoBack}
+          aria-label={t("bookingWidget.previousWeek")}
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[var(--brand-border)] text-[var(--color-text-secondary)] disabled:opacity-30"
+        >
+          <ChevronLeft size={16} />
+        </button>
+        <div className="grid flex-1 grid-cols-7 gap-1.5">
+          {weekDates.map((day, index) => {
+            const dateStr = weekDateStrings[index];
+            const query = weekQueries[index];
+            const slotCount = query?.data?.length ?? 0;
+            const isSelected = dateStr === selectedDate;
+            return (
+              <button
+                key={dateStr}
+                type="button"
+                onClick={() => {
+                  setSelectedDate(dateStr);
+                  setSelectedSlot(null);
+                  setSuccess("");
+                }}
+                className={cn(
+                  "flex flex-col items-center gap-1 rounded-[10px] border px-1 py-2 text-center transition",
+                  isSelected ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white" : "border-[var(--brand-border)] text-[var(--color-text-primary)] hover:border-[var(--brand-primary)]",
+                )}
+              >
+                <span className={cn("text-[10px] font-bold uppercase tracking-[0.06em]", isSelected ? "text-white/80" : "text-[var(--color-text-muted)]")}>
+                  {day.toLocaleDateString("fr-FR", { weekday: "short" }).replace(".", "")}
+                </span>
+                <span className="text-[15px] font-bold">{day.getDate()}</span>
+                {query?.isLoading ? (
+                  <span className={cn("h-1.5 w-1.5 animate-pulse rounded-full", isSelected ? "bg-white/60" : "bg-[var(--brand-border)]")} />
+                ) : (
+                  <span className={cn("h-1.5 w-1.5 rounded-full", slotCount > 0 ? (isSelected ? "bg-white" : "bg-[var(--brand-success)]") : "bg-transparent")} />
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={() => setWeekOffset((value) => value + 1)}
+          disabled={!canGoForward}
+          aria-label={t("bookingWidget.nextWeek")}
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[var(--brand-border)] text-[var(--color-text-secondary)] disabled:opacity-30"
+        >
+          <ChevronRight size={16} />
+        </button>
+      </div>
 
       <div className="mt-4">
-        {availabilityQuery.isLoading ? (
+        {selectedQuery?.isLoading ? (
           <div className="flex items-center gap-2 text-[13px] text-[var(--color-text-muted)]">
             <Loader2 size={16} className="animate-spin" /> {t("bookingWidget.searchingSlots")}
           </div>

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { StatCard } from "@/components/shared/StatCard";
 import { useMySubscription, useSubscriptionPlans, useUpgradeSubscription } from "@/hooks/useSubscriptionApi";
 import type { SubscriptionPlanKey } from "@/lib/api/subscriptions";
 
@@ -160,12 +161,3 @@ function SubscriptionPage() {
   );
 }
 
-function StatCard({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
-  return (
-    <div className="rounded-[8px] border border-[var(--brand-border-light)] bg-white p-5">
-      <Icon size={22} className="text-[var(--brand-primary)]" />
-      <p className="mt-3 text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-muted)]">{label}</p>
-      <p className="mt-1 text-[24px] font-extrabold text-[var(--color-text-primary)]">{value}</p>
-    </div>
-  );
-}

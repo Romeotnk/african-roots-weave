@@ -327,6 +327,31 @@ export const downloadFormation = asyncHandler(async (req, res) => {
   );
 });
 
+export const listMyFormationEnrollments = asyncHandler(async (req, res) => {
+  if (!req.user) throw new ApiError(401, "Authentication required");
+  const enrollments = await prisma.formationEnrollment.findMany({
+    where: { userId: req.user.id },
+    orderBy: { enrolledAt: "desc" },
+    include: {
+      formation: {
+        include: {
+          modules: { include: { lessons: { select: { id: true } } } },
+          createdBy: { select: { firstName: true, lastName: true } },
+        },
+      },
+    },
+  });
+
+  const enrollmentsWithProgress = enrollments.map(({ formation, ...enrollment }) => {
+    const lessonCount = formation.modules.reduce((sum, module) => sum + module.lessons.length, 0);
+    const progressPercent = lessonCount > 0 ? Math.round((enrollment.completedLessonIds.length / lessonCount) * 100) : 0;
+    const { modules: _modules, ...formationSummary } = formation;
+    return { ...enrollment, formation: formationSummary, lessonCount, progressPercent };
+  });
+
+  res.json(apiResponse(true, enrollmentsWithProgress, "My formation enrollments retrieved"));
+});
+
 export const getMyFormationEnrollment = asyncHandler(async (req, res) => {
   if (!req.user) throw new ApiError(401, "Authentication required");
   const enrollment = await prisma.formationEnrollment.findUnique({

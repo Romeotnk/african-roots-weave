@@ -1,5 +1,6 @@
 import { ReviewTarget } from "@prisma/client";
 import { prisma } from "../config/db.js";
+import { createNotification } from "../services/notification.service.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/errors.js";
@@ -71,6 +72,11 @@ export const createReview = asyncHandler(async (req, res) => {
     throw new ApiError(403, "You can only rate a buyer after a delivered order with them");
   }
 
+  const existingReview = await prisma.review.findUnique({
+    where: { authorId_targetId_targetType: { authorId: req.user.id, targetId, targetType } },
+    select: { id: true },
+  });
+
   const review = await prisma.review.upsert({
     where: { authorId_targetId_targetType: { authorId: req.user.id, targetId, targetType } },
     update: { rating, comment: req.body.comment },
@@ -79,6 +85,16 @@ export const createReview = asyncHandler(async (req, res) => {
 
   if (targetType === "PROFESSIONAL") {
     await recomputeProfessionalRating(targetId);
+  }
+
+  if (!existingReview && ownerId) {
+    await createNotification({
+      userId: ownerId,
+      type: "REVIEW_RECEIVED",
+      title: "Nouvel avis reçu",
+      message: `Vous avez reçu un nouvel avis ${rating}/5.`,
+      link: targetType === "PROFESSIONAL" ? `/pro/${targetId}` : "/mon-compte",
+    });
   }
 
   res.status(201).json(apiResponse(true, review, "Review saved"));

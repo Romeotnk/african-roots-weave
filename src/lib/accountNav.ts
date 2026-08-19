@@ -79,6 +79,7 @@ export function buildAccountNavGroups(t: TFunction): AccountNavGroup[] {
         { id: "wallet", icon: Wallet, label: t("accountNav.wallet"), to: "/mon-compte/portefeuille" },
         { id: "myBookings", icon: CalendarClock, label: t("accountNav.myBookings"), to: "/mon-compte/reservations" },
         { id: "myQuotes", icon: FileText, label: t("accountNav.myQuotes"), to: "/mon-compte/devis" },
+        { id: "myLearning", icon: GraduationCap, label: t("accountNav.myLearning"), to: "/mon-compte/mes-formations" },
         { id: "registrations", icon: Calendar, label: t("accountNav.registrations"), to: "/mon-compte/inscriptions" },
         { id: "favorites", icon: Sparkles, label: t("accountNav.favorites"), to: "/mon-compte/favoris" },
         { id: "alerts", icon: Bell, label: t("accountNav.alerts"), to: "/mon-compte/alertes" },
