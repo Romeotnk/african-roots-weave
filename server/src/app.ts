@@ -80,8 +80,14 @@ app.use(
           "'self'",
           "https://www.googletagmanager.com",
           "https://connect.facebook.net",
+          "https://challenges.cloudflare.com",
           (_req, res) => `'nonce-${(res as express.Response).locals.cspNonce}'`,
         ],
+        // Turnstile renders its challenge inside an iframe from this origin -
+        // without an explicit frame-src it falls back to default-src ('self'),
+        // which silently blocks the iframe and leaves the widget blank while
+        // the login form still demands a token nothing can produce.
+        frameSrc: ["'self'", "https://challenges.cloudflare.com"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       },
     },
