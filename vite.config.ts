@@ -67,13 +67,6 @@ export default defineConfig({
             if (id.includes("recharts")) return "charts";
             if (id.includes("embla-carousel")) return "carousel";
             if (id.includes("date-fns")) return "dates";
-            // Only the auth (OAuth login) and postgrest (a single "user_roles"
-            // lookup) subsystems are actually used — see src/integrations/supabase/
-            // client.ts — but createClient() from the umbrella package also pulls
-            // in storage-js/realtime-js/functions-js unconditionally. Isolating
-            // the whole SDK into its own chunk (~280KB of that is dead weight)
-            // keeps it out of the main entry chunk that every route pays for.
-            if (id.includes("@supabase/") || id.includes("/iceberg-js/")) return "supabase";
           }
         },
       },
